@@ -33,5 +33,6 @@ class DatabaseSeeder extends Seeder
         CecoAllocationAmount::factory(20)->create();
         ImplementModel::factory(20)->create();
         Implement::factory(300)->create();
+
     }
 }
