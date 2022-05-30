@@ -60,4 +60,31 @@ class User extends Authenticatable
     protected $appends = [
         'profile_photo_url',
     ];
+    public function adminlte_image(){
+        return $this->profile_photo_url;
+    }
+    public function cecoDetails(){
+        return $this->hasMany(CecoDetail::class);
+    }
+    public function operatorAssignedStock(){
+        return $this->hasMany(OperatorAssignedStock::class);
+    }
+    public function operatorStock(){
+        return $this->hasMany(OperatorStock::class);
+    }
+    public function operatorStockDetail(){
+        return $this->hasMany(OperatorStockDetail::class);
+    }
+    public function orderRequest(){
+        return $this->hasMany(OrderRequest::class);
+    }
+    public function ReleasedStockDetail(){
+        return $this->hasMany(OrderRequest::class);
+    }
+    public function tractorReport(){
+        return $this->hasMany(TractorReport::class);
+    }
+    public function workOrder(){
+        return $this->hasMany(WorkOrder::class);
+    }
 }

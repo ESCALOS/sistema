@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('code')->unique();
             $table->string('sede');
-            $table->foreignId('zone_id')->constrained()->onUpdate('restrict')->onDelete('restrict');
+            $table->foreignId('zone_id')->constrained();
             $table->timestamps();
         });
     }

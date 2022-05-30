@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('code')->unique();
             $table->string('description');
-            $table->foreignId('location')->constrained()->onUpdate('restrict')->onDelete('restrict');
+            $table->foreignId('location_id')->constrained();
             $table->double('amount');
             $table->timestamps();
         });

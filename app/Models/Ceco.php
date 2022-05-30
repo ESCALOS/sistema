@@ -12,4 +12,7 @@ class Ceco extends Model
     public function location(){
         return $this->belongsTo(Location::class);
     }
+    public function cecoDetails(){
+        return $this->hasMany(CecoDetail::class);
+    }
 }

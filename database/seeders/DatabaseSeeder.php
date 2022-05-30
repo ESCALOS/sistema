@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        \App\Models\User::factory(3)->create();
+        \App\Models\User::factory(30)->create();
 
         $zone = new Zone();
 
