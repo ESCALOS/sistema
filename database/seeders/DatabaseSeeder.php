@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Database\Factories\BrandFactory;
+use Database\Factories\CecoFactory;
 use Database\Factories\LocationFactory;
 use Database\Factories\SedeFactory;
 use Database\Factories\ZoneFactory;
@@ -23,6 +24,6 @@ class DatabaseSeeder extends Seeder
         SedeFactory::factory(8)->create();
         LocationFactory::factory(11)->create();
         BrandFactory::factory(30)->create();
-
+        CecoFactory::factory(20)->create();
     }
 }

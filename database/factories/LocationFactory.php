@@ -18,7 +18,7 @@ class LocationFactory extends Factory
         return [
             'code' => $this->faker->unique()->numerify('######'),
             'sede' => $this->faker->word(),
-            'zone' => Sede::all()->random()->id(),
+            'sede_id' => Sede::all()->random()->id(),
         ];
     }
 }

@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('ceco_allocationamounts', function (Blueprint $table) {
+        Schema::create('ceco_allocation_amounts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('ceco_id')->constrained();
             $table->double('allocation_amount');
