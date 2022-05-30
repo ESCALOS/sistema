@@ -20,6 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('part');
             $table->foreign('part')->references('id')->on('components');
             $table->timestamps();
+            $table->index(['component','part']);
         });
     }
 

@@ -9,6 +9,8 @@ class Sede extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     public function zone(){
         return $this->belongsTo(Zone::class);
     }

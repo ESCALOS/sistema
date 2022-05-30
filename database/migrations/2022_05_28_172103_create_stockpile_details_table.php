@@ -15,6 +15,12 @@ return new class extends Migration
     {
         Schema::create('stockpile_details', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('stockpile_id')->constrained();
+            $table->foreignId('item_id')->constrained();
+            $table->double('quantity');
+            $table->double('price');
+            $table->foreignId('warehouse_id')->constrained();
+            $table->enum('state',['PENDIENTE','VALIDADO','RECHAZADO','ANULADO']);
             $table->timestamps();
         });
     }

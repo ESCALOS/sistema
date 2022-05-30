@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('task_id')->constrained();
             $table->foreignId('risk_id')->constrained();
             $table->timestamps();
+            $table->index(['task_id','risk_id']);
         });
     }
 

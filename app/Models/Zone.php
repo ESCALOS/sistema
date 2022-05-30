@@ -9,6 +9,8 @@ class Zone extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     //Relación de uno a muchos
     public function sedes(){
         return $this->hasMany(Sede::class);

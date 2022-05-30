@@ -2,11 +2,15 @@
 
 namespace Database\Seeders;
 
-use Database\Factories\BrandFactory;
-use Database\Factories\CecoFactory;
-use Database\Factories\LocationFactory;
-use Database\Factories\SedeFactory;
-use Database\Factories\ZoneFactory;
+use App\Models\Brand;
+use App\Models\Ceco;
+use App\Models\CecoAllocationAmount;
+use App\Models\Implement;
+use App\Models\ImplementModel;
+use App\Models\Location;
+use App\Models\MeasurementUnit;
+use App\Models\Sede;
+use App\Models\Zone;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -20,10 +24,14 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         \App\Models\User::factory(30)->create();
-        ZoneFactory::factory(3)->create();
-        SedeFactory::factory(8)->create();
-        LocationFactory::factory(11)->create();
-        BrandFactory::factory(30)->create();
-        CecoFactory::factory(20)->create();
+        Zone::factory(3)->create();
+        Sede::factory(8)->create();
+        Location::factory(11)->create();
+        Brand::factory(30)->create();
+        MeasurementUnit::factory(50)->create();
+        Ceco::factory(20)->create();
+        CecoAllocationAmount::factory(20)->create();
+        ImplementModel::factory(20)->create();
+        Implement::factory(300)->create();
     }
 }

@@ -15,6 +15,12 @@ return new class extends Migration
     {
         Schema::create('loans', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('lender_stock_id');
+            $table->foreign('lender_stock_id')->references('id')->on('users');
+            $table->unsignedBigInteger('borrower_stock_id');
+            $table->foreign('borrower_stock_id')->references('id')->on('users');
+            $table->double('quantity');
+            $table->double('price');
             $table->timestamps();
         });
     }

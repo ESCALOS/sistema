@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Ceco;
+use App\Models\CecoAllocationAmount;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -9,15 +11,14 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class CecoAllocationAmountFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = CecoAllocationAmount::class;
+
     public function definition()
     {
         return [
-            //
+            'ceco_id' => Ceco::all()->random()->id,
+            'allocation_amount' => $this->faker->randomFloat($nbMaxDecimals=2,$min=2000,4000),
+            'date' => $this->faker->date($format='Y-m-d',$max='now'),
         ];
     }
 }

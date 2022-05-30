@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rules\Unique;
 
 return new class extends Migration
 {
@@ -15,7 +16,7 @@ return new class extends Migration
     {
         Schema::create('components', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('item_id')->constrained()->unique();
+            $table->foreignId('item_id')->unique()->constrained();
             $table->string('component')->unique();
             $table->boolean('is_part');
             $table->double('lifespan');

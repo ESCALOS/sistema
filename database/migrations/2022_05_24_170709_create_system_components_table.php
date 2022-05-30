@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('system_id')->constrained();
             $table->foreignId('component_id')->constrained();
             $table->timestamps();
+            $table->index(['system_id','component_id']);
         });
     }
 

@@ -16,7 +16,7 @@ class MeasurementUnitFactory extends Factory
     {
         return [
             'measurement_unit' => $this->faker->unique()->word(),
-            'abbrevition' => $this->faker->unique()->lexify('???')
+            'abbreviation' => $this->faker->unique()->lexify('???')
         ];
     }
 }

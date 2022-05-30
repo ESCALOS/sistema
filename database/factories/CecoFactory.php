@@ -15,8 +15,8 @@ class CecoFactory extends Factory
         return [
             'code' => $this->faker->unique()->numerify('######'),
             'description' => $this->faker->word(),
-            'location_id' => Location::all()->random()->id(),
-            'amount' => $this->faker->randomFloat($nbMaxDecimals=2,$min=0,$max=30000),
+            'location_id' => Location::all()->random()->id,
+            'amount' => 0,
         ];
     }
 }

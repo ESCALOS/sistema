@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('tractor_number',5);
             $table->double('hour_meter');
             $table->timestamps();
+            $table->index(['tractor_model_id','tractor_number']);
         });
     }
 

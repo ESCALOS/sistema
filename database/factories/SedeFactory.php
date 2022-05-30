@@ -18,7 +18,7 @@ class SedeFactory extends Factory
         return [
             'code' => $this->faker->unique()->numerify('######'),
             'sede' => $this->faker->word(),
-            'zone_id' => Zone::all()->random()->id(),
+            'zone_id' => Zone::all()->random()->id,
         ];
     }
 }

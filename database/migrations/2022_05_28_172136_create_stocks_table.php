@@ -20,6 +20,7 @@ return new class extends Migration
             $table->double('price')->constrained();
             $table->foreignId('warehouse_id')->constrained();
             $table->timestamps();
+            $table->index(['item_id','warehouse_id']);
         });
     }
 
