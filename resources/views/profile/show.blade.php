@@ -1,6 +1,6 @@
 <x-app-layout>
     <slot name="menu">
-        @livewire('navigation-menu')
+        @livewire('navigation')
     </slot>
 
     <div>
@@ -31,7 +31,7 @@
                 @livewire('profile.logout-other-browser-sessions-form')
             </div>
 <!--            @if (Laravel\Jetstream\Jetstream::hasAccountDeletionFeatures())
-            
+
                 <x-jet-section-border />
 
                 <div class="mt-10 sm:mt-0">
