@@ -15,7 +15,7 @@ class ImplementModelFactory extends Factory
     public function definition()
     {
         return [
-            'implement_model' => $this->faker->unique()->word(),
+            'implement_model' => $this->faker->unique()->lexify('??????????'),
         ];
     }
 }

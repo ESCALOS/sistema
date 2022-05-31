@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Admin\Labor;
+use App\Models\Labor;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -15,7 +15,7 @@ class LaborFactory extends Factory
     public function definition()
     {
         return [
-            'labor' => $this->faker->unique()->word(),
+            'labor' => $this->faker->unique()->lexify('??????'),
         ];
     }
 }

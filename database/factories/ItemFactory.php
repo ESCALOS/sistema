@@ -18,9 +18,9 @@ class ItemFactory extends Factory
     {
         return [
             'sku' => $this->faker->unique()->numerify('########'),
-            'item' => $this->faker->unique()->word(),
+            'item' => $this->faker->unique()->lexify('????????'),
             'brand_id' => Brand::all()->random()->id,
-            'measurement_id' => MeasurementUnit::all()->random()->id,
+            'measurement_unit_id' => MeasurementUnit::all()->random()->id,
             'estimated_price' => $this->faker->randomFloat($nbMaxDecimals=2,$min=300,$max=1500),
             'type' => $this->faker->randomElement(['FUNGIBLE','COMPONENTE','PIEZA','HERRAMIENTA']),
             'is_active' => $this->faker->randomElement([0,1]),
