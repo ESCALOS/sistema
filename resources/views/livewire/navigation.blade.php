@@ -15,13 +15,13 @@
       </div>
       <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
         <a href="/" class="flex-shrink-0 flex items-center">
-          <img class="block lg:hidden h-8 w-auto" src="http://sistema/img/logo.png" alt="Workflow">
-          <img class="hidden lg:block h-8 w-auto" src="http://sistema/img/logo.png" alt="Workflow">
+          <img class="block lg:hidden h-8 w-auto" src="http://sistema/img/logo.png" alt="Logo">
+          <img class="hidden lg:block h-8 w-auto" src="http://sistema/img/logo.png" alt="Logo">
         </a>
         <div class="hidden sm:block sm:ml-6">
           <div class="flex space-x-4">
             <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
-            <a href="{{ route('overseer.tractor-scheduling.index') }}" :active="request()->routeIs('overseer.tractor-scheduling.index')" class="{{ request()->routeIs('overseer.tractor-scheduling.index') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium" aria-current="page">Programación de Tractores</a>
+            <a href="{{ route('overseer.tractor-scheduling.index') }}" class="{{ request()->routeIs('overseer.tractor-scheduling.index') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium" aria-current="page">Programación de Tractores</a>
 
             <a href="{{ route('asistent.index') }}" class="{{ request()->routeIs('asistent.index') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium">Reporte de tractores</a>
 

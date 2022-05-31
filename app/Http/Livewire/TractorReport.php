@@ -11,7 +11,7 @@ class TractorReport extends Component
     public function render()
     {
 
-        $tractorReports = ModelsTractorReport::all();
+        $tractorReports = ModelsTractorReport::paginate(7);
 
         return view('livewire.tractor-report',compact('tractorReports'));
     }
