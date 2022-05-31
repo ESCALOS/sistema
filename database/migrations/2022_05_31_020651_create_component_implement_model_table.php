@@ -13,12 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('task_risks', function (Blueprint $table) {
+        Schema::create('component_implement_model', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('task_id')->constrained();
-            $table->foreignId('risk_id')->constrained();
+            $table->foreignId('component_id')->constrained();
+            $table->foreignId('implement_model_id')->constrained();
             $table->timestamps();
-            $table->index(['task_id','risk_id']);
+            $table->index(['component_id','implement_model_id']);
         });
     }
 
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('task_risks');
+        Schema::dropIfExists('component_implement_model');
     }
 };

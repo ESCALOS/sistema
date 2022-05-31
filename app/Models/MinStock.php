@@ -8,4 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class MinStock extends Model
 {
     use HasFactory;
+
+    public function item(){
+        return $this->belongsTo(Item::class);
+    }
+    public function warehouse(){
+        return $this->belongsTo(Warehouse::class);
+    }
 }

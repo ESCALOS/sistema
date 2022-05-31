@@ -12,7 +12,6 @@ class Location extends Model
     public function sede(){
         return $this->belongsTo(Sede::class);
     }
-
     public function cecos(){
         return $this->hasMany(Ceco::class);
     }

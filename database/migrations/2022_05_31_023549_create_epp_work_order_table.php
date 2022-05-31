@@ -13,12 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('risk_epps', function (Blueprint $table) {
+        Schema::create('epp_work_order', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('risk_id')->constrained();
             $table->foreignId('epp_id')->constrained();
+            $table->foreignId('work_order')->constrained();
             $table->timestamps();
-            $table->index(['risk_id','epp_id']);
+            $table->index(['epp_id','work_order']);
         });
     }
 
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('risk_epps');
+        Schema::dropIfExists('epp_work_order');
     }
 };

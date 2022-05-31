@@ -13,12 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('system_components', function (Blueprint $table) {
+        Schema::create('component_system', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('system_id')->constrained();
             $table->foreignId('component_id')->constrained();
+            $table->foreignId('system_id')->constrained();
             $table->timestamps();
-            $table->index(['system_id','component_id']);
+            $table->index(['component_id','system_id']);
         });
     }
 
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('system_components');
+        Schema::dropIfExists('component_system');
     }
 };

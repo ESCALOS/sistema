@@ -18,4 +18,7 @@ class Component extends Model
     public function systems(){
         return $this->belongsToMany(System::class);
     }
+    public function implementModels(){
+        return $this->belongsToMany(ImplementModel::class);
+    }
 }
