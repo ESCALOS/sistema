@@ -3,20 +3,29 @@
     <div class="min-w-screen min-h-3/4 bg-gray-100 flex items-center justify-center bg-gray-100 font-sans overflow-hidden">
         <div class="w-full lg:w-5/6">
             <div class="bg-white shadow-md rounded my-6">
-                <table class="min-w-max w-full table-auto">
+                <table class="min-w-max w-full table-fixed overflow-x-auto">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="block md:hidden py-3 px-6 text-center">Tractor</th>
-                            <th class="sm:hidden py-3 px-6 text-center">
-                                <img class="flex mx-auto" src="http://sistema/img/tractor.svg" alt="tractor" width="20vh">
+                            <th class="py-3 text-center">
+                                <span class="hidden sm:block">Tractor</span>
+                                <img class="sm:hidden flex mx-auto" src="http://sistema/img/tractor.svg" alt="tractor" width="25">
                             </th>
-                            <th class="md:show py-3 px-6 text-center">Labor</th>
-                            <th class="sm:hidden py-3 px-6 text-center">
-                                <img class="flex mx-auto" src="http://sistema/img/labor.svg" alt="tractor" width="20vh">
+                            <th class="py-3 text-center">
+                                <span class="hidden sm:block">Labor</span>
+                                <img class="sm:hidden flex mx-auto" src="http://sistema/img/labor.svg" alt="labor" width="25">
                             </th>
-                            <th class="py-3 px-6 text-center">Día</th>
-                            <th class="py-3 px-6 text-center">Turno</th>
-                            <th class="py-3 px-6 text-center">Implemento</th>
+                            <th class="py-3 text-center">
+                                <span class="hidden sm:block">Día</span>
+                                <img class="sm:hidden flex mx-auto" src="http://sistema/img/date.svg" alt="date" width="28">
+                            </th>
+                            <th class="py-3 text-center">
+                                <span class="hidden sm:block">Turno</span>
+                                <img class="sm:hidden flex mx-auto" src="http://sistema/img/shift.svg" alt="shift" width="25">
+                            </th>
+                            <th class="py-3 text-center">
+                                <span class="hidden sm:block">Turno</span>
+                                <img class="sm:hidden flex mx-auto" src="http://sistema/img/actions.svg" alt="actions" width="25">
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="text-gray-600 text-sm font-light">
@@ -27,25 +36,22 @@
                                     <span class="font-medium">{{ $tractorReport->tractor->tractorModel->model }} {{ $tractorReport->tractor->tractor_number }}</span>
                                 </div>
                             </td>
-                            <td class="py-3 px-6 text-left">
+                            <td class="py-3 px-2 text-left whitespace-nowrap">
                                 <div class="flex items-center">
-                                    <div class="mr-2">
-                                        <img class="w-6 h-6 rounded-full" src="https://randomuser.me/api/portraits/men/1.jpg"/>
-                                    </div>
-                                    <span>{{ $tractorReport->labor->labor }}</span>
+                                    <span class="font-medium">{{ $tractorReport->labor->labor }}</span>
                                 </div>
                             </td>
-                            <td class="py-3 px-6 text-center">
+                            <td class="py-3 px-2 text-left whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <span class="font-medium">{{ $tractorReport->date}}</span>
+                                </div>
+                            </td>
+                            <td class="py-3 px-2 text-center">
                                 <div class="flex items-center justify-center">
-                                    <img class="w-6 h-6 rounded-full border-gray-200 border transform hover:scale-125" src="https://randomuser.me/api/portraits/men/1.jpg"/>
-                                    <img class="w-6 h-6 rounded-full border-gray-200 border -m-1 transform hover:scale-125" src="https://randomuser.me/api/portraits/women/2.jpg"/>
-                                    <img class="w-6 h-6 rounded-full border-gray-200 border -m-1 transform hover:scale-125" src="https://randomuser.me/api/portraits/men/3.jpg"/>
+                                    <img src="http://sistema/img/{{ $tractorReport->shift=='MAÑANA' ? 'sun' : 'moon'}}.svg" alt="shift" width="25">
                                 </div>
                             </td>
-                            <td class="py-3 px-6 text-center">
-                                <span class="bg-purple-200 text-purple-600 py-1 px-3 rounded-full text-xs">Active</span>
-                            </td>
-                            <td class="py-3 px-6 text-center">
+                            <td class="py-3 px-2 text-center">
                                 <div class="flex item-center justify-center">
                                     <div class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
