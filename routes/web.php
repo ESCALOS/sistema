@@ -19,13 +19,13 @@ Route::middleware([
     })->name('dashboard');
 });
 
-Route::middleware([
+/*Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified'
 ])->controller(AsistentController::class)->group(function(){
     Route::get('asistent','index')->name('asistent.index');
-});
+});*/
 
 Route::controller(OperatorController::class)->group(function(){
     Route::get('operator','index')
