@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreignId('implement_id')->constrained();
             $table->date('date');
             $table->enum('shift',['MAÑANA','NOCHE']);
-            $table->foreignId('location_id');
+            $table->foreignId('location_id')->constrained();
             $table->timestamps();
         });
     }

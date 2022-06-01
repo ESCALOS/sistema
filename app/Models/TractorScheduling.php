@@ -13,7 +13,7 @@ class TractorScheduling extends Model
         return $this->belongsTo(User::class);
     }
     public function tractor(){
-        return $this->belongs(Tractor::class);
+        return $this->belongsTo(Tractor::class);
     }
     public function labor(){
         return $this->belongsTo(Labor::class);

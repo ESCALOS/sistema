@@ -3,52 +3,55 @@
     <div class="min-w-screen min-h-3/4 bg-gray-100 flex items-center justify-center bg-gray-100 font-sans overflow-hidden">
         <div class="w-full lg:w-5/6">
             <div class="bg-white shadow-md rounded my-6">
-                <table class="min-w-max w-full table-fixed overflow-x-auto">
+                <div class="px-6 py-4">
+                    <x-jet-input class="w-full" placeholder="Escriba el turno" type="text" wire:model="search"/>
+                </div>
+                <table class="min-w-max w-full table-auto overflow-x-auto">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                             <th class="py-3 text-center">
                                 <span class="hidden sm:block">Tractor</span>
-                                <img class="sm:hidden flex mx-auto" src="http://sistema/img/tractor.svg" alt="tractor" width="25">
+                                <img class="sm:hidden flex mx-auto" src="img/tractor.svg" alt="tractor" width="25">
                             </th>
                             <th class="py-3 text-center">
                                 <span class="hidden sm:block">Labor</span>
-                                <img class="sm:hidden flex mx-auto" src="http://sistema/img/labor.svg" alt="labor" width="25">
+                                <img class="sm:hidden flex mx-auto" src="img/labor.svg" alt="labor" width="25">
                             </th>
                             <th class="py-3 text-center">
                                 <span class="hidden sm:block">Día</span>
-                                <img class="sm:hidden flex mx-auto" src="http://sistema/img/date.svg" alt="date" width="28">
+                                <img class="sm:hidden flex mx-auto" src="img/date.svg" alt="date" width="28">
                             </th>
                             <th class="py-3 text-center">
                                 <span class="hidden sm:block">Turno</span>
-                                <img class="sm:hidden flex mx-auto" src="http://sistema/img/shift.svg" alt="shift" width="25">
+                                <img class="sm:hidden flex mx-auto" src="img/shift.svg" alt="shift" width="25">
                             </th>
                             <th class="py-3 text-center">
                                 <span class="hidden sm:block">Turno</span>
-                                <img class="sm:hidden flex mx-auto" src="http://sistema/img/actions.svg" alt="actions" width="25">
+                                <img class="sm:hidden flex mx-auto" src="img/actions.svg" alt="actions" width="25">
                             </th>
                         </tr>
                     </thead>
                     <tbody class="text-gray-600 text-sm font-light">
                         @foreach ($tractorReports as $tractorReport)
                         <tr class="border-b border-gray-200 hover:bg-gray-100">
-                            <td class="py-3 px-6 text-left whitespace-nowrap">
+                            <td class="py-3 px-6 text-left">
                                 <div class="flex items-center">
                                     <span class="font-medium">{{ $tractorReport->tractor->tractorModel->model }} {{ $tractorReport->tractor->tractor_number }}</span>
                                 </div>
                             </td>
-                            <td class="py-3 px-2 text-left whitespace-nowrap">
+                            <td class="py-3 px-2 text-left">
                                 <div class="flex items-center">
                                     <span class="font-medium">{{ $tractorReport->labor->labor }}</span>
                                 </div>
                             </td>
-                            <td class="py-3 px-2 text-left whitespace-nowrap">
+                            <td class="py-3 px-2 text-left">
                                 <div class="flex items-center">
                                     <span class="font-medium">{{ $tractorReport->date}}</span>
                                 </div>
                             </td>
                             <td class="py-3 px-2 text-center">
                                 <div class="flex items-center justify-center">
-                                    <img src="http://sistema/img/{{ $tractorReport->shift=='MAÑANA' ? 'sun' : 'moon'}}.svg" alt="shift" width="25">
+                                    <img src="img/{{ $tractorReport->shift=='MAÑANA' ? 'sun' : 'moon'}}.svg" alt="shift" width="25">
                                 </div>
                             </td>
                             <td class="py-3 px-2 text-center">

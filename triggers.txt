@@ -1,0 +1,2 @@
+CREATE TRIGGER `aumenta_monto_ceco` BEFORE INSERT ON `ceco_allocation_amounts`
+ FOR EACH ROW UPDATE cecos SET amount = amount + new.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id
