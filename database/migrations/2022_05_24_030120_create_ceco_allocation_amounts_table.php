@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('ceco_id')->constrained();
             $table->decimal('allocation_amount',8,2);
+            $table->boolean('is_canceled')->default(false);
             $table->date('date');
             $table->timestamps();
         });

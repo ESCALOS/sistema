@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->foreignId('tractor_id')->constrained();
             $table->foreignId('labor_id')->constrained();
-            $table->string('correlative',30);
+            $table->string('correlative',30)->unique();
             $table->date('date');
             $table->enum('shift',['MAÑANA','NOCHE']);
             $table->foreignId('implement_id')->constrained();

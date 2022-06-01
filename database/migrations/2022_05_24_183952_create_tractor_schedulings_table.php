@@ -22,6 +22,7 @@ return new class extends Migration
             $table->date('date');
             $table->enum('shift',['MAÑANA','NOCHE']);
             $table->foreignId('location_id')->constrained();
+            $table->boolean('is_canceled')->default(false);
             $table->timestamps();
         });
     }

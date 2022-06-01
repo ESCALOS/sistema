@@ -20,6 +20,7 @@ return new class extends Migration
             $table->enum('state',['PENDIENTE','CERRADO','VALIDADO','RECHAZADO']);
             $table->unsignedBigInteger('validate_by');
             $table->foreign('validate_by')->references('id')->on('users');
+            $table->boolean('is_canceled')->default(false);
             $table->timestamps();
         });
     }

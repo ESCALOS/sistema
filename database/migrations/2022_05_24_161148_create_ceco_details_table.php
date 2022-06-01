@@ -20,6 +20,7 @@ return new class extends Migration
             $table->foreignId('implement_id')->constrained();
             $table->foreignId('item_id')->constrained();
             $table->decimal('price',8,2);
+            $table->boolean('is_canceled')->default(false);
             $table->timestamps();
         });
     }
