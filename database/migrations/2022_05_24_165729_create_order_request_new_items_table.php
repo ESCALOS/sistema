@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_request_id')->constrained();
             $table->string('new_item');
-            $table->double('quantity');
+            $table->decimal('quantity',8,2);
             $table->string('brand');
             $table->text('datasheet');
             $table->string('image',2048);

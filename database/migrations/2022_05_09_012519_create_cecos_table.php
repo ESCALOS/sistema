@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('code')->unique();
             $table->string('description');
             $table->foreignId('location_id')->constrained();
-            $table->double('amount');
+            $table->decimal('amount',8,2);
             $table->timestamps();
         });
     }

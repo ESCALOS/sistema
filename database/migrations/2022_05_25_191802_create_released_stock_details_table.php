@@ -18,8 +18,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->foreignId('item_id')->constrained();
             $table->enum('movement',['INGRESO','SALIDA']);
-            $table->double('quantity');
-            $table->double('price');
+            $table->decimal('quantity',8,2);
+            $table->decimal('price',8,2);
             $table->foreignId('warehouse_id')->constrained();
             $table->foreignId('operator_assigned_stock_id')->constrained();
             $table->timestamps();

@@ -22,9 +22,9 @@ return new class extends Migration
             $table->date('date');
             $table->enum('shift',['MAÑANA','NOCHE']);
             $table->foreignId('implement_id')->constrained();
-            $table->double('hour_meter_start');
-            $table->double('hour_meter_end');
-            $table->double('hours');
+            $table->decimal('hour_meter_start',8,2);
+            $table->decimal('hour_meter_end',8,2);
+            $table->decimal('hours',8,2);
             $table->text('observations');
             $table->boolean('is_canceled')->default(false);
             $table->timestamps();

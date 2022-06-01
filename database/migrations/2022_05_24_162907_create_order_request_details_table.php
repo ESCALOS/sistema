@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_request_id')->constrained();
             $table->foreignId('item_id')->constrained();
-            $table->double('quantity')->constrained();
+            $table->decimal('quantity',8,2);
             $table->enum('state',['PENDIENTE','VALIDADO','CONFIRMADO']);
             $table->text('observation');
             $table->timestamps();

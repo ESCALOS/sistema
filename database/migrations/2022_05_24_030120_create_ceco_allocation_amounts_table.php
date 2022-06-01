@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('ceco_allocation_amounts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('ceco_id')->constrained();
-            $table->double('allocation_amount');
+            $table->decimal('allocation_amount',8,2);
             $table->date('date');
             $table->timestamps();
         });

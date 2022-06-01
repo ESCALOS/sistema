@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->foreignId('implement_id')->constrained();
             $table->foreignId('item_id')->constrained();
-            $table->double('price');
+            $table->decimal('price',8,2);
             $table->timestamps();
         });
     }

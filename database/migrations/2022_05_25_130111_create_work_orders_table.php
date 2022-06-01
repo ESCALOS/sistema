@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('implement_id')->constrained();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('location_id')->constrained();
-            $table->double('estimated_price');
+            $table->decimal('estimated_price',8,2);
             $table->enum('maintenance',[1,2,3]);
             $table->timestamps();
         });

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('item')->unique();
             $table->foreignId('brand_id')->constrained();
             $table->foreignId('measurement_unit_id')->constrained();
-            $table->double('estimated_price');
+            $table->decimal('estimated_price',8,2);
             $table->enum('type',['FUNGIBLE','COMPONENTE','PIEZA','HERRAMIENTA']);
             $table->boolean('is_active')->default(true);
             $table->timestamps();

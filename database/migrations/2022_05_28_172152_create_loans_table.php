@@ -19,8 +19,8 @@ return new class extends Migration
             $table->foreign('lender_stock_id')->references('id')->on('users');
             $table->unsignedBigInteger('borrower_stock_id');
             $table->foreign('borrower_stock_id')->references('id')->on('users');
-            $table->double('quantity');
-            $table->double('price');
+            $table->decimal('quantity',8,2);
+            $table->decimal('price',8,2);
             $table->timestamps();
         });
     }

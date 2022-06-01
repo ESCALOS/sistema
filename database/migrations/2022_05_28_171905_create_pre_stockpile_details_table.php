@@ -17,8 +17,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('pre_stockpile')->constrained();
             $table->foreignId('item_id')->constrained();
-            $table->double('quantity');
-            $table->double('precio');
+            $table->decimal('quantity',8,2);
+            $table->decimal('precio',8,2);
             $table->foreignId('warehouse_id')->constrained();
             $table->timestamps();
         });
