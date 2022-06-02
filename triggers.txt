@@ -3,7 +3,11 @@
 CREATE TRIGGER `aumenta_monto_ceco` AFTER INSERT ON `ceco_allocation_amounts`
  FOR EACH ROW UPDATE cecos SET amount = amount + new.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id
  /*--------Actualizar y Disminuir----------*/
-
+IF(new.is_canceled) THEN
+UPDATE cecos SET amount = amount-old.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id;
+ELSE
+UPDATE cecos SET amount = amount + new.allocation_amount-old.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id;
+END IF
 
 
 /*--------MODIFICAR TABLA TRACTOR E IMPLEMENTO-------*/
