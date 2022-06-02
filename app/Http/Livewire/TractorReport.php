@@ -7,12 +7,15 @@ use App\Models\Labor;
 use App\Models\Tractor;
 use App\Models\TractorReport as ModelsTractorReport;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class TractorReport extends Component
 {
-    public $tractor;
-    public $labor;
-    public $implement;
+    use WithPagination;
+
+    public $stractor;
+    public $slabor;
+    public $simplement;
 
     public function render()
     {
@@ -22,16 +25,16 @@ class TractorReport extends Component
 
         $tractorReports = new ModelsTractorReport;
 
-        if($this->tractor > 0){
-            $tractorReports = $tractorReports->where('tractor_id',$this->tractor);
+        if($this->stractor > 0){
+            $tractorReports = $tractorReports->where('tractor_id',$this->stractor);
         }
 
-        if($this->labor > 0){
-            $tractorReports = $tractorReports->where('labor_id',$this->labor);
+        if($this->slabor > 0){
+            $tractorReports = $tractorReports->where('labor_id',$this->slabor);
         }
 
-        if($this->implement > 0){
-            $tractorReports = $tractorReports->where('implement_id',$this->implement);
+        if($this->simplement > 0){
+            $tractorReports = $tractorReports->where('implement_id',$this->simplement);
         }
 
         $tractorReports = $tractorReports->paginate(7);

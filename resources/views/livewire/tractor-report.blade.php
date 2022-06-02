@@ -1,11 +1,11 @@
-<div class="overflow-x-scroll">
+<div>
     <div class="min-w-screen min-h-3/4 flex items-center justify-center bg-gray-100 font-sans overflow-y-hidden">
         <div class="w-full lg:w-5/6">
             <div class="bg-white shadow-md rounded my-6">
-                <div class="px-6 py-4" wire:ignore>
-                    <div>
-                        <label for="tractor">Tractor:&nbsp;&nbsp;</label>
-                        <select id="tractor" class="select2" wire:model='tractor'>
+                <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3" wire:ignore>
+                    <div class="px-6 py-2">
+                        <label for="stractor">Tractor:</label><br>
+                        <select id="stractor" class="select2" wire:model='stractor'>
                             <option value="">Seleccione el tractor</option>
                             @foreach ($tractors as $tractor)
                                 <option value="{{ $tractor->id }}">{{ $tractor->tractorModel->model }}
@@ -13,27 +13,30 @@
                             @endforeach
                         </select>
                     </div>
-                    <div>
-                        <label for="labor">Labor:&nbsp;&nbsp;&nbsp;&nbsp;</label>
-                        <select id="labor" class="select2" wire:model='labor'>
+                    <div class="px-6 py-2">
+                        <label for="slabor">Labor:</label><br>
+                        <select id="slabor" class="select2" wire:model='slabor'>
                             <option value="">Seleccione la labor</option>
                             @foreach ($labors as $labor)
                                 <option value="{{ $labor->id }}">{{ $labor->labor }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div>
-                        <label for="implement">Implemento:&nbsp;&nbsp;&nbsp;&nbsp;</label>
-                        <select id="implement" class="select2" wire:model='implement'>
+                    <div class="px-6 py-2">
+                        <label for="simplement">Implemento:</label><br>
+                        <select id="simplement" class="select2" wire:model='simplement'>
                             <option value="">Seleccione el implemento</option>
                             @foreach ($implements as $implement)
                                 <option value="{{ $implement->id }}">{{ $implement->implementModel->implement_model }} {{ $implement->implement_number }}</option>
                             @endforeach
                         </select>
                     </div>
-
+                    <div class="px-6 pt-4 py-2">
+                        @livewire('create-tractor-report')
+                    </div>
                 </div>
-                <div class="px-6">
+            </div>
+            <div class="p-6">
                     @if ($tractorReports->count())
                         <table class="min-w-max w-full table-fixed overflow-x-scroll">
                             <thead>
@@ -127,8 +130,9 @@
                             No existe ningún registro coincidente
                         </div>
                     @endif
-                    <div class="px-4 py-4">
-                        {{ $tractorReports->links() }}
+                        <div class="px-4 py-4">
+                            {{ $tractorReports->links() }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -137,14 +141,14 @@
     <script>
         document.addEventListener('livewire:load', function() {
             $('.select2').select2();
-            $('#tractor').on('change', function() {
-                @this.set('tractor', this.value);
+            $('#stractor').on('change', function() {
+                @this.set('stractor', this.value);
             });
-            $('#labor').on('change', function() {
-                @this.set('labor', this.value);
+            $('#slabor').on('change', function() {
+                @this.set('slabor', this.value);
             });
-            $('#implement').on('change', function() {
-                @this.set('implement', this.value);
+            $('#simplement').on('change', function() {
+                @this.set('simplement', this.value);
             });
         })
 

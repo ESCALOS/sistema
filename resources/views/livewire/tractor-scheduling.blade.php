@@ -1,8 +1,8 @@
-<div class="overflow-x-scroll">
+<div>
     <div class="min-w-screen min-h-3/4 flex items-center justify-center bg-gray-100 font-sans overflow-y-hidden">
         <div class="w-full lg:w-5/6">
             <div class="bg-white shadow-md rounded my-6">
-                <div class="px-6 py-4" wire:ignore>
+                <div class="px-6 py-4 grip grip-cols-4" wire:ignore>
                     <div>
                         <label for="tractor">Tractor:&nbsp;&nbsp;</label>
                         <select id="tractor" class="select2" wire:model='tractor'>
