@@ -10,9 +10,9 @@ use Livewire\Component;
 
 class TractorScheduling extends Component
 {
-    public $tractor;
-    public $labor;
-    public $implement;
+    public $stractor;
+    public $slabor;
+    public $simplement;
 
     public function render()
     {
@@ -22,16 +22,16 @@ class TractorScheduling extends Component
 
         $tractorSchedulings = new ModelsTractorScheduling;
 
-        if($this->tractor > 0){
-            $tractorSchedulings = $tractorSchedulings->where('tractor_id',$this->tractor);
+        if($this->stractor > 0){
+            $tractorSchedulings = $tractorSchedulings->where('tractor_id',$this->stractor);
         }
 
-        if($this->labor > 0){
-            $tractorSchedulings = $tractorSchedulings->where('labor_id',$this->labor);
+        if($this->slabor > 0){
+            $tractorSchedulings = $tractorSchedulings->where('labor_id',$this->slabor);
         }
 
-        if($this->implement > 0){
-            $tractorSchedulings = $tractorSchedulings->where('implement_id',$this->implement);
+        if($this->simplement > 0){
+            $tractorSchedulings = $tractorSchedulings->where('implement_id',$this->simplement);
         }
 
         $tractorSchedulings = $tractorSchedulings->paginate(7);

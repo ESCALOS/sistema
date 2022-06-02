@@ -19,7 +19,7 @@ class OrderRequestFactory extends Factory
         return [
             'user_id' => User::all()->random()->id,
             'implement_id' => Implement::all()->random()->id,
-            'state' => $this->faker->randomElement(['PENDIENTE','CERRADO','VALIDADO','RECHAZADO']),
+            'state' => "PENDIENTE",
             'validate_by' => User::all()->random()->id,
         ];
     }

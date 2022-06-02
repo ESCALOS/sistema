@@ -20,7 +20,7 @@ class OrderRequestDetailFactory extends Factory
             'order_request_id' => OrderRequest::all()->random()->id,
             'item_id' => Item::all()->random()->id,
             'quantity' => $this->faker->randomFloat(4,0,300),
-            'state' => $this->faker->randomElement(['PENDIENTE','VALIDADO','CONFIRMADO']),
+            'state' => "PENDIENTE",
             'observation' => $this->faker->realText($maxNbChars = 200, $indexSize = 2),
         ];
     }

@@ -35,3 +35,28 @@ UPDATE tractors SET hour_meter = hour_meter-(old.hours+new.hours), updated_at = 
 UPDATE implements SET hours = hours+(old.hours-new.hours)*0.85, updated_at = CURRENT_TIMESTAMP WHERE id = new.implement_id;
 END IF;
 END
+
+
+/*------------STOCK MÍNIMO--------------------------------*/
+/*-----------INGRESO Y SALIDA------------------------------*/
+CREATE TRIGGER `aumentar_stock_minimo` AFTER INSERT ON `min_stock_details`
+ FOR EACH ROW IF(new.movement="INGRESO") THEN
+UPDATE min_stocks SET current_quantity = current_quantity + new.quantity, price = price + new.price WHERE item_id = new.item_id AND warehouse_id = new.warehouse_id;
+ELSE
+UPDATE min_stocks SET current_quantity = current_quantity - new.quantity, price = price - new.price WHERE item_id = new.item_id AND warehouse_id = new.warehouse_id;
+END IF
+/*--------ACTUALIZAR----------------------------------------*/
+CREATE TRIGGER `actualizar_aumento_stock_minimo` AFTER UPDATE ON `min_stock_details`
+ FOR EACH ROW IF(new.movement="INGRESO") THEN
+IF(new.is_canceled) THEN
+UPDATE min_stocks SET current_quantity = current_quantity - old.quantity, price = price - old.price WHERE item_id = old.item_id AND warehouse_id = old.warehouse_id;
+ELSE
+UPDATE min_stocks SET current_quantity = current_quantity - old.quantity+new.quantity, price = price - old.price + new.price WHERE item_id = new.item_id AND warehouse_id = new.warehouse_id;
+END IF;
+ELSE
+IF(new.is_canceled) THEN
+UPDATE min_stocks SET current_quantity = current_quantity + new.quantity, price = price + new.price WHERE item_id = new.item_id AND warehouse_id = new.warehouse_id;
+ELSE
+UPDATE min_stocks SET current_quantity = current_quantity + old.quantity-new.quantity, price = price + old.price - new.price WHERE item_id = new.item_id AND warehouse_id = new.warehouse_id;
+END IF;
+END IF

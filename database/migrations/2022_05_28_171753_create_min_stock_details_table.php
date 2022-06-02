@@ -15,12 +15,15 @@ return new class extends Migration
     {
         Schema::create('min_stock_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('min_stock_id')->constrained();
+            $table->foreignId('item_id')->constrained();
+            $table->foreignId('warehouse_id')-> constrained();
             $table->foreignId('user_id')->constrained();
             $table->enum('movement',['INGRESO','SALIDA'])->constrained();
             $table->decimal('quantity',8,2);
             $table->decimal('price',8,2);
-            $table->foreignId('implement_id')->constrained()->nullable();
+            $table->unsignedBigInteger('implement_id')->nullable();
+            $table->foreign('implement_id')->references('id')->on('implements');
+            $table->boolean('is_canceled')->default(0);
             $table->timestamps();
         });
     }
