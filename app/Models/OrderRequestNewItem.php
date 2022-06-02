@@ -9,6 +9,8 @@ class OrderRequestNewItem extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     public function orderRequest(){
         return $this->belongs(OrderRequest::class);
     }

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class WorkOrder extends Model
 {
     use HasFactory;
+
+    protected $guarded = [];
     
     public function implement(){
         return $this->belongsTo(Implement::class);

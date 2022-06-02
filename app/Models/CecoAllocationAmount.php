@@ -9,6 +9,8 @@ class CecoAllocationAmount extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     public function ceco(){
         return $this->belognsTo(Ceco::class);
     }

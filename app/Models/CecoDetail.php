@@ -9,6 +9,8 @@ class CecoDetail extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     public function ceco(){
         return $this->belongsTo(Ceco::class);
     }

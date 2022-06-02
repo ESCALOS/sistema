@@ -9,6 +9,8 @@ class Task extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     public function risks(){
         return $this->belongsToMany(Risk::class);
     }

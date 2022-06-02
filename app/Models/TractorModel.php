@@ -9,6 +9,8 @@ class TractorModel extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     public function tractors(){
         return $this->hasMany(Tractor::class);
     }

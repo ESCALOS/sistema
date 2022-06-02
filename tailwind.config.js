@@ -14,9 +14,6 @@ module.exports = {
                 sans: ['Nunito', ...defaultTheme.fontFamily.sans],
             },
         },
-        minHeight: {
-            '3/4' : '75%'
-        }
     },
 
     plugins: [require('@tailwindcss/forms'), require('@tailwindcss/typography')],

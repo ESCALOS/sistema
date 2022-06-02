@@ -9,6 +9,8 @@ class Warehouse extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     public function operatorAssignedStock(){
         return $this->hasMany(OperatorAssignedStock::class);
     }

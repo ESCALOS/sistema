@@ -9,6 +9,8 @@ class Tractor extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     public function tractorModel(){
         return $this->belongsTo(TractorModel::class);
     }

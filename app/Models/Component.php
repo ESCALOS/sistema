@@ -9,6 +9,8 @@ class Component extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     public function item(){
         return $this->hasOne(Item::class);
     }

@@ -9,6 +9,8 @@ class WorkOrderDetail extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     public function workOrder(){
         return $this->belongsTo(WorkOrder::class);
     }

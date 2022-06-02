@@ -9,6 +9,8 @@ class Risk extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     public function epps(){
         return $this->belongsToMany(Epp::class);
     }

@@ -9,6 +9,8 @@ class ImplementModel extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     public function implements(){
         return $this->hasMany(Implement::class);
     }

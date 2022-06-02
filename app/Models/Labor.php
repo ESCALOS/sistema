@@ -9,6 +9,8 @@ class Labor extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     public function tractorReport(){
         return $this->hasMany(TractorReport::class);
     }

@@ -9,6 +9,8 @@ class Location extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     public function sede(){
         return $this->belongsTo(Sede::class);
     }
