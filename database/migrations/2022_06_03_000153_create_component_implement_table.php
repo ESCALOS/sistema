@@ -18,7 +18,6 @@ return new class extends Migration
             $table->foreignId('component_id')->constrained();
             $table->foreignId('implement_id')->constrained();
             $table->decimal('hours', 8, 2);
-            $table->decimal('lifespan', 8, 2);
             $table->enum('state',['PENDIENTE','ORDENADO','CONCLUIDO'])->default('PENDIENTE');
             $table->timestamps();
         });

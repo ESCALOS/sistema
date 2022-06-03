@@ -25,7 +25,7 @@ return new class extends Migration
             $table->decimal('hour_meter_start',8,2);
             $table->decimal('hour_meter_end',8,2);
             $table->decimal('hours',8,2);
-            $table->text('observations');
+            $table->text('observations')->nullable();
             $table->boolean('is_canceled')->default(false);
             $table->timestamps();
         });

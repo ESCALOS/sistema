@@ -37,7 +37,7 @@ class TractorReport extends Component
             $tractorReports = $tractorReports->where('implement_id',$this->simplement);
         }
 
-        $tractorReports = $tractorReports->paginate(7);
+        $tractorReports = $tractorReports->orderBy('id','desc')->paginate(7);
 
 
 

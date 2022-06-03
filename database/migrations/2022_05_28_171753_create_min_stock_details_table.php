@@ -21,8 +21,7 @@ return new class extends Migration
             $table->enum('movement',['INGRESO','SALIDA'])->constrained();
             $table->decimal('quantity',8,2);
             $table->decimal('price',8,2);
-            $table->unsignedBigInteger('implement_id')->nullable();
-            $table->foreign('implement_id')->references('id')->on('implements');
+            $table->foreignId('implement_id')->nullable();
             $table->boolean('is_canceled')->default(0);
             $table->timestamps();
         });

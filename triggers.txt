@@ -61,7 +61,8 @@ ELSE
 UPDATE min_stocks SET current_quantity = current_quantity + old.quantity-new.quantity, price = price + old.price - new.price WHERE item_id = new.item_id AND warehouse_id = new.warehouse_id;
 END IF;
 END IF
-/*----------------Aumentar horas en la tabla component_implements los componentes -----------*/
-
+/*----------------Actualizar horas en la tabla component_implements los componentes -----------*/
+CREATE TRIGGER `actualizar_horas_componente` AFTER UPDATE ON `implements`
+ FOR EACH ROW UPDATE component_implement SET hours = hours + (new.hours-old.hours) WHERE implements_id = new.id
 
 /*---------------Colocar los componentes caducados en la tabla expired_components-------------*/
