@@ -21,7 +21,7 @@ class OrderRequestDetailFactory extends Factory
             'item_id' => Item::all()->random()->id,
             'quantity' => $this->faker->randomFloat(4,0,300),
             'state' => "PENDIENTE",
-            'observation' => $this->faker->realText($maxNbChars = 200, $indexSize = 2),
+            'observation' => $this->faker->realText(200,2),
         ];
     }
 }

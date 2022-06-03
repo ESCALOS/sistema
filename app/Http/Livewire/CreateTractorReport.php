@@ -11,6 +11,13 @@ use Livewire\Component;
 class CreateTractorReport extends Component
 {
     public $open = "false";
+    public $correlative;
+    public $date;
+    public $shift;
+    public $user;
+    public $tractor;
+    public $labor;
+    public $implement;
 
     public function render()
     {

@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Task;
 use App\Models\WorkOrder;
+use App\Models\WorkOrderDetail;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class WorkOrderDetailFactory extends Factory
 {
-    protected $model = \App\Models\WorkOrderDetail::class;
+    protected $model = WorkOrderDetail::class;
 
     public function definition()
     {

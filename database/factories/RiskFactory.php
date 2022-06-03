@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Risk;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class RiskFactory extends Factory
 {
-    protected $model = \App\Models\Risk::class;
+    protected $model = Risk::class;
 
     public function definition()
     {

@@ -20,4 +20,7 @@ class Ceco extends Model
     public function implementModels(){
         return $this->hasMany(ImplementModel::class);
     }
+    public function cecoAllocationAmount(){
+        return $this->hasMany(CecoAllocationAmount::class);
+    }
 }

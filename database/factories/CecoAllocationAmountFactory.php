@@ -17,8 +17,8 @@ class CecoAllocationAmountFactory extends Factory
     {
         return [
             'ceco_id' => Ceco::all()->random()->id,
-            'allocation_amount' => $this->faker->randomFloat($nbMaxDecimals=2,$min=2000,4000),
-            'date' => $this->faker->date($format='Y-m-d',$max='now'),
+            'allocation_amount' => $this->faker->randomFloat(2,2000,4000),
+            'date' => $this->faker->date('Y-m-d','now'),
         ];
     }
 }

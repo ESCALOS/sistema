@@ -3,6 +3,10 @@
 namespace Database\Factories;
 
 use App\Models\Implement;
+use App\Models\Item;
+use App\Models\MinStockDetail;
+use App\Models\User;
+use App\Models\Warehouse;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -10,17 +14,18 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class MinStockDetailFactory extends Factory
 {
-    protected $model = \App\Models\MinStockDetail::class;
+    protected $model = MinStockDetail::class;
 
     public function definition()
     {
         return [
-            'min_stock_id' => \App\Models\MinStock::all()->random()->id,
-            'user_id' => \App\Models\User::all()->random()->id,
+            'item_id' => Item::all()->random()->id,
+            'warehouse_id' => Warehouse::all()->random()->id,
+            'user_id' => User::all()->random()->id,
             'movement' => $this->faker->randomElement(['INGRESO','SALIDA']),
             'quantity' => $this->faker->randomNumber(2),
             'price' => $this->faker->randomElement([100,200,500,1000,1500]),
-            'implement' => Implement::all()->random()->id,
+            'implement_id' => Implement::all()->random()->id,
         ];
     }
 }

@@ -14,6 +14,7 @@ use App\Models\Labor;
 use App\Models\Location;
 use App\Models\MeasurementUnit;
 use App\Models\MinStock;
+use App\Models\MinStockDetail;
 use App\Models\OrderRequest;
 use App\Models\OrderRequestDetail;
 use App\Models\Risk;
@@ -36,7 +37,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        \App\Models\User::factory(30)->create();
+        /*\App\Models\User::factory(30)->create();
         Zone::factory(3)->create();
         Sede::factory(8)->create();
         Location::factory(11)->create();
@@ -56,7 +57,7 @@ class DatabaseSeeder extends Seeder
         Task::factory(50)->create();
         Risk::factory(20)->create();
         Warehouse::factory(8)->create();
-        WorkOrder::factory(50)->hasWorkOrderDetails(10)->create();
-        MinStock::factory(20)->hasMinStockDetail(10)->create();
+        WorkOrder::factory(50)->hasWorkOrderDetails(10)->create();*/
+        MinStockDetail::factory(10)->create();
     }
 }

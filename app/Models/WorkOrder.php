@@ -20,7 +20,7 @@ class WorkOrder extends Model
     public function location(){
         return $this->belongsTo(Location::class);
     }
-    public function workOrderDetail(){
+    public function workOrderDetails(){
         return $this->hasMany(WorkOrderDetail::class);
     }
     public function epps(){

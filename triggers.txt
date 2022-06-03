@@ -1,13 +1,14 @@
 /*--------------MODIFICAR TABLA CECO------------------------------------------------*/
 /*-----Aumentar---------------*/
-CREATE TRIGGER `aumenta_monto_ceco` AFTER INSERT ON `ceco_allocation_amounts`
+CREATE TRIGGER `aumentar_monto_ceco` AFTER INSERT ON `ceco_allocation_amounts`
  FOR EACH ROW UPDATE cecos SET amount = amount + new.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id
  /*--------Actualizar y Disminuir----------*/
-IF(new.is_canceled) THEN
-UPDATE cecos SET amount = amount-old.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id;
-ELSE
-UPDATE cecos SET amount = amount + new.allocation_amount-old.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id;
-END IF
+CREATE TRIGGER `actualizar_monto_ceco` AFTER UPDATE ON `ceco_allocation_amounts`
+ FOR EACH ROW IF(new.is_canceled) THEN 
+ UPDATE cecos SET amount = amount-old.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id; 
+ ELSE 
+ UPDATE cecos SET amount = amount + new.allocation_amount-old.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id; 
+ END IF
 
 
 /*--------MODIFICAR TABLA TRACTOR E IMPLEMENTO-------*/
@@ -60,3 +61,7 @@ ELSE
 UPDATE min_stocks SET current_quantity = current_quantity + old.quantity-new.quantity, price = price + old.price - new.price WHERE item_id = new.item_id AND warehouse_id = new.warehouse_id;
 END IF;
 END IF
+/*----------------Aumentar horas en la tabla component_implements los componentes -----------*/
+
+
+/*---------------Colocar los componentes caducados en la tabla expired_components-------------*/
