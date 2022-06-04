@@ -7,9 +7,12 @@ use App\Models\Labor;
 use App\Models\Tractor;
 use App\Models\TractorScheduling as ModelsTractorScheduling;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class TractorScheduling extends Component
 {
+    use WithPagination;
+
     public $idSchedule = 0;
     public $stractor;
     public $slabor;
@@ -20,6 +23,14 @@ class TractorScheduling extends Component
     public function seleccionar($id){
         $this->idSchedule = $id;
         $this->emit('capturar',$this->idSchedule);
+    }
+
+    public function anular(){
+        $scheduling = ModelsTractorScheduling::find($this->idSchedule);
+        $scheduling->is_canceled = 1;
+        $scheduling->save();
+        $this->idSchedule = 0;
+        $this->render();
     }
 
     public function render()
