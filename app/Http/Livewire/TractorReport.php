@@ -22,6 +22,7 @@ class TractorReport extends Component
 
     public function seleccionar($id){
         $this->idReporte = $id;
+        $this->emitTo('editTractorReport', 'save',[$this->idReporte]);
     }
 
     public function render()
