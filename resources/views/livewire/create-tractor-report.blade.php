@@ -9,13 +9,6 @@
         <x-slot name="content">
 
             <div class="grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 2 span/ 2 span">
-                    <x-jet-label>Correlativo:</x-jet-label>
-                    <x-jet-input type="text" style="height:30px;width: 100%" wire:model.defer="correlative" />
-
-                    <x-jet-input-error for="correlative"/>
-
-                </div>
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                     <x-jet-label>Día:</x-jet-label>
                     <x-jet-input type="date" min="2022-05-18" style="height:30px;width: 100%" wire:model.defer="date"/>
@@ -31,6 +24,25 @@
                     </select>
 
                     <x-jet-input-error for="shift"/>
+
+                </div>
+                <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
+                    <x-jet-label>Ubicación:</x-jet-label>
+                    <select id="location" class="form-select" style="width: 100%" wire:model.defer='location'>
+                        <option value="">Seleccione una opción</option>
+                        @foreach ($locations as $location)
+                            <option value="{{ $location->id }}">{{ $location->location }}</option>
+                        @endforeach
+                    </select>
+
+                    <x-jet-input-error for="location"/>
+
+                </div>
+                <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
+                    <x-jet-label>Correlativo:</x-jet-label>
+                    <x-jet-input type="text" style="height:30px;width: 100%" wire:model.defer="correlative" />
+
+                    <x-jet-input-error for="correlative"/>
 
                 </div>
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
@@ -96,7 +108,7 @@
                 </div>
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 2 span/ 2 span">
                     <x-jet-label>Observaciones:</x-jet-label>
-                    <textarea class="form-control w-full text-sm" rows=6 wire:model.defer="observations"></textarea>
+                    <textarea class="form-control w-full text-sm" rows=5 wire:model.defer="observations"></textarea>
                 </div>
             </div>
         </x-slot>

@@ -4,15 +4,16 @@ namespace App\Http\Livewire;
 
 use App\Models\Implement;
 use App\Models\Labor;
+use App\Models\Location;
 use App\Models\Tractor;
 use App\Models\TractorReport;
 use App\Models\User;
 use Livewire\Component;
-use phpDocumentor\Reflection\Types\This;
 
 class CreateTractorReport extends Component
 {
     public $open = false;
+    public $location;
     public $correlative;
     public $date;
     public $shift = "MAÑANA";
@@ -25,6 +26,7 @@ class CreateTractorReport extends Component
     public $observations = "";
 
     protected $rules = [
+        'location' => 'required|exists:locations,id',
         'correlative' => 'required',
         'date' => 'required|date|date_format:Y-m-d',
         'shift' => 'required',
@@ -51,11 +53,12 @@ class CreateTractorReport extends Component
             'hour_meter_start' => $hour_meter_start,
             'hour_meter_end' => $this->hour_meter_end,
             'hours' => $this->hour_meter_end - $hour_meter_start,
-            'observations' => $this->observations
+            'observations' => $this->observations,
+            'location_id' => $this->location,
         ]);
-        $this->reset(['correlative','date','shift','user','tractor','labor','implement','horometro_inicial','hour_meter_end','observations']);
+        $this->reset(['correlative','user','tractor','labor','implement','horometro_inicial','hour_meter_end','observations']);
 
-        $this->emit('renderTractorReport');
+        $this->emit('render');
         $this->emit('alert');
     }
 
@@ -65,6 +68,7 @@ class CreateTractorReport extends Component
         $labors = Labor::all();
         $implements = Implement::all();
         $users = User::all();
+        $locations = Location::all();
 
         if($this->tractor > 0){
             $tractor = Tractor::find($this->tractor);
@@ -73,6 +77,6 @@ class CreateTractorReport extends Component
             $this->horometro_inicial = "";
         }
 
-        return view('livewire.create-tractor-report',compact('tractors','labors','implements','users'));
+        return view('livewire.create-tractor-report',compact('tractors','labors','implements','users','locations'));
     }
 }

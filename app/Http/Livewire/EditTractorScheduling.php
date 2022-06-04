@@ -9,7 +9,7 @@ use App\Models\TractorReport;
 use App\Models\User;
 use Livewire\Component;
 
-class EditTractorReport extends Component
+class EditTractorScheduling extends Component
 {
     public $open_edit = false;
     public $idReport = 0;
@@ -42,6 +42,6 @@ class EditTractorReport extends Component
             $report = new TractorReport();
         }
 
-        return view('livewire.edit-tractor-report',compact('users','tractors','labors','implements','report'));
+        return view('livewire.edit-tractor-scheduling',compact('users','tractors','labors','implements','report'));
     }
 }

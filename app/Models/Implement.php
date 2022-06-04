@@ -26,4 +26,13 @@ class Implement extends Model
     public function workOrder(){
         return $this->hasMany(WorkOrder::class);
     }
+    public function tractorScheduling(){
+        return $this->hasMany(TractorScheduling::class);
+    }
+    public function minStockDetails(){
+        return $this->hasMany(MinStockDetail::class);
+    }
+    public function components(){
+        return $this->belongsToMany(Component::class);
+    }
 }

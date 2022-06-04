@@ -8,6 +8,7 @@ use App\Models\CecoAllocationAmount;
 use App\Models\Component;
 use App\Models\Crop;
 use App\Models\Epp;
+use App\Models\Implement;
 use App\Models\ImplementModel;
 use App\Models\Item;
 use App\Models\Labor;
@@ -22,6 +23,7 @@ use App\Models\Sede;
 use App\Models\Task;
 use App\Models\TractorModel;
 use App\Models\TractorReport;
+use App\Models\TractorScheduling;
 use App\Models\Warehouse;
 use App\Models\WorkOrder;
 use App\Models\Zone;
@@ -47,8 +49,25 @@ class DatabaseSeeder extends Seeder
         Item::factory(100)->create();
         ImplementModel::factory(3)->hasImplements(5)->create();
         Component::factory(5)->create();
-        Labor::factory(6)->create();
-        TractorModel::factory(5)->hasTractors(5)->create();
+        Labor::factory(6)->create();*/
+
+        /*$implement_model = ImplementModel::find(1);
+        $implement_model->components()->attach(1);
+        $implement_model->components()->attach(2);
+        $implement_model->components()->attach(3);
+        $implement_model->components()->attach(4);
+        $implement_model->components()->attach(5);*/
+
+        /*for($i=1;$i<=5;$i++){
+            $implement = Implement::find($i);
+            $implement->components()->attach(1);
+            $implement->components()->attach(2);
+            $implement->components()->attach(3);
+            $implement->components()->attach(4);
+            $implement->components()->attach(5);
+        }*/
+
+        TractorScheduling::factory(100)->create();
         TractorReport::factory(100)->create();
         Crop::factory(10)->create();
         Epp::factory(20)->create();
@@ -57,7 +76,7 @@ class DatabaseSeeder extends Seeder
         Task::factory(50)->create();
         Risk::factory(20)->create();
         Warehouse::factory(8)->create();
-        WorkOrder::factory(50)->hasWorkOrderDetails(10)->create();*/
+        WorkOrder::factory(50)->hasWorkOrderDetails(10)->create();
         MinStockDetail::factory(10)->create();
     }
 }

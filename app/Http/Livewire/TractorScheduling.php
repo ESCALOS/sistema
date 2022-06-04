@@ -10,9 +10,17 @@ use Livewire\Component;
 
 class TractorScheduling extends Component
 {
+    public $idSchedule = 0;
     public $stractor;
     public $slabor;
     public $simplement;
+
+    protected $listeners = ['render'];
+
+    public function seleccionar($id){
+        $this->idSchedule = $id;
+        $this->emit('capturar',$this->idSchedule);
+    }
 
     public function render()
     {
@@ -20,7 +28,7 @@ class TractorScheduling extends Component
         $labors = Labor::all();
         $implements = Implement::all();
 
-        $tractorSchedulings = new ModelsTractorScheduling;
+        $tractorSchedulings = ModelsTractorScheduling::where('is_canceled',0);
 
         if($this->stractor > 0){
             $tractorSchedulings = $tractorSchedulings->where('tractor_id',$this->stractor);
@@ -34,7 +42,7 @@ class TractorScheduling extends Component
             $tractorSchedulings = $tractorSchedulings->where('implement_id',$this->simplement);
         }
 
-        $tractorSchedulings = $tractorSchedulings->paginate(7);
+        $tractorSchedulings = $tractorSchedulings->orderBy('id','desc')->paginate(7);
 
 
 

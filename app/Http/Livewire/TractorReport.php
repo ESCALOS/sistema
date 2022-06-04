@@ -13,16 +13,23 @@ class TractorReport extends Component
 {
     use WithPagination;
 
-    public $idReporte;
+    public $idReporte=0;
     public $stractor;
     public $slabor;
     public $simplement;
 
-    protected $listeners = ['renderTractorReport'=>'render'];
+    protected $listeners = ['render'];
 
     public function seleccionar($id){
         $this->idReporte = $id;
-        $this->emitTo('editTractorReport', 'save',[$this->idReporte]);
+        $this->emit('capturar',$this->idReporte);
+    }
+    public function anular(){
+        $reporte = ModelsTractorReport::find($this->idReporte);
+        $reporte->is_canceled = 1;
+        $reporte->save();
+        $this->idReporte = 0;
+        $this->render();
     }
 
     public function render()
@@ -31,7 +38,7 @@ class TractorReport extends Component
         $labors = Labor::all();
         $implements = Implement::all();
 
-        $tractorReports = new ModelsTractorReport;
+        $tractorReports = ModelsTractorReport::where('is_canceled',0);
 
         if($this->stractor > 0){
             $tractorReports = $tractorReports->where('tractor_id',$this->stractor);

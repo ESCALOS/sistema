@@ -1,26 +1,26 @@
 <div>
     <div class="p-4">
-        <button type="button" wire:click="$set('open','true')" class="w-full inline-flex items-center justify-center px-4 py-2 bg-amber-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-amber-500 focus:outline-none focus:border-amber-700 focus:ring focus:ring-amber-200 active:bg-amber-600 disabled:opacity-25 transition">
+        <button type="button" wire:click="$set('open_edit','{{$idReport > 0}}')" class="w-full inline-flex items-center justify-center px-4 py-2 bg-amber-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-amber-500 focus:outline-none focus:border-amber-700 focus:ring focus:ring-amber-200 active:bg-amber-600 disabled:opacity-25 transition">
             Editar
         </button>
     </div>
-    <x-jet-dialog-modal wire:model="open">
+    <x-jet-dialog-modal wire:model="open_edit">
         <x-slot name="title">
-            Regitrar Reporte de tractores {{$idReporte}}
+            Regitrar Reporte de tractores {{$idReport}}
         </x-slot>
         <x-slot name="content">
 
             <div class="grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 2 span/ 2 span">
                     <x-jet-label>Correlativo:</x-jet-label>
-                    <x-jet-input type="text" style="height:30px;width: 100%" wire:model.defer="correlative" />
+                    <x-jet-input type="text" style="height:30px;width: 100%" wire:model.defer="correlative" :value="$report->correlative"/>
 
                     <x-jet-input-error for="correlative"/>
 
                 </div>
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                     <x-jet-label>Día:</x-jet-label>
-                    <x-jet-input type="date" min="2022-05-18" style="height:30px;width: 100%" wire:model.defer="date"/>
+                    <x-jet-input type="date" min="2022-05-18" :value="$report->date" style="height:30px;width: 100%" wire:model.defer="date"/>
 
                     <x-jet-input-error for="date"/>
 
@@ -98,7 +98,7 @@
                 </div>
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 2 span/ 2 span">
                     <x-jet-label>Observaciones:</x-jet-label>
-                    <textarea class="form-control w-full text-sm" rows=6 wire:model.defer="observations"></textarea>
+                    <textarea class="form-control w-full text-sm" rows=5 wire:model.defer="observations"></textarea>
                 </div>
             </div>
         </x-slot>
@@ -109,7 +109,7 @@
             <div wire:loading wire:target="store">
                 Registrando...
             </div>
-            <x-jet-secondary-button wire:click="$set('open',false)" class="ml-2">
+            <x-jet-secondary-button wire:click="$set('open_edit',false)" class="ml-2">
                 Cancelar
             </x-jet-secondary-button>
         </x-slot>

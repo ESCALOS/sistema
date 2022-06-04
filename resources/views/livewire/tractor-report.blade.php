@@ -42,7 +42,7 @@
                 @livewire('create-tractor-report')
                 @livewire('edit-tractor-report')
                 <div class="p-4">
-                    <button type="button" class="w-full inline-flex items-center justify-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 focus:outline-none focus:border-red-700 focus:ring focus:ring-red-200 active:bg-red-600 disabled:opacity-25 transition">
+                    <button type="button" wire:click='anular()' class="w-full inline-flex items-center justify-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 focus:outline-none focus:border-red-700 focus:ring focus:ring-red-200 active:bg-red-600 disabled:opacity-25 transition">
                         Anular
                     </button>
                 </div>
@@ -52,6 +52,11 @@
                         <table class="min-w-max w-full table-fixed overflow-x-scroll">
                             <thead>
                                 <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                    <th class="py-3 text-center">
+                                        <span class="hidden sm:block">Correlativo</span>
+                                        <img class="sm:hidden flex mx-auto" src="img/correlative.svg" alt="correlative"
+                                            width="25">
+                                    </th>
                                     <th class="py-3 text-center">
                                         <span class="hidden sm:block">Tractor</span>
                                         <img class="sm:hidden flex mx-auto" src="img/tractor.svg" alt="tractor"
@@ -76,8 +81,13 @@
                                     <tr style="cursor:pointer" wire:click="seleccionar({{$tractorReport->id}})" class="border-b {{ $tractorReport->id == $idReporte ? 'bg-blue-200' : '' }} border-gray-200">
                                         <td class="py-3 px-6 text-left">
                                             <div class="flex items-center">
+                                                <span class="font-medium">{{ $tractorReport->correlative }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="py-3 px-6 text-left">
+                                            <div class="flex items-center">
                                                 <span class="font-medium">{{ $tractorReport->tractor->tractorModel->model }}
-                                                    {{ $tractorReport->tractor->tractor_number }} {{ $idReporte }}</span>
+                                                    {{ $tractorReport->tractor->tractor_number }}</span>
                                             </div>
                                         </td>
                                         <td class="py-3 px-2 text-left">

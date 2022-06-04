@@ -26,6 +26,7 @@ return new class extends Migration
             $table->decimal('hour_meter_end',8,2);
             $table->decimal('hours',8,2);
             $table->text('observations')->nullable();
+            $table->foreignId('location_id')->constrained();
             $table->boolean('is_canceled')->default(false);
             $table->timestamps();
         });
