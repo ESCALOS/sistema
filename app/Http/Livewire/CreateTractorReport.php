@@ -8,6 +8,7 @@ use App\Models\Tractor;
 use App\Models\TractorReport;
 use App\Models\User;
 use Livewire\Component;
+use phpDocumentor\Reflection\Types\This;
 
 class CreateTractorReport extends Component
 {
@@ -19,11 +20,24 @@ class CreateTractorReport extends Component
     public $tractor;
     public $labor;
     public $implement;
-    public $horometro_inicial = "";
+    public $horometro_inicial = 0;
     public $hour_meter_end;
-    public $observations;
+    public $observations = "";
+
+    protected $rules = [
+        'correlative' => 'required',
+        'date' => 'required|date|date_format:Y-m-d',
+        'shift' => 'required',
+        'user' => 'required|exists:users,id',
+        'tractor' => 'required|exists:tractors,id',
+        'labor' => 'required|exists:labors,id',
+        'implement' => 'required|exists:implements,id',
+        'hour_meter_end' => "required|gt:horometro_inicial",
+    ];
 
     public function store(){
+        $this->validate();
+
         $tractor = Tractor::find($this->tractor);
         $hour_meter_start = $tractor->hour_meter;
         TractorReport::create([
@@ -37,11 +51,13 @@ class CreateTractorReport extends Component
             'hour_meter_start' => $hour_meter_start,
             'hour_meter_end' => $this->hour_meter_end,
             'hours' => $this->hour_meter_end - $hour_meter_start,
-            'observations' => $this->observations,
+            'observations' => $this->observations
         ]);
-        $this->reset();
-    }
+        $this->reset(['correlative','date','shift','user','tractor','labor','implement','horometro_inicial','hour_meter_end','observations']);
 
+        $this->emit('renderTractorReport');
+        $this->emit('alert');
+    }
 
     public function render()
     {

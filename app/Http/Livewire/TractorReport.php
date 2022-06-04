@@ -13,9 +13,16 @@ class TractorReport extends Component
 {
     use WithPagination;
 
+    public $idReporte;
     public $stractor;
     public $slabor;
     public $simplement;
+
+    protected $listeners = ['renderTractorReport'=>'render'];
+
+    public function seleccionar($id){
+        $this->idReporte = $id;
+    }
 
     public function render()
     {

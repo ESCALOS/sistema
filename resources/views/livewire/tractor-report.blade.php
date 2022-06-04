@@ -75,14 +75,13 @@
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody class="text-gray-600 text-sm font-light">
+                            <tbody  x-data="{open:false}" class="text-gray-600 text-sm font-light">
                                 @foreach ($tractorReports as $tractorReport)
-                                    <tr class="border-b border-gray-200 hover:bg-gray-100">
+                                    <tr style="cursor:pointer" wire:click="seleccionar({{$tractorReport->id}})" class="border-b {{ $tractorReport->id == $idReporte ? 'bg-blue-200' : '' }} border-gray-200">
                                         <td class="py-3 px-6 text-left">
                                             <div class="flex items-center">
-                                                <span
-                                                    class="font-medium">{{ $tractorReport->tractor->tractorModel->model }}
-                                                    {{ $tractorReport->tractor->tractor_number }}</span>
+                                                <span class="font-medium">{{ $tractorReport->tractor->tractorModel->model }}
+                                                    {{ $tractorReport->tractor->tractor_number }} {{ $idReporte }}</span>
                                             </div>
                                         </td>
                                         <td class="py-3 px-2 text-left">

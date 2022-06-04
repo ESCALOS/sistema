@@ -63,6 +63,6 @@ END IF;
 END IF
 /*----------------Actualizar horas en la tabla component_implements los componentes -----------*/
 CREATE TRIGGER `actualizar_horas_componente` AFTER UPDATE ON `implements`
- FOR EACH ROW UPDATE component_implement SET hours = hours + (new.hours-old.hours) WHERE implements_id = new.id
+ FOR EACH ROW UPDATE component_implement SET hours = hours + (new.hours-old.hours) WHERE implement_id = new.id
 
 /*---------------Colocar los componentes caducados en la tabla expired_components-------------*/
