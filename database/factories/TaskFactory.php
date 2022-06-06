@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Implement;
+use App\Models\Component;
 use App\Models\Task;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -17,7 +17,7 @@ class TaskFactory extends Factory
     {
         return [
             'task' => $this->faker->unique()->sentence(),
-            'implement_id' => Implement::all()->random()->id,
+            'component_id' => Component::all()->random()->id,
             'estimated_time' => $this->faker->numberBetween(30,180),
         ];
     }

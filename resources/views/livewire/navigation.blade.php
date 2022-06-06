@@ -15,8 +15,8 @@
       </div>
       <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
         <a href="/" class="flex-shrink-0 flex items-center">
-          <img class="block lg:hidden h-8 w-auto" src="img/logo.png" alt="Logo">
-          <img class="hidden lg:block h-8 w-auto" src="img/logo.png" alt="Logo">
+          <img class="block lg:hidden h-8 w-auto" src="http://sistema/img/logo.png" alt="Logo">
+          <img class="hidden lg:block h-8 w-auto" src="http://sistema/img/logo.png" alt="Logo">
         </a>
         <div class="hidden sm:block sm:ml-6">
           <div class="flex space-x-4">
@@ -25,7 +25,7 @@
 
             <a href="{{ route('asistent.index') }}" class="{{ request()->routeIs('asistent.index') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium">Reporte de tractores</a>
 
-            <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Projects</a>
+            <a href="{{ route('operator.request-materials') }}" class="{{ request()->routeIs('operator.request-materials') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium">Solicitar Materiales</a>
 
             <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Calendar</a>
           </div>

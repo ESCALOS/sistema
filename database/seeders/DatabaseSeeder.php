@@ -46,42 +46,52 @@ class DatabaseSeeder extends Seeder
         Location::factory(11)->create();
         Brand::factory(30)->create();
         MeasurementUnit::factory(50)->create();
+        Crop::factory(10)->create();
+        Warehouse::factory(8)->create();
+        Epp::factory(20)->create();
+        Risk::factory(20)->create();
         Ceco::factory(10)->hasCecoAllocationAmount(10)->create();
         Item::factory(100)->create();
         ImplementModel::factory(3)->hasImplements(5)->create();
-        Component::factory(5)->create();
+        Component::factory(10)->create();
+        Task::factory(50)->create();
         Labor::factory(6)->create();
-        
+        TractorModel::factory(3)->create();
+        Tractor::factory(10)->create();
 
-        for($i=1;$i<=3;$i++){
-            $implement_model = ImplementModel::find($i);
+
+            $implement_model = ImplementModel::find(1);
             $implement_model->components()->attach(1);
             $implement_model->components()->attach(2);
             $implement_model->components()->attach(3);
+            $implement_model->components()->attach(8);
+
+            $implement_model = ImplementModel::find(2);
             $implement_model->components()->attach(4);
             $implement_model->components()->attach(5);
-        }
+            $implement_model->components()->attach(6);
 
-        for($i=1;$i<=5;$i++){
+            $implement_model = ImplementModel::find(3);
+            $implement_model->components()->attach(6);
+            $implement_model->components()->attach(7);
+            $implement_model->components()->attach(9);
+            $implement_model->components()->attach(11);*/
+
+
+
+        /*for($i=1;$i<=5;$i++){
             $implement = Implement::find($i);
             $implement->components()->attach(1);
             $implement->components()->attach(2);
             $implement->components()->attach(3);
             $implement->components()->attach(4);
             $implement->components()->attach(5);
-        }*/
-        TractorModel::factory(3)->create();
-        Tractor::factory(10)->create();
+        }
         TractorScheduling::factory(50)->create();
         TractorReport::factory(50)->create();
-        Crop::factory(10)->create();
-        Epp::factory(20)->create();
         OrderRequest::factory(50)->create();
         OrderRequestDetail::factory(50)->create();
-        Task::factory(50)->create();
-        Risk::factory(20)->create();
-        Warehouse::factory(8)->create();
         WorkOrder::factory(50)->hasWorkOrderDetails(10)->create();
-        MinStockDetail::factory(10)->create();
+        MinStockDetail::factory(10)->create();*/
     }
 }

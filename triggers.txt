@@ -4,10 +4,10 @@ CREATE TRIGGER `aumentar_monto_ceco` AFTER INSERT ON `ceco_allocation_amounts`
  FOR EACH ROW UPDATE cecos SET amount = amount + new.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id
  /*--------Actualizar y Disminuir----------*/
 CREATE TRIGGER `actualizar_monto_ceco` AFTER UPDATE ON `ceco_allocation_amounts`
- FOR EACH ROW IF(new.is_canceled) THEN 
- UPDATE cecos SET amount = amount-old.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id; 
- ELSE 
- UPDATE cecos SET amount = amount + new.allocation_amount-old.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id; 
+ FOR EACH ROW IF(new.is_canceled) THEN
+ UPDATE cecos SET amount = amount-old.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id;
+ ELSE
+ UPDATE cecos SET amount = amount + new.allocation_amount-old.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id;
  END IF
 
 
@@ -62,9 +62,29 @@ UPDATE min_stocks SET current_quantity = current_quantity + old.quantity-new.qua
 END IF;
 END IF
 /*----------------Actualizar horas en la tabla component_implements los componentes -----------*/
-CREATE TRIGGER `actualizar_horas_componente` AFTER UPDATE ON `implements`
- FOR EACH ROW UPDATE component_implement SET hours = hours + (new.hours-old.hours) WHERE implement_id = new.id
+CREATE TRIGGER `aumetar _horas_componentes` AFTER UPDATE ON `implements`
+ FOR EACH ROW BEGIN
+DECLARE var_final INT DEFAULT 0;
+DECLARE var_componente INT;
+DECLARE cursor1 CURSOR FOR SELECT component_id FROM component_implement_model WHERE implement_model_id = old.implement_model_id;
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET var_final = 1;
+OPEN cursor1;
+bucle: LOOP
+	FETCH cursor1 INTO var_componente;
+    IF var_final = 1 THEN
+    	LEAVE bucle;
+    END IF;
 
+    IF EXISTS (SELECT * FROM component_implement WHERE implement_id = new.id AND component_id = var_componente AND (state = 'PENDIENTE' OR state = 'ORDENADO')) THEN
+    UPDATE component_implement SET hours = hours + (new.hours-old.hours) WHERE implement_id = new.id AND component_id = var_componente;
+ELSE
+    	INSERT INTO component_implement(component_id,implement_id,hours) VALUES (var_componente,new.id,(new.hours-old.hours));
+
+END IF;
+
+END LOOP bucle;
+CLOSE cursor1;
+END
 /*---------------Agregar a lista de materiales necesarios-------------*/
 CREATE TRIGGER `materiales_para_solicitar` AFTER UPDATE ON `component_implement`
  FOR EACH ROW BEGIN
