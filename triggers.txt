@@ -65,8 +65,20 @@ END IF
 CREATE TRIGGER `actualizar_horas_componente` AFTER UPDATE ON `implements`
  FOR EACH ROW UPDATE component_implement SET hours = hours + (new.hours-old.hours) WHERE implement_id = new.id
 
-/*---------------Colocar los componentes caducados en la tabla expired_components-------------*/
-
+/*---------------Agregar a lista de materiales necesarios-------------*/
+CREATE TRIGGER `materiales_para_solicitar` AFTER UPDATE ON `component_implement`
+ FOR EACH ROW BEGIN
+DECLARE request INT;
+DECLARE responsable INT;
+SELECT user_id INTO responsable FROM implements WHERE id = new.implement_id;
+/*-----Comprobar si el componente pasó sus horas-----*/
+IF EXISTS (SELECT * FROM component_implement ci INNER JOIN components c WHERE ci.implement_id = new.implement_id AND ci.component_id = new.component_id AND ci.hours > c.lifespan) THEN
+/*----Comprobar si existe la solicitud de pedido para el implemento*/
+IF NOT EXISTS(SELECT * FROM order_requests WHERE user_id = responsable AND implement_id = new.implement_id AND state = 'PENDIENTE') THEN
+INSERT INTO order_requests(user_id,implement_id) VALUES (responsable,new.implement_id);
+END IF;
+END IF;
+END
 
 /*---------------Crear tabla afectados_por_ingreso_operador----------------------*/
 id, operator_stock_id, operator_stock_details_id, operador_stock_assigned_id, stock_id
