@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Implement;
 use App\Models\Labor;
+use App\Models\Location;
 use App\Models\Tractor;
 use App\Models\TractorReport;
 use App\Models\User;
@@ -21,7 +22,7 @@ class TractorReportFactory extends Factory
         $inicio = $this->faker->randomFloat(null,120,500);
         $fin = $this->faker->randomFloat(null,600,2000);
         return [
-            
+            'location_id' => Location::all()->random()->id,
             'user_id' => User::all()->random()->id,
             'tractor_id' => Tractor::all()->random()->id,
             'labor_id' => Labor::all()->random()->id,

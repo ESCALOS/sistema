@@ -21,6 +21,7 @@ use App\Models\OrderRequestDetail;
 use App\Models\Risk;
 use App\Models\Sede;
 use App\Models\Task;
+use App\Models\Tractor;
 use App\Models\TractorModel;
 use App\Models\TractorReport;
 use App\Models\TractorScheduling;
@@ -49,16 +50,19 @@ class DatabaseSeeder extends Seeder
         Item::factory(100)->create();
         ImplementModel::factory(3)->hasImplements(5)->create();
         Component::factory(5)->create();
-        Labor::factory(6)->create();*/
+        Labor::factory(6)->create();
+        
 
-        /*$implement_model = ImplementModel::find(1);
-        $implement_model->components()->attach(1);
-        $implement_model->components()->attach(2);
-        $implement_model->components()->attach(3);
-        $implement_model->components()->attach(4);
-        $implement_model->components()->attach(5);*/
+        for($i=1;$i<=3;$i++){
+            $implement_model = ImplementModel::find($i);
+            $implement_model->components()->attach(1);
+            $implement_model->components()->attach(2);
+            $implement_model->components()->attach(3);
+            $implement_model->components()->attach(4);
+            $implement_model->components()->attach(5);
+        }
 
-        /*for($i=1;$i<=5;$i++){
+        for($i=1;$i<=5;$i++){
             $implement = Implement::find($i);
             $implement->components()->attach(1);
             $implement->components()->attach(2);
@@ -66,13 +70,14 @@ class DatabaseSeeder extends Seeder
             $implement->components()->attach(4);
             $implement->components()->attach(5);
         }*/
-
-        TractorScheduling::factory(100)->create();
-        TractorReport::factory(100)->create();
+        TractorModel::factory(3)->create();
+        Tractor::factory(10)->create();
+        TractorScheduling::factory(50)->create();
+        TractorReport::factory(50)->create();
         Crop::factory(10)->create();
         Epp::factory(20)->create();
-        OrderRequest::factory(100)->create();
-        OrderRequestDetail::factory(100)->create();
+        OrderRequest::factory(50)->create();
+        OrderRequestDetail::factory(50)->create();
         Task::factory(50)->create();
         Risk::factory(20)->create();
         Warehouse::factory(8)->create();

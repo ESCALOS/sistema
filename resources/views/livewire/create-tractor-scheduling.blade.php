@@ -9,10 +9,10 @@
         <x-slot name="content">
             <div class="grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
-                <x-jet-label>Día:</x-jet-label>
-                <x-jet-input type="date" min="2022-05-18" style="height:30px;width: 100%" wire:model.defer="date"/>
+                    <x-jet-label>Día:</x-jet-label>
+                    <x-jet-input type="date" min="2022-05-18" style="height:30px;width: 100%" wire:model.defer="date"/>
 
-                <x-jet-input-error for="date"/>
+                    <x-jet-input-error for="date"/>
 
                 </div>
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
