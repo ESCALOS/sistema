@@ -1,7 +1,8 @@
 /*--------------MODIFICAR TABLA CECO------------------------------------------------*/
 /*-----Aumentar---------------*/
+DELIMITER //
 CREATE TRIGGER `aumentar_monto_ceco` AFTER INSERT ON `ceco_allocation_amounts`
- FOR EACH ROW UPDATE cecos SET amount = amount + new.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id
+ FOR EACH ROW UPDATE cecos SET amount = amount + new.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id; //
  /*--------Actualizar y Disminuir----------*/
 DELIMITER //
 CREATE TRIGGER `actualizar_monto_ceco` AFTER UPDATE ON `ceco_allocation_amounts`
@@ -68,7 +69,7 @@ END IF;
 END IF; //
 /*----------------Actualizar horas en la tabla component_implements los componentes -----------*/
 DELIMITER //
-CREATE TRIGGER `aumetar _horas_componentes` AFTER UPDATE ON `implements`
+CREATE TRIGGER `aumentar_horas_componentes` AFTER UPDATE ON `implements`
  FOR EACH ROW BEGIN
 DECLARE var_final INT DEFAULT 0;
 DECLARE var_componente INT;
