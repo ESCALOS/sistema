@@ -40,7 +40,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        /*\App\Models\User::factory(30)->create();
+        \App\Models\User::factory(30)->create();
         Zone::factory(3)->create();
         Sede::factory(8)->create();
         Location::factory(11)->create();
@@ -75,7 +75,7 @@ class DatabaseSeeder extends Seeder
             $implement_model->components()->attach(6);
             $implement_model->components()->attach(7);
             $implement_model->components()->attach(9);
-            $implement_model->components()->attach(11);*/
+            $implement_model->components()->attach(11);
 
 
 

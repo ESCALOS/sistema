@@ -3,25 +3,28 @@
 CREATE TRIGGER `aumentar_monto_ceco` AFTER INSERT ON `ceco_allocation_amounts`
  FOR EACH ROW UPDATE cecos SET amount = amount + new.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id
  /*--------Actualizar y Disminuir----------*/
+DELIMITER //
 CREATE TRIGGER `actualizar_monto_ceco` AFTER UPDATE ON `ceco_allocation_amounts`
  FOR EACH ROW IF(new.is_canceled) THEN
  UPDATE cecos SET amount = amount-old.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id;
  ELSE
  UPDATE cecos SET amount = amount + new.allocation_amount-old.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id;
- END IF
+ END IF; //
 
 
 /*--------MODIFICAR TABLA TRACTOR E IMPLEMENTO-------*/
 /*--------Aumentar---------------*/
+DELIMITER //
 CREATE TRIGGER `aumentar_horas` AFTER INSERT ON `tractor_reports`
  FOR EACH ROW BEGIN
 /*------Tractores----------*/
 UPDATE tractors SET hour_meter = hour_meter+new.hours, updated_at = CURRENT_TIMESTAMP WHERE id = new.tractor_id;
 /*--------Implementos-----------------*/
 UPDATE implements SET hours = hours+(new.hours)*0.85, updated_at = CURRENT_TIMESTAMP WHERE id = new.implement_id;
-END
+END; //
 
 /*--------Actualizar y Disminuir---------------*/
+DELIMITER //
 CREATE TRIGGER `actualizar_horas` AFTER UPDATE ON `tractor_reports`
  FOR EACH ROW BEGIN
 IF (new.is_canceled) THEN
@@ -35,19 +38,21 @@ UPDATE tractors SET hour_meter = hour_meter-(old.hours+new.hours), updated_at = 
 /*--------Implementos-----------------*/
 UPDATE implements SET hours = hours+(old.hours-new.hours)*0.85, updated_at = CURRENT_TIMESTAMP WHERE id = new.implement_id;
 END IF;
-END
+END; //
 
 
 /*------------STOCK MÍNIMO--------------------------------*/
 /*-----------INGRESO Y SALIDA------------------------------*/
+DELIMITER //
 CREATE TRIGGER `aumentar_stock_minimo` AFTER INSERT ON `min_stock_details`
  FOR EACH ROW IF(new.movement="INGRESO") THEN
 UPDATE min_stocks SET current_quantity = current_quantity + new.quantity, price = price + new.price WHERE item_id = new.item_id AND warehouse_id = new.warehouse_id;
 ELSE
 UPDATE min_stocks SET current_quantity = current_quantity - new.quantity, price = price - new.price WHERE item_id = new.item_id AND warehouse_id = new.warehouse_id;
-END IF
+END IF; //
 /*--------ACTUALIZAR----------------------------------------*/
-CREATE TRIGGER `actualizar_aumento_stock_minimo` AFTER UPDATE ON `min_stock_details`
+DELIMITER //
+CREATE TRIGGER `actualizar_stock_minimo` AFTER UPDATE ON `min_stock_details`
  FOR EACH ROW IF(new.movement="INGRESO") THEN
 IF(new.is_canceled) THEN
 UPDATE min_stocks SET current_quantity = current_quantity - old.quantity, price = price - old.price WHERE item_id = old.item_id AND warehouse_id = old.warehouse_id;
@@ -60,8 +65,9 @@ UPDATE min_stocks SET current_quantity = current_quantity + new.quantity, price 
 ELSE
 UPDATE min_stocks SET current_quantity = current_quantity + old.quantity-new.quantity, price = price + old.price - new.price WHERE item_id = new.item_id AND warehouse_id = new.warehouse_id;
 END IF;
-END IF
+END IF; //
 /*----------------Actualizar horas en la tabla component_implements los componentes -----------*/
+DELIMITER //
 CREATE TRIGGER `aumetar _horas_componentes` AFTER UPDATE ON `implements`
  FOR EACH ROW BEGIN
 DECLARE var_final INT DEFAULT 0;
@@ -84,21 +90,31 @@ END IF;
 
 END LOOP bucle;
 CLOSE cursor1;
-END
+END; //
 /*---------------Agregar a lista de materiales necesarios-------------*/
+DELIMITER //
 CREATE TRIGGER `materiales_para_solicitar` AFTER UPDATE ON `component_implement`
  FOR EACH ROW BEGIN
 DECLARE request INT;
 DECLARE responsable INT;
+DECLARE componente INT;
+DECLARE tiempo_vida DECIMAL(8,2);
 SELECT user_id INTO responsable FROM implements WHERE id = new.implement_id;
+SELECT item_id,lifespan INTO componente,tiempo_vida FROM components WHERE id = new.component_id;
 /*-----Comprobar si el componente pasó sus horas-----*/
 IF EXISTS (SELECT * FROM component_implement ci INNER JOIN components c WHERE ci.implement_id = new.implement_id AND ci.component_id = new.component_id AND ci.hours > c.lifespan) THEN
 /*----Comprobar si existe la solicitud de pedido para el implemento*/
 IF NOT EXISTS(SELECT * FROM order_requests WHERE user_id = responsable AND implement_id = new.implement_id AND state = 'PENDIENTE') THEN
 INSERT INTO order_requests(user_id,implement_id) VALUES (responsable,new.implement_id);
 END IF;
+/*-------Seleccionar el id de la orden de pedido-------------------*/
+SELECT id INTO request FROM order_requests WHERE user_id = responsable AND implement_id = new.implement_id AND state = 'PENDIENTE';
+/*-----Insertar en el detalle de la solicitud de pedido-----------*/
+IF NOT EXISTS(SELECT * FROM order_request_details WHERE order_request_id = request AND item_id = componente AND state = 'PENDIENTE') THEN
+INSERT INTO order_request_details(order_request_id,item_id,quantity) VALUES (request,componente,ceiling(400/tiempo_vida));
 END IF;
-END
+END IF;
+END //
 
 /*---------------Crear tabla afectados_por_ingreso_operador----------------------*/
 id, operator_stock_id, operator_stock_details_id, operador_stock_assigned_id, stock_id
