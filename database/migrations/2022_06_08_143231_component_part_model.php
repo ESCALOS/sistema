@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('component_part', function (Blueprint $table) {
+        Schema::create('component_part_model', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('component');
             $table->foreign('component')->references('id')->on('components');
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('component_part');
+        Schema::dropIfExists('component_part_model');
     }
 };

@@ -15,31 +15,31 @@ CREATE TRIGGER `actualizar_monto_ceco` AFTER UPDATE ON `ceco_allocation_amounts`
 
 /*--------MODIFICAR TABLA TRACTOR E IMPLEMENTO-------*/
 /*--------Aumentar---------------*/
-DELIMITER //
-CREATE TRIGGER `aumentar_horas` AFTER INSERT ON `tractor_reports`
- FOR EACH ROW BEGIN
-/*------Tractores----------*/
-UPDATE tractors SET hour_meter = hour_meter+new.hours, updated_at = CURRENT_TIMESTAMP WHERE id = new.tractor_id;
-/*--------Implementos-----------------*/
-UPDATE implements SET hours = hours+(new.hours)*0.85, updated_at = CURRENT_TIMESTAMP WHERE id = new.implement_id;
-END; //
+    DELIMITER //
+    CREATE TRIGGER `aumentar_horas` AFTER INSERT ON `tractor_reports`
+    FOR EACH ROW BEGIN
+    /*------Tractores----------*/
+    UPDATE tractors SET hour_meter = hour_meter+new.hours, updated_at = CURRENT_TIMESTAMP WHERE id = new.tractor_id;
+    /*--------Implementos-----------------*/
+    UPDATE implements SET hours = hours+(new.hours)*0.85, updated_at = CURRENT_TIMESTAMP WHERE id = new.implement_id;
+    END; //
 
-/*--------Actualizar y Disminuir---------------*/
-DELIMITER //
-CREATE TRIGGER `actualizar_horas` AFTER UPDATE ON `tractor_reports`
- FOR EACH ROW BEGIN
-IF (new.is_canceled) THEN
-/*------Tractores----------*/
-UPDATE tractors SET hour_meter = hour_meter-old.hours, updated_at = CURRENT_TIMESTAMP WHERE id = new.tractor_id;
-/*--------Implementos-----------------*/
-UPDATE implements SET hours = hours-(old.hours)*0.85, updated_at = CURRENT_TIMESTAMP WHERE id = new.implement_id;
-ELSE
-/*------Tractores----------*/
-UPDATE tractors SET hour_meter = hour_meter-(old.hours+new.hours), updated_at = CURRENT_TIMESTAMP WHERE id = new.tractor_id;
-/*--------Implementos-----------------*/
-UPDATE implements SET hours = hours+(old.hours-new.hours)*0.85, updated_at = CURRENT_TIMESTAMP WHERE id = new.implement_id;
-END IF;
-END; //
+    /*--------Actualizar y Disminuir---------------*/
+    DELIMITER //
+    CREATE TRIGGER `actualizar_horas` AFTER UPDATE ON `tractor_reports`
+    FOR EACH ROW BEGIN
+    IF (new.is_canceled) THEN
+    /*------Tractores----------*/
+    UPDATE tractors SET hour_meter = hour_meter-old.hours, updated_at = CURRENT_TIMESTAMP WHERE id = new.tractor_id;
+    /*--------Implementos-----------------*/
+    UPDATE implements SET hours = hours-(old.hours)*0.85, updated_at = CURRENT_TIMESTAMP WHERE id = new.implement_id;
+    ELSE
+    /*------Tractores----------*/
+    UPDATE tractors SET hour_meter = hour_meter-(old.hours+new.hours), updated_at = CURRENT_TIMESTAMP WHERE id = new.tractor_id;
+    /*--------Implementos-----------------*/
+    UPDATE implements SET hours = hours+(old.hours-new.hours)*0.85, updated_at = CURRENT_TIMESTAMP WHERE id = new.implement_id;
+    END IF;
+    END; //
 
 
 /*------------STOCK MÍNIMO--------------------------------*/
@@ -69,28 +69,49 @@ END IF;
 END IF; //
 /*----------------Actualizar horas en la tabla component_implements los componentes -----------*/
 DELIMITER //
-CREATE TRIGGER `aumentar_horas_componentes` AFTER UPDATE ON `implements`
+CREATE TRIGGER `aumentar_horas_imp_comp` AFTER UPDATE ON `implements`
  FOR EACH ROW BEGIN
-DECLARE var_final INT DEFAULT 0;
-DECLARE var_componente INT;
-DECLARE cursor1 CURSOR FOR SELECT component_id FROM component_implement_model WHERE implement_model_id = old.implement_model_id;
-DECLARE CONTINUE HANDLER FOR NOT FOUND SET var_final = 1;
-OPEN cursor1;
-bucle: LOOP
-	FETCH cursor1 INTO var_componente;
-    IF var_final = 1 THEN
+DECLARE part_final INT DEFAULT 0;
+DECLARE comp_final INT DEFAULT 0;
+DECLARE componente INT;
+DECLARE pieza INT;
+DECLARE comp_imp INT;
+DECLARE cursor_componente CURSOR FOR SELECT cim.component_id FROM component_implement_model cim INNER JOIN implements i ON i.implement_model_id = cim.implement_model_id WHERE i.id = old.id;
+/*-------Actualizar horas de los componentes--------*/
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET comp_final = 1;
+OPEN cursor_componente;
+	bucle: LOOP
+    FETCH cursor_componente INTO componente;
+    IF comp_final = 1 THEN
     	LEAVE bucle;
     END IF;
-
-    IF EXISTS (SELECT * FROM component_implement WHERE implement_id = new.id AND component_id = var_componente AND (state = 'PENDIENTE' OR state = 'ORDENADO')) THEN
-    UPDATE component_implement SET hours = hours + (new.hours-old.hours) WHERE implement_id = new.id AND component_id = var_componente;
-ELSE
-    	INSERT INTO component_implement(component_id,implement_id,hours) VALUES (var_componente,new.id,(new.hours-old.hours));
-
-END IF;
-
-END LOOP bucle;
-CLOSE cursor1;
+    IF EXISTS(SELECT * FROM component_implement ci WHERE ci.component_id = componente AND ci.implement_id = new.id AND ci.state = "PENDIENTE") THEN
+    UPDATE component_implement ci SET ci.hours = ci.hours+(new.hours-old.hours) WHERE ci.component_id = componente AND ci.implement_id = new.id AND ci.state = 'PENDIENTE';
+    ELSE
+    INSERT INTO component_implement (component_id,implement_id,hours) VALUES(componente,new.id,(new.hours-old.hours));
+    END IF;
+    SELECT id INTO comp_imp FROM component_implement ci WHERE ci.component_id = componente AND ci.implement_id = new.id AND ci.state = "PENDIENTE";
+/*-------Actualizar componentes-----------------*/
+BEGIN
+	DECLARE cursor_part CURSOR FOR SELECT cpm.part FROM component_part_model cpm WHERE cpm.component = componente;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET part_final = 1;
+    OPEN cursor_part;
+    bucle2: LOOP
+    FETCH cursor_part INTO pieza;
+    IF part_final = 1 THEN
+    	LEAVE bucle2;
+    END IF;
+    IF EXISTS(SELECT * FROM component_part cp WHERE cp.component_implement_id = comp_imp AND cp.part = pieza AND cp.state = 'PENDIENTE') THEN
+    UPDATE component_part cp SET cp.hours = cp.hours + (new.hours-old.hours) WHERE cp.component_implement_id = comp_imp AND cp.part = pieza AND cp.state = 'PENDIENTE';
+    ELSE
+    INSERT INTO component_part (component_implement_id,part,hours) VALUES (comp_imp,pieza,(new.hours-old.hours));
+    END IF;
+    END LOOP bucle2;
+    CLOSE cursor_part;
+    SELECT 0 INTO part_final;
+END;
+	END LOOP bucle;
+CLOSE cursor_componente;
 END; //
 /*---------------Agregar a lista de materiales necesarios-------------*/
 DELIMITER //
@@ -112,10 +133,10 @@ END IF;
 SELECT id INTO request FROM order_requests WHERE user_id = responsable AND implement_id = new.implement_id AND state = 'PENDIENTE';
 /*-----Insertar en el detalle de la solicitud de pedido-----------*/
 IF NOT EXISTS(SELECT * FROM order_request_details WHERE order_request_id = request AND item_id = componente AND state = 'PENDIENTE') THEN
-INSERT INTO order_request_details(order_request_id,item_id,quantity) VALUES (request,componente,ceiling(400/tiempo_vida));
+INSERT INTO order_request_details(order_request_id,item_id,quantity) VALUES (request,componente,ceiling(326.4/tiempo_vida));
 END IF;
 END IF;
-END //
+END//
 
 /*---------------Crear tabla afectados_por_ingreso_operador----------------------*/
 id, operator_stock_id, operator_stock_details_id, operador_stock_assigned_id, stock_id

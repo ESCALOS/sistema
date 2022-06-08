@@ -16,6 +16,8 @@ class RequestMaterial extends Component
     public $open;
     public $idRequest = 0;
     public $implemento;
+    public $added_components = [];
+    public $comp_add;
 
     public function cerrar(){
         $this->open = false;
@@ -32,10 +34,14 @@ class RequestMaterial extends Component
         }
         $requests = OrderRequest::where('user_id',auth()->user()->id)->get();
         //$components = ModelsComponent::whereRelation('implements','implement_id',$this->idImplement)->get();
+        $components = OrderRequestDetail::where('order_request_id',$this->idRequest)->orderBy('id','DESC')->get();
+        foreach($components as $component){
+            array_push($this->added_components,$component->item->id);
+        }
 
-        $components = OrderRequestDetail::where('order_request_id',$this->idRequest)->get();
+        $select_comps = OrderRequestDetail::where('order_request_id',$this->idRequest)->whereNotIn('item_id',$this->added_components)->get();
 
 
-        return view('livewire.request-material',compact('requests','components'));
+        return view('livewire.request-material',compact('requests','components','select_comps'));
     }
 }
