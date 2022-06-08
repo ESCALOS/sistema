@@ -51,14 +51,14 @@ class DatabaseSeeder extends Seeder
         Epp::factory(20)->create();
         Risk::factory(20)->create();
         Ceco::factory(10)->hasCecoAllocationAmount(10)->create();
-        Item::factory(100)->create();
+        Item::factory(30)->hasComponent(1)->create();
         ImplementModel::factory(3)->hasImplements(5)->create();
         Task::factory(50)->create();
         Labor::factory(6)->create();
         TractorModel::factory(3)->create();
         Tractor::factory(10)->create();
-
 /*
+
             $implement_model = ImplementModel::find(1);
             $implement_model->components()->attach(1);
             $implement_model->components()->attach(2);
