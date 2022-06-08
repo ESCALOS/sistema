@@ -136,41 +136,42 @@ IF NOT EXISTS(SELECT * FROM order_request_details WHERE order_request_id = reque
 INSERT INTO order_request_details(order_request_id,item_id,quantity) VALUES (request,componente,ceiling(326.4/tiempo_vida));
 END IF;
 END IF;
-END//
-
-/*---------------Crear tabla afectados_por_ingreso_operador----------------------*/
-id, operator_stock_id, operator_stock_details_id, operador_stock_assigned_id, stock_id
-
+END; //
 
 /*--------Evento para liberar el material-----------------------------------*/
-CREATE DEFINER=`root`@`localhost` EVENT `liberar_material_event` ON SCHEDULE EVERY 1 MONTH STARTS '2022-05-18 09:00:54' ON COMPLETION NOT PRESERVE ENABLE DO UPDATE operator_stock_assigned SET state = "LIBERADO", quantity = 0, price = 0 WHERE DATE_ADD(updated_at, INTERVAL 3 MONTH) < CURRENT_TIMESTAMP AND quantity > 0
+DELIMITER //
+CREATE DEFINER=`root`@`localhost` EVENT `liberar_material_event` ON SCHEDULE EVERY 1 MONTH STARTS '2022-05-18 09:00:54' ON COMPLETION NOT PRESERVE ENABLE DO UPDATE operator_assigned_stocks SET state = "LIBERADO", quantity = 0, price = 0 WHERE DATE_ADD(updated_at, INTERVAL 3 MONTH) < CURRENT_TIMESTAMP AND quantity > 0 //
 
 /*-----------------Liberar material---------------------------------------------*/
-CREATE TRIGGER `liberar_material` AFTER UPDATE ON `operator_stock_assigned`
+DELIMITER //
+CREATE TRIGGER `liberar_material` AFTER UPDATE ON `operator_assigned_stocks`
  FOR EACH ROW IF new.state = "LIBERADO" THEN
-INSERT INTO free_stocks_details (code_user, item_id, movement, quantity, price, warehouse_id, operator_stock_assigned_id) VALUES (old.code_user, old.item_id, 'INGRESO', old.quantity, old.price, old.warehouse_id,old.id);
-END IF
+INSERT INTO released_stocks_details (code_user, item_id, movement, quantity, price, warehouse_id, operator_assigned_stock_id) VALUES (old.code_user, old.item_id, 'INGRESO', old.quantity, old.price, old.warehouse_id,old.id);
+END IF //
 
 /*----------Acumular el stock liberado---------*/
-CREATE TRIGGER `acumular_stock_liberado` BEFORE INSERT ON `free_stocks_details`
+DELIMITER //
+CREATE TRIGGER `acumular_stock_liberado` BEFORE INSERT ON `released_stocks_details`
  FOR EACH ROW BEGIN
 IF new.movement = "INGRESO" THEN
-IF EXISTS(SELECT * FROM free_stocks WHERE item_id =  new.item_id AND warehouse_id = new.warehouse_id) THEN
-UPDATE free_stocks SET quantity = quantity + new.quantity, price = price + new.price WHERE item_id = new.item_id AND warehouse_id = new.warehouse_id;
+IF EXISTS(SELECT * FROM released_stocks WHERE item_id =  new.item_id AND warehouse_id = new.warehouse_id) THEN
+UPDATE released_stocks SET quantity = quantity + new.quantity, price = price + new.price WHERE item_id = new.item_id AND warehouse_id = new.warehouse_id;
 ELSE
-INSERT INTO free_stocks (item_id,quantity,price,warehouse_id) VALUES (new.item_id,new.quantity,new.price, new.warehouse_id);
+INSERT INTO released_stocks (item_id,quantity,price,warehouse_id) VALUES (new.item_id,new.quantity,new.price, new.warehouse_id);
 END IF;
 INSERT INTO operator_stocks_details(code_user, item_id, movement, quantity, price, warehouse_id,state) VALUES (new.code_user, new.item_id, 'SALIDA', new.quantity, new.price, new.warehouse_id, 'LIBERADO');
 /*-----------END INGRESO-------------------*/
 ELSE
 /*-----------BEGIN SALIDA-----------------*/
-UPDATE free_stocks SET quantity = quantity - new.quantity, price = price - new.price  WHERE item_id = new.item_id AND warehouse_id = new.warehouse_id;
+UPDATE released_stocks SET quantity = quantity - new.quantity, price = price - new.price  WHERE item_id = new.item_id AND warehouse_id = new.warehouse_id;
 /*----------------END SALIDA---------------*/
 END IF;
-END
+END //
 
 /*---------Asignar el stock al operador------------------------*/
-BEGIN
+DELIMITER //
+CREATE TRIGGER `operator_stocks_input` AFTER INSERT ON `operator_stocks_details`
+ FOR EACH ROW BEGIN
 DECLARE op_stock INT;
 DECLARE op_assigned INT;
 DECLARE stock_general INT;
@@ -198,8 +199,8 @@ INSERT INTO stocks (item_id, quantity, price, warehouse_id) VALUES (new.item_id,
 SELECT MAX(id) INTO stock_general FROM stocks;
 END IF;
 /*-------Material asignado al operador por fecha para descontar--------*/
-INSERT INTO operator_stock_assigned(code_user, item_id, quantity, unit_price,price, warehouse_id) VALUES (new.code_user, new.item_id, new.quantity,(new.price/new.quantity), new.price, new.warehouse_id);
-SELECT MAX(id) INTO op_assigned FROM operator_stock_assigned;
+INSERT INTO operator_assigned_stocks(code_user, item_id, quantity, unit_price,price, warehouse_id) VALUES (new.code_user, new.item_id, new.quantity,(new.price/new.quantity), new.price, new.warehouse_id);
+SELECT MAX(id) INTO op_assigned FROM operator_assigned_stocks;
 ELSEIF new.movement = "SALIDA" THEN
 /*-------SALIDA DEL MATERIAL-----------*/
 /*-----Acumulado del operador-----*/
@@ -207,24 +208,51 @@ UPDATE operator_stocks SET quantity = quantity - new.quantity, price = price-new
 SELECT id INTO op_stock FROM operator_stocks ORDER BY updated_at DESC LIMIT 1;
 IF new.state = "CONFIRMADO" THEN
 /*---Descontar items por antiguedad----*/
-SELECT quantity,price INTO cantidad,precio FROM operator_stock_assigned WHERE code_user = new.code_user AND item_id = new.item_id AND warehouse_id = new.warehouse_id AND quantity <> 0 ORDER BY created_at ASC LIMIT 1;
+SELECT quantity,price INTO cantidad,precio FROM operator_assigned_stocks WHERE code_user = new.code_user AND item_id = new.item_id AND warehouse_id = new.warehouse_id AND quantity <> 0 ORDER BY created_at ASC LIMIT 1;
 SELECT new.quantity,new.price INTO cantidad_sobrante,precio_sobrante;
 WHILE cantidad_sobrante > cantidad DO
-UPDATE operator_stock_assigned SET quantity = 0, price = 0 WHERE code_user = new.code_user AND item_id = new.item_id AND warehouse_id = new.warehouse_id AND quantity <> 0 ORDER BY created_at ASC LIMIT 1;
+UPDATE operator_assigned_stocks SET quantity = 0, price = 0 WHERE code_user = new.code_user AND item_id = new.item_id AND warehouse_id = new.warehouse_id AND quantity <> 0 ORDER BY created_at ASC LIMIT 1;
 SELECT (cantidad_sobrante-cantidad),(precio_sobrante-precio) INTO cantidad_sobrante,precio_sobrante;
-SELECT quantity,price INTO cantidad,precio FROM operator_stock_assigned WHERE code_user = new.code_user AND item_id = new.item_id AND warehouse_id = new.warehouse_id AND quantity <> 0 ORDER BY created_at ASC LIMIT 1;
+SELECT quantity,price INTO cantidad,precio FROM operator_assigned_stocks WHERE code_user = new.code_user AND item_id = new.item_id AND warehouse_id = new.warehouse_id AND quantity <> 0 ORDER BY created_at ASC LIMIT 1;
 END WHILE;
 IF cantidad >= cantidad_sobrante THEN
-UPDATE operator_stock_assigned SET quantity = quantity - cantidad_sobrante, price = price - precio_sobrante WHERE code_user = new.code_user AND item_id = new.item_id AND warehouse_id = new.warehouse_id AND quantity <> 0 ORDER BY created_at ASC LIMIT 1;
+UPDATE operator_assigned_stocks SET quantity = quantity - cantidad_sobrante, price = price - precio_sobrante WHERE code_user = new.code_user AND item_id = new.item_id AND warehouse_id = new.warehouse_id AND quantity <> 0 ORDER BY created_at ASC LIMIT 1;
 END IF;
-SELECT id INTO op_assigned FROM operator_stock_assigned ORDER BY updated_at DESC LIMIT 1;
+SELECT id INTO op_assigned FROM operator_assigned_stocks ORDER BY updated_at DESC LIMIT 1;
 /*--------Descontar el stock general---*/
 UPDATE stocks SET quantity = quantity - new.quantity, price = price - new.price WHERE item_id = new.item_id AND warehouse_id = new.warehouse_id;
 SELECT id INTO stock_general FROM stocks ORDER BY updated_at DESC LIMIT 1;
 ELSE
-SELECT id INTO op_assigned FROM operator_stock_assigned WHERE state = "LIBERADO" ORDER BY updated_at DESC LIMIT 1;
+SELECT id INTO op_assigned FROM operator_assigned_stocks WHERE state = "LIBERADO" ORDER BY updated_at DESC LIMIT 1;
 END IF;
 /*----------END SALIDA----------*/
 END IF;
-INSERT INTO afectados_por_ingreso_operador (operator_stock_id, operator_stock_details_id, operador_stock_assigned_id, stock_id) VALUES (op_stock, new.id, op_assigned, stock_general);
-END
+INSERT INTO affected_by_warehouse_movement (operator_stock_id, operator_stock_detail_id, operator_assigned_stock_id, stock_id) VALUES (op_stock, new.id, op_assigned, stock_general);
+END //
+/*------------ANULAR MOVIMIENTO----------------------------------*/
+DELIMITER //
+CREATE TRIGGER `anulacion_movimientos` AFTER UPDATE ON `operator_stocks_details`
+ FOR EACH ROW BEGIN
+DECLARE op_stock INT;
+DECLARE op_assigned INT;
+DECLARE stock INT;
+/*---Obteniendo filas afectadas------*/
+SELECT operator_stock_id, operator_assigned_stock_id, stock_id INTO op_stock,op_assigned,stock FROM affected_by_warehouse_movement WHERE operator_stocks_details_id = old.id;
+IF new.movement = "INGRESO" THEN
+/*----------ANULAR INGRESO------*/
+/*-----Anular en operator_stocks--------*/
+UPDATE operator_stocks SET quantity = quantity - old.quantity, price = price - new.price WHERE id = op_stock;
+/*----Anular en operator_assigned_stocks--*/
+UPDATE operator_assigned_stocks SET quantity = quantity - old.quantity, price = price - old.price WHERE id = op_assigned;
+/*-------Anular en stock general--------*/
+UPDATE stocks SET quantity = quantity - old.quantity, price = price - old.price WHERE id = stock;
+ELSE
+/*----------ANULAR SALIDA-------*/
+/*---------Anular en op_stock---------*/
+UPDATE operator_stocks SET quantity = quantity + old.quantity, price = price + old.price WHERE id = op_stock;
+/*----Anular en operator_assigned_stocks--*/
+UPDATE operator_assigned_stocks SET quantity = quantity + old.quantity, price = price + old.price WHERE id = op_assigned;
+/*-------Anular en stock general--------*/
+UPDATE stocks SET quantity = quantity + old.quantity, price = price + old.price WHERE id = stock;
+END IF;
+END //
