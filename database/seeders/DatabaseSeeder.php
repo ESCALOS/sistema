@@ -57,24 +57,23 @@ class DatabaseSeeder extends Seeder
         Task::factory(50)->create();
         Labor::factory(6)->create();
         TractorModel::factory(3)->create();
-        Tractor::factory(10)->create();
+        Tractor::factory(10)->create();*/
         $faker = Faker::create();
-/*
-        for($i=1;$i<=5;$i++){
-            $implement_model = ImplementModel::find($i);
-            $implement_model->components()->attach($faker->numberBetween(1,36));
-            $implement_model->components()->attach($faker->numberBetween(1,36));
-            $implement_model->components()->attach($faker->numberBetween(1,36));
-        }
-*/
-        $componentes = Component::where('is_part',0)->get();
-        $partes = Component::where('is_part',1)->get();
-            foreach($componentes as $componente){
-                for($i=0;$i<5;$i++){
-                    $componente->parts()->attach($partes->random()->id);
-                }
 
+        $componentes = Component::where('is_part', 0)->get();
+        $partes = Component::where('is_part',1)->get();
+        for($i=3;$i<=7;$i++){
+            $implement_model = ImplementModel::find($i);
+            $implement_model->components()->attach($componentes->random()->id);
+            $implement_model->components()->attach($componentes->random()->id);
+            $implement_model->components()->attach($componentes->random()->id);
+        }
+
+        foreach($componentes as $componente){
+            for($i=0;$i<5;$i++){
+                $componente->parts()->attach($partes->random()->id);
             }
+        }
            /* $implement_model->components()->attach(2);
             $implement_model->components()->attach(10);
             $implement_model->components()->attach(8);

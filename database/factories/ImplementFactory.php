@@ -2,8 +2,10 @@
 
 namespace Database\Factories;
 
+use App\Models\Ceco;
 use App\Models\Implement;
 use App\Models\ImplementModel;
+use App\Models\Location;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -21,6 +23,8 @@ class ImplementFactory extends Factory
             'implement_number' => $this->faker->unique()->numerify('####'),
             'hours' => $this->faker->randomFloat($nbMaxDecimals=2,$min=8,$max=100),
             'user_id' => User::all()->random()->id,
+            'location_id' => Location::all()->random()->id,
+            'ceco_id' => Ceco::all()->random()->id,
         ];
     }
 }
