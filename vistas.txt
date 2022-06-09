@@ -1,0 +1,9 @@
+/*------------Vista parte----------------------------------------------*/
+create view partes as
+SELECT c.item_id as item, c.component as nombre, c.is_part as parte, c.lifespan as tiempo_vida, cp.hours, ci.implement_id, cc.component as perteneciente FROM components c INNER JOIN component_part cp ON c.id = cp.part INNER JOIN component_implement ci ON cp.component_implement_id = ci.id INNER JOIN components cc ON ci.component_id = cc.id WHERE cp.state = "PENDIENTE";
+/*------------Vista componentes------------------------------------------------*/
+create view componentes as
+SELECT c.item_id, c.component as nombre, c.is_part as parte, c.lifespan as tiempo_vida, ci.hours, ci.implement_id,'' as perteneciente FROM component_implement ci INNER JOIN components c ON ci.component_id = c.id WHERE state = 'PENDIENTE';
+/*---------juntando vistas-------------------------------------*/
+CREATE VIEW implement_component_part AS
+SELECT * FROM partes UNION ALL SELECT * FROM componentes

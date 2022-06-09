@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('implement_number',5);
             $table->decimal('hours',8,2);
             $table->foreignId('user_id')->constrained();
+            $table->foreignId('location_id')->constrained();
+            $table->foreignId('ceco_id')->constrained();
             $table->timestamps();
             $table->index(['implement_model_id','implement_number']);
         });

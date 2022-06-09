@@ -35,4 +35,10 @@ class Implement extends Model
     public function components(){
         return $this->belongsToMany(Component::class,'component_implement','implement_id','component_id');
     }
+    public function location(){
+        return $this->belongsTo(Location::class);
+    }
+    public function ceco(){
+        return $this->belongsTo(Ceco::class);
+    }
 }

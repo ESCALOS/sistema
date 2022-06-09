@@ -17,4 +17,10 @@ class Tractor extends Model
     public function tractorReport(){
         return $this->hasMany(TractorReport::class);
     }
+    public function tractorScheduling(){
+        return $this->hasMany(TractorScheduling::class);
+    }
+    public function location(){
+        return $this->belongsTo(Location::class);
+    }
 }

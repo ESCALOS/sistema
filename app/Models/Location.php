@@ -23,4 +23,10 @@ class Location extends Model
     public function warehouse(){
         return $this->hasMany(warehouse::class);
     }
+    public function implements(){
+        return $this->hasMany(Implement::class);
+    }
+    public function tractors(){
+        return $this->hasMany(Tractor::class);
+    }
 }

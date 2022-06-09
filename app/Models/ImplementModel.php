@@ -14,9 +14,6 @@ class ImplementModel extends Model
     public function implements(){
         return $this->hasMany(Implement::class);
     }
-    public function ceco(){
-        return $this->belongsTo(Ceco::class);
-    }
     public function components(){
         return $this->belongsToMany(Component::class);
     }

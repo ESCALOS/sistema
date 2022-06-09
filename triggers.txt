@@ -256,3 +256,41 @@ UPDATE operator_assigned_stocks SET quantity = quantity + old.quantity, price = 
 UPDATE stocks SET quantity = quantity + old.quantity, price = price + old.price WHERE id = stock;
 END IF;
 END //
+/*---------------------agregar componentes y partes a los items----------------*/
+DELIMITER //
+CREATE TRIGGER `agregar_componentes` AFTER INSERT ON `items`
+ FOR EACH ROW IF(new.type="COMPONENTE") THEN
+INSERT INTO components (item_id,component,is_part,lifespan) VALUES (new.id,new.item,0,ROUND(RAND()+1000)*5);
+ELSEIF(new.type="PIEZA") THEN
+INSERT INTO components(item_id,component,is_part,lifespan) VALUES (new.id,new.item,1,ROUND(RAND()+100)*5);
+END IF //
+/*------------------------Listar materiales para el pedido-------------------*/
+DELIMITER //
+CREATE DEFINER=`root`@`localhost` EVENT `Listar_materiales_pedido` ON SCHEDULE EVERY 8 WEEK STARTS '2022-06-27 00:00:00' ON COMPLETION PRESERVE DISABLE DO BEGIN
+DECLARE var_final INT DEFAULT 0;
+DECLARE var_final2 INT DEFAULT 0;
+DECLARE implemento INT;
+DECLARE item INT;
+DECLARE cantidad DECIMAL(8,2);
+DECLARE pedido INT;
+DECLARE usuario INT;
+DECLARE cur_comp CURSOR FOR SELECT icp.item,icp.implement_id,ROUND((324.6+icp.hours)/icp.tiempo_vida),icp.responsable FROM `implement_component_part` icp;
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET var_final = 1;
+OPEN cur_comp;
+	bucle:LOOP
+    FETCH cur_comp INTO item,implemento,cantidad,usuario;
+    IF var_final = 1 THEN
+    	LEAVE bucle;
+    END IF;
+    IF NOT EXISTS(SELECT * FROM order_requests r WHERE r.implement_id = implemento AND r.user_id = usuario AND r.state = 'PENDIENTE') THEN
+    	INSERT INTO order_requests(user_id,implement_id) VALUES (usuario,implemento);
+    END IF;
+    SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento AND user_id = usuario AND state = "PENDIENTE";
+    IF EXISTS(SELECT * FROM order_request_details rd WHERE rd.order_request_id = pedido AND rd.item_id = item AND rd.state="PENDIENTE") THEN
+    UPDATE order_request_details rd SET rd.quantity = rd.quantity + cantidad WHERE rd.order_request_id = pedido AND rd.item_id = item;
+    ELSE
+    INSERT INTO order_request_details (order_request_id,item_id,quantity,observation) VALUES (pedido,item, cantidad,'');
+    END IF;
+    END LOOP bucle;
+CLOSE cur_comp;
+END //
