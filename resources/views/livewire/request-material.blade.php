@@ -47,7 +47,7 @@
                 <div class="text-center">
                     <h1 class="text-md font-bold pb-4">Añadir a la solicitud:</h1>
                 </div>
-                <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
+                <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
                     @livewire('add-component', ['idImplemento' => $idImplemento])
                     <div>
                         <button class="px-4 py-2 w-48 bg-red-500 hover:bg-red-700 text-white rounded-md">Agregar Pieza</button>
