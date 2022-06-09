@@ -20,7 +20,7 @@ return new class extends Migration
             $table->enum('movement',['INGRESO','SALIDA']);
             $table->decimal('quantity',8,2);
             $table->decimal('price',8,2);
-            $table->foreignId('warehouse')->constrained();
+            $table->foreignId('warehouse_id')->constrained();
             $table->enum('state',['CONFIRMADO','ANULADO','LIBERADO']);
             $table->timestamps();
         });

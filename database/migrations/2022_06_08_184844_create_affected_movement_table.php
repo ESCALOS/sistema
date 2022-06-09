@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('affected_by_warehouse_movement', function (Blueprint $table) {
+        Schema::create('affected_movement', function (Blueprint $table) {
             $table->id();
             $table->foreignId('operator_stock_id')->nullable()->constrained();
             $table->foreignId('operator_stock_detail_id')->nullable()->constrained();
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('affected_by_warehouse_movement');
+        Schema::dropIfExists('affected_movement');
     }
 };

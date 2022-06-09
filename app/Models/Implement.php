@@ -33,6 +33,6 @@ class Implement extends Model
         return $this->hasMany(MinStockDetail::class);
     }
     public function components(){
-        return $this->belongsToMany(Component::class);
+        return $this->belongsToMany(Component::class,'component_implement','implement_id','component_id');
     }
 }

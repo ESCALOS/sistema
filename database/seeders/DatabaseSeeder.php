@@ -30,6 +30,7 @@ use App\Models\WorkOrder;
 use App\Models\Zone;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Faker\Factory as Faker;
 
 class DatabaseSeeder extends Seeder
 {
@@ -40,7 +41,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        \App\Models\User::factory(30)->create();
+        /*\App\Models\User::factory(30)->create();
         Zone::factory(3)->create();
         Sede::factory(8)->create();
         Location::factory(11)->create();
@@ -52,16 +53,22 @@ class DatabaseSeeder extends Seeder
         Risk::factory(20)->create();
         Ceco::factory(10)->hasCecoAllocationAmount(10)->create();
         Item::factory(30)->hasComponent(1)->create();
-        ImplementModel::factory(3)->hasImplements(5)->create();
+        ImplementModel::factory(5)->hasImplements(5)->create();
         Task::factory(50)->create();
         Labor::factory(6)->create();
         TractorModel::factory(3)->create();
         Tractor::factory(10)->create();
-/*
+*/      $faker = Faker::create();  
 
-            $implement_model = ImplementModel::find(1);
-            $implement_model->components()->attach(1);
-            $implement_model->components()->attach(2);
+        $componentes = Component::where('is_part',0)->get();
+        $partes = Component::where('is_part',1)->get();
+            foreach($componentes as $componente){
+                for($i=0;$i<5;$i++){
+                    $componente->parts()->attach($partes->random()->id);
+                }
+                
+            }
+           /* $implement_model->components()->attach(2);
             $implement_model->components()->attach(10);
             $implement_model->components()->attach(8);
 
@@ -74,7 +81,7 @@ class DatabaseSeeder extends Seeder
             $implement_model->components()->attach(6);
             $implement_model->components()->attach(7);
             $implement_model->components()->attach(9);
-            $implement_model->components()->attach(11);*/
+            $implement_model->components()->attach(11);
 
 
 

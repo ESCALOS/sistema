@@ -12,10 +12,10 @@ class Component extends Model
     protected $guarded = [];
 
     public function item(){
-        return $this->hasOne(Item::class);
+        return $this->belongsTo(Item::class);
     }
     public function parts(){
-        return $this->belongsToMany(Component::class,'component_parts','component_id','part_id');
+        return $this->belongsToMany(Component::class,'component_part_model','component','part');
     }
     public function systems(){
         return $this->belongsToMany(System::class);
