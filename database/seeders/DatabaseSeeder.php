@@ -41,7 +41,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        /*\App\Models\User::factory(30)->create();
+        \App\Models\User::factory(30)->create();
         Zone::factory(3)->create();
         Sede::factory(8)->create();
         Location::factory(11)->create();
@@ -57,12 +57,12 @@ class DatabaseSeeder extends Seeder
         Task::factory(50)->create();
         Labor::factory(6)->create();
         TractorModel::factory(3)->create();
-        Tractor::factory(10)->create();*/
+        Tractor::factory(10)->create();
         $faker = Faker::create();
 
         $componentes = Component::where('is_part', 0)->get();
         $partes = Component::where('is_part',1)->get();
-        for($i=3;$i<=7;$i++){
+        for($i=1;$i<=5;$i++){
             $implement_model = ImplementModel::find($i);
             $implement_model->components()->attach($componentes->random()->id);
             $implement_model->components()->attach($componentes->random()->id);
@@ -74,32 +74,8 @@ class DatabaseSeeder extends Seeder
                 $componente->parts()->attach($partes->random()->id);
             }
         }
-           /* $implement_model->components()->attach(2);
-            $implement_model->components()->attach(10);
-            $implement_model->components()->attach(8);
 
-            $implement_model = ImplementModel::find(2);
-            $implement_model->components()->attach(4);
-            $implement_model->components()->attach(5);
-            $implement_model->components()->attach(6);
-
-            $implement_model = ImplementModel::find(3);
-            $implement_model->components()->attach(6);
-            $implement_model->components()->attach(7);
-            $implement_model->components()->attach(9);
-            $implement_model->components()->attach(11);
-
-
-
-        /*for($i=1;$i<=5;$i++){
-            $implement = Implement::find($i);
-            $implement->components()->attach(1);
-            $implement->components()->attach(2);
-            $implement->components()->attach(3);
-            $implement->components()->attach(4);
-            $implement->components()->attach(5);
-        }
-        TractorScheduling::factory(50)->create();
+        /*TractorScheduling::factory(50)->create();
         TractorReport::factory(50)->create();
         OrderRequest::factory(50)->create();
         OrderRequestDetail::factory(50)->create();

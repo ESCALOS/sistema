@@ -12,7 +12,7 @@
                     <select id="component" class="form-select" style="width: 100%" wire:model='component_for_add'>
                         <option value="">Seleccione una opción</option>
                         @foreach ($components as $component)
-                            <option value="{{ $component->item_id }}">{{ $component->component }} </option>
+                            <option value="{{ $component->item_id }}">{{ $component->item }} </option>
                         @endforeach
                     </select>
 

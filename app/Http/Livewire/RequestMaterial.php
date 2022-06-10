@@ -22,8 +22,7 @@ class RequestMaterial extends Component
 
     public $idImplemento = 0;
     public $implemento;
-    public $idRequest = 0;
-    public $request = 0;
+    public $idRequest;
     public $open_edit = false;
     public $material_seleccionado = 0;
     protected $listeners = ['render'];
@@ -35,12 +34,12 @@ class RequestMaterial extends Component
 
     public function updatedIdImplemento()
     {
-        $this->emit('cambioImplemento', [$this->idImplemento, $this->idRequest]);
+        $this->emit('cambioImplemento', $this->idImplemento);
     }
     public function render()
     {
         $implements = Implement::where('user_id',auth()->user()->id)->get();
-        //$components = DB::table('implement_component_part')->where('implement_id',$this->idImplemento)->get();
+
         if($this->idImplemento > 0){
             $orderRequest = OrderRequest::where('implement_id',$this->idImplemento)->where('state','PENDIENTE')->first();
             if($orderRequest!=null){
@@ -48,9 +47,8 @@ class RequestMaterial extends Component
             }else{
                 $this->idRequest = 0;
             }
-            
         }
-        $orderRequestDetails = OrderRequestDetail::where('order_request_id',$this->idRequest)->get();
+        $orderRequestDetails = OrderRequestDetail::where('order_request_id',$this->idRequest)->orderBy('id','desc')->get();
         if($this->idImplemento>0){
             $implement = Implement::where('id',$this->idImplemento)->first();
             $this->implemento = $implement->implementModel->implement_model.' '.$implement->implement_number;

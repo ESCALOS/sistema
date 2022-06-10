@@ -7,6 +7,7 @@ use App\Models\Implement;
 use App\Models\Item;
 use App\Models\OrderRequest;
 use App\Models\OrderRequestDetail;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class AddComponent extends Component
@@ -16,7 +17,8 @@ class AddComponent extends Component
     public $idRequest;
     public $component_for_add;
     public $quantity_component_for_add;
-    public $estimated_price_component = 0;
+    public $estimated_price_component;
+    public $excluidos = [];
 
     protected $rules = [
         'component_for_add' => 'required|exists:items,id',
@@ -25,23 +27,30 @@ class AddComponent extends Component
 
     protected $listeners = ['cambioImplemento'=>'cambioImplemento'];
 
-    public function cambioImplemento(Implement $idImplemento, OrderRequest $idRequest)
+    public function updatedOpenComponente(){
+        $this->reset(['component_for_add','quantity_component_for_add','estimated_price_component']);
+    }
+
+    public function cambioImplemento(Implement $idImplemento)
     {
         $this->idImplemento = $idImplemento->id;
-        $this->idRequest = $idRequest->id;
+        $this->excluidos = [];
     }
 
     public function store(){
         $this->validate();
 
-        if($this->idRequest == 0){
+        $order_request_id = OrderRequest::where('implement_id',$this->idImplemento)->where('state','PENDIENTE')->first();
+        if(is_null($order_request_id)){
             $order_request = OrderRequest::create([
                 'user_id' => auth()->user()->id,
                 'implement_id' => $this->idImplemento
             ]);
             $this->idRequest = $order_request->id;
+        }else{
+            $this->idRequest = $order_request_id->id;
         }
-        
+
         OrderRequestDetail::create([
             'order_request_id' => $this->idRequest,
             'item_id' => $this->component_for_add,
@@ -51,7 +60,7 @@ class AddComponent extends Component
 
         $this->reset(['component_for_add','quantity_component_for_add','estimated_price_component']);
         $this->open_componente = false;
-        $this->emit('render');
+        $this->emit('render',$this->idRequest);
         $this->emit('alert');
     }
 
@@ -66,8 +75,14 @@ class AddComponent extends Component
 
     public function render()
     {
+        $added_components = OrderRequestDetail::where('order_request_id',$this->idRequest)->get();
+        if($added_components != null){
+            foreach($added_components as $added_component){
+                array_push($this->excluidos,$added_component->item_id);
+            }
+        }
+        $components = DB::table('componentes_del_implemento')->where('implement_id','=',$this->idImplemento)->whereNotIn('item_id',$this->excluidos)->get();
 
-        $components = ModelsComponent::whereRelation('implements','implement_id',$this->idImplemento)->get();
         return view('livewire.add-component',compact('components'));
     }
 }

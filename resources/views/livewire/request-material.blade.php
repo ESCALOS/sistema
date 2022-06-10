@@ -1,6 +1,6 @@
 <div>
     <div class="text-center">
-        <h1 class="text-2xl font-bold pb-4">Solicitud de Pedido : {{strtoupper($implemento)}}</h1>
+        <h1 class="text-2xl font-bold pb-4">Solicitud de Pedido : {{strtoupper($implemento)}} </h1>
     </div>
     <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
         <select class="form-select" style="width: 100%" wire:model='idImplemento'>
@@ -30,7 +30,7 @@
                             <tr style="cursor:pointer" wire:click="seleccionar({{$request->id}})" class="border-b {{ $request->id == $material_seleccionado ? 'bg-blue-200' : '' }} border-gray-200">
                                 <td class="py-3 px-6 text-center">
                                     <div>
-                                        <span class="font-bold {{$request->item->type == "PIEZA" ? 'text-red-500' : ( $request->item->type == "COMPONENTE" ? 'text-red-500' : ($request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "FUNGIBLE" ? 'text-amber-500' : 'text-blue-500')))}} ">{{ strtoupper($request->item->item) }}</span>
+                                        <span class="font-bold {{$request->item->type == "PIEZA" ? 'text-red-500' : ( $request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "FUNGIBLE" ? 'text-amber-500' : 'text-blue-500')))}} ">{{ strtoupper($request->item->item) }}</span>
                                     </div>
                                 </td>
                                 <td class="py-3 px-6 text-center">
@@ -48,10 +48,10 @@
                     <h1 class="text-md font-bold pb-4">Añadir a la solicitud:</h1>
                 </div>
                 <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
-                    @livewire('add-component')
-                    @livewire('add-part')
-                    @livewire('add-material')
-                    @livewire('add-tool')
+                    @livewire('add-component', ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
+                    @livewire('add-part',  ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
+                    @livewire('add-material',  ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
+                    @livewire('add-tool',  ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
                 </div>
             </div>
             <div style="height:180px;overflow:auto">

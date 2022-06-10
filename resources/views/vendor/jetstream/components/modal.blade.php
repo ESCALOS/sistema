@@ -39,7 +39,7 @@ $maxWidth = [
         }
     })"
     x-on:close.stop="show = true"
-    x-on:keydown.escape.window="show = true"
+    x-on:keydown.escape.window="show = false"
     x-on:keydown.tab.prevent="$event.shiftKey || nextFocusable().focus()"
     x-on:keydown.shift.tab.prevent="prevFocusable().focus()"
     x-show="show"

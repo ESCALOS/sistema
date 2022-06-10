@@ -9,26 +9,26 @@
         <x-slot name="content">
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                     <x-jet-label>Componente: </x-jet-label>
-                    <select id="component" class="form-select" style="width: 100%" wire:model='component_for_part'>
-                        <option value="">Seleccione una opción</option>
+                    <select wire:model='component_for_part' class="form-select" style="width: 100%">
+                        <option value="0">Seleccione una opción</option>
                         @foreach ($components as $component)
-                            <option value="{{ $component->item_id }}">{{ $component->component }} {{$component->item->estimated_price}}</option>
+                            <option value="{{ $component->item_id }}">{{ $component->item }} </option>
                         @endforeach
                     </select>
 
-                    <x-jet-input-error for="componente_for_add"/>
+                    <x-jet-input-error for="component_for_part"/>
 
                 </div>
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
-                    <x-jet-label>Componente: </x-jet-label>
-                    <select id="component" class="form-select" style="width: 100%" wire:model='component_for_part'>
-                        <option value="">Seleccione una opción</option>
-                        @foreach ($components as $component)
-                            <option value="{{ $component->item_id }}">{{ $component->component }} {{$component->item->estimated_price}}</option>
+                    <x-jet-label>Pieza: </x-jet-label>
+                    <select wire:model='part_for_add' class="form-select" style="width: 100%">
+                        <option value="0">Seleccione una opción</option>
+                        @foreach ($parts as $part)
+                            <option value="{{ $part->item_id }}">{{ $part->part }} </option>
                         @endforeach
                     </select>
 
-                    <x-jet-input-error for="componente_for_add"/>
+                    <x-jet-input-error for="part_for_add"/>
 
                 </div>
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
