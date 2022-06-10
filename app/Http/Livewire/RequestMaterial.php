@@ -7,6 +7,7 @@ use App\Models\Implement;
 use App\Models\Item;
 use App\Models\OrderRequest;
 use App\Models\OrderRequestDetail;
+use App\Models\OrderRequestNewItem;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -14,11 +15,6 @@ use Livewire\WithPagination;
 class RequestMaterial extends Component
 {
     use WithPagination;
-
-    public $open_componte = false;
-    public $open_pieza = false;
-    public $open_material = false;
-    public $open_herramienta = false;
 
     public $idImplemento = 0;
     public $implemento;
@@ -49,6 +45,7 @@ class RequestMaterial extends Component
             }
         }
         $orderRequestDetails = OrderRequestDetail::where('order_request_id',$this->idRequest)->orderBy('id','desc')->get();
+        $orderRequestNewItems = OrderRequestNewItem::where('order_request_id',$this->idRequest)->orderBy('id','desc')->get();
         if($this->idImplemento>0){
             $implement = Implement::where('id',$this->idImplemento)->first();
             $this->implemento = $implement->implementModel->implement_model.' '.$implement->implement_number;
@@ -56,6 +53,6 @@ class RequestMaterial extends Component
             $this->implemento = "Seleccione un implemento";
         }
 
-        return view('livewire.request-material',compact('implements','orderRequestDetails'));
+        return view('livewire.request-material',compact('implements','orderRequestDetails','orderRequestNewItems'));
     }
 }

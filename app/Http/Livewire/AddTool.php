@@ -28,6 +28,11 @@ class AddTool extends Component
     public function cambioImplemento(Implement $idImplemento)
     {
         $this->idImplemento = $idImplemento->id;
+        $this->excluidos = [];
+    }
+
+    public function updatedOpenTool(){
+        $this->reset(['tool_for_add','quantity_tool_for_add','estimated_price_tool']);
     }
 
     public function store(){
@@ -71,8 +76,13 @@ class AddTool extends Component
 
     public function render()
     {
-
-        $components = Item::where('type','HERRAMIENTA')->get();
+        $added_components = OrderRequestDetail::where('order_request_id',$this->idRequest)->get();
+        if($added_components != null){
+            foreach($added_components as $added_component){
+                array_push($this->excluidos,$added_component->item_id);
+            }
+        }
+        $components = Item::where('type','HERRAMIENTA')->whereNotIn('id',$this->excluidos)->get();
         return view('livewire.add-tool',compact('components'));
     }
 }

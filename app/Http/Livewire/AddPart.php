@@ -31,7 +31,8 @@ class AddPart extends Component
 
     public function cambioImplemento(Implement $idImplemento)
     {
-        $this->idImplemento = $idImplemento->id;;
+        $this->idImplemento = $idImplemento->id;
+        $this->excluidos = [];
     }
 
     public function updatedOpenParte(){
