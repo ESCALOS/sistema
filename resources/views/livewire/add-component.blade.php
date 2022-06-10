@@ -8,11 +8,11 @@
         </x-slot>
         <x-slot name="content">
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
-                    <x-jet-label>Componente: {{$estimated_price_component}}</x-jet-label>
+                    <x-jet-label>Componente: </x-jet-label>
                     <select id="component" class="form-select" style="width: 100%" wire:model='component_for_add'>
                         <option value="">Seleccione una opción</option>
                         @foreach ($components as $component)
-                            <option value="{{ $component->item_id }}">{{ $component->component }} {{$component->item->estimated_price}}</option>
+                            <option value="{{ $component->item_id }}">{{ $component->component }} </option>
                         @endforeach
                     </select>
 

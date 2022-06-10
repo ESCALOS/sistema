@@ -30,7 +30,7 @@
                             <tr style="cursor:pointer" wire:click="seleccionar({{$request->id}})" class="border-b {{ $request->id == $material_seleccionado ? 'bg-blue-200' : '' }} border-gray-200">
                                 <td class="py-3 px-6 text-center">
                                     <div>
-                                        <span class="font-bold {{$request->item->type === "PIEZA" ? 'text-red-500' : 'text-green-500'}} ">{{ strtoupper($request->item->item) }}</span>
+                                        <span class="font-bold {{$request->item->type == "PIEZA" ? 'text-red-500' : ( $request->item->type == "COMPONENTE" ? 'text-red-500' : ($request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "FUNGIBLE" ? 'text-amber-500' : 'text-blue-500')))}} ">{{ strtoupper($request->item->item) }}</span>
                                     </div>
                                 </td>
                                 <td class="py-3 px-6 text-center">
@@ -48,16 +48,10 @@
                     <h1 class="text-md font-bold pb-4">Añadir a la solicitud:</h1>
                 </div>
                 <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
-                    @livewire('add-component', ['idImplemento' => $idImplemento])
-                    <div>
-                        <button class="px-4 py-2 w-48 bg-red-500 hover:bg-red-700 text-white rounded-md">Agregar Pieza</button>
-                    </div>
-                    <div>
-                        <button class="px-4 py-2 w-48 bg-amber-500 hover:bg-amber-700 text-white rounded-md">Agregar Material</button>
-                    </div>
-                    <div>
-                        <button class="px-4 py-2 w-48 bg-blue-500 hover:bg-blue-700 text-white rounded-md">Agregar Herramienta</button>
-                    </div>
+                    @livewire('add-component')
+                    @livewire('add-part')
+                    @livewire('add-material')
+                    @livewire('add-tool')
                 </div>
             </div>
             <div style="height:180px;overflow:auto">

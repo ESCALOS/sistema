@@ -26,6 +26,7 @@ class RequestMaterial extends Component
     public $request = 0;
     public $open_edit = false;
     public $material_seleccionado = 0;
+    protected $listeners = ['render'];
 
     public function seleccionar($id)
     {
@@ -34,7 +35,7 @@ class RequestMaterial extends Component
 
     public function updatedIdImplemento()
     {
-        $this->emit('cambioImplemento', $this->idImplemento);
+        $this->emit('cambioImplemento', [$this->idImplemento, $this->idRequest]);
     }
     public function render()
     {
@@ -42,7 +43,12 @@ class RequestMaterial extends Component
         //$components = DB::table('implement_component_part')->where('implement_id',$this->idImplemento)->get();
         if($this->idImplemento > 0){
             $orderRequest = OrderRequest::where('implement_id',$this->idImplemento)->where('state','PENDIENTE')->first();
-            $this->idRequest = $orderRequest->id;
+            if($orderRequest!=null){
+                $this->idRequest = $orderRequest->id;
+            }else{
+                $this->idRequest = 0;
+            }
+            
         }
         $orderRequestDetails = OrderRequestDetail::where('order_request_id',$this->idRequest)->get();
         if($this->idImplemento>0){
