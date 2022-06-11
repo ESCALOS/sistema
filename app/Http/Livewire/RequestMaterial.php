@@ -20,12 +20,34 @@ class RequestMaterial extends Component
     public $implemento;
     public $idRequest;
     public $open_edit = false;
-    public $material_seleccionado = 0;
+    public $material_edit = 0;
+    public $material_edit_name = '';
+    public $material_nuevo_seleccionado = 0;
+
+    public $cantidad_edit;
+
     protected $listeners = ['render'];
 
-    public function seleccionar($id)
+    public function seleccionar_material_nuevo($id)
     {
-        $this->material_seleccionado = $id;
+        $this->material_nuevo_seleccionado = $id;
+    }
+
+    public function editar($id)
+    {
+        $this->material_edit = $id;
+        $material = OrderRequestDetail::find($id);
+        $this->material_edit_name = $material->item->item;
+        $this->cantidad_edit = $material->quantity;
+        $this->open_edit = true;
+    }
+
+    public function actualizar(){
+        $material = OrderRequestDetail::find($this->material_edit);
+        $material->cantidad = $this->cantidad_edit;
+        $material->save();
+        $this->open_edit = false;
+        $this->render();
     }
 
     public function updatedIdImplemento()
