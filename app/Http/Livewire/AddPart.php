@@ -92,7 +92,7 @@ class AddPart extends Component
         }
         $components = DB::table('componentes_del_implemento')->where('implement_id','=',$this->idImplemento)->get();
         if($this->component_for_part > 0){
-            $parts = DB::table('piezas_simplificada')->where('component_id',$this->component_for_part)->whereNotIn('item_id',$this->excluidos)->get();
+            $parts = DB::table('pieza_simplificada')->where('component_id',$this->component_for_part)->whereNotIn('item_id',$this->excluidos)->get();
         }else{
             $parts = [];
         }

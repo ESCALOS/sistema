@@ -15,6 +15,6 @@ class OrderRequestNewItem extends Model
         return $this->belongs(OrderRequest::class);
     }
     public function measurementUnit(){
-        return $this->belongs(MeasurementUnit::class);
+        return $this->belongsTo(MeasurementUnit::class);
     }
 }
