@@ -71,12 +71,12 @@
                         <tr style="cursor:pointer" wire:click="seleccionar({{$request->id}})" class="border-b {{ $request->id == $material_seleccionado ? 'bg-blue-200' : '' }} border-gray-200">
                             <td class="py-3 px-6 text-center">
                                 <div>
-                                    <span class="font-bold">{{ strtoupper($request->item->item) }}</span>
+                                    <span class="font-bold">{{ strtoupper($request->new_item) }}</span>
                                 </div>
                             </td>
                             <td class="py-3 px-6 text-center">
                                 <div>
-                                    <span class="font-medium">{{$request->quantity}} {{$request->item->measurementUnit->abbreviation}}</span>
+                                    <span class="font-medium">{{$request->quantity}} {{$request->brand}}</span>
                                 </div>
                             </td>
                         </tr>

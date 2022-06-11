@@ -14,5 +14,5 @@ SELECT c.id as component_id,c.item_id as item_id, c.component as item, i.id as i
 CREATE VIEW partes_del_componente AS
 SELECT p.id as part_id, p.item_id as item_id, p.component as item, c.id as componente_id FROM components p INNER JOIN component_part_model cpm on p.id = cpm.part INNER JOIN components c ON c.id = cpm.component;
 /*-------------Vista piezas simplificada----------------*/
-CREATE VIEW piezas_simplificada AS
-SELECT c.item_id,cpm.part as part_id,p.component as part, cpm.id as component_id FROM component_part_model cpm INNER JOIN components c ON c.id = cpm.component INNER JOIN components p ON p.id = cpm.part;
+create view pieza_simplificada as
+SELECT p.item_id as item_id, p.component as part, c.item_id AS component_id FROM component_part_model cpm INNER JOIN components c ON c.id = cpm.component INNER JOIN components p ON p.id = cpm.part;
