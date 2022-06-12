@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('order_request_id')->constrained();
             $table->string('new_item');
             $table->decimal('quantity',8,2);
+            $table->foreignId('measurement_unit_id')->constrained();
             $table->string('brand');
             $table->text('datasheet');
             $table->string('image',2048);
