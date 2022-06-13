@@ -11,11 +11,13 @@ use App\Models\OrderRequestDetail;
 use App\Models\OrderRequestNewItem;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 class RequestMaterial extends Component
 {
     use WithPagination;
+    use WithFileUploads;
 
     public $idImplemento = 0;
     public $implemento;
@@ -54,9 +56,13 @@ class RequestMaterial extends Component
 
     public function actualizar_nuevo()
     {
-        $material = OrderRequestNewItem::find($this->material_edit);
+        $material = OrderRequestNewItem::find($this->material_new_edit);
         $material->quantity = $this->material_new_edit_quantity;
         $material->measurement_unit_id = $this->material_new_edit_measurement_unit;
+        $material->brand = $this->material_new_edit_brand;
+        $material->datasheet = $this->material_new_edit_datasheet;
+        $material->image = $this->material_new_edit_image;
+        $material->observation = $this->material_new_edit_observation;
         $material->save();
         $this->open_edit_new = false;
         $this->render();
