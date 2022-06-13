@@ -14,6 +14,17 @@
         @if ($idImplemento > 0)
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div style="height:180px;overflow:auto">
+                <div class="text-center">
+                    <h1 class="text-md font-bold pb-4">Añadir a la solicitud:</h1>
+                </div>
+                <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
+                    @livewire('add-component', ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
+                    @livewire('add-part',  ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
+                    @livewire('add-material',  ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
+                    @livewire('add-tool',  ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
+                </div>
+            </div>
+            <div style="height:180px;overflow:auto">
                 <table class="min-w-max w-full">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -43,18 +54,7 @@
                     </tbody>
                 </table>
             </div>
-            <div style="height:180px;overflow:auto">
-                <div class="text-center">
-                    <h1 class="text-md font-bold pb-4">Añadir a la solicitud:</h1>
-                </div>
-                <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
-                    @livewire('add-component', ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
-                    @livewire('add-part',  ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
-                    @livewire('add-material',  ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
-                    @livewire('add-tool',  ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
-                </div>
-            </div>
-            <div style="height:2000px;overflow:auto">
+            <div style="height:200px;overflow:auto;">
                 <table class="min-w-max w-full">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -83,64 +83,6 @@
                     @endforeach
                     </tbody>
                 </table>
-            </div>
-            <div style="height:200px;overflow:auto">
-                <div class="text-center">
-                    <h1 class="text-md font-bold pb-4">Añadir a la solicitud:</h1>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
-                    <x-jet-label>Nombre:</x-jet-label>
-                    <x-jet-input type="text" style="height:30px;width: 100%" wire:model="material_new_item" />
-
-                    <x-jet-input-error for="material_new_edit_quantity"/>
-
-                </div>
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem; padding-right:1rem">
-                    <x-jet-label>Cantidad:</x-jet-label>
-                    <x-jet-input type="number" style="height:30px;width: 100%" wire:model="material_new_quantity" />
-
-                    <x-jet-input-error for="material_new_edit_quantity"/>
-
-                </div>
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
-                    <x-jet-label>Unidad de Medida: </x-jet-label>
-                    <select class="form-select" style="width: 100%" wire:model='material_new_measurement_unit'>
-                        <option value="">Seleccione una opción</option>
-                        @foreach ($measurement_units as $measurement_unit)
-                            <option value="{{ $measurement_unit->id }}">{{ $measurement_unit->measurement_unit }} </option>
-                        @endforeach
-                    </select>
-
-                    <x-jet-input-error for="material_new_edit_measurement_unit"/>
-
-                </div>
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
-                    <x-jet-label>Marca:</x-jet-label>
-                    <x-jet-input type="text" style="height:30px;width: 100%" wire:model="material_new_brand" />
-
-                    <x-jet-input-error for="material_new_edit_brand"/>
-
-                </div>
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 2 span/ 2 span">
-                    <x-jet-label>Especificaciones:</x-jet-label>
-                    <textarea class="form-control w-full text-sm" rows=4 wire:model.defer="material_new_edit_datasheet"></textarea>
-                </div>
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
-                    <x-jet-label>Imagen:</x-jet-label>
-                    <x-jet-input type="file" style="height:30px;width: 100%" wire:model="material_new_edit_image" />
-
-                    <x-jet-input-error for="material_new_edit_image"/>
-
-                </div>
-
-                
-
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 2 span/ 2 span">
-                    <x-jet-label>Observaciones:</x-jet-label>
-                    <textarea class="form-control w-full text-sm" rows=4 wire:model.defer="material_new_edit_observation"></textarea>
-                </div>
-            </div>
             </div>
         </div>
         @else

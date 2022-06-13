@@ -113,30 +113,6 @@ END;
 	END LOOP bucle;
 CLOSE cursor_componente;
 END; //
-/*---------------Agregar a lista de materiales necesarios-------------*/
-DELIMITER //
-CREATE TRIGGER `materiales_para_solicitar` AFTER UPDATE ON `component_implement`
- FOR EACH ROW BEGIN
-DECLARE request INT;
-DECLARE responsable INT;
-DECLARE componente INT;
-DECLARE tiempo_vida DECIMAL(8,2);
-SELECT user_id INTO responsable FROM implements WHERE id = new.implement_id;
-SELECT item_id,lifespan INTO componente,tiempo_vida FROM components WHERE id = new.component_id;
-/*-----Comprobar si el componente pasó sus horas-----*/
-IF EXISTS (SELECT * FROM component_implement ci INNER JOIN components c WHERE ci.implement_id = new.implement_id AND ci.component_id = new.component_id AND ci.hours > c.lifespan) THEN
-/*----Comprobar si existe la solicitud de pedido para el implemento*/
-IF NOT EXISTS(SELECT * FROM order_requests WHERE user_id = responsable AND implement_id = new.implement_id AND state = 'PENDIENTE') THEN
-INSERT INTO order_requests(user_id,implement_id) VALUES (responsable,new.implement_id);
-END IF;
-/*-------Seleccionar el id de la orden de pedido-------------------*/
-SELECT id INTO request FROM order_requests WHERE user_id = responsable AND implement_id = new.implement_id AND state = 'PENDIENTE';
-/*-----Insertar en el detalle de la solicitud de pedido-----------*/
-IF NOT EXISTS(SELECT * FROM order_request_details WHERE order_request_id = request AND item_id = componente AND state = 'PENDIENTE') THEN
-INSERT INTO order_request_details(order_request_id,item_id,quantity) VALUES (request,componente,ceiling(326.4/tiempo_vida));
-END IF;
-END IF;
-END; //
 
 /*--------Evento para liberar el material-----------------------------------*/
 DELIMITER //
@@ -264,33 +240,98 @@ INSERT INTO components (item_id,component,is_part,lifespan) VALUES (new.id,new.i
 ELSEIF(new.type="PIEZA") THEN
 INSERT INTO components(item_id,component,is_part,lifespan) VALUES (new.id,new.item,1,ROUND(RAND()+100)*5);
 END IF //
+
 /*------------------------Listar materiales para el pedido-------------------*/
+
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` EVENT `Listar_materiales_pedido` ON SCHEDULE EVERY 8 WEEK STARTS '2022-06-27 00:00:00' ON COMPLETION PRESERVE DISABLE DO BEGIN
-DECLARE var_final INT DEFAULT 0;
-DECLARE var_final2 INT DEFAULT 0;
+/*--------variables para detener el ciclo-----------*/
+DECLARE componente_final INT DEFAULT 0;
+DECLARE pieza_final  INT DEFAULT 0;
+/*-------------------------------------------------*/
+/*---------variables para almacenar variables del componente----------*/
+DECLARE pedido INT;  #order_request_id
 DECLARE implemento INT;
+DECLARE componente INT;
+DECLARE responsable INT;
 DECLARE item INT;
+DECLARE tiempo_vida DECIMAL(8,2);
+DECLARE horas DECIMAL(8,2);
 DECLARE cantidad DECIMAL(8,2);
-DECLARE pedido INT;
-DECLARE usuario INT;
-DECLARE cur_comp CURSOR FOR SELECT icp.item,icp.implement_id,ROUND((324.6+icp.hours)/icp.tiempo_vida),icp.responsable FROM `implement_component_part` icp;
-DECLARE CONTINUE HANDLER FOR NOT FOUND SET var_final = 1;
+/*------------------------------------------------------------------------*/
+/*--------------variables para la pieza------------------------------------*/
+DECLARE pieza INT;
+DECLARE item_pieza INT;
+DECLARE horas_pieza DECIMAL(8,2);
+DECLARE tiempo_vida_pieza DECIMAL(8,2);
+DECLARE cantidad_pieza DECIMAL(8,2);
+/*------------------------------------------------------------------------------*/
+/*---------Declarando cursores para iterar por cada componente y pieza-----------*/
+DECLARE cur_comp CURSOR FOR SELECT i.id, c.id, c.item_id, c.lifespan, i.user_id FROM component_implement_model cim INNER JOIN implements i ON i.implement_model_id = cim.implement_model_id INNER JOIN components c ON c.id = cim.component_id;
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET componente_final = 1;
+/*-----------------------------------------------------------------------------------*/
 OPEN cur_comp;
 	bucle:LOOP
-    FETCH cur_comp INTO item,implemento,cantidad,usuario;
-    IF var_final = 1 THEN
+    IF componente_final = 1 THEN
     	LEAVE bucle;
     END IF;
-    IF NOT EXISTS(SELECT * FROM order_requests r WHERE r.implement_id = implemento AND r.user_id = usuario AND r.state = 'PENDIENTE') THEN
-    	INSERT INTO order_requests(user_id,implement_id) VALUES (usuario,implemento);
-    END IF;
-    SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento AND user_id = usuario AND state = "PENDIENTE";
-    IF EXISTS(SELECT * FROM order_request_details rd WHERE rd.order_request_id = pedido AND rd.item_id = item AND rd.state="PENDIENTE") THEN
-    UPDATE order_request_details rd SET rd.quantity = rd.quantity + cantidad WHERE rd.order_request_id = pedido AND rd.item_id = item;
+    FETCH cur_comp INTO implemento,componente,item,tiempo_vida,responsable;
+    /*--------------Obtener horas del componente-----------------------------------*/
+    IF EXISTS(SELECT * FROM component_implement WHERE implement_id = implemento AND component_id = componente AND state = "PENDIENTE") THEN
+    	SELECT hours INTO horas FROM component_implement WHERE implement_id = implemento AND component_id = componente AND state = "PENDIENTE";
     ELSE
-    INSERT INTO order_request_details (order_request_id,item_id,quantity,observation) VALUES (pedido,item, cantidad,'');
+    	SELECT 0 INTO horas;
     END IF;
+    /*-----------------------------------------------------------*/
+    /*-------Calcular la cantidad del pedido-------------------*/
+    SELECT ROUND((336+horas)/tiempo_vida) INTO cantidad;
+    /*-----------Verificar si se requiere el componente----------*/
+    IF(cantidad > 0) THEN
+    /*------------Verificar si existe la cabecera de la solicitud------*/
+    	IF NOT EXISTS(SELECT * FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE") THEN
+        	INSERT INTO order_requests(user_id,implement_id) VALUES (responsable,implemento);
+        END IF;
+    /*-----------Obteniendo la cabecera de la solicitud-------------------------*/
+        SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE";
+    /*------Creando la solicitud del componente--------*/
+    	INSERT INTO order_request_details(order_request_id,item_id,quantity) VALUES (pedido,item,cantidad);
+    END IF;
+    BEGIN
+    /*-------Declarando cursor para piezas---------------------*/
+    	DECLARE cur_part CURSOR FOR SELECT cpm.part,c.lifespan,c.item_id FROM component_part_model cpm INNER JOIN components c ON c.id = cpm.part WHERE cpm.component = componente;
+        DECLARE CONTINUE HANDLER FOR NOT FOUND SET pieza_final = 1;
+    /*--------------------------------------------------*/
+    	OPEN cur_part;
+        	bucle2:LOOP
+            IF pieza_final = 1 THEN
+            	LEAVE bucle2;
+            END IF;
+            FETCH cur_part INTO pieza,tiempo_vida_pieza,item_pieza;
+            /*--------------Obtener horas de la pieza-------------------------------*/
+            IF EXISTS(SELECT * FROM component_part cp INNER JOIN component_implement ci ON ci.id = cp.component_implement_id WHERE ci.component_id = componente AND cp.part = pieza AND cp.state = "PENDIENTE") THEN
+    			SELECT cp.hours INTO horas_pieza FROM component_part cp INNER JOIN component_implement ci ON ci.id = cp.component_implement_id WHERE ci.component_id = componente AND cp.part = pieza AND cp.state = "PENDIENTE";
+    		ELSE
+    			SELECT 0 INTO horas_pieza;
+    		END IF;
+            /*------------------------------------------------------------*/
+            /*-------------Calcular la cantidad del pedido---------------------*/
+            SELECT ROUND((336+horas_pieza)/tiempo_vida_pieza) INTO cantidad_pieza;
+            /*----------Verificar si se requiere la pieza----------------------------*/
+            IF(cantidad_pieza > 0) THEN
+            /*----------Verificar si existe la cabecera de la solicitud-------------------------------*/
+            IF NOT EXISTS(SELECT * FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE") THEN
+        		INSERT INTO order_requests(user_id,implement_id) VALUES (responsable,implemento);
+        	END IF;
+            /*-------------Obteniendo la cabecera de la solicitud--------------------------------------------------*/
+            SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE";
+            /*-------------Creando la solicitud de la pieza---------------------------------------------*/
+            INSERT INTO order_request_details(order_request_id,item_id,quantity) VALUES (pedido,item_pieza,cantidad_pieza);
+            END IF;
+            END LOOP bucle2;
+            SELECT 0 INTO pieza_final;
+        CLOSE cur_part;
+    /*----------------------*/
+    END;
     END LOOP bucle;
 CLOSE cur_comp;
 END //
