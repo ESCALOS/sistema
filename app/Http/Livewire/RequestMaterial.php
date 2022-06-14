@@ -46,27 +46,30 @@ class RequestMaterial extends Component
         $this->reset('material_new_edit_name','material_new_edit_quantity','material_new_edit_measurement_unit','material_new_edit_brand','material_new_edit_datasheet','material_new_edit_image','material_new_edit_observation');
     }
 
-    public function editar_nuevo($id)
-    {
+    public function seleccionar($id){
         $this->material_new_edit = $id;
-        $material = OrderRequestNewItem::find($id);
-        $this->material_new_edit_name = $material->new_item;
-        $this->material_new_edit_quantity = $material->quantity;
-        $this->material_new_edit_measurement_unit = $material->measurement_unit_id;
-        $this->material_new_edit_brand = $material->brand;
-        $this->material_new_edit_datasheet = $material->datasheet;
-        $this->material_new_edit_image_old = $material->image;
-        $this->material_new_edit_observation = $material->observation;
-        $this->open_edit_new = true;
+    }
+
+    public function editar_nuevo()
+    {
+        if($this->material_new_edit != 0){
+            $material = OrderRequestNewItem::find($this->material_new_edit);
+            $this->material_new_edit_name = $material->new_item;
+            $this->material_new_edit_quantity = $material->quantity;
+            $this->material_new_edit_measurement_unit = $material->measurement_unit_id;
+            $this->material_new_edit_brand = $material->brand;
+            $this->material_new_edit_datasheet = $material->datasheet;
+            $this->material_new_edit_image_old = $material->image;
+            $this->material_new_edit_observation = $material->observation;
+            $this->open_edit_new = true;
+        }
     }
 
     public function actualizar_nuevo()
     {
         if($this->material_new_edit_image != ""){
             $image = $this->material_new_edit_image->store('public/newMaterials');
-            $old_image = str_replace('/storage', 'public', $this->material_new_edit_image_old);
-            Storage::delete($old_image);
-            $image = str_replace('public', '/storage', $image);
+            Storage::delete($this->material_new_edit_image_old);
         }
 
         $material = OrderRequestNewItem::find($this->material_new_edit);
@@ -80,6 +83,15 @@ class RequestMaterial extends Component
         $material->observation = $this->material_new_edit_observation;
         $material->save();
         $this->open_edit_new = false;
+        $this->render();
+    }
+
+    public function eliminar_nuevo(){
+        $material = OrderRequestNewItem::find($this->material_new_edit);
+        Storage::delete($material->image);
+        $material->delete();
+        $this->open_edit_new = false;
+        $this->material_new_edit = 0;
         $this->render();
     }
 

@@ -12,7 +12,7 @@ use Livewire\WithFileUploads;
 class RequestNewMaterial extends Component
 {
     use WithFileUploads;
-    
+
     public $idRequest;
     public $idImplemento;
 
@@ -46,7 +46,6 @@ class RequestNewMaterial extends Component
         }
         if($this->material_new_image != ""){
             $image = $this->material_new_image->store('public/newMaterials');
-            $image = str_replace('public', '/storage', $image);    
         }
 
         OrderRequestNewItem::create([

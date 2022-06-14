@@ -1,6 +1,6 @@
 <div>
-    <button wire:click="$set('open_material','true')" class="px-4 py-2 w-48 bg-amber-500 hover:bg-amber-700 text-white rounded-md">
-        Agregar Material
+    <button wire:click="$set('open_material','true')" style="width: 150px" class="px-4 py-2 bg-amber-500 hover:bg-amber-700 text-white rounded-md">
+        Material
     </button>
     <x-jet-dialog-modal wire:model="open_material">
         <x-slot name="title">

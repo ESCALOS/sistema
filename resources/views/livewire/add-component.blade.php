@@ -1,6 +1,6 @@
 <div>
-    <button wire:click="$set('open_componente','true')" class="px-4 py-2 w-48 bg-green-500 hover:bg-green-700 text-white rounded-md">
-        Agregar Componente
+    <button wire:click="$set('open_componente','true')" style="width: 150px" class="px-4 py-2 bg-green-500 hover:bg-green-700 text-white rounded-md">
+        Componente
     </button>
     <x-jet-dialog-modal wire:model="open_componente">
         <x-slot name="title">

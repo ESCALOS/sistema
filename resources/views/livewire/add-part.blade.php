@@ -1,6 +1,6 @@
 <div>
-    <button wire:click="$set('open_parte','true')" class="px-4 py-2 w-48 bg-red-500 hover:bg-red-700 text-white rounded-md">
-        Agregar Pieza
+    <button wire:click="$set('open_parte','true')" style="width: 150px" class="px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-md">
+        Pieza
     </button>
     <x-jet-dialog-modal wire:model="open_parte">
         <x-slot name="title">

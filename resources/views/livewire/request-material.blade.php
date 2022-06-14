@@ -1,19 +1,31 @@
 <div>
-    <div class="text-center">
-        <h1 class="text-2xl font-bold pb-4">Solicitud de Pedido : {{strtoupper($implemento)}} </h1>
-    </div>
-    <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
-        <select class="form-select" style="width: 100%" wire:model='idImplemento'>
-            <option value="0">Seleccione una implemento</option>
-        @foreach ($implements as $implement)
-            <option value="{{ $implement->id }}">{{ $implement->implementModel->implement_model }} {{ $implement->implement_number }}</option>
-        @endforeach
-        </select>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+            <div class="text-center">
+                <h1 class="text-2xl font-bold pb-4">Solicitud de Pedido : {{strtoupper($implemento)}} </h1>
+            </div>
+            <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
+                <select class="form-select" style="width: 100%" wire:model='idImplemento'>
+                    <option value="0">Seleccione una implemento</option>
+                @foreach ($implements as $implement)
+                    <option value="{{ $implement->id }}">{{ $implement->implementModel->implement_model }} {{ $implement->implement_number }}</option>
+                @endforeach
+                </select>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center;justify-content:center">
+            <h1 class="font-bold text-2xl">Pedido para: {{ date("F",strtotime(date('d-m-Y')."+ 2 month + 1 week")) }} </h1>
+        </div>
+        <div style="display:flex; align-items:center;justify-content:center">
+            <button wire:click="cerrar_pedido()" class="px-4 py-2 w-full bg-gray-500 hover:bg-gray-700 text-white rounded-md">
+                Cerrar Pedido
+            </button>
+        </div>
     </div>
     <div class="px-6 py-4">
         @if ($idImplemento > 0)
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div style="height:180px;overflow:auto">
+            <div style="height:180px">
                 <div class="text-center">
                     <h1 class="text-md font-bold pb-4">Añadir a la solicitud:</h1>
                 </div>
@@ -54,23 +66,32 @@
                     </tbody>
                 </table>
             </div>
+        </div>
             <div class="bg-white p-6 grid text-center gap-4" style="grid-column: 2 span/ 2 span">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     @livewire('request-new-material', ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
                     <div>
-                        <button wire:click="$set('open_new_material','true')" class="px-4 py-2 w-full bg-orange-500 hover:bg-orange-700 text-white rounded-md">
-                            Cerrar Pedido
+                        <button wire:click="editar_nuevo()" class="px-4 py-2 w-full bg-yellow-500 hover:bg-yellow-700 text-white rounded-md">
+                            Editar
+                        </button>
+                    </div>
+                    <div>
+                        <button wire:click="eliminar_nuevo()" class="px-4 py-2 w-full bg-orange-500 hover:bg-orange-700 text-white rounded-md">
+                            Eliminar
                         </button>
                     </div>
                 </div>
             </div>
-            <div style="height:360px;overflow:auto;grid-column: 2 span/ 2 span">
-            
+        <div>
+            <div style="height:360px;overflow:auto">
                 <table class="min-w-max w-full">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                             <th class="py-3 text-center">
                                 <span>Material Nuevo </span>
+                            </th>
+                            <th class="py-3 text-center">
+                                <span>Marca </span>
                             </th>
                             <th class="py-3 text-center">
                                 <span>Cantidad</span>
@@ -79,10 +100,15 @@
                     </thead>
                     <tbody class="text-gray-600 text-sm font-light">
                         @foreach ($orderRequestNewItems as $request)
-                        <tr wire:dblclick='editar_nuevo({{$request->id}})' class="border-b border-gray-200 unselected">
+                        <tr wire:click='seleccionar({{$request->id}})' class="border-b {{ $request->id == $material_new_edit ? 'bg-blue-200' : '' }} border-gray-200 unselected">
                             <td class="py-3 px-6 text-center">
                                 <div>
                                     <span class="font-bold">{{ strtoupper($request->new_item) }}</span>
+                                </div>
+                            </td>
+                            <td class="py-3 px-6 text-center">
+                                <div>
+                                    <span class="font-bold">{{ strtoupper($request->brand) }}</span>
                                 </div>
                             </td>
                             <td class="py-3 px-6 text-center">
@@ -171,12 +197,12 @@
                     <x-jet-input-error for="material_new_edit_image"/>
 
                 </div>
-                
+
                 <div wire:loading wire:target='material_new_edit_image' class="flex p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-blue-200 dark:text-blue-800" style="grid-column: 2 span/ 2 span">
                     <div>
                         <strong class="font-bold">Imagen Cargando!</strong> <span class="block sm:inline">Espere a que termine de cargar.</span>
                     </div>
-                </div>  
+                </div>
 
                 @if($material_new_edit_image)
                     <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 2 span/ 2 span">
@@ -184,7 +210,7 @@
                     </div>
                 @else
                     <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 2 span/ 2 span">
-                        <img src="{{ $material_new_edit_image_old }}" class="w-full">
+                        <img src="{{ str_replace('public','/storage',$material_new_edit_image_old) }}" class="w-full">
                     </div>
                 @endif
 

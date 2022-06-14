@@ -27,7 +27,7 @@
 
             <a href="{{ route('operator.request-materials') }}" class="{{ request()->routeIs('operator.request-materials') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium">Solicitar Materiales</a>
 
-            <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Calendar</a>
+            <a href="{{ route('planner.validate-request-materials') }}" class="{{ request()->routeIs('planner.validate-request-materials') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium">Validar Solicitud de Materiales</a>
           </div>
         </div>
       </div>
