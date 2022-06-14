@@ -1,8 +1,11 @@
 <div>
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
+        <h1 class="font-bold text-2xl">PEDIDO DE JULIO</h1>
+    </div>
+    <div class="grid grid-cols-1 {{$idImplemento!=0?'sm:grid-cols-3':''}} gap-4">
         <div>
             <div class="text-center">
-                <h1 class="text-2xl font-bold pb-4">Solicitud de Pedido : {{strtoupper($implemento)}} </h1>
+                <h1 class="text-lg font-bold pb-4">SOLICITUD DE PEDIDO : {{strtoupper($implemento)}} </h1>
             </div>
             <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                 <select class="form-select" style="width: 100%" wire:model='idImplemento'>
@@ -13,14 +16,17 @@
                 </select>
             </div>
         </div>
-        <div style="display:flex; align-items:center;justify-content:center">
-            <h1 class="font-bold text-2xl">Pedido para: {{ date("F",strtotime(date('d-m-Y')."+ 2 month + 1 week")) }} </h1>
-        </div>
-        <div style="display:flex; align-items:center;justify-content:center">
-            <button wire:click="cerrar_pedido()" class="px-4 py-2 w-full bg-gray-500 hover:bg-gray-700 text-white rounded-md">
-                Cerrar Pedido
-            </button>
-        </div>
+        @if ($idImplemento != 0)
+            <div style="display:flex; align-items:center;justify-content:center">
+                <h1 class="font-bold text-xl">MONTO DISPONIBLE: S/. 2500.66</h1>
+            </div>
+
+            <div style="display:flex; align-items:center;justify-content:center">
+                <button wire:click="$emit('confirmarCerrarPedido','{{$implemento}}')" class="px-4 py-2 w-full bg-gray-500 hover:bg-gray-700 text-white rounded-md">
+                    Cerrar Pedido
+                </button>
+            </div>
+        @endif
     </div>
     <div class="px-6 py-4">
         @if ($idImplemento > 0)
@@ -233,5 +239,12 @@
         </x-slot>
     </x-jet-dialog-modal>
 </div>
-
+    @push('js')
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        Livewire.on('cp', implemento => {
+            alert("hola");
+        });
+    </script>
+    @endpush
 </div>

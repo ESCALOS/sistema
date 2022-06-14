@@ -61,7 +61,7 @@ class AddMaterial extends Component
         $this->emit('alert');
     }
 
-    public function updatedQuantitymaterialForAdd(){
+    public function updatedQuantityMaterialForAdd(){
 
         if($this->quantity_material_for_add > 0){
             $item = Item::where('id',$this->material_for_add)->first();
@@ -75,12 +75,7 @@ class AddMaterial extends Component
 
     public function render()
     {
-        $added_components = OrderRequestDetail::where('order_request_id',$this->idRequest)->get();
-        if($added_components != null){
-            foreach($added_components as $added_component){
-                array_push($this->excluidos,$added_component->item_id);
-            }
-        }
+
         $added_components = OrderRequestDetail::where('order_request_id',$this->idRequest)->get();
         if($added_components != null){
             foreach($added_components as $added_component){

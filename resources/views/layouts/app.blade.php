@@ -48,7 +48,31 @@
                     showConfirmButton: false,
                     timer: 1000
                 })
-            })
+            });
+
+            Livewire.on('confirmarCerrarPedido', implemento =>{
+                Swal.fire({
+                    title: '¿Está seguro de cerrar el pedido de '+implemento+'?',
+                    text: "Esta acción es irreversible",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, cerrar!',
+                    cancelButtonText: 'No, cancelar!',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+
+                        Livewire.emitTo('request-material', 'cerrarPedido');
+
+                        Swal.fire(
+                            'Deleted!',
+                            'Your file has been deleted.',
+                            'success'
+                        )
+                    }
+                })
+            });
         </script>
     </body>
 </html>

@@ -20,6 +20,8 @@ class RequestMaterial extends Component
     use WithPagination;
     use WithFileUploads;
 
+    public $excluidos = [];
+
     public $idImplemento = 0;
     public $implemento;
     public $idRequest;
@@ -117,9 +119,28 @@ class RequestMaterial extends Component
     {
         $this->emit('cambioImplemento', $this->idImplemento);
     }
+
+    public function cerrarPedido(){
+        $request = OrderRequest::find($this->idRequest);
+        $request->state = 'CERRADO';
+        $request->save();
+        $this->idRequest = 0;
+        $this->render();
+    }
+
     public function render()
     {
-        $implements = Implement::where('user_id', auth()->user()->id)->get();
+
+        $ordenes_cerradas = OrderRequest::where('user_id', auth()->user()->id)->where('state', 'CERRADO')->get();
+
+        if($ordenes_cerradas != null){
+            foreach($ordenes_cerradas as $ordenes_cerrada){
+                array_push($this->excluidos,$ordenes_cerrada->implement_id);
+            }
+        }
+
+        $implements = Implement::where('user_id', auth()->user()->id)->whereNotIn('id',$this->excluidos)->get();
+
         $measurement_units = MeasurementUnit::all();
 
         if ($this->idImplemento > 0) {
