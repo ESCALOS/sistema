@@ -17,10 +17,17 @@
             </div>
         </div>
         @if ($idImplemento != 0)
+        <div>
             <div style="display:flex; align-items:center;justify-content:center">
-                <h1 class="font-bold text-xl">MONTO DISPONIBLE: S/. 2500.66</h1>
+                <h1 class="font-bold text-xl">MONTO ASIGNADO: S/. {{$monto_asignado}}</h1>
             </div>
-
+            <div style="display:flex; align-items:center;justify-content:center">
+                <h1 class="font-bold text-xl">MONTO USADO: S/. {{$monto_usado}}</h1>
+            </div>
+            <div style="display:flex; align-items:center;justify-content:center">
+                <h1 class="font-bold {{$monto_asignado > $monto_usado ? 'text-green-500' : text-red-500}} text-xl">MONTO RESTANTE: S/. {{$monto_asignado - $monto_usado}}</h1>
+            </div>
+        </div>
             <div style="display:flex; align-items:center;justify-content:center">
                 <button wire:click="$emit('confirmarCerrarPedido','{{$implemento}}')" class="px-4 py-2 w-full bg-gray-500 hover:bg-gray-700 text-white rounded-md">
                     Cerrar Pedido

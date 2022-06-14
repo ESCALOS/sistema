@@ -16,3 +16,6 @@ SELECT p.id as part_id, p.item_id as item_id, p.component as item, c.id as compo
 /*-------------Vista piezas simplificada----------------*/
 create view pieza_simplificada as
 SELECT p.item_id as item_id, p.component as part, c.item_id AS component_id FROM component_part_model cpm INNER JOIN components c ON c.id = cpm.component INNER JOIN components p ON p.id = cpm.part;
+/*------------------Monto usado para pedido--------------------*/
+CREATE VIEW monto_usado_pedido AS
+SELECT rd.order_request_id, SUM(i.estimated_price*rd.quantity) as total FROM order_request_details rd INNER JOIN items i ON i.id = rd.item_id GROUP BY order_request_id;

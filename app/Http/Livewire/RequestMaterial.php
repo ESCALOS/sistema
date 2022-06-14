@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire;
 
+use App\Models\CecoAllocationAmount;
 use App\Models\Component as ModelsComponent;
 use App\Models\Implement;
 use App\Models\Item;
@@ -21,6 +22,8 @@ class RequestMaterial extends Component
     use WithFileUploads;
 
     public $excluidos = [];
+    public $monto_asignado = 0;
+    public $monto_usado = 0;
 
     public $idImplemento = 0;
     public $implemento;
@@ -130,7 +133,6 @@ class RequestMaterial extends Component
 
     public function render()
     {
-
         $ordenes_cerradas = OrderRequest::where('user_id', auth()->user()->id)->where('state', 'CERRADO')->get();
 
         if($ordenes_cerradas != null){
@@ -147,6 +149,7 @@ class RequestMaterial extends Component
             $orderRequest = OrderRequest::where('implement_id', $this->idImplemento)->where('state', 'PENDIENTE')->first();
             if ($orderRequest != null) {
                 $this->idRequest = $orderRequest->id;
+
             } else {
                 $this->idRequest = 0;
             }
@@ -156,8 +159,12 @@ class RequestMaterial extends Component
         if ($this->idImplemento > 0) {
             $implement = Implement::where('id', $this->idImplemento)->first();
             $this->implemento = $implement->implementModel->implement_model . ' ' . $implement->implement_number;
+            $this->monto_asignado = $implement->ceco->amount;
+            $acumulado = DB::table('monto_usado_pedido')->where('order_request_id', $this->idRequest)->get();
+            $this->monto_usado = $acumulado->total;
         } else {
             $this->implemento = "Seleccione un implemento";
+            $this->monto_usado = 0;
         }
 
         return view('livewire.request-material', compact('implements', 'orderRequestDetails', 'orderRequestNewItems', 'measurement_units'));
