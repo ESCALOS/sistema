@@ -1472,6 +1472,10 @@ select {
   --tw-bg-opacity: 1;
   background-color: rgb(17 24 39 / var(--tw-bg-opacity));
 }
+.bg-orange-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(249 115 22 / var(--tw-bg-opacity));
+}
 .bg-green-500 {
   --tw-bg-opacity: 1;
   background-color: rgb(34 197 94 / var(--tw-bg-opacity));
@@ -1479,6 +1483,10 @@ select {
 .bg-green-600 {
   --tw-bg-opacity: 1;
   background-color: rgb(22 163 74 / var(--tw-bg-opacity));
+}
+.bg-cyan-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(6 182 212 / var(--tw-bg-opacity));
 }
 .bg-blue-500 {
   --tw-bg-opacity: 1;
@@ -2058,6 +2066,10 @@ select {
     --tw-bg-opacity: 1;
     background-color: rgb(185 28 28 / var(--tw-bg-opacity));
   }
+.hover\:bg-cyan-700:hover {
+    --tw-bg-opacity: 1;
+    background-color: rgb(14 116 144 / var(--tw-bg-opacity));
+  }
 .hover\:bg-amber-700:hover {
     --tw-bg-opacity: 1;
     background-color: rgb(180 83 9 / var(--tw-bg-opacity));
@@ -2065,6 +2077,14 @@ select {
 .hover\:bg-blue-700:hover {
     --tw-bg-opacity: 1;
     background-color: rgb(3 105 161 / var(--tw-bg-opacity));
+  }
+.hover\:bg-yellow-700:hover {
+    --tw-bg-opacity: 1;
+    background-color: rgb(161 98 7 / var(--tw-bg-opacity));
+  }
+.hover\:bg-orange-700:hover {
+    --tw-bg-opacity: 1;
+    background-color: rgb(194 65 12 / var(--tw-bg-opacity));
   }
 .text-amber-500 {
     --tw-text-opacity: 1;
@@ -2121,6 +2141,10 @@ select {
   --tw-bg-opacity: 1;
   background-color: rgb(180 83 9 / var(--tw-bg-opacity));
 }
+.hover\:bg-yellow-700:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(161 98 7 / var(--tw-bg-opacity));
+}
 .hover\:bg-green-700:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(21 128 61 / var(--tw-bg-opacity));
@@ -2128,6 +2152,10 @@ select {
 .hover\:bg-green-500:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(34 197 94 / var(--tw-bg-opacity));
+}
+.hover\:bg-cyan-700:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(14 116 144 / var(--tw-bg-opacity));
 }
 .hover\:bg-blue-700:hover {
   --tw-bg-opacity: 1;

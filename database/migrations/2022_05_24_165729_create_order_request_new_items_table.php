@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreignId('measurement_unit_id')->constrained();
             $table->string('brand');
             $table->text('datasheet');
-            $table->string('image',2048);
+            $table->string('image',2048)->nullable();
             $table->text('observation');
             $table->timestamps();
         });

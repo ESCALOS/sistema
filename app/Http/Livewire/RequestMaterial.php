@@ -10,6 +10,7 @@ use App\Models\OrderRequest;
 use App\Models\OrderRequestDetail;
 use App\Models\OrderRequestNewItem;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
@@ -27,18 +28,23 @@ class RequestMaterial extends Component
     public $material_edit = 0;
     public $material_edit_name = '';
 
-    public $material_new_edit = 0;
-    public $material_new_edit_name = '';
-    public $material_new_edit_quantity = 0;
-    public $material_new_edit_measurement_unit = 0;
-    public $material_new_edit_brand = '';
-    public $material_new_edit_datasheet = '';
-    public $material_new_edit_image = '';
-    public $material_new_edit_observation = '';
+    public $material_new_edit;
+    public $material_new_edit_name ;
+    public $material_new_edit_quantity;
+    public $material_new_edit_measurement_unit;
+    public $material_new_edit_brand ;
+    public $material_new_edit_datasheet;
+    public $material_new_edit_image;
+    public $material_new_edit_image_old;
+    public $material_new_edit_observation;
 
     public $quantity_edit;
 
     protected $listeners = ['render'];
+
+    public function updatedOpenEditNew(){
+        $this->reset('material_new_edit_name','material_new_edit_quantity','material_new_edit_measurement_unit','material_new_edit_brand','material_new_edit_datasheet','material_new_edit_image','material_new_edit_observation');
+    }
 
     public function editar_nuevo($id)
     {
@@ -49,19 +55,28 @@ class RequestMaterial extends Component
         $this->material_new_edit_measurement_unit = $material->measurement_unit_id;
         $this->material_new_edit_brand = $material->brand;
         $this->material_new_edit_datasheet = $material->datasheet;
-        $this->material_new_edit_image = $material->image;
+        $this->material_new_edit_image_old = $material->image;
         $this->material_new_edit_observation = $material->observation;
         $this->open_edit_new = true;
     }
 
     public function actualizar_nuevo()
     {
+        if($this->material_new_edit_image != ""){
+            $image = $this->material_new_edit_image->store('public/newMaterials');
+            $old_image = str_replace('/storage', 'public', $this->material_new_edit_image_old);
+            Storage::delete($old_image);
+            $image = str_replace('public', '/storage', $image);
+        }
+
         $material = OrderRequestNewItem::find($this->material_new_edit);
         $material->quantity = $this->material_new_edit_quantity;
         $material->measurement_unit_id = $this->material_new_edit_measurement_unit;
         $material->brand = $this->material_new_edit_brand;
         $material->datasheet = $this->material_new_edit_datasheet;
-        $material->image = $this->material_new_edit_image;
+        if($this->material_new_edit_image != ""){
+            $material->image = $image;
+        }
         $material->observation = $this->material_new_edit_observation;
         $material->save();
         $this->open_edit_new = false;

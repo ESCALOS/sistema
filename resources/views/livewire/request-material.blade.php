@@ -54,7 +54,18 @@
                     </tbody>
                 </table>
             </div>
-            <div style="height:200px;overflow:auto;">
+            <div class="bg-white p-6 grid text-center gap-4" style="grid-column: 2 span/ 2 span">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    @livewire('request-new-material', ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
+                    <div>
+                        <button wire:click="$set('open_new_material','true')" class="px-4 py-2 w-full bg-orange-500 hover:bg-orange-700 text-white rounded-md">
+                            Cerrar Pedido
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div style="height:360px;overflow:auto;grid-column: 2 span/ 2 span">
+            
                 <table class="min-w-max w-full">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -76,7 +87,7 @@
                             </td>
                             <td class="py-3 px-6 text-center">
                                 <div>
-                                    <span class="font-medium">{{$request->quantity}} {{$request->measurementUnit->measurement_unit}} </span>
+                                    <span class="font-medium">{{$request->quantity}} {{$request->measurementUnit->abbreviation}} </span>
                                 </div>
                             </td>
                         </tr>
@@ -153,13 +164,29 @@
                     <x-jet-label>Especificaciones:</x-jet-label>
                     <textarea class="form-control w-full text-sm" rows=5 wire:model.defer="material_new_edit_datasheet"></textarea>
                 </div>
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
+                <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 2 span/ 2 span">
                     <x-jet-label>Imagen:</x-jet-label>
-                    <x-jet-input type="file" style="height:30px;width: 100%" wire:model="material_new_edit_image" />
+                    <input type="file" style="height:30px;width: 100%" wire:model="material_new_edit_image" accept="image/*"/>
 
                     <x-jet-input-error for="material_new_edit_image"/>
 
                 </div>
+                
+                <div wire:loading wire:target='material_new_edit_image' class="flex p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-blue-200 dark:text-blue-800" style="grid-column: 2 span/ 2 span">
+                    <div>
+                        <strong class="font-bold">Imagen Cargando!</strong> <span class="block sm:inline">Espere a que termine de cargar.</span>
+                    </div>
+                </div>  
+
+                @if($material_new_edit_image)
+                    <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 2 span/ 2 span">
+                        <img src="{{ $material_new_edit_image->temporaryUrl() }}" class="w-full">
+                    </div>
+                @else
+                    <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 2 span/ 2 span">
+                        <img src="{{ $material_new_edit_image_old }}" class="w-full">
+                    </div>
+                @endif
 
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 3 span/ 3 span">
                     <x-jet-label>Observaciones:</x-jet-label>

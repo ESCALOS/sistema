@@ -1,8 +1,8 @@
 <div>
-    <button wire:click="$set('open_new_material','true')" class="px-4 py-2 w-48 bg-cyan-500 hover:bg-cyan-700 text-white rounded-md">
+    <button wire:click="$set('open_new_material','true')" class="px-4 py-2 w-full bg-cyan-500 hover:bg-cyan-700 text-white rounded-md">
         Agregar Nuevo Material
     </button>
-    <x-jet-dialog-modal wire:model="open_tool">
+    <x-jet-dialog-modal wire:model="open_new_material">
         <x-slot name="title">
             Agregar Nuevo Material
         </x-slot>
@@ -45,14 +45,27 @@
                     <x-jet-label>Especificaciones:</x-jet-label>
                     <textarea class="form-control w-full text-sm" rows=4 wire:model.defer="material_new_datasheet"></textarea>
                 </div>
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
-                    <x-jet-label>Imagen:</x-jet-label>
-                    <x-jet-input type="file" style="height:30px;width: 100%" wire:model="material_new_image" />
 
-                    <x-jet-input-error for="material_new_edit_image"/>
+                <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 2 span/ 2 span">
+                    <x-jet-label>Imagen:</x-jet-label>
+                    <input type="file" style="height:30px;width: 100%" wire:model="material_new_image" accept="image/*"/>
+
+                    <x-jet-input-error for="material_new_image"/>
 
                 </div>
+                
+                <div wire:loading wire:target='material_new_image' class="flex p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-blue-200 dark:text-blue-800" style="grid-column: 2 span/ 2 span">
+                    <div>
+                        <strong class="font-bold">Imagen Cargando!</strong> <span class="block sm:inline">Espere a que termine de cargar.</span>
+                    </div>
+                </div>  
 
+                @if($material_new_image)
+                    <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 2 span/ 2 span">
+                        <img src="{{ $material_new_image->temporaryUrl() }}" class="w-full">
+                    </div>  
+                @endif
+                           
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 2 span/ 2 span">
                     <x-jet-label>Observaciones:</x-jet-label>
                     <textarea class="form-control w-full text-sm" rows=4 wire:model.defer="material_new_observation"></textarea>
