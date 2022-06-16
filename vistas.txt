@@ -19,3 +19,7 @@ SELECT p.item_id as item_id, p.component as part, c.item_id AS component_id FROM
 /*------------------Monto usado para pedido--------------------*/
 CREATE VIEW monto_usado_pedido AS
 SELECT rd.order_request_id, SUM(i.estimated_price*rd.quantity) as total FROM order_request_details rd INNER JOIN items i ON i.id = rd.item_id GROUP BY order_request_id;
+
+/*----------Monto por ceco------------------Corregir tabla cecos para buscar adelantar dos meses después, evento para aumentar ceco cuando llegue el mes-------------------*/
+CREATE VIEW montos_por_ceco AS
+SELECT c.id AS ceco, c.amount AS asignado, SUM(it.estimated_price*rd.quantity) AS usado, i.id AS implement_id FROM `cecos` c INNER JOIN implements i ON i.ceco_id = c.id INNER JOIN order_requests r ON r.implement_id = i.id INNER JOIN order_request_details rd ON rd.order_request_id = r.id INNER JOIN items it ON it.id = rd.item_id GROUP BY c.id

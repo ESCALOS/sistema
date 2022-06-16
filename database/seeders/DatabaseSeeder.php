@@ -58,8 +58,8 @@ class DatabaseSeeder extends Seeder
         Labor::factory(6)->create();
         TractorModel::factory(3)->create();
         Tractor::factory(10)->create();
+        
         $faker = Faker::create();
-
         $componentes = Component::where('is_part', 0)->get();
         $partes = Component::where('is_part',1)->get();
         for($i=1;$i<=5;$i++){

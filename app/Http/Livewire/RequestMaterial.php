@@ -128,6 +128,7 @@ class RequestMaterial extends Component
         $request->state = 'CERRADO';
         $request->save();
         $this->idRequest = 0;
+        $this->idImplemento = 0;
         $this->render();
     }
 
@@ -156,15 +157,19 @@ class RequestMaterial extends Component
         }
         $orderRequestDetails = OrderRequestDetail::where('order_request_id', $this->idRequest)->orderBy('id', 'desc')->get();
         $orderRequestNewItems = OrderRequestNewItem::where('order_request_id', $this->idRequest)->orderBy('id', 'desc')->get();
+        $acumulado = DB::table('monto_usado_pedido')->where('order_request_id', '=', $this->idRequest)->first();
+        $this->monto_usado = $acumulado->total;
+        if($acumulado != null){
+            $this->monto_usado = $acumulado->total;
+        }else{
+            $this->monto_usado = 0;
+        }
         if ($this->idImplemento > 0) {
             $implement = Implement::where('id', $this->idImplemento)->first();
             $this->implemento = $implement->implementModel->implement_model . ' ' . $implement->implement_number;
             $this->monto_asignado = $implement->ceco->amount;
-            $acumulado = DB::table('monto_usado_pedido')->where('order_request_id', $this->idRequest)->get();
-            $this->monto_usado = $acumulado->total;
         } else {
             $this->implemento = "Seleccione un implemento";
-            $this->monto_usado = 0;
         }
 
         return view('livewire.request-material', compact('implements', 'orderRequestDetails', 'orderRequestNewItems', 'measurement_units'));

@@ -236,9 +236,9 @@ END //
 DELIMITER //
 CREATE TRIGGER `agregar_componentes` AFTER INSERT ON `items`
  FOR EACH ROW IF(new.type="COMPONENTE") THEN
-INSERT INTO components (item_id,component,is_part,lifespan) VALUES (new.id,new.item,0,ROUND(RAND()+1000)*5);
+INSERT INTO components (item_id,component,is_part,lifespan) VALUES (new.id,new.item,0,ROUND(RAND()*5000));
 ELSEIF(new.type="PIEZA") THEN
-INSERT INTO components(item_id,component,is_part,lifespan) VALUES (new.id,new.item,1,ROUND(RAND()+100)*5);
+INSERT INTO components(item_id,component,is_part,lifespan) VALUES (new.id,new.item,1,ROUND(RAND()*500));
 END IF //
 
 /*------------------------Listar materiales para el pedido-------------------*/
@@ -278,7 +278,7 @@ OPEN cur_comp;
     FETCH cur_comp INTO implemento,componente,item,tiempo_vida,responsable;
     /*--------------Obtener horas del componente-----------------------------------*/
     IF EXISTS(SELECT * FROM component_implement WHERE implement_id = implemento AND component_id = componente AND state = "PENDIENTE") THEN
-    	SELECT hours INTO horas FROM component_implement WHERE implement_id = implemento AND component_id = componente AND state = "PENDIENTE";
+    	SELECT hours INTO horas FROM component_implement WHERE implement_id = implemento AND component_id = componente AND state = "PENDIENTE" LIMIT 1;
     ELSE
     	SELECT 0 INTO horas;
     END IF;
@@ -292,7 +292,7 @@ OPEN cur_comp;
         	INSERT INTO order_requests(user_id,implement_id) VALUES (responsable,implemento);
         END IF;
     /*-----------Obteniendo la cabecera de la solicitud-------------------------*/
-        SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE";
+        SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
     /*------Creando la solicitud del componente--------*/
     	INSERT INTO order_request_details(order_request_id,item_id,quantity) VALUES (pedido,item,cantidad);
     END IF;
@@ -309,7 +309,7 @@ OPEN cur_comp;
             FETCH cur_part INTO pieza,tiempo_vida_pieza,item_pieza;
             /*--------------Obtener horas de la pieza-------------------------------*/
             IF EXISTS(SELECT * FROM component_part cp INNER JOIN component_implement ci ON ci.id = cp.component_implement_id WHERE ci.component_id = componente AND cp.part = pieza AND cp.state = "PENDIENTE") THEN
-    			SELECT cp.hours INTO horas_pieza FROM component_part cp INNER JOIN component_implement ci ON ci.id = cp.component_implement_id WHERE ci.component_id = componente AND cp.part = pieza AND cp.state = "PENDIENTE";
+    			SELECT cp.hours INTO horas_pieza FROM component_part cp INNER JOIN component_implement ci ON ci.id = cp.component_implement_id WHERE ci.component_id = componente AND cp.part = pieza AND cp.state = "PENDIENTE" LIMIT 1;
     		ELSE
     			SELECT 0 INTO horas_pieza;
     		END IF;
@@ -323,7 +323,7 @@ OPEN cur_comp;
         		INSERT INTO order_requests(user_id,implement_id) VALUES (responsable,implemento);
         	END IF;
             /*-------------Obteniendo la cabecera de la solicitud--------------------------------------------------*/
-            SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE";
+            SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
             /*-------------Creando la solicitud de la pieza---------------------------------------------*/
             INSERT INTO order_request_details(order_request_id,item_id,quantity) VALUES (pedido,item_pieza,cantidad_pieza);
             END IF;

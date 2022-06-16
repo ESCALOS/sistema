@@ -25,7 +25,7 @@
                 <h1 class="font-bold text-xl">MONTO USADO: S/. {{$monto_usado}}</h1>
             </div>
             <div style="display:flex; align-items:center;justify-content:center">
-                <h1 class="font-bold {{$monto_asignado > $monto_usado ? 'text-green-500' : text-red-500}} text-xl">MONTO RESTANTE: S/. {{$monto_asignado - $monto_usado}}</h1>
+                <h1 class="font-bold {{$monto_asignado > $monto_usado ? 'text-green-500' : 'text-red-500'}} text-xl">MONTO RESTANTE: S/. {{$monto_asignado - $monto_usado}}</h1>
             </div>
         </div>
             <div style="display:flex; align-items:center;justify-content:center">
