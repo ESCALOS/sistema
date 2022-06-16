@@ -38,14 +38,12 @@ class ValidateRequestMaterial extends Component
 
         $sedes = Sede::where('zone_id',$this->tzone)->get();
 
-
         $locations = Location::where('sede_id',$this->tsede)->get();
 
         $order_requests = OrderRequest::join('implements',function ($join){
             $join->on('order_requests.implement_id','=','implements.id')
                     ->where('implements.location_id',$this->tlocation);
         })->where('state','CERRADO')->get();
-
 
         if($order_requests != null){
             foreach($order_requests as $order_request){
