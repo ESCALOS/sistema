@@ -50,9 +50,9 @@ class CreateTractorReport extends Component
             'date' => $this->date,
             'shift' => $this->shift,
             'implement_id' => $this->implement,
-            'hour_meter_start' => $hour_meter_start,
-            'hour_meter_end' => $this->hour_meter_end,
-            'hours' => $this->hour_meter_end - $hour_meter_start,
+            'hour_meter_start' => floatval($hour_meter_start),
+            'hour_meter_end' => floatval($this->hour_meter_end),
+            'hours' => floatval($this->hour_meter_end - $hour_meter_start),
             'observations' => $this->observations,
             'location_id' => $this->location,
         ]);
@@ -74,7 +74,7 @@ class CreateTractorReport extends Component
             $tractor = Tractor::find($this->tractor);
             $this->horometro_inicial = $tractor->hour_meter;
         }else{
-            $this->horometro_inicial = "";
+            $this->horometro_inicial = 0;
         }
 
         return view('livewire.create-tractor-report',compact('tractors','labors','implements','users','locations'));

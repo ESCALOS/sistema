@@ -16,7 +16,7 @@ class AddPart extends Component
     public $idImplemento;
     public $idRequest;
     public $part_for_add= 0;
-    public $quantity_part_for_add;
+    public $quantity_part_for_add = 1;
     public $estimated_price_part;
     public $component_for_part = 0;
     public $excluidos = [];
@@ -56,11 +56,12 @@ class AddPart extends Component
         }else{
             $this->idRequest = $order_request_id->id;
         }
-
+        $item = Item::find($this->part_for_add);
         OrderRequestDetail::create([
             'order_request_id' => $this->idRequest,
             'item_id' => $this->part_for_add,
             'quantity' => $this->quantity_part_for_add,
+            'estimated_price' => $item->estimated_price,
             'observation' => '',
         ]);
 

@@ -16,7 +16,7 @@ class AddComponent extends Component
     public $idImplemento;
     public $idRequest;
     public $component_for_add;
-    public $quantity_component_for_add;
+    public $quantity_component_for_add = 1;
     public $estimated_price_component;
     public $excluidos = [];
 
@@ -50,11 +50,12 @@ class AddComponent extends Component
         }else{
             $this->idRequest = $order_request_id->id;
         }
-
+        $item = Item::find($this->component_for_add);
         OrderRequestDetail::create([
             'order_request_id' => $this->idRequest,
             'item_id' => $this->component_for_add,
             'quantity' => $this->quantity_component_for_add,
+            'estimated_price' => $item->estimated_price,
             'observation' => '',
         ]);
 
@@ -69,7 +70,7 @@ class AddComponent extends Component
             $item = Item::where('id',$this->component_for_add)->first();
             $componente = ModelsComponent::where('id',$item->component->id)->first();
             $item = Item::find($componente->item_id);
-            $this->estimated_price_component = $item->estimated_price*$this->quantity_component_for_add;
+            $this->estimated_price_component = floatval($item->estimated_price)*floatval($this->quantity_component_for_add);
         }
     }
 

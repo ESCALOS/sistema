@@ -25,6 +25,8 @@ class RequestMaterial extends Component
     public $monto_asignado = 0;
     public $monto_usado = 0;
 
+    public $estimated_price_edit;
+
     public $idImplemento = 0;
     public $implemento;
     public $idRequest;
@@ -45,10 +47,10 @@ class RequestMaterial extends Component
 
     public $quantity_edit;
 
-    protected $listeners = ['render'];
+    protected $listeners = ['render','cerrarPedido'];
 
     public function updatedOpenEditNew(){
-        $this->reset('material_new_edit_name','material_new_edit_quantity','material_new_edit_measurement_unit','material_new_edit_brand','material_new_edit_datasheet','material_new_edit_image','material_new_edit_observation');
+        $this->reset('material_new_edit_name','material_new_edit_quantity','material_new_edit_measurement_unit','material_new_edit_brand','material_new_edit_datasheet','material_new_edit_image','material_new_edit_observation','estimated_price_edit');
     }
 
     public function seleccionar($id){
@@ -105,7 +107,9 @@ class RequestMaterial extends Component
         $this->material_edit = $id;
         $material = OrderRequestDetail::find($id);
         $this->material_edit_name = $material->item->item;
-        $this->quantity_edit = $material->quantity;
+        $this->quantity_edit = floatval($material->quantity);
+        $item = Item::find($material->item_id);
+        $this->estimated_price_edit = floatval($item->estimated_price);
         $this->open_edit = true;
     }
 
@@ -150,6 +154,7 @@ class RequestMaterial extends Component
             $orderRequest = OrderRequest::where('implement_id', $this->idImplemento)->where('state', 'PENDIENTE')->first();
             if ($orderRequest != null) {
                 $this->idRequest = $orderRequest->id;
+                $this->monto_usado = $orderRequest->estimated_price;
 
             } else {
                 $this->idRequest = 0;
@@ -157,13 +162,7 @@ class RequestMaterial extends Component
         }
         $orderRequestDetails = OrderRequestDetail::where('order_request_id', $this->idRequest)->orderBy('id', 'desc')->get();
         $orderRequestNewItems = OrderRequestNewItem::where('order_request_id', $this->idRequest)->orderBy('id', 'desc')->get();
-        $acumulado = DB::table('monto_usado_pedido')->where('order_request_id', '=', $this->idRequest)->first();
-        $this->monto_usado = $acumulado->total;
-        if($acumulado != null){
-            $this->monto_usado = $acumulado->total;
-        }else{
-            $this->monto_usado = 0;
-        }
+
         if ($this->idImplemento > 0) {
             $implement = Implement::where('id', $this->idImplemento)->first();
             $this->implemento = $implement->implementModel->implement_model . ' ' . $implement->implement_number;

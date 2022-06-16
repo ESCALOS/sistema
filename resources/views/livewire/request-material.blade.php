@@ -19,13 +19,13 @@
         @if ($idImplemento != 0)
         <div>
             <div style="display:flex; align-items:center;justify-content:center">
-                <h1 class="font-bold text-xl">MONTO ASIGNADO: S/. {{$monto_asignado}}</h1>
+                <h1 class="font-bold text-xl">MONTO ASIGNADO: S/. {{round($monto_asignado,2)}}</h1>
             </div>
             <div style="display:flex; align-items:center;justify-content:center">
-                <h1 class="font-bold text-xl">MONTO USADO: S/. {{$monto_usado}}</h1>
+                <h1 class="font-bold text-xl">MONTO USADO: S/. {{round($monto_usado,2)}}</h1>
             </div>
             <div style="display:flex; align-items:center;justify-content:center">
-                <h1 class="font-bold {{$monto_asignado > $monto_usado ? 'text-green-500' : 'text-red-500'}} text-xl">MONTO RESTANTE: S/. {{$monto_asignado - $monto_usado}}</h1>
+                <h1 class="font-bold {{$monto_asignado > $monto_usado ? 'text-green-500' : 'text-red-500'}} text-xl">MONTO RESTANTE: S/. {{round(($monto_asignado - $monto_usado),2)}}</h1>
             </div>
         </div>
             <div style="display:flex; align-items:center;justify-content:center">
@@ -151,6 +151,11 @@
                     <x-jet-input type="number" style="height:30px;width: 100%" wire:model="quantity_edit" />
 
                     <x-jet-input-error for="quantity_edit"/>
+
+                </div>
+                <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
+                    <x-jet-label>Precio Aproximado: </x-jet-label>
+                    <x-jet-input type="number" style="height:30px;width: 100%" disabled value="{{ floatval($estimated_price_edit)*floatval($quantity_edit) }}"/>
 
                 </div>
         </x-slot>

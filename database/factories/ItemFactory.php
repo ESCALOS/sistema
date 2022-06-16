@@ -21,7 +21,7 @@ class ItemFactory extends Factory
             'item' => $this->faker->unique()->lexify('????????'),
             'brand_id' => Brand::all()->random()->id,
             'measurement_unit_id' => MeasurementUnit::all()->random()->id,
-            'estimated_price' => $this->faker->randomFloat(2,300,1500),
+            'estimated_price' => $this->faker->randomFloat(2,200,1000),
             'type' => $this->faker->randomElement(['FUNGIBLE','COMPONENTE','PIEZA','HERRAMIENTA']),
             'is_active' => $this->faker->randomElement([0,1]),
         ];

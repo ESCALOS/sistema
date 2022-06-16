@@ -19,7 +19,9 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->foreignId('implement_id')->constrained();
             $table->foreignId('item_id')->constrained();
-            $table->decimal('price',8,2);
+            $table->decimal('quantity', 8, 2);
+            $table->decimal('price', 8,2);
+            $table->foreignId('stockpile_detail_id')->constrained();
             $table->boolean('is_canceled')->default(false);
             $table->timestamps();
         });

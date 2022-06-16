@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->foreignId('implement_id')->constrained();
             $table->enum('state',['PENDIENTE','CERRADO','VALIDADO','RECHAZADO'])->default('PENDIENTE');
+            $table->decimal('estimated_price', 8, 2)->default(0);
             $table->unsignedBigInteger('validate_by')->nullable();
             $table->foreign('validate_by')->references('id')->on('users');
             $table->boolean('is_canceled')->default(false);

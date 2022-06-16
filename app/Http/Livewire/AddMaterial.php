@@ -14,8 +14,8 @@ class AddMaterial extends Component
     public $idImplemento;
     public $idRequest;
     public $material_for_add;
-    public $quantity_material_for_add = 0;
-    public $estimated_price_material = 0;
+    public $quantity_material_for_add = 1;
+    public $estimated_price_material;
     public $excluidos = [];
 
     protected $rules = [
@@ -47,11 +47,12 @@ class AddMaterial extends Component
         }else{
             $this->idRequest = $order_request_id->id;
         }
-
+        $item = Item::find($this->material_for_add);
         OrderRequestDetail::create([
             'order_request_id' => $this->idRequest,
             'item_id' => $this->material_for_add,
             'quantity' => $this->quantity_material_for_add,
+            'estimated_price' => $item->estimated_price,
             'observation' => '',
         ]);
 

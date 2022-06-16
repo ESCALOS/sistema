@@ -19,7 +19,7 @@ class CreateTractorScheduling extends Component
     public $tractor;
     public $implement;
     public $date;
-    public $shift;
+    public $shift = "MAÑANA";
 
     protected $rules = [
         'location' => 'required|exists:locations,id',

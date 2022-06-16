@@ -14,8 +14,8 @@ class AddTool extends Component
     public $idImplemento;
     public $idRequest;
     public $tool_for_add;
-    public $quantity_tool_for_add = 0;
-    public $estimated_price_tool = 0;
+    public $quantity_tool_for_add = 1;
+    public $estimated_price_tool;
     public $excluidos = [];
 
     protected $rules = [
@@ -48,11 +48,12 @@ class AddTool extends Component
         }else{
             $this->idRequest = $order_request_id->id;
         }
-
+        $item = Item::find($this->tool_for_add);
         OrderRequestDetail::create([
             'order_request_id' => $this->idRequest,
             'item_id' => $this->tool_for_add,
             'quantity' => $this->quantity_tool_for_add,
+            'estimated_price' => $item->estimated_price,
             'observation' => '',
         ]);
 

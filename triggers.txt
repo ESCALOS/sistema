@@ -1,16 +1,22 @@
-/*--------------MODIFICAR TABLA CECO------------------------------------------------*/
-/*-----Aumentar---------------*/
+/*---------------Aumentar monto ceco------------------*/
+CREATE TRIGGER `aumentar_monto_ceco` BEFORE UPDATE ON `ceco_allocation_amounts`
+ FOR EACH ROW IF(new.is_allocated) THEN
+UPDATE cecos SET amount = amount + old.allocation_amount WHERE id = old.ceco_id;
+END IF
+
+/*--------------Disminuir monto restante de CECOS------------------------------------------------*/
+/*-----Disminuir---------------*/
 DELIMITER //
-CREATE TRIGGER `aumentar_monto_ceco` AFTER INSERT ON `ceco_allocation_amounts`
- FOR EACH ROW UPDATE cecos SET amount = amount + new.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id; //
+CREATE TRIGGER `disminuir_monto_ceco` AFTER INSERT ON `ceco_details`
+ FOR EACH ROW UPDATE cecos SET amount = amount - new.price WHERE ceco_id = id //
  /*--------Actualizar y Disminuir----------*/
 DELIMITER //
-CREATE TRIGGER `actualizar_monto_ceco` AFTER UPDATE ON `ceco_allocation_amounts`
+CREATE TRIGGER `cancelar_disminucion_ceco` AFTER UPDATE ON `ceco_details`
  FOR EACH ROW IF(new.is_canceled) THEN
- UPDATE cecos SET amount = amount-old.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id;
- ELSE
- UPDATE cecos SET amount = amount + new.allocation_amount-old.allocation_amount, updated_at = CURRENT_TIMESTAMP WHERE id = new.ceco_id;
- END IF; //
+UPDATE cecos SET amount = amount + old.price WHERE id = old.ceco_id;
+ELSE
+UPDATE cecos SET amount = amount + (old.price-new.price) WHERE id = old.ceco_id;
+END IF //
 
 
 /*--------MODIFICAR TABLA TRACTOR E IMPLEMENTO-------*/
@@ -70,15 +76,16 @@ END IF; //
 /*----------------Actualizar horas en la tabla component_implements los componentes -----------*/
 DELIMITER //
 CREATE TRIGGER `aumentar_horas_imp_comp` AFTER UPDATE ON `implements`
- FOR EACH ROW BEGIN
+ FOR EACH ROW IF(new.hours<>old.hours) THEN
+BEGIN
 DECLARE part_final INT DEFAULT 0;
 DECLARE comp_final INT DEFAULT 0;
 DECLARE componente INT;
 DECLARE pieza INT;
 DECLARE comp_imp INT;
 DECLARE cursor_componente CURSOR FOR SELECT cim.component_id FROM component_implement_model cim INNER JOIN implements i ON i.implement_model_id = cim.implement_model_id WHERE i.id = old.id;
-/*-------Actualizar horas de los componentes--------*/
 DECLARE CONTINUE HANDLER FOR NOT FOUND SET comp_final = 1;
+/*-------Actualizar horas de los componentes--------*/
 OPEN cursor_componente;
 	bucle: LOOP
     FETCH cursor_componente INTO componente;
@@ -112,11 +119,8 @@ BEGIN
 END;
 	END LOOP bucle;
 CLOSE cursor_componente;
-END; //
-
-/*--------Evento para liberar el material-----------------------------------*/
-DELIMITER //
-CREATE DEFINER=`root`@`localhost` EVENT `liberar_material_event` ON SCHEDULE EVERY 1 MONTH STARTS '2022-05-18 09:00:54' ON COMPLETION NOT PRESERVE ENABLE DO UPDATE operator_assigned_stocks SET state = "LIBERADO", quantity = 0, price = 0 WHERE DATE_ADD(updated_at, INTERVAL 3 MONTH) < CURRENT_TIMESTAMP AND quantity > 0 //
+END;
+END IF; //
 
 /*-----------------Liberar material---------------------------------------------*/
 DELIMITER //
@@ -240,98 +244,9 @@ INSERT INTO components (item_id,component,is_part,lifespan) VALUES (new.id,new.i
 ELSEIF(new.type="PIEZA") THEN
 INSERT INTO components(item_id,component,is_part,lifespan) VALUES (new.id,new.item,1,ROUND(RAND()*500));
 END IF //
-
-/*------------------------Listar materiales para el pedido-------------------*/
-
-DELIMITER //
-CREATE DEFINER=`root`@`localhost` EVENT `Listar_materiales_pedido` ON SCHEDULE EVERY 8 WEEK STARTS '2022-06-27 00:00:00' ON COMPLETION PRESERVE DISABLE DO BEGIN
-/*--------variables para detener el ciclo-----------*/
-DECLARE componente_final INT DEFAULT 0;
-DECLARE pieza_final  INT DEFAULT 0;
-/*-------------------------------------------------*/
-/*---------variables para almacenar variables del componente----------*/
-DECLARE pedido INT;  #order_request_id
-DECLARE implemento INT;
-DECLARE componente INT;
-DECLARE responsable INT;
-DECLARE item INT;
-DECLARE tiempo_vida DECIMAL(8,2);
-DECLARE horas DECIMAL(8,2);
-DECLARE cantidad DECIMAL(8,2);
-/*------------------------------------------------------------------------*/
-/*--------------variables para la pieza------------------------------------*/
-DECLARE pieza INT;
-DECLARE item_pieza INT;
-DECLARE horas_pieza DECIMAL(8,2);
-DECLARE tiempo_vida_pieza DECIMAL(8,2);
-DECLARE cantidad_pieza DECIMAL(8,2);
-/*------------------------------------------------------------------------------*/
-/*---------Declarando cursores para iterar por cada componente y pieza-----------*/
-DECLARE cur_comp CURSOR FOR SELECT i.id, c.id, c.item_id, c.lifespan, i.user_id FROM component_implement_model cim INNER JOIN implements i ON i.implement_model_id = cim.implement_model_id INNER JOIN components c ON c.id = cim.component_id;
-DECLARE CONTINUE HANDLER FOR NOT FOUND SET componente_final = 1;
-/*-----------------------------------------------------------------------------------*/
-OPEN cur_comp;
-	bucle:LOOP
-    IF componente_final = 1 THEN
-    	LEAVE bucle;
-    END IF;
-    FETCH cur_comp INTO implemento,componente,item,tiempo_vida,responsable;
-    /*--------------Obtener horas del componente-----------------------------------*/
-    IF EXISTS(SELECT * FROM component_implement WHERE implement_id = implemento AND component_id = componente AND state = "PENDIENTE") THEN
-    	SELECT hours INTO horas FROM component_implement WHERE implement_id = implemento AND component_id = componente AND state = "PENDIENTE" LIMIT 1;
-    ELSE
-    	SELECT 0 INTO horas;
-    END IF;
-    /*-----------------------------------------------------------*/
-    /*-------Calcular la cantidad del pedido-------------------*/
-    SELECT ROUND((336+horas)/tiempo_vida) INTO cantidad;
-    /*-----------Verificar si se requiere el componente----------*/
-    IF(cantidad > 0) THEN
-    /*------------Verificar si existe la cabecera de la solicitud------*/
-    	IF NOT EXISTS(SELECT * FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE") THEN
-        	INSERT INTO order_requests(user_id,implement_id) VALUES (responsable,implemento);
-        END IF;
-    /*-----------Obteniendo la cabecera de la solicitud-------------------------*/
-        SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
-    /*------Creando la solicitud del componente--------*/
-    	INSERT INTO order_request_details(order_request_id,item_id,quantity) VALUES (pedido,item,cantidad);
-    END IF;
-    BEGIN
-    /*-------Declarando cursor para piezas---------------------*/
-    	DECLARE cur_part CURSOR FOR SELECT cpm.part,c.lifespan,c.item_id FROM component_part_model cpm INNER JOIN components c ON c.id = cpm.part WHERE cpm.component = componente;
-        DECLARE CONTINUE HANDLER FOR NOT FOUND SET pieza_final = 1;
-    /*--------------------------------------------------*/
-    	OPEN cur_part;
-        	bucle2:LOOP
-            IF pieza_final = 1 THEN
-            	LEAVE bucle2;
-            END IF;
-            FETCH cur_part INTO pieza,tiempo_vida_pieza,item_pieza;
-            /*--------------Obtener horas de la pieza-------------------------------*/
-            IF EXISTS(SELECT * FROM component_part cp INNER JOIN component_implement ci ON ci.id = cp.component_implement_id WHERE ci.component_id = componente AND cp.part = pieza AND cp.state = "PENDIENTE") THEN
-    			SELECT cp.hours INTO horas_pieza FROM component_part cp INNER JOIN component_implement ci ON ci.id = cp.component_implement_id WHERE ci.component_id = componente AND cp.part = pieza AND cp.state = "PENDIENTE" LIMIT 1;
-    		ELSE
-    			SELECT 0 INTO horas_pieza;
-    		END IF;
-            /*------------------------------------------------------------*/
-            /*-------------Calcular la cantidad del pedido---------------------*/
-            SELECT ROUND((336+horas_pieza)/tiempo_vida_pieza) INTO cantidad_pieza;
-            /*----------Verificar si se requiere la pieza----------------------------*/
-            IF(cantidad_pieza > 0) THEN
-            /*----------Verificar si existe la cabecera de la solicitud-------------------------------*/
-            IF NOT EXISTS(SELECT * FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE") THEN
-        		INSERT INTO order_requests(user_id,implement_id) VALUES (responsable,implemento);
-        	END IF;
-            /*-------------Obteniendo la cabecera de la solicitud--------------------------------------------------*/
-            SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
-            /*-------------Creando la solicitud de la pieza---------------------------------------------*/
-            INSERT INTO order_request_details(order_request_id,item_id,quantity) VALUES (pedido,item_pieza,cantidad_pieza);
-            END IF;
-            END LOOP bucle2;
-            SELECT 0 INTO pieza_final;
-        CLOSE cur_part;
-    /*----------------------*/
-    END;
-    END LOOP bucle;
-CLOSE cur_comp;
-END //
+/*----------------Aumentar precio estimado de la solicitud de pedido---------------------------------------*/
+CREATE TRIGGER `aumentar_precio_solicitud` AFTER INSERT ON `order_request_details`
+ FOR EACH ROW UPDATE order_requests SET estimated_price = estimated_price + (new.estimated_price*new.quantity) WHERE id = new.order_request_id;
+ /*----------------Actualizar y anular precio estimado de la solicitud de pedido---------------------------------------*/
+CREATE TRIGGER `actualizar_precio_solicitud` AFTER UPDATE ON `order_request_details`
+ FOR EACH ROW UPDATE order_requests SET estimated_price = estimated_price + (new.estimated_price*new.quantity) - (old.estimated_price*old.quantity) WHERE id = new.order_request_id;
