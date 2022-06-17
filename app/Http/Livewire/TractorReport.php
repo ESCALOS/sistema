@@ -5,9 +5,11 @@ namespace App\Http\Livewire;
 use App\Models\Implement;
 use App\Models\Labor;
 use App\Models\Location;
+use App\Models\Lote;
 use App\Models\Tractor;
 use App\Models\TractorReport as ModelsTractorReport;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -23,6 +25,7 @@ class TractorReport extends Component
     public $open_edit = false;
 
     public $location;
+    public $lote;
     public $correlative;
     public $date;
     public $shift;
@@ -35,7 +38,7 @@ class TractorReport extends Component
     public $observations;
 
     protected $rules = [
-        'location' => 'required|exists:locations,id',
+        'lote' => 'required|exists:lotes,id',
         'correlative' => 'required',
         'date' => 'required|date|date_format:Y-m-d',
         'shift' => 'required',
@@ -61,7 +64,8 @@ class TractorReport extends Component
 
     public function editar(){
         $reporte = ModelsTractorReport::find($this->idReporte);
-        $this->location = $reporte->location_id;
+        $this->location = $reporte->lote->location->id;
+        $this->lote = $reporte->lote_id;
         $this->correlative = $reporte->correlative;
         $this->date = $reporte->date;
         $this->shift = $reporte->shift;
@@ -77,7 +81,7 @@ class TractorReport extends Component
 
     public function actualizar(){
         $reporte = ModelsTractorReport::find($this->idReporte);
-        $reporte->location_id = $this->location;
+        $reporte->lote_id = $this->lote;
         $reporte->correlative = $this->correlative;
         $reporte->date = $this->date;
         $reporte->shift = $this->shift;
@@ -92,13 +96,35 @@ class TractorReport extends Component
         $this->render();
     }
 
+    public function updatedLocation(){
+        $this->lote = 0;
+        $this->tractor = 0;
+        $this->implement = 0;
+        $this->user = 0;
+    }
+
     public function render()
     {
-        $tractors = Tractor::all();
+        $sede_general = Auth::user()->location->sede->id;
+        $filtro_tractores = Tractor::join('locations',function($join){
+            $join->on('locations.id','=','tractors.location_id');
+        })->join('sedes',function($join){
+            $join->on('sedes.id','=','locations.sede_id');
+        })->where('sedes.id','=',$sede_general)->select('tractors.*')->get();
+
+        $filtro_implementos = Implement::join('locations',function($join){
+            $join->on('locations.id','=','implements.location_id');
+        })->join('sedes',function($join){
+            $join->on('sedes.id','=','locations.sede_id');
+        })->where('sedes.id','=',$sede_general)->select('implements.*')->get();
+
+        /*----------------CRUD-------------------------------------------------------*/
+        $locations = Location::where('sede_id',Auth::user()->location->sede->id)->get();
+        $tractors = Tractor::where('location_id',$this->location)->get();
+        $users = User::where('location_id',$this->location)->get();
         $labors = Labor::all();
-        $implements = Implement::all();
-        $users = User::all();
-        $locations = Location::all();
+        $implements = Implement::where('location_id',$this->location)->get();
+        $lotes = Lote::where('location_id',$this->location)->get();
 
         $tractorReports = ModelsTractorReport::where('is_canceled',0);
 
@@ -114,10 +140,10 @@ class TractorReport extends Component
             $tractorReports = $tractorReports->where('implement_id',$this->simplement);
         }
 
-        $tractorReports = $tractorReports->orderBy('id','desc')->paginate(7);
+        $tractorReports = $tractorReports->orderBy('id','desc')->paginate(6);
 
 
 
-        return view('livewire.tractor-report',compact('tractorReports','tractors','labors','implements','users','locations'));
+        return view('livewire.tractor-report',compact('tractorReports','tractors','labors','implements','users','locations','lotes','filtro_tractores','filtro_implementos'));
     }
 }

@@ -87,4 +87,7 @@ class User extends Authenticatable
     public function workOrder(){
         return $this->hasMany(WorkOrder::class);
     }
+    public function location(){
+        return $this->belongsTo(Location::class);
+    }
 }

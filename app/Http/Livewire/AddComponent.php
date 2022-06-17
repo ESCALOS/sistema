@@ -17,7 +17,6 @@ class AddComponent extends Component
     public $idRequest;
     public $component_for_add;
     public $quantity_component_for_add = 1;
-    public $estimated_price_component;
     public $excluidos = [];
 
     protected $rules = [
@@ -28,7 +27,7 @@ class AddComponent extends Component
     protected $listeners = ['cambioImplemento'=>'cambioImplemento'];
 
     public function updatedOpenComponente(){
-        $this->reset(['component_for_add','quantity_component_for_add','estimated_price_component']);
+        $this->reset(['component_for_add','quantity_component_for_add']);
     }
 
     public function cambioImplemento(Implement $idImplemento)
@@ -59,19 +58,10 @@ class AddComponent extends Component
             'observation' => '',
         ]);
 
-        $this->reset(['component_for_add','quantity_component_for_add','estimated_price_component']);
+        $this->reset(['component_for_add','quantity_component_for_add']);
         $this->open_componente = false;
         $this->emit('render',$this->idRequest);
         $this->emit('alert');
-    }
-
-    public function updatedQuantityComponentForAdd(){
-        if($this->quantity_component_for_add > 0){
-            $item = Item::where('id',$this->component_for_add)->first();
-            $componente = ModelsComponent::where('id',$item->component->id)->first();
-            $item = Item::find($componente->item_id);
-            $this->estimated_price_component = floatval($item->estimated_price)*floatval($this->quantity_component_for_add);
-        }
     }
 
     public function render()

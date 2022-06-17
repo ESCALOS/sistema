@@ -22,5 +22,8 @@ class TractorScheduling extends Model
     }
     public function implement(){
         return $this->belongsTo(Implement::class);
-    } 
+    }
+    public function lote(){
+        return $this->belongsTo(Lote::class);
+    }
 }

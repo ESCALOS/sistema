@@ -17,7 +17,6 @@ class AddPart extends Component
     public $idRequest;
     public $part_for_add= 0;
     public $quantity_part_for_add = 1;
-    public $estimated_price_part;
     public $component_for_part = 0;
     public $excluidos = [];
 
@@ -36,11 +35,11 @@ class AddPart extends Component
     }
 
     public function updatedOpenParte(){
-        $this->reset(['part_for_add','quantity_part_for_add','estimated_price_part','component_for_part']);
+        $this->reset(['part_for_add','quantity_part_for_add']);
     }
 
     public function updatedComponentForPart(){
-        $this->reset(['part_for_add','quantity_part_for_add','estimated_price_part']);
+        $this->reset(['part_for_add','quantity_part_for_add']);
     }
 
     public function store(){
@@ -65,22 +64,10 @@ class AddPart extends Component
             'observation' => '',
         ]);
 
-        $this->reset(['part_for_add','quantity_part_for_add','estimated_price_part']);
+        $this->reset(['part_for_add','quantity_part_for_add']);
         $this->open_part = false;
         $this->emit('render');
         $this->emit('alert');
-    }
-
-    public function updatedQuantityPartForAdd(){
-
-        if($this->quantity_part_for_add > 0){
-            $item = Item::where('id',$this->part_for_add)->first();
-            $precio = $item->estimated_price;
-        }else{
-            $precio = 0;
-        }
-
-        $this->estimated_price_part = floatval($precio)*floatval($this->quantity_part_for_add);
     }
 
     public function render()

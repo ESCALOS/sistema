@@ -25,8 +25,6 @@ class RequestMaterial extends Component
     public $monto_asignado = 0;
     public $monto_usado = 0;
 
-    public $estimated_price_edit;
-
     public $idImplemento = 0;
     public $implemento;
     public $idRequest;
@@ -50,7 +48,7 @@ class RequestMaterial extends Component
     protected $listeners = ['render','cerrarPedido'];
 
     public function updatedOpenEditNew(){
-        $this->reset('material_new_edit_name','material_new_edit_quantity','material_new_edit_measurement_unit','material_new_edit_brand','material_new_edit_datasheet','material_new_edit_image','material_new_edit_observation','estimated_price_edit');
+        $this->reset('material_new_edit_name','material_new_edit_quantity','material_new_edit_measurement_unit','material_new_edit_brand','material_new_edit_datasheet','material_new_edit_image','material_new_edit_observation');
     }
 
     public function seleccionar($id){
@@ -62,7 +60,7 @@ class RequestMaterial extends Component
         if($this->material_new_edit != 0){
             $material = OrderRequestNewItem::find($this->material_new_edit);
             $this->material_new_edit_name = $material->new_item;
-            $this->material_new_edit_quantity = $material->quantity;
+            $this->material_new_edit_quantity = floatval($material->quantity);
             $this->material_new_edit_measurement_unit = $material->measurement_unit_id;
             $this->material_new_edit_brand = $material->brand;
             $this->material_new_edit_datasheet = $material->datasheet;
@@ -108,8 +106,6 @@ class RequestMaterial extends Component
         $material = OrderRequestDetail::find($id);
         $this->material_edit_name = $material->item->item;
         $this->quantity_edit = floatval($material->quantity);
-        $item = Item::find($material->item_id);
-        $this->estimated_price_edit = floatval($item->estimated_price);
         $this->open_edit = true;
     }
 

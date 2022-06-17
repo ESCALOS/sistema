@@ -5,15 +5,18 @@ namespace App\Http\Livewire;
 use App\Models\Implement;
 use App\Models\Labor;
 use App\Models\Location;
+use App\Models\Lote;
 use App\Models\Tractor;
 use App\Models\TractorReport;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class CreateTractorReport extends Component
 {
     public $open = false;
     public $location;
+    public $lote;
     public $correlative;
     public $date;
     public $shift = "MAÑANA";
@@ -26,7 +29,7 @@ class CreateTractorReport extends Component
     public $observations = "";
 
     protected $rules = [
-        'location' => 'required|exists:locations,id',
+        'lote' => 'required|exists:lotes,id',
         'correlative' => 'required',
         'date' => 'required|date|date_format:Y-m-d',
         'shift' => 'required',
@@ -54,7 +57,7 @@ class CreateTractorReport extends Component
             'hour_meter_end' => floatval($this->hour_meter_end),
             'hours' => floatval($this->hour_meter_end - $hour_meter_start),
             'observations' => $this->observations,
-            'location_id' => $this->location,
+            'lote_id' => $this->lote,
         ]);
         $this->reset(['correlative','user','tractor','labor','implement','horometro_inicial','hour_meter_end','observations']);
 
@@ -62,13 +65,24 @@ class CreateTractorReport extends Component
         $this->emit('alert');
     }
 
+    public function updatedLocation(){
+        $this->lote = 0;
+        $this->tractor = 0;
+        $this->implement = 0;
+        $this->user = 0;
+    }
+
     public function render()
     {
-        $tractors = Tractor::all();
+        if($this->date == ""){
+            $this->date = date('Y-m-d',strtotime(date('Y-m-d')."-1 days"));
+        }
+        $locations = Location::where('sede_id',Auth::user()->location->sede->id)->get();
+        $tractors = Tractor::where('location_id',$this->location)->get();
+        $users = User::where('location_id',$this->location)->get();
         $labors = Labor::all();
-        $implements = Implement::all();
-        $users = User::all();
-        $locations = Location::all();
+        $implements = Implement::where('location_id',$this->location)->get();
+        $lotes = Lote::where('location_id',$this->location)->get();
 
         if($this->tractor > 0){
             $tractor = Tractor::find($this->tractor);
@@ -77,6 +91,6 @@ class CreateTractorReport extends Component
             $this->horometro_inicial = 0;
         }
 
-        return view('livewire.create-tractor-report',compact('tractors','labors','implements','users','locations'));
+        return view('livewire.create-tractor-report',compact('tractors','labors','implements','users','locations','lotes'));
     }
 }

@@ -1,8 +1,9 @@
 /*---------------Aumentar monto ceco------------------*/
+DELIMITER //
 CREATE TRIGGER `aumentar_monto_ceco` BEFORE UPDATE ON `ceco_allocation_amounts`
  FOR EACH ROW IF(new.is_allocated) THEN
 UPDATE cecos SET amount = amount + old.allocation_amount WHERE id = old.ceco_id;
-END IF
+END IF //
 
 /*--------------Disminuir monto restante de CECOS------------------------------------------------*/
 /*-----Disminuir---------------*/
@@ -245,8 +246,10 @@ ELSEIF(new.type="PIEZA") THEN
 INSERT INTO components(item_id,component,is_part,lifespan) VALUES (new.id,new.item,1,ROUND(RAND()*500));
 END IF //
 /*----------------Aumentar precio estimado de la solicitud de pedido---------------------------------------*/
+DELIMITER //
 CREATE TRIGGER `aumentar_precio_solicitud` AFTER INSERT ON `order_request_details`
- FOR EACH ROW UPDATE order_requests SET estimated_price = estimated_price + (new.estimated_price*new.quantity) WHERE id = new.order_request_id;
+ FOR EACH ROW UPDATE order_requests SET estimated_price = estimated_price + (new.estimated_price*new.quantity) WHERE id = new.order_request_id; //
  /*----------------Actualizar y anular precio estimado de la solicitud de pedido---------------------------------------*/
+ DELIMITER //
 CREATE TRIGGER `actualizar_precio_solicitud` AFTER UPDATE ON `order_request_details`
- FOR EACH ROW UPDATE order_requests SET estimated_price = estimated_price + (new.estimated_price*new.quantity) - (old.estimated_price*old.quantity) WHERE id = new.order_request_id;
+ FOR EACH ROW UPDATE order_requests SET estimated_price = estimated_price + (new.estimated_price*new.quantity) - (old.estimated_price*old.quantity) WHERE id = new.order_request_id; //

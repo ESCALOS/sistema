@@ -15,7 +15,6 @@ class AddMaterial extends Component
     public $idRequest;
     public $material_for_add;
     public $quantity_material_for_add = 1;
-    public $estimated_price_material;
     public $excluidos = [];
 
     protected $rules = [
@@ -31,7 +30,7 @@ class AddMaterial extends Component
         $this->excluidos = [];
     }
     public function updatedOpenMaterial(){
-        $this->reset(['material_for_add','quantity_material_for_add','estimated_price_material']);
+        $this->reset(['material_for_add','quantity_material_for_add']);
     }
 
     public function store(){
@@ -56,22 +55,10 @@ class AddMaterial extends Component
             'observation' => '',
         ]);
 
-        $this->reset(['material_for_add','quantity_material_for_add','estimated_price_material']);
+        $this->reset(['material_for_add','quantity_material_for_add']);
         $this->open_material = false;
         $this->emit('render');
         $this->emit('alert');
-    }
-
-    public function updatedQuantityMaterialForAdd(){
-
-        if($this->quantity_material_for_add > 0){
-            $item = Item::where('id',$this->material_for_add)->first();
-            $precio = $item->estimated_price;
-        }else{
-            $precio = 0;
-        }
-
-        $this->estimated_price_material = floatval($precio)*floatval($this->quantity_material_for_add);
     }
 
     public function render()

@@ -26,11 +26,6 @@
                     <x-jet-input-error for="quantity_material_for_add"/>
 
                 </div>
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
-                    <x-jet-label>Precio Aproximado: </x-jet-label>
-                    <x-jet-input type="number" style="height:30px;width: 100%" disabled value="{{ $estimated_price_material }}"/>
-
-                </div>
         </x-slot>
         <x-slot name="footer">
             <x-jet-button wire:loading.attr="disabled" wire:click="store()">

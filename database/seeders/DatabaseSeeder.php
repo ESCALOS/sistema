@@ -13,6 +13,7 @@ use App\Models\ImplementModel;
 use App\Models\Item;
 use App\Models\Labor;
 use App\Models\Location;
+use App\Models\Lote;
 use App\Models\MeasurementUnit;
 use App\Models\MinStock;
 use App\Models\MinStockDetail;
@@ -25,6 +26,7 @@ use App\Models\Tractor;
 use App\Models\TractorModel;
 use App\Models\TractorReport;
 use App\Models\TractorScheduling;
+use App\Models\User;
 use App\Models\Warehouse;
 use App\Models\WorkOrder;
 use App\Models\Zone;
@@ -41,25 +43,36 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        \App\Models\User::factory(30)->create();
-        Zone::factory(3)->create();
-        Sede::factory(8)->create();
-        Location::factory(11)->create();
+        $faker = Faker::create();
+
+        Zone::factory(3)->has(Sede::factory()->count(2)->has(Location::factory()->count(2)->has(Lote::factory()->count(2))->has(User::factory()->count(3))->has(Ceco::factory()->count(3))))->create();
+        //\App\Models\User::factory(20)->create();
         Brand::factory(30)->create();
         MeasurementUnit::factory(50)->create();
         Crop::factory(10)->create();
         Warehouse::factory(8)->create();
         Epp::factory(20)->create();
         Risk::factory(20)->create();
-        Ceco::factory(10)->hasCecoAllocationAmount(10)->create();
-        Item::factory(30)->create();
+
+        //Ceco::factory(16)->create();
+        for($j = 7; $j <= 12; $j++){
+            $fecha = "2022-".$j."-01";
+            for($i = 1; $i <=10;$i++){
+                CecoAllocationAmount::factory(1)->create([
+                    'ceco_id' => $i,
+                    'allocation_amount' => $faker->numberBetween(1000,3000),
+                    'date' => $fecha
+                ]);
+            }
+        }
+
+        Item::factory(60)->create();
         ImplementModel::factory(5)->hasImplements(5)->create();
-        Task::factory(50)->create();
+        Task::factory(40)->create();
         Labor::factory(6)->create();
         TractorModel::factory(3)->create();
         Tractor::factory(10)->create();
 
-        $faker = Faker::create();
         $componentes = Component::where('is_part', 0)->get();
         $partes = Component::where('is_part',1)->get();
         for($i=1;$i<=5;$i++){

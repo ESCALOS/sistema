@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Location;
 use App\Models\Tractor;
 use App\Models\TractorModel;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -19,6 +20,7 @@ class TractorFactory extends Factory
             'tractor_model_id' => TractorModel::all()->random()->id,
             'tractor_number' => $this->faker->numerify('#####'),
             'hour_meter' => $this->faker->numberBetween(16,500),
+            'location_id' => Location::all()->random()->id,
         ];
     }
 }

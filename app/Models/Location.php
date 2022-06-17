@@ -29,4 +29,10 @@ class Location extends Model
     public function tractors(){
         return $this->hasMany(Tractor::class);
     }
+    public function lotes(){
+        return $this->hasMany(Lote::class);
+    }
+    public function users(){
+        return $this->hasMany(User::class);
+    }
 }

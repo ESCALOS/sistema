@@ -10,26 +10,18 @@
                         <div class="px-6 py-2">
                             <label for="stractor">Tractor:</label><br>
                             <select id="stractor" class="select2" wire:model='stractor'>
-                                <option value="">Seleccione el tractor</option>
+                                <option value="0">Seleccione el tractor</option>
                                 @foreach ($tractors as $tractor)
                                     <option value="{{ $tractor->id }}">{{ $tractor->tractorModel->model }}
                                         {{ $tractor->tractor_number }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="px-6 py-2">
-                            <label for="slabor">Labor:</label><br>
-                            <select id="slabor" class="select2" wire:model='slabor'>
-                                <option value="">Seleccione la labor</option>
-                                @foreach ($labors as $labor)
-                                    <option value="{{ $labor->id }}">{{ $labor->labor }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+
                         <div class="px-6 py-2">
                             <label for="simplement">Implemento:</label><br>
                             <select id="simplement" class="select2" wire:model='simplement'>
-                                <option value="">Seleccione el implemento</option>
+                                <option value="0">Seleccione el implemento</option>
                                 @foreach ($implements as $implement)
                                     <option value="{{ $implement->id }}">{{ $implement->implementModel->implement_model }} {{ $implement->implement_number }}</option>
                                 @endforeach
@@ -71,8 +63,8 @@
                                 </div>
                                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                                     <x-jet-label>Ubicación:</x-jet-label>
-                                    <select id="location" class="form-select" style="width: 100%" wire:model.defer='location'>
-                                        <option value="">Seleccione una opción</option>
+                                    <select class="form-select" style="width: 100%" wire:model='location'>
+                                        <option value="0">Seleccione una opción</option>
                                         @foreach ($locations as $location)
                                             <option value="{{ $location->id }}">{{ $location->location }}</option>
                                         @endforeach
@@ -82,6 +74,18 @@
 
                                 </div>
                                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
+                                    <x-jet-label>Ubicación:</x-jet-label>
+                                    <select class="form-select" style="width: 100%" wire:model='lote'>
+                                        <option value="0">Seleccione una opción</option>
+                                        @foreach ($lotes as $lote)
+                                            <option value="{{ $lote->id }}">{{ $lote->lote }}</option>
+                                        @endforeach
+                                    </select>
+
+                                    <x-jet-input-error for="lote"/>
+
+                                </div>
+                                <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 2 span/ 2 span">
                                     <x-jet-label>Correlativo:</x-jet-label>
                                     <x-jet-input type="text" style="height:30px;width: 100%" wire:model.defer="correlative" />
 
@@ -91,7 +95,7 @@
                                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                                     <x-jet-label>Operador:</x-jet-label>
                                     <select id="user" class="form-select" style="width: 100%" wire:model.defer='user'>
-                                        <option value="">Seleccione una opción</option>
+                                        <option value="0">Seleccione una opción</option>
                                         @foreach ($users as $user)
                                             <option value="{{ $user->id }}">{{ $user->name }}</option>
                                         @endforeach
@@ -103,7 +107,7 @@
                                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                                     <x-jet-label>Tractor:</x-jet-label>
                                     <select class="form-select" wire:model='tractor'>
-                                        <option value="">Seleccione una opción</option>
+                                        <option value="0">Seleccione una opción</option>
                                         @foreach ($tractors as $tractor)
                                             <option value="{{ $tractor->id }}">{{ $tractor->tractorModel->model }}
                                                 {{ $tractor->tractor_number }}</option>
@@ -128,7 +132,7 @@
                                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                                     <x-jet-label>Implemento:</x-jet-label>
                                     <select class="form-select" style="width: 100%" wire:model.defer='implement'>
-                                        <option value="">Seleccione una opción</option>
+                                        <option value="0">Seleccione una opción</option>
                                     @foreach ($implements as $implement)
                                         <option value="{{ $implement->id }}">{{ $implement->implementModel->implement_model }} {{ $implement->implement_number }}</option>
                                     @endforeach
@@ -140,7 +144,7 @@
                                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                                     <x-jet-label>Labor:</x-jet-label>
                                     <select class="form-select" style="width: 100%" wire:model.defer='labor'>
-                                        <option value="">Seleccione una opción</option>
+                                        <option value="0">Seleccione una opción</option>
                                         @foreach ($labors as $labor)
                                             <option value="{{ $labor->id }}">{{ $labor->labor }}</option>
                                         @endforeach
@@ -151,7 +155,7 @@
                                 </div>
                                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 2 span/ 2 span">
                                     <x-jet-label>Observaciones:</x-jet-label>
-                                    <textarea class="form-control w-full text-sm" rows=5 wire:model.defer="observations"></textarea>
+                                    <textarea class="form-control w-full text-sm" rows=2 wire:model.defer="observations"></textarea>
                                 </div>
                             </div>
                         </x-slot>
@@ -250,7 +254,7 @@
             </div>
         </div>
     </div>
-    
+
     <script>
         document.addEventListener('livewire:load', function() {
             $('.select2').select2();

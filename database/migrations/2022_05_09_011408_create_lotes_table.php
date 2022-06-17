@@ -13,14 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('tractors', function (Blueprint $table) {
+        Schema::create('lotes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tractor_model_id')->constrained();
-            $table->string('tractor_number',5);
-            $table->decimal('hour_meter',8,2);
+            $table->string('code')->unique();
+            $table->string('lote');
             $table->foreignId('location_id')->constrained();
             $table->timestamps();
-            $table->index(['tractor_model_id','tractor_number']);
         });
     }
 
@@ -31,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tractors');
+        Schema::dropIfExists('lotes');
     }
 };

@@ -38,7 +38,8 @@
     <div class="px-6 py-4">
         @if ($idImplemento > 0)
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div style="height:180px">
+            <!-------GRID DE BOTONES PARA AGREGAR MATERIALES -->
+            <div style="height:280px">
                 <div class="text-center">
                     <h1 class="text-md font-bold pb-4">Añadir a la solicitud:</h1>
                 </div>
@@ -49,10 +50,14 @@
                     @livewire('add-tool',  ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
                 </div>
             </div>
+            <!-------TABLA DE MATERIALES PEDIDOS YA EXISTENTES -->
             <div style="height:180px;overflow:auto">
                 <table class="min-w-max w-full">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 text-center">
+                                <span>Código</span>
+                            </th>
                             <th class="py-3 text-center">
                                 <span>Componentes</span>
                             </th>
@@ -64,6 +69,11 @@
                     <tbody class="text-gray-600 text-sm font-light">
                         @foreach ($orderRequestDetails as $request)
                             <tr wire:dblclick="editar({{$request->id}})" class="border-b border-gray-200 unselected">
+                                <td class="py-3 px-6 text-center">
+                                    <div>
+                                        <span class="font-medium">{{$request->item->sku}} </span>
+                                    </div>
+                                </td>
                                 <td class="py-3 px-6 text-center">
                                     <div>
                                         <span class="font-bold {{$request->item->type == "PIEZA" ? 'text-red-500' : ( $request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "FUNGIBLE" ? 'text-amber-500' : 'text-blue-500')))}} ">{{ strtoupper($request->item->item) }}</span>
@@ -151,11 +161,6 @@
                     <x-jet-input type="number" style="height:30px;width: 100%" wire:model="quantity_edit" />
 
                     <x-jet-input-error for="quantity_edit"/>
-
-                </div>
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
-                    <x-jet-label>Precio Aproximado: </x-jet-label>
-                    <x-jet-input type="number" style="height:30px;width: 100%" disabled value="{{ floatval($estimated_price_edit)*floatval($quantity_edit) }}"/>
 
                 </div>
         </x-slot>

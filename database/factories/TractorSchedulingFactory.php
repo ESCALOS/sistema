@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\Implement;
 use App\Models\Labor;
 use App\Models\Location;
+use App\Models\Lote;
 use App\Models\Tractor;
 use App\Models\TractorScheduling;
 use App\Models\User;
@@ -26,7 +27,7 @@ class TractorSchedulingFactory extends Factory
             'implement_id' => Implement::all()->random()->id,
             'date' => $this->faker->date('Y-m-d','now'),
             'shift' => $this->faker->randomElement(['MAÑANA','NOCHE']),
-            'location_id' => Location::all()->random()->id,
+            'lote_id' => Lote::all()->random()->id,
         ];
     }
 }
