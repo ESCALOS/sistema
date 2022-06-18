@@ -45,8 +45,7 @@ class DatabaseSeeder extends Seeder
     {
         $faker = Faker::create();
 
-        Zone::factory(3)->has(Sede::factory()->count(2)->has(Location::factory()->count(2)->has(Lote::factory()->count(2))->has(User::factory()->count(3))->has(Ceco::factory()->count(3))))->create();
-        //\App\Models\User::factory(20)->create();
+        Zone::factory(2)->has(Sede::factory()->count(2)->has(Location::factory()->count(2)->has(Lote::factory()->count(2))->has(User::factory()->count(2))->has(Ceco::factory()->count(2))))->create();
         Brand::factory(30)->create();
         MeasurementUnit::factory(50)->create();
         Crop::factory(10)->create();
@@ -54,7 +53,6 @@ class DatabaseSeeder extends Seeder
         Epp::factory(20)->create();
         Risk::factory(20)->create();
 
-        //Ceco::factory(16)->create();
         for($j = 7; $j <= 12; $j++){
             $fecha = "2022-".$j."-01";
             for($i = 1; $i <=10;$i++){
@@ -67,15 +65,14 @@ class DatabaseSeeder extends Seeder
         }
 
         Item::factory(60)->create();
-        ImplementModel::factory(5)->hasImplements(5)->create();
+        ImplementModel::factory(4)->hasImplements(4)->create();
         Task::factory(40)->create();
         Labor::factory(6)->create();
-        TractorModel::factory(3)->create();
-        Tractor::factory(10)->create();
+        TractorModel::factory(4)->hasTractors(4)->create();
 
         $componentes = Component::where('is_part', 0)->get();
         $partes = Component::where('is_part',1)->get();
-        for($i=1;$i<=5;$i++){
+        for($i=1;$i<=4;$i++){
             $implement_model = ImplementModel::find($i);
             $implement_model->components()->attach($componentes->random()->id);
             $implement_model->components()->attach($componentes->random()->id);
@@ -83,7 +80,7 @@ class DatabaseSeeder extends Seeder
         }
 
         foreach($componentes as $componente){
-            for($i=0;$i<5;$i++){
+            for($i=0;$i<3;$i++){
                 $componente->parts()->attach($partes->random()->id);
             }
         }

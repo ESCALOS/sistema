@@ -34,7 +34,7 @@ END IF //
     /*--------Actualizar y Disminuir---------------*/
     DELIMITER //
     CREATE TRIGGER `actualizar_horas` AFTER UPDATE ON `tractor_reports`
-    FOR EACH ROW BEGIN
+ FOR EACH ROW BEGIN
     IF (new.is_canceled) THEN
     /*------Tractores----------*/
     UPDATE tractors SET hour_meter = hour_meter-old.hours, updated_at = CURRENT_TIMESTAMP WHERE id = new.tractor_id;
@@ -42,9 +42,15 @@ END IF //
     UPDATE implements SET hours = hours-(old.hours)*0.85, updated_at = CURRENT_TIMESTAMP WHERE id = new.implement_id;
     ELSE
     /*------Tractores----------*/
-    UPDATE tractors SET hour_meter = hour_meter-(old.hours+new.hours), updated_at = CURRENT_TIMESTAMP WHERE id = new.tractor_id;
+    /*--Reducir al tractor antiguo---------*/
+    UPDATE tractors SET hour_meter = hour_meter-old.hours, updated_at = CURRENT_TIMESTAMP WHERE id = old.tractor_id;
+    /*---------Aumentar al tractor nuevo---------*/
+    UPDATE tractors SET hour_meter = hour_meter+new.hours, updated_at = CURRENT_TIMESTAMP WHERE id = new.tractor_id;
     /*--------Implementos-----------------*/
-    UPDATE implements SET hours = hours+(old.hours-new.hours)*0.85, updated_at = CURRENT_TIMESTAMP WHERE id = new.implement_id;
+    /*--Disminuir al implemento antiguo---*/
+    UPDATE implements SET hours = hours-(old.hours*0.85), updated_at = CURRENT_TIMESTAMP WHERE id = old.implement_id;
+    /*--Aumentar al implemento nuevo---*/
+    UPDATE implements SET hours = hours+(new.hours)*0.85, updated_at = CURRENT_TIMESTAMP WHERE id = new.implement_id;
     END IF;
     END; //
 

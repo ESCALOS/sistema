@@ -23,7 +23,7 @@ class ImplementFactory extends Factory
             'implement_number' => $this->faker->unique()->numerify('####'),
             'hours' => $this->faker->randomFloat($nbMaxDecimals=2,$min=8,$max=100),
             'user_id' => User::all()->random()->id,
-            'location_id' => Location::all()->random()->id,
+            'location_id' => 1,
             'ceco_id' => Ceco::all()->random()->id,
         ];
     }

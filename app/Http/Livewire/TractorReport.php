@@ -90,6 +90,7 @@ class TractorReport extends Component
         $reporte->labor_id = $this->labor;
         $reporte->implement_id = $this->implement;
         $reporte->hour_meter_end = $this->hour_meter_end;
+        $reporte->hours = $this->hour_meter_end - $reporte->hour_meter_start;
         $reporte->observations = $this->observations;
         $reporte->save();
         $this->open_edit = false;
