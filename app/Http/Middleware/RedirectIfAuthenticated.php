@@ -23,33 +23,7 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                switch (auth()->user()->role) {
-                    case 'administrador':
-                        return route('admin.user.index');
-                        break;
-
-                    case 'asistente':
-                        return route('asistent.index');
-                        break;
-                    
-                    case 'operador':
-                        return route('operator.request-materials');
-                        break;
-
-                    case 'planner':
-                        return route('planner.validate-request-materials');
-                        break;
-                    
-                    case 'supervisor':
-                        return route('overseer.tractor-scheduling');
-                        break;
-                    
-                    default:
-                        auth()->logout();
-                        return redirect('/');
-                        break;
-                }
-                //return redirect(RouteServiceProvider::HOME);
+                return redirect('/');
             }
         }
 

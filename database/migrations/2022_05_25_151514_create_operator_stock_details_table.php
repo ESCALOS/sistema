@@ -22,6 +22,7 @@ return new class extends Migration
             $table->decimal('price',8,2);
             $table->foreignId('warehouse_id')->constrained();
             $table->enum('state',['CONFIRMADO','ANULADO','LIBERADO']);
+            $table->foreignId('order_request_detail_id')->constrained();
             $table->timestamps();
         });
     }

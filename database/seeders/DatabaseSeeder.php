@@ -17,6 +17,7 @@ use App\Models\Lote;
 use App\Models\MeasurementUnit;
 use App\Models\MinStock;
 use App\Models\MinStockDetail;
+use App\Models\OrderDate;
 use App\Models\OrderRequest;
 use App\Models\OrderRequestDetail;
 use App\Models\Risk;
@@ -86,6 +87,7 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(RoleSeeder::class);
+        $this->call(OrderDateSeeder::class);
 
         /*TractorScheduling::factory(50)->create();
         TractorReport::factory(50)->create();

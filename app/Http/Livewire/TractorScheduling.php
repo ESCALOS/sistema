@@ -119,7 +119,7 @@ class TractorScheduling extends Component
             $tractorSchedulings = $tractorSchedulings->where('implement_id',$this->simplement);
         }
 
-        $tractorSchedulings = $tractorSchedulings->orderBy('id','desc')->paginate(7);
+        $tractorSchedulings = $tractorSchedulings->orderBy('id','desc')->paginate(6);
 
 
 

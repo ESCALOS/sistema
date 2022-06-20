@@ -22,6 +22,7 @@ return new class extends Migration
             $table->unsignedBigInteger('validate_by')->nullable();
             $table->foreign('validate_by')->references('id')->on('users');
             $table->boolean('is_canceled')->default(false);
+            $table->foreignId('order_date_id')->constrained();
             $table->timestamps();
         });
     }

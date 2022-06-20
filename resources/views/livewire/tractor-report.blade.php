@@ -3,7 +3,7 @@
         <div class="w-full lg:w-5/6">
             <div x-data="{ open:false }">
                 <div class="text-center mb-4" x-on:click="open = !open">
-                    <x-jet-button>Filtros</x-jet-button>
+                    <x-jet-button>Filtros  {{auth()->user()->role}} </x-jet-button>
                 </div>
                 <div x-show="open" class="bg-white shadow-md rounded my-6">
                     <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3" wire:ignore>

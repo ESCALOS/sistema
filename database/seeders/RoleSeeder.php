@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 
 class RoleSeeder extends Seeder
 {
@@ -17,22 +18,27 @@ class RoleSeeder extends Seeder
     {
         $admin = Role::create([
             'name' => 'administrador',
+            'guard_name' => 'admin',
         ]);
 
         $asistent = Role::create([
             'name' => 'asistente',
+            'guard_name' => 'asistent',
         ]);
 
-        $operador = Role::create([
+        $operator = Role::create([
             'name' => 'operador',
+            'guard_name' => 'operator',
         ]);
 
         $planner = Role::create([
             'name' => 'planner',
+            'guard_name' => 'planner',
         ]);
 
         $supervisor = Role::create([
             'name' => 'supervisor',
+            'guard_name' => 'overseer',
         ]);
 
         $jefe = Role::create([
@@ -47,7 +53,7 @@ class RoleSeeder extends Seeder
         Permission::create([
             'name' => 'asistent.index',
             'guard_name' => 'asistent',
-        ])->syncRoles(['asistent']);
+        ])->syncRoles(['asistente']);
 
         Permission::create([
             'name' => 'operator.request-materials',
@@ -62,7 +68,7 @@ class RoleSeeder extends Seeder
         Permission::create([
             'name' => 'admin.user.index',
             'guard_name' => 'admin',
-        ])->syncRoles(['admin']);
+        ])->syncRoles(['administrador']);
 
     }
 }
