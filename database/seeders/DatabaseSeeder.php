@@ -85,6 +85,8 @@ class DatabaseSeeder extends Seeder
             }
         }
 
+        $this->call(RoleSeeder::class);
+
         /*TractorScheduling::factory(50)->create();
         TractorReport::factory(50)->create();
         OrderRequest::factory(50)->create();

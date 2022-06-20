@@ -21,7 +21,7 @@
         <div class="hidden sm:block sm:ml-6">
           <div class="flex space-x-4">
             <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
-            <a href="{{ route('overseer.tractor-scheduling.index') }}" class="{{ request()->routeIs('overseer.tractor-scheduling.index') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium" aria-current="page">Programación de Tractores</a>
+            <a href="{{ route('overseer.tractor-scheduling') }}" class="{{ request()->routeIs('overseer.tractor-scheduling') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium" aria-current="page">Programación de Tractores</a>
 
             <a href="{{ route('asistent.index') }}" class="{{ request()->routeIs('asistent.index') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium">Reporte de tractores</a>
 
