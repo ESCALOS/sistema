@@ -1,13 +1,15 @@
 <?php
 
-use App\Http\Controllers\AsistentController;
-use App\Http\Controllers\OperatorController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
 
+Route::get('/redirects',[HomeController::class,'index']);
 Route::get('/', function () {
     return view('welcome');
 });
+
+
 
 Route::middleware([
     'auth:sanctum',
@@ -19,15 +21,4 @@ Route::middleware([
     })->name('dashboard');
 });
 
-/*Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified'
-])->controller(AsistentController::class)->group(function(){
-    Route::get('asistent','index')->name('asistent.index');
-});*/
 
-Route::controller(OperatorController::class)->group(function(){
-    Route::get('operator','index')
-    ->middleware('auth:sanctum');
-});

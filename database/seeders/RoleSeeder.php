@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
@@ -16,7 +17,7 @@ class RoleSeeder extends Seeder
      */
     public function run()
     {
-        $admin = Role::create([
+        /*$admin = Role::create([
             'name' => 'administrador',
             'guard_name' => 'admin',
         ]);
@@ -69,6 +70,15 @@ class RoleSeeder extends Seeder
             'name' => 'admin.user.index',
             'guard_name' => 'admin',
         ])->syncRoles(['administrador']);
+*/
+        $users = User::all();
+        $user1 = $users->find(1);
+
+        $roles = Role::all();
+        $role1 = Role::find(1);
+
+        $user1->assignRole($role1);
+
 
     }
 }

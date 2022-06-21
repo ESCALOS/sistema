@@ -20,14 +20,22 @@
         </a>
         <div class="hidden sm:block sm:ml-6">
           <div class="flex space-x-4">
-            <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
+
+            @role('supervisor')
             <a href="{{ route('overseer.tractor-scheduling') }}" class="{{ request()->routeIs('overseer.tractor-scheduling') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium" aria-current="page">Programación de Tractores</a>
+            @endrole
 
-            <a href="{{ route('asistent.index') }}" class="{{ request()->routeIs('asistent.index') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium">Reporte de tractores</a>
+            @role('asistente')
+            <a href="{{ route('asistent') }}" class="{{ request()->routeIs('asistent') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium">Reporte de tractores</a>
+            @endrole
 
+            @role('operador')
             <a href="{{ route('operator.request-materials') }}" class="{{ request()->routeIs('operator.request-materials') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium">Solicitar Materiales</a>
+            @endrole
 
+            @role('planner')
             <a href="{{ route('planner.validate-request-materials') }}" class="{{ request()->routeIs('planner.validate-request-materials') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium">Validar Solicitud de Materiales</a>
+            @endrole
           </div>
         </div>
       </div>

@@ -17,7 +17,8 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @var string
      */
-    public const HOME = '/supervisor';
+
+    public const HOME = '/redirects';
 
     /**
      * Define your route model bindings, pattern filters, etc.
@@ -26,6 +27,7 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+
         $this->configureRateLimiting();
 
         $this->routes(function () {
@@ -36,22 +38,23 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
 
-            Route::middleware('web','auth')
+            Route::middleware('web','auth','role:administrador')
                 ->prefix('admin')
                 ->group(base_path('routes/admin.php'));
 
-            Route::middleware('web','auth')
+            Route::middleware('web','auth','role:supervisor')
                 ->prefix('supervisor')
                 ->group(base_path('routes/overseer.php'));
 
-            Route::middleware('web','auth')
-                ->prefix('asistent')
+            Route::middleware('web','auth','role:asistente')
+                ->prefix('asistente')
                 ->group(base_path('routes/asistent.php'));
 
-            Route::middleware('web','auth')
+            Route::middleware('web','auth','role:operador')
                 ->prefix('operator')
                 ->group(base_path('routes/operator.php'));
-            Route::middleware('web','auth')
+
+            Route::middleware('web','auth','role:planner')
                 ->prefix('planner')
                 ->group(base_path('routes/planner.php'));
         });

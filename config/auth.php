@@ -40,6 +40,26 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+        'asistent' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+        'operator' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+        'planner' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+        'overseer' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
     ],
 
     /*
