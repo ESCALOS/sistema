@@ -7,6 +7,7 @@ use App\Models\Component as ModelsComponent;
 use App\Models\Implement;
 use App\Models\Item;
 use App\Models\MeasurementUnit;
+use App\Models\OrderDate;
 use App\Models\OrderRequest;
 use App\Models\OrderRequestDetail;
 use App\Models\OrderRequestNewItem;
@@ -24,6 +25,9 @@ class RequestMaterial extends Component
     public $excluidos = [];
     public $monto_asignado = 0;
     public $monto_usado = 0;
+
+    public $fecha_pedido;
+    public $fecha_pedido_cierre;
 
     public $idImplemento = 0;
     public $implemento;
@@ -55,8 +59,7 @@ class RequestMaterial extends Component
         $this->material_new_edit = $id;
     }
 
-    public function editar_nuevo()
-    {
+    public function editar_nuevo(){
         if($this->material_new_edit != 0){
             $material = OrderRequestNewItem::find($this->material_new_edit);
             $this->material_new_edit_name = $material->new_item;
@@ -70,8 +73,7 @@ class RequestMaterial extends Component
         }
     }
 
-    public function actualizar_nuevo()
-    {
+    public function actualizar_nuevo(){
         if($this->material_new_edit_image != ""){
             $image = $this->material_new_edit_image->store('public/newMaterials');
             Storage::delete($this->material_new_edit_image_old);
@@ -100,8 +102,7 @@ class RequestMaterial extends Component
         $this->render();
     }
 
-    public function editar($id)
-    {
+    public function editar($id){
         $this->material_edit = $id;
         $material = OrderRequestDetail::find($id);
         $this->material_edit_name = $material->item->item;
@@ -109,8 +110,7 @@ class RequestMaterial extends Component
         $this->open_edit = true;
     }
 
-    public function actualizar()
-    {
+    public function actualizar(){
         $material = OrderRequestDetail::find($this->material_edit);
         $material->quantity = $this->quantity_edit;
         $material->save();
@@ -118,8 +118,7 @@ class RequestMaterial extends Component
         $this->render();
     }
 
-    public function updatedIdImplemento()
-    {
+    public function updatedIdImplemento(){
         $this->emit('cambioImplemento', $this->idImplemento);
     }
 
@@ -132,20 +131,31 @@ class RequestMaterial extends Component
         $this->render();
     }
 
-    public function render()
-    {
-        $ordenes_cerradas = OrderRequest::where('user_id', auth()->user()->id)->where('state', 'CERRADO')->get();
+    public function render(){
 
+        /*---------------Obtener la fecha del pedido------------------------------------------*/
+        $order_dates = OrderDate::where('state','ABIERTO')->first();
+
+        $this->fecha_pedido = $order_dates->order_date;
+        $this->fecha_pedido = date("d-m-Y", strtotime($this->fecha_pedido));
+        $this->fecha_pedido_abierto = $order_dates->open_request;
+        $this->fecha_pedido_cierre = $order_dates->close_request;
+        $this->fecha_pedido_llegada = $order_dates->arrival_date;
+
+        /*---------------Obtener órdenes del implemento ya cerradas-----------------------------*/
+        $ordenes_cerradas = OrderRequest::where('user_id', auth()->user()->id)->where('state', 'CERRADO')->get();
+        /*-------------------------------------Almacenar los id de las solicitudes ya cerradas------------*/
         if($ordenes_cerradas != null){
             foreach($ordenes_cerradas as $ordenes_cerrada){
                 array_push($this->excluidos,$ordenes_cerrada->implement_id);
             }
         }
-
+        /*---------------------Obtener los implementos con solicitudes abiertas-------------------------------*/
         $implements = Implement::where('user_id', auth()->user()->id)->whereNotIn('id',$this->excluidos)->get();
-
+        /*----Obtener las unidades de medida-----------------------------------*/
         $measurement_units = MeasurementUnit::all();
 
+        /*--------------Obtener los datos de la cabecera de la solicitud de pedido---------------------*/
         if ($this->idImplemento > 0) {
             $orderRequest = OrderRequest::where('implement_id', $this->idImplemento)->where('state', 'PENDIENTE')->first();
             if ($orderRequest != null) {
@@ -156,9 +166,12 @@ class RequestMaterial extends Component
                 $this->idRequest = 0;
             }
         }
+        /*---------Obtener el detalle de los materiales pedidos---------------------------------*/
         $orderRequestDetails = OrderRequestDetail::where('order_request_id', $this->idRequest)->orderBy('id', 'desc')->get();
+        /*-----------Obtener el detalle de los materiales nuevos pedidos--------------------------*/
         $orderRequestNewItems = OrderRequestNewItem::where('order_request_id', $this->idRequest)->orderBy('id', 'desc')->get();
 
+        /*--------------Obtener los datos del implemento y su ceco respectivo----------------------------*/
         if ($this->idImplemento > 0) {
             $implement = Implement::where('id', $this->idImplemento)->first();
             $this->implemento = $implement->implementModel->implement_model . ' ' . $implement->implement_number;

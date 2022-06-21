@@ -24,6 +24,9 @@ class OrderRequest extends Model
         return $this->hasMany(OrderRequestDetails::class);
     }
     public function orderRequesNewItem(){
-        return $this->hasMnay(OrderRequesNewItem::class);
+        return $this->hasMany(OrderRequesNewItem::class);
+    }
+    public function orderDate(){
+        return $this->belongsTo(OrderDate::class);
     }
 }

@@ -1,11 +1,26 @@
 <div>
     <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
-        <h1 class="font-bold text-2xl">PEDIDO DE JULIO</h1>
+        <div class="grid grid-cols-1 gap-4">
+            <div class="grid grid-cols-1 gap-4">
+                <div class="text-center">
+                    <h1 class="font-bold text-4xl">
+                        PEDIDO {{strtoupper(strftime("%B de %Y", strtotime($fecha_pedido)))}}
+                    </h1>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 gap-4">
+                <div class="text-center">
+                    <h1 class="font-bold text-xl">
+                        Abierto del {{strftime("%d", strtotime($fecha_pedido_abierto))}} al {{strftime("%d de %B de %Y", strtotime($fecha_pedido_cierre))}}
+                    </h1>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="grid grid-cols-1 {{$idImplemento!=0?'sm:grid-cols-3':''}} gap-4">
+    <div class="grid grid-cols-1 {{$idImplemento!=0?'sm:grid-cols-2':''}} gap-4">
         <div>
             <div class="text-center">
-                <h1 class="text-lg font-bold pb-4">SOLICITUD DE PEDIDO : {{strtoupper($implemento)}} </h1>
+                <h1 class="text-lg font-bold pb-4">IMPLEMENTO : {{strtoupper($implemento)}} </h1>
             </div>
             <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                 <select class="form-select" style="width: 100%" wire:model='idImplemento'>
@@ -17,25 +32,14 @@
             </div>
         </div>
         @if ($idImplemento != 0)
-        <div>
-            <div style="display:flex; align-items:center;justify-content:center">
-                <h1 class="font-bold text-xl">MONTO ASIGNADO: S/. {{round($monto_asignado,2)}}</h1>
-            </div>
-            <div style="display:flex; align-items:center;justify-content:center">
-                <h1 class="font-bold text-xl">MONTO USADO: S/. {{round($monto_usado,2)}}</h1>
-            </div>
-            <div style="display:flex; align-items:center;justify-content:center">
-                <h1 class="font-bold {{$monto_asignado > $monto_usado ? 'text-green-500' : 'text-red-500'}} text-xl">MONTO RESTANTE: S/. {{round(($monto_asignado - $monto_usado),2)}}</h1>
-            </div>
+        <div style="display:flex; align-items:center;justify-content:center" class="px-6 py-4">
+            <button wire:click="$emit('confirmarCerrarPedido','pxwuxakalx 6977')" class="w-full h-full bg-orange-500 text-2xl font-bold hover:bg-orange-700 text-white rounded-full">
+                Cerrar Pedido
+            </button>
         </div>
-            <div style="display:flex; align-items:center;justify-content:center">
-                <button wire:click="$emit('confirmarCerrarPedido','{{$implemento}}')" class="px-4 py-2 w-full bg-gray-500 hover:bg-gray-700 text-white rounded-md">
-                    Cerrar Pedido
-                </button>
-            </div>
         @endif
     </div>
-    <div class="px-6 py-4">
+    <div class="px-6 py-4 text-center">
         @if ($idImplemento > 0)
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-------GRID DE BOTONES PARA AGREGAR MATERIALES -->
@@ -213,7 +217,7 @@
                     <x-jet-label>Especificaciones:</x-jet-label>
                     <textarea class="form-control w-full text-sm" rows=5 wire:model.defer="material_new_edit_datasheet"></textarea>
                 </div>
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 2 span/ 2 span">
+                <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 3 span/ 3 span">
                     <x-jet-label>Imagen:</x-jet-label>
                     <input type="file" style="height:30px;width: 100%" wire:model="material_new_edit_image" accept="image/*"/>
 
@@ -221,18 +225,18 @@
 
                 </div>
 
-                <div wire:loading wire:target='material_new_edit_image' class="flex p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-blue-200 dark:text-blue-800" style="grid-column: 2 span/ 2 span">
+                <div wire:loading wire:target='material_new_edit_image' class="flex p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-blue-200 dark:text-blue-800" style="grid-column: 3 span/ 3 span">
                     <div>
                         <strong class="font-bold">Imagen Cargando!</strong> <span class="block sm:inline">Espere a que termine de cargar.</span>
                     </div>
                 </div>
 
                 @if($material_new_edit_image)
-                    <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 2 span/ 2 span">
+                    <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 3 span/ 3 span">
                         <img src="{{ $material_new_edit_image->temporaryUrl() }}" class="w-full">
                     </div>
                 @else
-                    <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 2 span/ 2 span">
+                    <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 3 span/ 3 span">
                         <img src="{{ str_replace('public','/storage',$material_new_edit_image_old) }}" class="w-full">
                     </div>
                 @endif

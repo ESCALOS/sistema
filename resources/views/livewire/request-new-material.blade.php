@@ -1,4 +1,4 @@
-<div>
+<div class="text-center">
     <button wire:click="$set('open_new_material','true')" class="px-4 py-2 w-full bg-cyan-500 hover:bg-cyan-700 text-white rounded-md">
         Agregar
     </button>

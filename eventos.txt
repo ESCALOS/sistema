@@ -4,13 +4,13 @@ CREATE DEFINER=`root`@`localhost` EVENT `liberar_material_event` ON SCHEDULE EVE
 
 /*-Listar materiales para el pedido-----------------*/
 DELIMITER //
-CREATE DEFINER=`root`@`localhost` EVENT `Listar_materiales_pedido` ON SCHEDULE EVERY 8 WEEK STARTS '2022-06-27 00:00:00' ON COMPLETION PRESERVE DISABLE DO BEGIN
+CREATE DEFINER=`root`@`localhost` EVENT `Listar_materiales_pedido` ON SCHEDULE EVERY 1 DAY STARTS '2022-06-27 00:00:00' ON COMPLETION PRESERVE DISABLE DO BEGIN
 /*-------Variables para la fecha para abrir el pedido--------*/
 DECLARE fecha_solicitud INT;
 DECLARE fecha_abrir_solicitud DATE;
 /*-------Obtener la fecha para abrir el pedido-------*/
 SELECT id,open_request INTO fecha_solicitud, fecha_abrir_solicitud FROM order_dates r WHERE r.state = "PENDIENTE" ORDER BY open_request ASC LIMIT 1;
-IF(fecha_abrir_solicitud >= NOW()) THEN
+IF(fecha_abrir_solicitud <= NOW()) THEN
 BEGIN
 /*--------variables para detener el ciclo-----------*/
 DECLARE componente_final INT DEFAULT 0;
@@ -58,7 +58,7 @@ OPEN cur_comp;
     IF(cantidad > 0) THEN
     /*------------Verificar si existe la cabecera de la solicitud------*/
     	IF NOT EXISTS(SELECT * FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE") THEN
-        	INSERT INTO order_requests(user_id,implement_id) VALUES (responsable,implemento);
+        	INSERT INTO order_requests(user_id,implement_id,order_date_id) VALUES (responsable,implemento,fecha_solicitud);
         END IF;
     /*-----------Obteniendo la cabecera de la solicitud-------------------------*/
         SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
@@ -89,7 +89,7 @@ OPEN cur_comp;
             IF(cantidad_pieza > 0) THEN
             /*----------Verificar si existe la cabecera de la solicitud-------------------------------*/
             IF NOT EXISTS(SELECT * FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE") THEN
-        		INSERT INTO order_requests(user_id,implement_id) VALUES (responsable,implemento);
+        		INSERT INTO order_requests(user_id,implement_id,order_date_id) VALUES (responsable,implemento,fecha_solicitud);
         	END IF;
             /*-------------Obteniendo la cabecera de la solicitud--------------------------------------------------*/
             SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
@@ -103,6 +103,7 @@ OPEN cur_comp;
     END;
     END LOOP bucle;
 CLOSE cur_comp;
+UPDATE order_dates SET state = "ABIERTO" WHERE id = fecha_solicitud;
 END;
 END IF;
 END //
