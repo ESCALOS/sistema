@@ -50,6 +50,7 @@
     </div>
     <div class="px-6 py-4 text-center">
         @if ($idImplemento > 0)
+    <!-- Crud Materiales Existentes -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-------GRID DE BOTONES PARA AGREGAR MATERIALES -->
             <div style="height:280px">
@@ -103,7 +104,8 @@
                 </table>
             </div>
         </div>
-            <div class="bg-white p-6 grid text-center gap-4" style="grid-column: 2 span/ 2 span">
+    <!-- Botones para elementos nuevos -->
+        <div class="bg-white p-6 grid text-center gap-4" style="grid-column: 2 span/ 2 span">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     @livewire('request-new-material', ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
                     <div>
@@ -119,7 +121,8 @@
                 </div>
             </div>
         <div>
-            <div style="height:360px;overflow:auto">
+    <!-- Tabla para elementos nuevos -->
+        <div style="height:360px;overflow:auto">
                 <table class="min-w-max w-full">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -164,13 +167,13 @@
         </div>
         @endif
     </div>
-    <x-jet-dialog-modal wire:model="open_edit">
+    <x-jet-dialog-modal maxWidth="sm" wire:model="open_edit">
         <x-slot name="title">
             {{ strtoupper($material_edit_name) }}
         </x-slot>
         <x-slot name="content">
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
-                    <x-jet-label>Cantidad:</x-jet-label>
+                    <x-jet-label class="text-md">Cantidad:</x-jet-label>
                     <x-jet-input type="number" style="height:30px;width: 100%" wire:model="quantity_edit" />
 
                     <x-jet-input-error for="quantity_edit"/>
@@ -269,12 +272,4 @@
         </x-slot>
     </x-jet-dialog-modal>
 </div>
-    @push('js')
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        Livewire.on('cp', implemento => {
-            alert("hola");
-        });
-    </script>
-    @endpush
 </div>
