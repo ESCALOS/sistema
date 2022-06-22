@@ -6,6 +6,13 @@
                     <h1 class="font-bold text-4xl">
                         PEDIDO {{strtoupper(strftime("%B de %Y", strtotime($fecha_pedido)))}}
                     </h1>
+                    @if ($monto_usado > $monto_asignado)
+                    <div class="mt-4 mx-6 px-6 py-4 cursor-default" title="Este monto es calculado de todos las solicitudes del ceco" >
+                        <div class="h-32 md:h-16 w-full p-4 text-white text-2xl font-black bg-red-600 rounded-lg">
+                            EL MONTO REBASA AL ASIGNADO
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
             <div class="grid grid-cols-1 gap-4">
@@ -20,20 +27,22 @@
     <div class="grid grid-cols-1 {{$idImplemento!=0?'sm:grid-cols-2':''}} gap-4">
         <div>
             <div class="text-center">
-                <h1 class="text-lg font-bold pb-4">IMPLEMENTO : {{strtoupper($implemento)}} </h1>
+                <h1 class="text-lg font-bold pb-2">
+                    FECHA DE LLEGADA : {{strtoupper(strftime("%B de %Y", strtotime($fecha_pedido_llegada)))}}
+                </h1>
             </div>
             <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
-                <select class="form-select" style="width: 100%" wire:model='idImplemento'>
-                    <option value="0">Seleccione una implemento</option>
+                <select class="form-select" style="width: 100%; height:2.5rem" wire:model='idImplemento'>
+                    <option value="0" class="text-center text-md font-bold">Seleccione una implemento</option>
                 @foreach ($implements as $implement)
-                    <option value="{{ $implement->id }}">{{ $implement->implementModel->implement_model }} {{ $implement->implement_number }}</option>
+                    <option value="{{ $implement->id }}" class="text-center text-md font-bold">Implemento: {{ strtoupper($implement->implementModel->implement_model) }} {{ $implement->implement_number }}</option>
                 @endforeach
                 </select>
             </div>
         </div>
         @if ($idImplemento != 0)
         <div style="display:flex; align-items:center;justify-content:center" class="px-6 py-4">
-            <button wire:click="$emit('confirmarCerrarPedido','pxwuxakalx 6977')" class="w-full h-full bg-orange-500 text-2xl font-bold hover:bg-orange-700 text-white rounded-full">
+            <button wire:click="$emit('confirmarCerrarPedido','pxwuxakalx 6977')" class="w-full h-16 bg-orange-500 text-2xl font-bold hover:bg-orange-700 text-white rounded-full">
                 Cerrar Pedido
             </button>
         </div>
@@ -151,7 +160,7 @@
         </div>
         @else
         <div class="px-6 py-4 text-center">
-            <h1 class="text-2xl font-bold pb-4">NINGÚN IMPLEMENTO SELECCIONADO</h1>
+            <h1 class="text-3xl font-bold pb-4">NINGÚN IMPLEMENTO SELECCIONADO</h1>
         </div>
         @endif
     </div>

@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
+use Carbon\Carbon;
 
 class RequestMaterial extends Component
 {
@@ -27,7 +28,9 @@ class RequestMaterial extends Component
     public $monto_usado = 0;
 
     public $fecha_pedido;
+    public $fecha_pedido_abierto;
     public $fecha_pedido_cierre;
+    public $fecha_pedido_llegada;
 
     public $idImplemento = 0;
     public $implemento;
@@ -160,7 +163,6 @@ class RequestMaterial extends Component
             $orderRequest = OrderRequest::where('implement_id', $this->idImplemento)->where('state', 'PENDIENTE')->first();
             if ($orderRequest != null) {
                 $this->idRequest = $orderRequest->id;
-                $this->monto_usado = $orderRequest->estimated_price;
 
             } else {
                 $this->idRequest = 0;
@@ -173,11 +175,25 @@ class RequestMaterial extends Component
 
         /*--------------Obtener los datos del implemento y su ceco respectivo----------------------------*/
         if ($this->idImplemento > 0) {
-            $implement = Implement::where('id', $this->idImplemento)->first();
-            $this->implemento = $implement->implementModel->implement_model . ' ' . $implement->implement_number;
-            $this->monto_asignado = $implement->ceco->amount;
+            $implement = Implement::find($this->idImplemento);
+
+
+             /*--------Obtener las fechas de llegada del pedido-------------------------------------*/
+            $fecha_llegada1 = Carbon::parse($this->fecha_pedido_llegada);
+            $fecha_llegada2 = $fecha_llegada1->addMonth();
+            /*---------------------Obtener el monto Asignado para los meses de llegada del pedido-------------*/
+            $ceco_allocations = CecoAllocationAmount::where('ceco_id',$implement->ceco_id)->whereDate('date','>=',$this->fecha_pedido_llegada)->whereDate('date','<=',$fecha_llegada2)->sum('allocation_amount');
+            $this->monto_asignado = $ceco_allocations;
+
+            /*-------------------Obtener el monto usado por el ceco en total-------------------------------------------*/
+            $solicitudes_por_ceco = OrderRequest::join('implements', function ($join){
+                $join->on('implements.id','=','order_requests.implement_id');
+            })->where('implements.ceco_id','=',$implement->ceco_id)->sum('order_requests.estimated_price');
+            $this->monto_usado = $solicitudes_por_ceco;
+
         } else {
-            $this->implemento = "Seleccione un implemento";
+            $this->monto_asignado = 0;
+            $this->monto_usado = 0;
         }
 
         return view('livewire.request-material', compact('implements', 'orderRequestDetails', 'orderRequestNewItems', 'measurement_units'));

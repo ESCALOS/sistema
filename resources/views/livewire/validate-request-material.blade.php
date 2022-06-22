@@ -40,28 +40,95 @@
             </div>
             @endif
         @endif
-
-        @if ($tlocation != 0)
-            <div class="grid grid-cols-3 sm:grid-cols-6 mt-4 gap-4 p-6">
-                @foreach ($users as $user)
-                    <div>
-                        {{$user->name}}
-                    </div>
-                @endforeach
-            </div>
-        @endif
     </div>
-    <!-- Cards de los usuarios con pedidos pendientes a validar  -->
+
+    @if ($tlocation != 0)
+        @if ($users->count())
     <div class="grid grid-cols-1 sm:grid-cols-3 mt-4 p-6 gap-4">
+            @foreach ($users as $user)
+    <!-- Cards de los usuarios con pedidos pendientes a validar  -->
         <div class="max-w-sm p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
             <div class="flex flex-col items-center pb-10">
-                <img class="mb-3 w-24 h-24 rounded-full shadow-lg" src="{{ Auth::user()->profile_photo_url }}" alt="{{ Auth::user()->name }}"/>
-                <h5 class="mb-1 text-xl font-medium text-gray-900 dark:text-white">{{ Auth::user()->name }} {{ Auth::user()->lastname }}</h5>
+                <img class="mb-3 w-24 h-24 rounded-full shadow-lg" src="{{ $user->profile_photo_path }}" alt="{{ $user->lastname }}"/>
+                <h5 class="mb-1 text-xl font-medium text-gray-900 dark:text-white">{{ $user->name }} {{ $user->lastname }}</h5>
                 <span class="text-sm text-gray-500 dark:text-gray-400">Operario</span>
                 <div class="flex mt-4 space-x-3 lg:mt-6">
                     <a href="#" class="inline-flex items-center py-2 px-4 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Ver Pedido</a>
                 </div>
             </div>
         </div>
+        <div class="max-w-sm p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
+            <div class="flex flex-col items-center pb-10">
+                <img class="mb-3 w-24 h-24 rounded-full shadow-lg" src="{{ $user->profile_photo_path }}" alt="{{ $user->lastname }}"/>
+                <h5 class="mb-1 text-xl font-medium text-gray-900 dark:text-white">{{ $user->name }} {{ $user->lastname }}</h5>
+                <span class="text-sm text-gray-500 dark:text-gray-400">Operario</span>
+                <div class="flex mt-4 space-x-3 lg:mt-6">
+                    <a href="#" class="inline-flex items-center py-2 px-4 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Ver Pedido</a>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-sm p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
+            <div class="flex flex-col items-center pb-10">
+                <img class="mb-3 w-24 h-24 rounded-full shadow-lg" src="{{ $user->profile_photo_path }}" alt="{{ $user->lastname }}"/>
+                <h5 class="mb-1 text-xl font-medium text-gray-900 dark:text-white">{{ $user->name }} {{ $user->lastname }}</h5>
+                <span class="text-sm text-gray-500 dark:text-gray-400">Operario</span>
+                <div class="flex mt-4 space-x-3 lg:mt-6">
+                    <a href="#" class="inline-flex items-center py-2 px-4 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Ver Pedido</a>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-sm p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
+            <div class="flex flex-col items-center pb-10">
+                <img class="mb-3 w-24 h-24 rounded-full shadow-lg" src="{{ $user->profile_photo_path }}" alt="{{ $user->lastname }}"/>
+                <h5 class="mb-1 text-xl font-medium text-gray-900 dark:text-white">{{ $user->name }} {{ $user->lastname }}</h5>
+                <span class="text-sm text-gray-500 dark:text-gray-400">Operario</span>
+                <div class="flex mt-4 space-x-3 lg:mt-6">
+                    <a href="#" class="inline-flex items-center py-2 px-4 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Ver Pedido</a>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-sm p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
+            <div class="flex flex-col items-center pb-10">
+                <img class="mb-3 w-24 h-24 rounded-full shadow-lg" src="{{ $user->profile_photo_path }}" alt="{{ $user->lastname }}"/>
+                <h5 class="mb-1 text-xl font-medium text-gray-900 dark:text-white">{{ $user->name }} {{ $user->lastname }}</h5>
+                <span class="text-sm text-gray-500 dark:text-gray-400">Operario</span>
+                <div class="flex mt-4 space-x-3 lg:mt-6">
+                    <a href="#" class="inline-flex items-center py-2 px-4 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Ver Pedido</a>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-sm p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
+            <div class="flex flex-col items-center pb-10">
+                <img class="mb-3 w-24 h-24 rounded-full shadow-lg" src="{{ $user->profile_photo_path }}" alt="{{ $user->lastname }}"/>
+                <h5 class="mb-1 text-xl font-medium text-gray-900 dark:text-white">{{ $user->name }} {{ $user->lastname }}</h5>
+                <span class="text-sm text-gray-500 dark:text-gray-400">Operario</span>
+                <div class="flex mt-4 space-x-3 lg:mt-6">
+                    <a href="#" class="inline-flex items-center py-2 px-4 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Ver Pedido</a>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-sm p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
+            <div class="flex flex-col items-center pb-10">
+                <img class="mb-3 w-24 h-24 rounded-full shadow-lg" src="{{ $user->profile_photo_path }}" alt="{{ $user->lastname }}"/>
+                <h5 class="mb-1 text-xl font-medium text-gray-900 dark:text-white">{{ $user->name }} {{ $user->lastname }}</h5>
+                <span class="text-sm text-gray-500 dark:text-gray-400">Operario</span>
+                <div class="flex mt-4 space-x-3 lg:mt-6">
+                    <a href="#" class="inline-flex items-center py-2 px-4 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Ver Pedido</a>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-sm p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
+            <div class="flex flex-col items-center pb-10">
+                <img class="mb-3 w-24 h-24 rounded-full shadow-lg" src="{{ $user->profile_photo_path }}" alt="{{ $user->lastname }}"/>
+                <h5 class="mb-1 text-xl font-medium text-gray-900 dark:text-white">{{ $user->name }} {{ $user->lastname }}</h5>
+                <span class="text-sm text-gray-500 dark:text-gray-400">Operario</span>
+                <div class="flex mt-4 space-x-3 lg:mt-6">
+                    <a href="#" class="inline-flex items-center py-2 px-4 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Ver Pedido</a>
+                </div>
+            </div>
+        </div>
+            @endforeach
     </div>
+        @endif
+    @endif
 </div>

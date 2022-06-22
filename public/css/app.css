@@ -1077,9 +1077,6 @@ select {
 .ml-auto {
   margin-left: auto;
 }
-.ml-0 {
-  margin-left: 0px;
-}
 .mb-8 {
   margin-bottom: 2rem;
 }
@@ -1687,6 +1684,9 @@ select {
 .pr-2 {
   padding-right: 0.5rem;
 }
+.pb-2 {
+  padding-bottom: 0.5rem;
+}
 .pb-10 {
   padding-bottom: 2.5rem;
 }
@@ -1736,6 +1736,10 @@ select {
   font-size: 2.25rem;
   line-height: 2.5rem;
 }
+.text-3xl {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
 .font-medium {
   font-weight: 500;
 }
@@ -1744,6 +1748,9 @@ select {
 }
 .font-bold {
   font-weight: 700;
+}
+.font-extrabold {
+  font-weight: 800;
 }
 .font-light {
   font-weight: 300;
@@ -2200,6 +2207,12 @@ select {
 .text-4xl {
     font-size: 2.25rem;
     line-height: 2.5rem;
+  }
+.font-extrabold {
+    font-weight: 800;
+  }
+.font-black {
+    font-weight: 900;
   }
 .hover\:border-gray-300:hover {
   --tw-border-opacity: 1;
