@@ -79,6 +79,38 @@ class RoleSeeder extends Seeder
 
         $user1->assignRole($role1);
 
+        $users = User::all();
+        $user2 = $users->find(2);
+
+        $roles = Role::all();
+        $role2 = Role::find(2);
+
+        $user2->assignRole($role2);
+
+        $users = User::all();
+        $user3 = $users->find(3);
+
+        $roles = Role::all();
+        $role3 = Role::find(3);
+
+        $user3->assignRole($role3);
+
+        $users = User::all();
+        $user4 = $users->find(4);
+
+        $roles = Role::all();
+        $role4 = Role::find(4);
+
+        $user4->assignRole($role4);
+
+        $users = User::all();
+        $user5 = $users->find(5);
+
+        $roles = Role::all();
+        $role5 = Role::find(5);
+
+        $user5->assignRole($role5);
+
 
     }
 }
