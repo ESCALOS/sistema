@@ -17,7 +17,7 @@ class RoleSeeder extends Seeder
      */
     public function run()
     {
-        /*$admin = Role::create([
+        $admin = Role::create([
             'name' => 'administrador',
             'guard_name' => 'admin',
         ]);
@@ -52,7 +52,7 @@ class RoleSeeder extends Seeder
         ])->syncRoles(['supervisor']);
 
         Permission::create([
-            'name' => 'asistent.index',
+            'name' => 'asistent',
             'guard_name' => 'asistent',
         ])->syncRoles(['asistente']);
 
@@ -70,7 +70,7 @@ class RoleSeeder extends Seeder
             'name' => 'admin.user.index',
             'guard_name' => 'admin',
         ])->syncRoles(['administrador']);
-*/
+
         $users = User::all();
         $user1 = $users->find(1);
 
