@@ -18,6 +18,15 @@ class ValidateRequestMaterial extends Component
 
     public $open_validate_resquest = false;
 
+    public $open_validate_material = false;
+    public $idMaterial = 0;
+    public $material = "";
+    public $cantidad = 0;
+    public $cantidad_pedida = 0;
+    public $precio = 0;
+    public $precioTotal = 0;
+    public $observation = "";
+
     public $idFechaPedido = 0;
     public $fecha_pedido = "";
 
@@ -34,24 +43,53 @@ class ValidateRequestMaterial extends Component
 
     public $incluidos = [];
 
+    protected $listeners = ['reinsertarRechazado'];
+
+    protected function rules(){
+        if($this->open_validate_material){
+           return [
+                'cantidad' => ['required','lte:cantidad_pedida','min:0'],
+            ];
+        }else{
+            return [
+                'cantidad' => ['required','lte:cantidad_pedida','min:0'],
+                'observation' => 'required'
+            ];
+        }
+    }
+
+    protected function messages(){
+        return [
+            'cantidad.required' => 'La cantidad es requerida',
+            'cantidad.lte' => 'El operador solo pidió '.$this->cantidad_pedida,
+            'cantidad.min' => 'La cantidad no puede ser negativa',
+            'observation.required' => 'La observation es requerida'
+        ];
+    }
+
     public function updatedTzone(){
-        $this->reset('tsede','tlocation');
+        $this->reset('tsede','tlocation','idOperador','operador','idImplemento','idSolicitudPedido');
         $this->incluidos = [];
     }
     public function updatedTsede(){
-        $this->reset('tlocation');
+        $this->reset('tlocation','idOperador','operador','idImplemento','idSolicitudPedido');
         $this->incluidos = [];
     }
     public function updatedTlocation(){
+        $this->reset('idOperador','operador','idImplemento','idSolicitudPedido');
         $this->incluidos = [];
     }
-
+    public function updatedOpenValidateResquest(){
+        $this->reset('idOperador','operador','idImplemento','idSolicitudPedido');
+    }
+    public function updatedOpenValidateMaterial(){
+        $this->reset('idMaterial','material','cantidad','precio','precioTotal','observation');
+    }
     public function mostrarImplementos($id,$name,$lastname){
         $this->idOperador = $id;
         $this->operador = $name.' '.$lastname;
         $this->open_validate_resquest = true;
     }
-
     public function updatedIdImplemento(){
         $order_request = OrderRequest::where('implement_id',$this->idImplemento)->where('state',"CERRADO")->first();
         if($order_request != null){
@@ -60,9 +98,64 @@ class ValidateRequestMaterial extends Component
             $this->idSolicitudPedido = 0;
         }
     }
+    public function updatedCantidad(){
+        $this->precioTotal = floatval($this->precio) * floatval($this->cantidad);
+    }
+/*----------------Validar o Rechazar Materiales ---------------------------------------------*/
+    public function mostrarModalValidarMaterial($id){
+        $this->open_validate_material = true;
+        $this->idMaterial = $id;
+        $material = OrderRequestDetail::find($id);
+        $this->material = strtoupper($material->item->item);
+        $this->cantidad = floatval($material->quantity);
+        $this->cantidad_pedida = floatval($material->quantity);
+        $this->precio = floatval($material->estimated_price);
+        $this->precioTotal = floatval($this->precio) * floatval($this->cantidad);
+    }
+    public function validarMaterial(){
+        $this->validate();
+        $material = OrderRequestDetail::find($this->idMaterial);
+        /*------------Verificar si se validó el pedido ----------------------*/
+        if($this->cantidad > 0){
+            OrderRequestDetail::create([
+                'order_request_id' => $this->idSolicitudPedido,
+                'item_id' => $material->item_id,
+                'quantity' => $this->cantidad,
+                'estimated_price' => $this->precio,
+                'state' => 'VALIDADO',
+                'observation' => $this->observation,
+            ]);
+            /*-------Verificar si se acepto el pedido completo-----------------*/
+            if($this->cantidad == $material->quantity){
+                $material->state = 'ACEPTADO';
+            /*-------Poner Pedido como modificado------------------------------*/
+            }else{
+                $material->state = 'MODIFICADO';
+            }
+        /*------------Rechazar el pedido---------------------------------------*/
+        }else{
+            $material->state = 'RECHAZADO';
+        }
+        $material->save();
+        $this->open_validate_material = false;
+        $this->reset('idMaterial','material','cantidad','precio','precioTotal','observation');
+        //$this->render();
+    }
+/*--------------------------------------------------------------------------------------------*/
 
+/*----------------Revertir validación----------------------------------------------*/
+    public function revertirValidacion($id){
+
+    }
+/*-----------------Aceptar Rechazados --------------------------------------------------------*/
+    public function reinsertarRechazado($id){
+        $material = OrderRequestDetail::find($id);
+        $material->state = "PENDIENTE";
+        $material->save();
+    }
     public function render()
     {
+    /*------------------DATOS PARA LAS SOLICITUDES DE PEDIDO POR USUARIO----------------------------*/
         /*-----------------------Obtener la fecha de pedido--------------------------------*/
         $order_date = OrderDate::where('state','ABIERTO')->orWhere('state','CERRADO')->first();
         if($order_date != null){
@@ -92,7 +185,7 @@ class ValidateRequestMaterial extends Component
         /*--------------------Mostrar a los usuarios que tienen solicitudes de pedido cerrada----------------------*/
         $users = DB::table('users')->whereIn('id',$this->incluidos)->get();
 
-/*----------------------DATOS DEL MODAL DE VALIDACIÓN--------------------------------------------------------------------------------------------*/
+/*----------------------DATOS DEL MODAL DE VALIDACIÓN --------------------------------------------------------------------------*/
         /*-----------Implementos del usuario------------------------------------*/
         $implements = OrderRequest::join('implements', function($join){
             $join->on('implements.id','=','order_requests.implement_id');
@@ -100,10 +193,15 @@ class ValidateRequestMaterial extends Component
             $join->on('implement_models.id','=','implements.implement_model_id');
         })->where('order_requests.user_id',$this->idOperador)->select('implements.*','implement_models.implement_model')->get();
 
-        $order_request_detail_operator = OrderRequestDetail::where('order_request_id',$this->idSolicitudPedido)->where('state','PENDIENTE')->orWhere('state','CERRADO')->where('quantity','>',0)->get();
+        $order_request_detail_operator = OrderRequestDetail::where('order_request_id',$this->idSolicitudPedido)->where('quantity','>',0)->where('state','PENDIENTE')->get();
 
-        $order_request_detail_planner = OrderRequestDetail::where('order_request_id',$this->idSolicitudPedido)->where('state','VALIDADO')->where('quantity','>',0)->get();
+        $order_request_detail_planner = OrderRequestDetail::where('order_request_id',$this->idSolicitudPedido)->where('quantity','>',0)->where(function ($query){
+            $query->where('state','VALIDADO');
+        })->get();
 
-        return view('livewire.validate-request-material', compact('zones', 'sedes', 'locations','users','implements','order_request_detail_operator','order_request_detail_planner'));
+        $order_request_detail_rechazado = OrderRequestDetail::where('order_request_id',$this->idSolicitudPedido)->where('quantity','>',0)->where('state','RECHAZADO')->get();
+
+        return view('livewire.validate-request-material', compact('zones', 'sedes', 'locations','users','implements','order_request_detail_operator','order_request_detail_planner','order_request_detail_rechazado'));
+/*---------------------------------------------------------------------------------------------------*/
     }
 }

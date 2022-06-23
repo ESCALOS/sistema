@@ -52,7 +52,7 @@
         @if ($idImplemento > 0)
     <!-- Crud Materiales Existentes -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-------GRID DE BOTONES PARA AGREGAR MATERIALES -->
+        <!-------GRID DE BOTONES PARA AGREGAR MATERIALES -->
             <div style="height:280px">
                 <div class="text-center">
                     <h1 class="text-md font-bold pb-4">Añadir a la solicitud:</h1>

@@ -40,6 +40,7 @@
         @livewireScripts
 
         <script>
+    /*------Alerta para registro----------------------------------------------------*/
             Livewire.on('alert', function(){
                 Swal.fire({
                     position: 'top-end',
@@ -49,7 +50,8 @@
                     timer: 1000
                 })
             });
-
+        @if (Route::is('operator.request-materials'))
+/*--------------------Confirmacion para cerra el pedido--------------------------------------*/
             Livewire.on('confirmarCerrarPedido', implemento =>{
                 Swal.fire({
                     title: '¿Está seguro de cerrar el pedido de '+implemento+'?',
@@ -66,13 +68,40 @@
                         Livewire.emitTo('request-material', 'cerrarPedido');
 
                         Swal.fire(
-                            'Deleted!',
-                            'Your file has been deleted.',
+                            'Pedido Cerrado!',
+                            'Se procesó el pedido',
+                            'Se le notificará cuando se apruebe'
+                        )
+                    }
+                })
+            });
+        @endif
+        @if(Route::is('planner.validate-request-materials'))
+/*--------------------Confirmacion Reinsertar Pedido Rechazado--------------------------------------*/
+            Livewire.on('confirmarReinsertarRechazado', solicitud =>{
+                Swal.fire({
+                    title: '¿Está seguro de reinsertar el material '+solicitud[1]+'?',
+                    text: "Esta acción es irreversible",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, reinsertar!',
+                    cancelButtonText: 'No, cancelar!',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+
+                        Livewire.emit('reinsertarRechazado',solicitud[0]);
+
+                        Swal.fire(
+                            'Pedido Reinsertado!',
+                            'El pedido se encuentra pendiente a validar',
                             'success'
                         )
                     }
                 })
             });
+        @endif
         </script>
     </body>
 </html>
