@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire;
 
+use App\Models\CecoAllocationAmount;
 use App\Models\Implement;
 use App\Models\Location;
 use App\Models\OrderDate;
@@ -11,12 +12,17 @@ use App\Models\Sede;
 use App\Models\Zone;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
-use PHPUnit\Framework\Constraint\Operator;
+use Carbon\Carbon;
 
 class ValidateRequestMaterial extends Component
 {
 
     public $open_validate_resquest = false;
+
+
+    public $monto_usado = 0;
+    public $monto_asignado = 0;
+    public $monto_real = 0;
 
     public $open_validate_material = false;
     public $idMaterial = 0;
@@ -29,6 +35,7 @@ class ValidateRequestMaterial extends Component
 
     public $idFechaPedido = 0;
     public $fecha_pedido = "";
+    public $fecha_pedido_llegada;
 
     public $idOperador = 0;
     public $operador = "";
@@ -91,12 +98,43 @@ class ValidateRequestMaterial extends Component
         $this->open_validate_resquest = true;
     }
     public function updatedIdImplemento(){
-        $order_request = OrderRequest::where('implement_id',$this->idImplemento)->where('state',"CERRADO")->first();
-        if($order_request != null){
-            $this->idSolicitudPedido = $order_request->id;
+        if($this->idImplemento > 0){
+            $order_request = OrderRequest::where('implement_id',$this->idImplemento)->where('state',"CERRADO")->first();
+            if($order_request != null){
+                $this->idSolicitudPedido = $order_request->id;
+            }else{
+                $this->idSolicitudPedido = 0;
+            }
+            $implement = Implement::find($this->idImplemento);
+
+            /*--------Obtener las fechas de llegada del pedido-------------------------------------*/
+            $fecha_llegada1 = Carbon::parse($this->fecha_pedido_llegada);
+            $fecha_llegada2 = $fecha_llegada1->addMonth();
+            /*---------------------Obtener el monto Asignado para los meses de llegada del pedido-------------*/
+            $this->monto_asignado = CecoAllocationAmount::where('ceco_id',$implement->ceco_id)->whereDate('date','>=',$this->fecha_pedido_llegada)->whereDate('date','<=',$fecha_llegada2)->sum('allocation_amount');
+
+            /*-------------------Obtener el monto usado por el ceco en total-------------------------------------------*/
+            $this->monto_usado = OrderRequestDetail::join('order_requests', function ($join){
+                                                        $join->on('order_requests.id','=','order_request_details.order_request_id');
+                                                    })->join('implements', function ($join){
+                                                        $join->on('implements.id','=','order_requests.implement_id');
+                                                    })->where('implements.ceco_id','=',$implement->ceco_id)
+                                                      ->where('order_request_details.state','=','PENDIENTE')
+                                                      ->sum('order_request_details.estimated_price');
+
+
+
+            /*-------------------Obtener el monto real por el ceco en total-------------------------------------------*/
+            $this->monto_real = OrderRequest::join('implements', function ($join){
+                $join->on('implements.id','=','order_requests.implement_id');
+            })->where('implements.ceco_id','=',$implement->ceco_id)->sum('order_requests.estimated_price');
+
         }else{
             $this->idSolicitudPedido = 0;
+            $this->monto_asignado = 0;
+            $this->monto_usado = 0;
         }
+
     }
     public function updatedCantidad(){
         $this->precioTotal = floatval($this->precio) * floatval($this->cantidad);
@@ -139,15 +177,14 @@ class ValidateRequestMaterial extends Component
         $material->save();
         $this->open_validate_material = false;
         $this->reset('idMaterial','material','cantidad','precio','precioTotal','observation');
-        //$this->render();
     }
-/*--------------------------------------------------------------------------------------------*/
+    /*--------------------------------------------------------------------------------------------*/
 
-/*----------------Revertir validación----------------------------------------------*/
+    /*----------------Revertir validación----------------------------------------------*/
     public function revertirValidacion($id){
 
     }
-/*-----------------Aceptar Rechazados --------------------------------------------------------*/
+    /*-----------------Aceptar Rechazados --------------------------------------------------------*/
     public function reinsertarRechazado($id){
         $material = OrderRequestDetail::find($id);
         $material->state = "PENDIENTE";
@@ -157,9 +194,10 @@ class ValidateRequestMaterial extends Component
     {
     /*------------------DATOS PARA LAS SOLICITUDES DE PEDIDO POR USUARIO----------------------------*/
         /*-----------------------Obtener la fecha de pedido--------------------------------*/
-        $order_date = OrderDate::where('state','ABIERTO')->orWhere('state','CERRADO')->first();
+        $order_date = OrderDate::where('state','ABIERTO')->first();
         if($order_date != null){
             $this->fecha_pedido = "PEDIDO PARA ".strtoupper(strftime("%A %d de %B de %Y", strtotime($order_date->order_date)));
+            $this->fecha_pedido_llegada = $order_date->arrival_date;
         }else{
             $this->fecha_pedido = "No existe pedido que validar";
         }

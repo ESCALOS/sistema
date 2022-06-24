@@ -84,12 +84,12 @@
                 </div>
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
                     <x-jet-label>Horometro Inicial: </x-jet-label>
-                    <x-jet-input type="number" style="height:30px;width: 100%" disabled value="{{ $horometro_inicial }}"/>
+                    <x-jet-input type="number" min="0" style="height:30px;width: 100%" disabled value="{{ $horometro_inicial }}"/>
 
                 </div>
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
                     <x-jet-label>Horometro Final:</x-jet-label>
-                    <x-jet-input type="number" style="height:30px;width: 100%" wire:model.defer="hour_meter_end" />
+                    <x-jet-input type="number" min="0" style="height:30px;width: 100%" wire:model.defer="hour_meter_end" />
 
                     <x-jet-input-error for="hour_meter_end"/>
 

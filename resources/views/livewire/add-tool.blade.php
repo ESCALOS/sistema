@@ -21,7 +21,7 @@
                 </div>
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
                     <x-jet-label>Cantidad:</x-jet-label>
-                    <x-jet-input type="number" style="height:30px;width: 100%" wire:model="quantity_tool_for_add" />
+                    <x-jet-input type="number" min="0" style="height:30px;width: 100%" wire:model="quantity_tool_for_add" />
 
                     <x-jet-input-error for="quantity_tool_for_add"/>
 

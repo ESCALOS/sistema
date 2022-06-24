@@ -64,9 +64,10 @@
 <!-- Modal para validar materiales por usuario  -->
     <x-jet-dialog-modal maxWidth="2xl" wire:model="open_validate_resquest">
         <x-slot name="title">
-            Validar Pedido de {{$operador}}
+            Pedido de {{$operador}}
         </x-slot>
         <x-slot name="content">
+            <div class="grid grid-cols-2 sm:grid-cols-1 gap-4">
     <!------------------------------------------- SELECT DE LOS IMPLEMENTOS ------------------------------------------------- -->
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                     <x-jet-label>Implemento: </x-jet-label>
@@ -80,12 +81,24 @@
                     <x-jet-input-error for="idImplemento"/>
 
                 </div>
+
+                <div>
+                    <h1 class="text-lg font-bold text-blue-500">Monto Asignado: S/.{{$monto_asignado}}</h1>
+                </div>
+            </div>
     <!-------------------------------------------TABLA DE LOS MATERIALES ------------------------------------------------- -->
                 <div class="grid grid-cols-1 sm:grid-cols-1 gap-4">
         <!------------------------ INICIO DE TABLAS --------------------------------------->
             <!------------------------ TABLA DE MATERIALES POR VALIDAR --------------------------------------->
+                        <div class="grid grid-cols-2 sm:grid-cols-1 gap-4">
+                            <div>
+                                <h1 class="text-lg font-bold">Materiales No Validados</h1>
+                            </div>
+                            <div>
+                                <h1 class="text-lg font-bold {{$monto_usado > $monto_asignado ? 'text-red-500' : 'text-green-500'}}">Precio Estimado: S/.{{$monto_usado}}</h1>
+                            </div>
+                        </div>
                         <div style="height:200px;overflow:auto">
-                            <h1 class="text-lg font-bold italic">Materiales No Validados</h1>
                             <table class="min-w-max w-full">
                                 <thead>
                                     <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -126,8 +139,15 @@
                             </table>
                         </div>
             <!----------------------- TABLA DE MATERIALES VALIDADOS -------------------------------------------->
+                        <div class="grid grid-cols-2 sm:grid-cols-1 gap-4">
+                            <div>
+                                <h1 class="text-lg font-bold">Materiales Validados</h1>
+                            </div>
+                            <div>
+                                <h1 class="text-lg font-bold {{$monto_real > $monto_asignado ? 'text-red-500' : 'text-green-500'}} ">Precio Real: S/.{{$monto_usado}}</h1>
+                            </div>
+                        </div>
                         <div style="height:200px;overflow:auto">
-                            <h1 class="text-lg font-bold">Materiales Validados</h1>
                             <table class="min-w-max w-full">
                                 <thead>
                                     <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -166,8 +186,8 @@
                             </table>
                         </div>
             <!-- ------------------------ TABLA DE MATERIALES RECHAZADOS ---------------------------------------  -->
+                    <h1 class="text-lg font-bold">Materiales Rechazados</h1>
                     <div style="height:200px;overflow:auto">
-                        <h1 class="text-lg font-bold">Materiales Rechazados</h1>
                         <table class="min-w-max w-full">
                             <thead>
                                 <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -209,9 +229,12 @@
                 </div>
         </x-slot>
         <x-slot name="footer">
-            <x-jet-button wire:loading.attr="disabled" wire:click="store()">
+            <button wire:loading.attr="disabled" {{$idImplemento <= 0 ? 'disabled' : '' }} wire:click="store()" style="width: 200px" class="px-4 py-2 {{ $idImplemento > 0 ? 'bg-blue-500 hover:bg-blue-700' : 'bg-blue-400 opacity-75' }} text-white rounded-md">
                 Validar
-            </x-jet-button>
+            </button>
+            <button wire:loading.attr="disabled" {{$idImplemento <=0 ? 'disabled' : '' }} wire:click="$emit('confirmarSolicitarCorrecion')" style="width: 200px" class="ml-2 px-4 py-2 {{ $idImplemento > 0 ? 'bg-green-500 hover:bg-green-700' : 'bg-green-400 opacity-75' }}  text-white rounded-md">
+                Mandar a Corregir
+            </button>
             <div wire:loading wire:target="store">
                 Registrando...
             </div>
@@ -239,12 +262,12 @@
             </div>
             <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
                 <x-jet-label>Precio Unitario Estimado</span></x-jet-label>
-                <x-jet-input type="number" disabled style="height:30px;width: 100%" class="text-center" value="{{$precio}}"/>
+                <x-jet-input type="number" min="0" style="height:30px;width: 100%" class="text-center" wire:model="precio"/>
 
             </div>
             <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
                 <x-jet-label>Precio Total</span></x-jet-label>
-                <x-jet-input type="number" disabled style="height:30px;width: 100%" class="text-center" value="{{$precioTotal}}"/>
+                <x-jet-input type="number" min="0" disabled style="height:30px;width: 100%" class="text-center" value="{{$precioTotal}}"/>
 
             </div>
             <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 3 span/ 3 span">
@@ -254,7 +277,6 @@
             </div>
         </x-slot>
         <x-slot name="footer">
-
             @if ($cantidad == 0)
                 <x-jet-button wire:loading.attr="disabled" wire:click="validarMaterial()">
                     Rechazar

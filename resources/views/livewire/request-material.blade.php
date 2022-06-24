@@ -1,19 +1,10 @@
 <div>
     <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
         <div class="grid grid-cols-1 gap-4">
-            <div class="grid grid-cols-1 gap-4">
-                <div class="text-center">
-                    <h1 class="font-bold text-4xl">
-                        PEDIDO {{strtoupper(strftime("%B de %Y", strtotime($fecha_pedido)))}}
-                    </h1>
-                    @if ($monto_usado > $monto_asignado)
-                    <div class="mt-4 mx-6 px-6 py-4 cursor-default" title="Este monto es calculado de todos las solicitudes del ceco" >
-                        <div class="h-32 md:h-16 w-full p-4 text-white text-2xl font-black bg-red-600 rounded-lg">
-                            EL MONTO REBASA AL ASIGNADO
-                        </div>
-                    </div>
-                    @endif
-                </div>
+            <div class="text-center">
+                <h1 class="font-bold text-4xl">
+                    PEDIDO {{strtoupper(strftime("%B de %Y", strtotime($fecha_pedido)))}}
+                </h1>
             </div>
             <div class="grid grid-cols-1 gap-4">
                 <div class="text-center">
@@ -22,6 +13,13 @@
                     </h1>
                 </div>
             </div>
+            @if ($monto_usado > $monto_asignado)
+                <div class="mt-4 mx-6 px-6 cursor-default" title="Este monto es calculado de todos las solicitudes del ceco" >
+                    <div class="h-32 md:h-16 w-full p-4 text-white text-2xl font-black bg-red-600 rounded-lg">
+                        EL MONTO REBASA AL ASIGNADO
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
     <div class="grid grid-cols-1 {{$idImplemento!=0?'sm:grid-cols-2':''}} gap-4">
@@ -172,13 +170,16 @@
             {{ strtoupper($material_edit_name) }}
         </x-slot>
         <x-slot name="content">
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
-                    <x-jet-label class="text-md">Cantidad:</x-jet-label>
-                    <x-jet-input type="number" style="height:30px;width: 100%" wire:model="quantity_edit" />
+            <div>
 
-                    <x-jet-input-error for="quantity_edit"/>
+            </div>
+            <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
+                <x-jet-label class="text-md">Cantidad:</x-jet-label>
+                <x-jet-input type="number" min="0" style="height:30px;width: 100%" wire:model="quantity_edit" />
 
-                </div>
+                <x-jet-input-error for="quantity_edit"/>
+
+            </div>
         </x-slot>
         <x-slot name="footer">
             <x-jet-button wire:loading.attr="disabled" wire:click="actualizar()">
@@ -201,7 +202,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
                     <x-jet-label>Cantidad:</x-jet-label>
-                    <x-jet-input type="number" style="height:30px;width: 100%" wire:model="material_new_edit_quantity" />
+                    <x-jet-input type="number" min="0" style="height:30px;width: 100%" wire:model="material_new_edit_quantity" />
 
                     <x-jet-input-error for="material_new_edit_quantity"/>
 
@@ -252,11 +253,6 @@
                         <img src="{{ str_replace('public','/storage',$material_new_edit_image_old) }}" class="w-full">
                     </div>
                 @endif
-
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 3 span/ 3 span">
-                    <x-jet-label>Observaciones:</x-jet-label>
-                    <textarea class="form-control w-full text-sm" rows=5 wire:model.defer="material_new_edit_observation"></textarea>
-                </div>
             </div>
         </x-slot>
         <x-slot name="footer">

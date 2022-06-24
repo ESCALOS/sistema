@@ -21,10 +21,19 @@ class AddPart extends Component
     public $excluidos = [];
 
     protected $rules = [
+        'component_for_part' => 'required|exists:items,id',
         'part_for_add' => 'required|exists:items,id',
         'quantity_part_for_add' => 'required|gt:0'
     ];
 
+    protected $messages = [
+        'component_for_part.required' => 'Seleccione el componente',
+        'component_for_part.exists' => 'El componente no existe',
+        'part_for_add.required' => 'Seleccione la pieza',
+        'part_for_add.exists' => 'La pieza no existe',
+        'quantity_part_for_add.required' => 'Ingrese una cantidad',
+        'quantity_part_for_add.gt' => 'La cantidad debe ser mayor de 0'
+    ];
 
     protected $listeners = ['cambioImplemento'=>'cambioImplemento'];
 

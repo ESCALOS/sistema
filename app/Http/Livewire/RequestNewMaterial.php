@@ -15,25 +15,60 @@ class RequestNewMaterial extends Component
 
     public $idRequest;
     public $idImplemento;
+    public $iteration = 0;
 
     public $open_new_material;
+
     public $material_new_item;
     public $material_new_quantity;
     public $material_new_measurement_unit;
     public $material_new_brand;
     public $material_new_datasheet;
     public $material_new_image;
-    public $material_new_observation;
 
     protected $listeners = ['cambioImplemento'=>'cambioImplemento'];
+
+    protected function rules(){
+        return [
+            'material_new_item' => 'required',
+            'material_new_quantity' => 'required|gt:0',
+            'material_new_measurement_unit' => 'required|exists:measurement_units,id',
+            'material_new_brand' => 'required',
+            'material_new_datasheet' => 'required',
+            'material_new_image' => 'required|image',
+        ];
+    }
+
+    protected $messages = [
+        'material_new_item.required' => 'Ingrese el nombre',
+        'material_new_quantity.required' => 'Ingrese la cantidad',
+        'material_new_quantity.gt' => 'Debe ser mayor de 0',
+        'material_new_measurement_unit.required' => 'Seleccione una unidad de medida',
+        'material_new_measurement_unit.exists' => 'La unidad de medida no existe',
+        'material_new_brand.required' => 'Ingrese la marca',
+        'material_new_datasheet.required' => 'Ingrese la ficha técnica',
+        'material_new_image.required' => 'Ingrese una imagen',
+        'material_new_image.image' => 'El archivo debe de ser una imagen'
+    ];
 
     public function cambioImplemento(Implement $idImplemento)
     {
         $this->idImplemento = $idImplemento->id;
     }
 
-    public function store(){
+    public function updatedMaterialNewImage(){
+        $this->resetValidation('material_new_image');
+    }
 
+    public function updatedOpenNewMaterial(){
+        $this->reset('material_new_item','material_new_quantity','material_new_measurement_unit','material_new_brand','material_new_datasheet');
+        $this->material_new_image = null;
+        $this->resetValidation();
+        $this->iteration++;
+    }
+
+    public function store(){
+        $this->validate();
         $order_request_id = OrderRequest::where('implement_id',$this->idImplemento)->where('state','PENDIENTE')->first();
         if(is_null($order_request_id)){
             $order_request = OrderRequest::create([
@@ -56,10 +91,8 @@ class RequestNewMaterial extends Component
             'brand' => $this->material_new_brand,
             'datasheet' => $this->material_new_datasheet,
             'image' => $image,
-            'observation' => $this->material_new_observation,
+            'observation' => '',
         ]);
-
-        $this->reset('material_new_item', 'material_new_quantity', 'material_new_measurement_unit', 'material_new_brand', 'material_new_datasheet', 'material_new_image', 'material_new_observation');
         $this->emit('render',$this->idRequest);
         $this->open_new_material = false;
         $this->emit('alert');

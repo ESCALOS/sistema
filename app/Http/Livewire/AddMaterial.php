@@ -22,6 +22,13 @@ class AddMaterial extends Component
         'quantity_material_for_add' => 'required|gt:0'
     ];
 
+    protected $messages = [
+        'material_for_add.required' => 'Seleccione el material',
+        'material_for_add.exists' => 'El material no existe',
+        'quantity_material_for_add.required' => 'Ingrese una cantidad',
+        'quantity_material_for_add.gt' => 'La cantidad debe ser mayor de 0'
+    ];
+
     protected $listeners = ['cambioImplemento'=>'cambioImplemento'];
 
     public function cambioImplemento(Implement $idImplemento)

@@ -38,6 +38,7 @@ class RequestMaterial extends Component
     public $open_edit = false;
     public $open_edit_new = false;
     public $material_edit = 0;
+
     public $material_edit_name = '';
 
     public $material_new_edit;
@@ -48,14 +49,45 @@ class RequestMaterial extends Component
     public $material_new_edit_datasheet;
     public $material_new_edit_image;
     public $material_new_edit_image_old;
-    public $material_new_edit_observation;
 
     public $quantity_edit;
 
     protected $listeners = ['render','cerrarPedido'];
 
+    protected function rules(){
+        if($this->open_edit_new){
+            return [
+                'material_new_edit_name' => 'required',
+                'material_new_edit_quantity' => 'required|gt:0',
+                'material_new_edit_measurement_unit' => 'required|exists:measurement_units,id',
+                'material_new_edit_brand' => 'required',
+                'material_new_edit_image' => 'required',
+                'material_new_image' => 'required|image',
+            ];
+        }else{
+            return [
+                'quantity_edit' => 'required|gte:0',
+            ];
+        }
+
+    }
+
+    protected $messages = [
+        'material_new_item.required' => 'Ingrese el nombre',
+        'material_new_quantity.required' => 'Ingrese la cantidad',
+        'material_new_quantity.gt' => 'Debe ser mayor de 0',
+        'material_new_measurement_unit.required' => 'Seleccione una unidad de medida',
+        'material_new_measurement_unit.exists' => 'La unidad de medida no existe',
+        'material_new_brand.required' => 'Ingrese la marca',
+        'material_new_datasheet.required' => 'Ingrese la ficha técnica',
+        'material_new_image.required' => 'Ingrese una imagen',
+        'material_new_image.image' => 'El archivo debe de ser una imagen',
+        'quantity_edit.required' => 'Ingrese la cantidad',
+        'quantity_edit.gte' => 'Debe ser 0 para rechazar o mayor'
+    ];
+
     public function updatedOpenEditNew(){
-        $this->reset('material_new_edit_name','material_new_edit_quantity','material_new_edit_measurement_unit','material_new_edit_brand','material_new_edit_datasheet','material_new_edit_image','material_new_edit_observation');
+        $this->reset('material_new_edit_name','material_new_edit_quantity','material_new_edit_measurement_unit','material_new_edit_brand','material_new_edit_datasheet','material_new_edit_image');
     }
 
     public function seleccionar($id){
@@ -77,6 +109,7 @@ class RequestMaterial extends Component
     }
 
     public function actualizar_nuevo(){
+        $this->validate();
         if($this->material_new_edit_image != ""){
             $image = $this->material_new_edit_image->store('public/newMaterials');
             Storage::delete($this->material_new_edit_image_old);
@@ -90,7 +123,7 @@ class RequestMaterial extends Component
         if($this->material_new_edit_image != ""){
             $material->image = $image;
         }
-        $material->observation = $this->material_new_edit_observation;
+        //$material->observation = $this->material_new_edit_observation;
         $material->save();
         $this->open_edit_new = false;
         $this->render();
@@ -114,6 +147,7 @@ class RequestMaterial extends Component
     }
 
     public function actualizar(){
+        $this->validate();
         $material = OrderRequestDetail::find($this->material_edit);
         $material->quantity = $this->quantity_edit;
         $material->save();
@@ -176,7 +210,6 @@ class RequestMaterial extends Component
         /*--------------Obtener los datos del implemento y su ceco respectivo----------------------------*/
         if ($this->idImplemento > 0) {
             $implement = Implement::find($this->idImplemento);
-
 
              /*--------Obtener las fechas de llegada del pedido-------------------------------------*/
             $fecha_llegada1 = Carbon::parse($this->fecha_pedido_llegada);
