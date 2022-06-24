@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 24-06-2022 a las 15:26:13
+-- Tiempo de generación: 24-06-2022 a las 21:20:48
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -1503,22 +1503,22 @@ CREATE TABLE `order_requests` (
 --
 
 INSERT INTO `order_requests` (`id`, `user_id`, `implement_id`, `state`, `estimated_price`, `validate_by`, `is_canceled`, `order_date_id`, `created_at`, `updated_at`) VALUES
-(33, 1, 1, 'PENDIENTE', '16360.55', NULL, 0, 1, NULL, NULL),
-(34, 2, 2, 'PENDIENTE', '16360.55', NULL, 0, 1, NULL, NULL),
-(35, 3, 3, 'PENDIENTE', '16360.55', NULL, 0, 1, NULL, NULL),
-(36, 4, 4, 'PENDIENTE', '16360.55', NULL, 0, 1, NULL, NULL),
-(37, 5, 5, 'PENDIENTE', '9823.00', NULL, 0, 1, NULL, NULL),
-(38, 6, 6, 'PENDIENTE', '9823.00', NULL, 0, 1, NULL, NULL),
-(39, 7, 7, 'PENDIENTE', '9823.00', NULL, 0, 1, NULL, NULL),
-(40, 8, 8, 'PENDIENTE', '9823.00', NULL, 0, 1, NULL, NULL),
-(41, 9, 9, 'PENDIENTE', '19707.23', NULL, 0, 1, NULL, NULL),
-(42, 10, 10, 'PENDIENTE', '19707.23', NULL, 0, 1, NULL, NULL),
-(43, 11, 11, 'PENDIENTE', '19707.23', NULL, 0, 1, NULL, NULL),
-(44, 12, 12, 'PENDIENTE', '19707.23', NULL, 0, 1, NULL, NULL),
-(45, 13, 13, 'PENDIENTE', '15727.94', NULL, 0, 1, NULL, NULL),
-(46, 14, 14, 'PENDIENTE', '15727.94', NULL, 0, 1, NULL, NULL),
-(47, 15, 15, 'PENDIENTE', '15727.94', NULL, 0, 1, NULL, NULL),
-(48, 16, 16, 'PENDIENTE', '30967.39', NULL, 0, 1, NULL, NULL);
+(1, 1, 1, 'PENDIENTE', '16360.55', NULL, 0, 1, NULL, NULL),
+(2, 2, 2, 'PENDIENTE', '16360.55', NULL, 0, 1, NULL, NULL),
+(3, 3, 3, 'CERRADO', '13207.07', NULL, 0, 1, NULL, '2022-06-24 23:31:02'),
+(4, 4, 4, 'PENDIENTE', '16360.55', NULL, 0, 1, NULL, NULL),
+(5, 5, 5, 'PENDIENTE', '9823.00', NULL, 0, 1, NULL, NULL),
+(6, 6, 6, 'CERRADO', '7720.50', NULL, 0, 1, NULL, '2022-06-24 23:32:39'),
+(7, 7, 7, 'CERRADO', '11955.03', NULL, 0, 1, NULL, '2022-06-24 23:34:29'),
+(8, 8, 8, 'PENDIENTE', '9823.00', NULL, 0, 1, NULL, NULL),
+(9, 9, 9, 'PENDIENTE', '19707.23', NULL, 0, 1, NULL, NULL),
+(10, 10, 10, 'PENDIENTE', '19707.23', NULL, 0, 1, NULL, NULL),
+(11, 11, 11, 'PENDIENTE', '19707.23', NULL, 0, 1, NULL, NULL),
+(12, 12, 12, 'PENDIENTE', '19707.23', NULL, 0, 1, NULL, NULL),
+(13, 13, 13, 'PENDIENTE', '15727.94', NULL, 0, 1, NULL, NULL),
+(14, 14, 14, 'PENDIENTE', '15727.94', NULL, 0, 1, NULL, NULL),
+(15, 15, 15, 'PENDIENTE', '15727.94', NULL, 0, 1, NULL, NULL),
+(16, 16, 16, 'PENDIENTE', '30967.39', NULL, 0, 1, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1543,118 +1543,125 @@ CREATE TABLE `order_request_details` (
 --
 
 INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quantity`, `estimated_price`, `state`, `observation`, `created_at`, `updated_at`) VALUES
-(402, 33, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
-(403, 33, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(404, 33, 44, '2.00', '1909.30', 'PENDIENTE', NULL, NULL, NULL),
-(405, 33, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(406, 33, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
-(407, 33, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(408, 33, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(409, 34, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
-(410, 34, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(411, 34, 44, '2.00', '1909.30', 'PENDIENTE', NULL, NULL, NULL),
-(412, 34, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(413, 34, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
-(414, 34, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(415, 34, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(416, 35, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
-(417, 35, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(418, 35, 44, '2.00', '1909.30', 'PENDIENTE', NULL, NULL, NULL),
-(419, 35, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(420, 35, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
-(421, 35, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(422, 35, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(423, 36, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
-(424, 36, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(425, 36, 44, '2.00', '1909.30', 'PENDIENTE', NULL, NULL, NULL),
-(426, 36, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(427, 36, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
-(428, 36, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(429, 36, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(430, 37, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(431, 37, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
-(432, 37, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
-(433, 37, 52, '3.00', '649.92', 'PENDIENTE', NULL, NULL, NULL),
-(434, 37, 57, '2.00', '1004.34', 'PENDIENTE', NULL, NULL, NULL),
-(435, 37, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(436, 37, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(437, 38, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(438, 38, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
-(439, 38, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
-(440, 38, 52, '3.00', '649.92', 'PENDIENTE', NULL, NULL, NULL),
-(441, 38, 57, '2.00', '1004.34', 'PENDIENTE', NULL, NULL, NULL),
-(442, 38, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(443, 38, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(444, 39, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(445, 39, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
-(446, 39, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
-(447, 39, 52, '3.00', '649.92', 'PENDIENTE', NULL, NULL, NULL),
-(448, 39, 57, '2.00', '1004.34', 'PENDIENTE', NULL, NULL, NULL),
-(449, 39, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(450, 39, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(451, 40, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(452, 40, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
-(453, 40, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
-(454, 40, 52, '3.00', '649.92', 'PENDIENTE', NULL, NULL, NULL),
-(455, 40, 57, '2.00', '1004.34', 'PENDIENTE', NULL, NULL, NULL),
-(456, 40, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(457, 40, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(458, 41, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(459, 41, 15, '2.00', '1917.50', 'PENDIENTE', NULL, NULL, NULL),
-(460, 41, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
-(461, 41, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(462, 41, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
-(463, 41, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(464, 41, 29, '11.00', '378.24', 'PENDIENTE', NULL, NULL, NULL),
-(465, 42, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(466, 42, 15, '2.00', '1917.50', 'PENDIENTE', NULL, NULL, NULL),
-(467, 42, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
-(468, 42, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(469, 42, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
-(470, 42, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(471, 42, 29, '11.00', '378.24', 'PENDIENTE', NULL, NULL, NULL),
-(472, 43, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(473, 43, 15, '2.00', '1917.50', 'PENDIENTE', NULL, NULL, NULL),
-(474, 43, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
-(475, 43, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(476, 43, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
-(477, 43, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(478, 43, 29, '11.00', '378.24', 'PENDIENTE', NULL, NULL, NULL),
-(479, 44, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(480, 44, 15, '2.00', '1917.50', 'PENDIENTE', NULL, NULL, NULL),
-(481, 44, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
-(482, 44, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(483, 44, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
-(484, 44, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(485, 44, 29, '11.00', '378.24', 'PENDIENTE', NULL, NULL, NULL),
-(486, 45, 3, '2.00', '1385.96', 'PENDIENTE', NULL, NULL, NULL),
-(487, 45, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(488, 45, 52, '2.00', '433.28', 'PENDIENTE', NULL, NULL, NULL),
-(489, 45, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(490, 45, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
-(491, 45, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
-(492, 45, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(493, 46, 3, '2.00', '1385.96', 'PENDIENTE', NULL, NULL, NULL),
-(494, 46, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(495, 46, 52, '2.00', '433.28', 'PENDIENTE', NULL, NULL, NULL),
-(496, 46, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(497, 46, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
-(498, 46, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
-(499, 46, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(500, 47, 3, '2.00', '1385.96', 'PENDIENTE', NULL, NULL, NULL),
-(501, 47, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(502, 47, 52, '2.00', '433.28', 'PENDIENTE', NULL, NULL, NULL),
-(503, 47, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(504, 47, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
-(505, 47, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
-(506, 47, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(507, 48, 3, '3.00', '2078.94', 'PENDIENTE', NULL, NULL, NULL),
-(508, 48, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(509, 48, 52, '2.00', '433.28', 'PENDIENTE', NULL, NULL, NULL),
-(510, 48, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(511, 48, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
-(512, 48, 57, '6.00', '3013.02', 'PENDIENTE', NULL, NULL, NULL),
-(513, 48, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL);
+(1, 1, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
+(2, 1, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
+(3, 1, 44, '2.00', '1909.30', 'PENDIENTE', NULL, NULL, NULL),
+(4, 1, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
+(5, 1, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(6, 1, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(7, 1, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
+(8, 2, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
+(9, 2, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
+(10, 2, 44, '2.00', '1909.30', 'PENDIENTE', NULL, NULL, NULL),
+(11, 2, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
+(12, 2, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(13, 2, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(14, 2, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
+(15, 3, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
+(16, 3, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
+(17, 3, 44, '2.00', '1909.30', 'PENDIENTE', NULL, NULL, NULL),
+(18, 3, 52, '0.00', '216.64', 'PENDIENTE', NULL, NULL, '2022-06-24 23:28:45'),
+(19, 3, 57, '2.00', '2008.68', 'PENDIENTE', NULL, NULL, '2022-06-24 23:28:37'),
+(20, 3, 3, '0.00', '692.98', 'PENDIENTE', NULL, NULL, '2022-06-24 23:29:23'),
+(21, 3, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
+(22, 4, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
+(23, 4, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
+(24, 4, 44, '2.00', '1909.30', 'PENDIENTE', NULL, NULL, NULL),
+(25, 4, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
+(26, 4, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(27, 4, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(28, 4, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
+(29, 5, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
+(30, 5, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
+(31, 5, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
+(32, 5, 52, '3.00', '649.92', 'PENDIENTE', NULL, NULL, NULL),
+(33, 5, 57, '2.00', '1004.34', 'PENDIENTE', NULL, NULL, NULL),
+(34, 5, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(35, 5, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
+(36, 6, 4, '0.00', '459.05', 'PENDIENTE', NULL, NULL, '2022-06-24 23:32:18'),
+(37, 6, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
+(38, 6, 24, '0.00', '1154.10', 'PENDIENTE', NULL, NULL, '2022-06-24 23:32:20'),
+(39, 6, 52, '3.00', '649.92', 'PENDIENTE', NULL, NULL, NULL),
+(40, 6, 57, '2.00', '1004.34', 'PENDIENTE', NULL, NULL, NULL),
+(41, 6, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(42, 6, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
+(43, 7, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
+(44, 7, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
+(45, 7, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
+(46, 7, 52, '3.00', '649.92', 'PENDIENTE', NULL, NULL, NULL),
+(47, 7, 57, '2.00', '1004.34', 'PENDIENTE', NULL, NULL, NULL),
+(48, 7, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(49, 7, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
+(50, 8, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
+(51, 8, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
+(52, 8, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
+(53, 8, 52, '3.00', '649.92', 'PENDIENTE', NULL, NULL, NULL),
+(54, 8, 57, '2.00', '1004.34', 'PENDIENTE', NULL, NULL, NULL),
+(55, 8, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(56, 8, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
+(57, 9, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(58, 9, 15, '2.00', '1917.50', 'PENDIENTE', NULL, NULL, NULL),
+(59, 9, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
+(60, 9, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
+(61, 9, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(62, 9, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
+(63, 9, 29, '11.00', '378.24', 'PENDIENTE', NULL, NULL, NULL),
+(64, 10, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(65, 10, 15, '2.00', '1917.50', 'PENDIENTE', NULL, NULL, NULL),
+(66, 10, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
+(67, 10, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
+(68, 10, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(69, 10, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
+(70, 10, 29, '11.00', '378.24', 'PENDIENTE', NULL, NULL, NULL),
+(71, 11, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(72, 11, 15, '2.00', '1917.50', 'PENDIENTE', NULL, NULL, NULL),
+(73, 11, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
+(74, 11, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
+(75, 11, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(76, 11, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
+(77, 11, 29, '11.00', '378.24', 'PENDIENTE', NULL, NULL, NULL),
+(78, 12, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(79, 12, 15, '2.00', '1917.50', 'PENDIENTE', NULL, NULL, NULL),
+(80, 12, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
+(81, 12, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
+(82, 12, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(83, 12, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
+(84, 12, 29, '11.00', '378.24', 'PENDIENTE', NULL, NULL, NULL),
+(85, 13, 3, '2.00', '1385.96', 'PENDIENTE', NULL, NULL, NULL),
+(86, 13, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
+(87, 13, 52, '2.00', '433.28', 'PENDIENTE', NULL, NULL, NULL),
+(88, 13, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
+(89, 13, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
+(90, 13, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(91, 13, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
+(92, 14, 3, '2.00', '1385.96', 'PENDIENTE', NULL, NULL, NULL),
+(93, 14, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
+(94, 14, 52, '2.00', '433.28', 'PENDIENTE', NULL, NULL, NULL),
+(95, 14, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
+(96, 14, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
+(97, 14, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(98, 14, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
+(99, 15, 3, '2.00', '1385.96', 'PENDIENTE', NULL, NULL, NULL),
+(100, 15, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
+(101, 15, 52, '2.00', '433.28', 'PENDIENTE', NULL, NULL, NULL),
+(102, 15, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
+(103, 15, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
+(104, 15, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(105, 15, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
+(106, 16, 3, '3.00', '2078.94', 'PENDIENTE', NULL, NULL, NULL),
+(107, 16, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
+(108, 16, 52, '2.00', '433.28', 'PENDIENTE', NULL, NULL, NULL),
+(109, 16, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
+(110, 16, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
+(111, 16, 57, '6.00', '3013.02', 'PENDIENTE', NULL, NULL, NULL),
+(112, 16, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
+(113, 3, 17, '1.00', '906.47', 'PENDIENTE', '', '2022-06-24 23:29:28', '2022-06-24 23:29:28'),
+(114, 3, 12, '3.00', '289.01', 'PENDIENTE', '', '2022-06-24 23:29:36', '2022-06-24 23:30:59'),
+(115, 6, 22, '1.00', '391.84', 'PENDIENTE', '', '2022-06-24 23:32:26', '2022-06-24 23:32:26'),
+(116, 6, 1, '1.00', '272.91', 'PENDIENTE', '', '2022-06-24 23:32:33', '2022-06-24 23:32:33'),
+(117, 7, 33, '1.00', '819.03', 'PENDIENTE', '', '2022-06-24 23:33:34', '2022-06-24 23:33:34'),
+(118, 7, 34, '1.00', '797.90', 'PENDIENTE', '', '2022-06-24 23:33:38', '2022-06-24 23:33:38'),
+(119, 7, 28, '1.00', '515.10', 'PENDIENTE', '', '2022-06-24 23:33:44', '2022-06-24 23:33:44');
 
 --
 -- Disparadores `order_request_details`
@@ -1689,6 +1696,15 @@ CREATE TABLE `order_request_new_items` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `order_request_new_items`
+--
+
+INSERT INTO `order_request_new_items` (`id`, `order_request_id`, `new_item`, `quantity`, `measurement_unit_id`, `brand`, `datasheet`, `image`, `observation`, `created_at`, `updated_at`) VALUES
+(6, 3, 'PC', '2.00', 1, 'ROLLING', 'ASUS NVIDIA 2060RTX', 'public/newMaterials/tCaRQJ58fSFLVJZHun0H9W1NC59heh45dAmb4PgK.jpg', '', '2022-06-24 23:28:27', '2022-06-24 23:28:27'),
+(7, 6, 'PERNO DE 6\"', '52.00', 4, 'CASIO', 'AAS', 'public/newMaterials/7SJbr2gPxjjNzlUYowqFKdHOvZHGvVlj2thMC73C.jpg', '', '2022-06-24 23:32:10', '2022-06-24 23:32:10'),
+(8, 7, 'ARDUINO UNO', '15.00', 6, 'ARDUINO', '-ARDUINO MEGA 2560', 'public/newMaterials/IwV0J41v2j2ZleqHRhyeloX9G0DjiKRKa5bg0dJH.png', '', '2022-06-24 23:34:25', '2022-06-24 23:34:25');
 
 -- --------------------------------------------------------
 
@@ -1993,7 +2009,8 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('eOvIcKPflhK2wkAgEoM1xZZZUBCpGGuyIA1bptJO', 7, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiTXRHS0tyVVl2Wld2UjB5bFd3c08zNE5WVWNoOHZHa0pqemU4djdxNCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjAzOiJodHRwOi8vc2lzdGVtYS9saXZld2lyZS9wcmV2aWV3LWZpbGUvU2liWWY2Yng3a2JabnNTQ3plVmNadDdIMEVyMFNsLW1ldGFSa0pmU1UxSFh6RTJNRE0zTlRRNE5EWXhNRGt1YW5Cbi0uanBnP2V4cGlyZXM9MTY1NjA3ODcwNSZzaWduYXR1cmU9MDMwNmIyODdlNTQ5ZjZhNmViOGE5YmE4NTM3MzcxOTlmZTk5OGRjNzc5NzkwM2QzYWE5YTZmZTQ4YjExYmNjNSI7fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjc7fQ==', 1656076944);
+('7m4boL8eaCAUXuC9EFKQLZSjONvYEeJFecVszoN5', NULL, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiTlFLRkN2V0xrd2RsdWNiQ1kwYVNJMlBkekdHcFplSHh4Y01aRlcxWCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MTQ6Imh0dHA6Ly9zaXN0ZW1hIjt9fQ==', 1656095672),
+('993nsF85wPf1Ol5B3vs8lRGQPy8045VB8J6ufjdP', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiOU5scHlDSHBHV000cWRzbjVUelRHS1lhbmFxZk5KUGg5OUc5ZmVlTyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDg6Imh0dHA6Ly9zaXN0ZW1hL3BsYW5uZXIvdmFsaWRhdGUtcmVxdWVzdC1tYXRlcmlhbCI7fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjQ7fQ==', 1656095890);
 
 -- --------------------------------------------------------
 
@@ -2313,11 +2330,11 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `code`, `name`, `lastname`, `location_id`, `email`, `email_verified_at`, `password`, `two_factor_secret`, `two_factor_recovery_codes`, `two_factor_confirmed_at`, `is_admin`, `remember_token`, `current_team_id`, `profile_photo_path`, `created_at`, `updated_at`) VALUES
 (1, '777269', 'Mr. Ford Vandervort', 'Kunze', 1, 'roob.brianne@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '9qbcg7etDUazjid2a1WnwCiA2DAYd6bQZ0bFlxOGd6bdtq9vUzYTO0X3q59R', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
 (2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'zuqVwejbr3aTIFNjQbxmZay9UCXghe6TF7IaxSyPVrHckyhrRRnFQrbB4nwF', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
-(3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'uq6E5hTmHTAhPCIyjWdMZmibZaDYvIDMYCli6WpEe57WJL1jtIBFEbk9R8sW', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'AEjm4n1ZK8uKSfuz9MFA0quA7SH9TRWpCEk0driJUnA3OMKietmYRDfEC6fq', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'nRtVWucswjxIf5asU5m3CIbkkUkmy8aBlnBhLP717c83gohWPlJ3ThIVTOmA', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'JQIrgQxqEDHQWGQsEwTeZeBm54zyMfZXkk0IZiyecTqYXHMe6QCIFdyhy7Ij', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(6, '502387', 'Bella Block', 'Bashirian', 3, 'sibyl08@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'SuqJiAy8in0Buwrj1x8QbyIifgeAk2ZjfBtdzIzGvU7AfmBsfji66BbmsZSU', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(7, '981787', 'Jaylon Prosacco', 'Langosh', 4, 'pleuschke@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'NXHHGbjAGN', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
+(6, '502387', 'Bella Block', 'Bashirian', 3, 'sibyl08@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '3NXfsNa9xGchlBQ9iIbNaHjLcFz5unflenQ1Z74g5YCsxiXyXk0bKpoWgElS', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(7, '981787', 'Jaylon Prosacco', 'Langosh', 4, 'pleuschke@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'rc7GJRvdk8Hja3W1jLepIOIhBPkUfcaM2TtoYLw1sJTXXmjxVBy2kQtGm8t1', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
 (8, '588440', 'Irving Strosin', 'Langosh', 4, 'mercedes57@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '2KTwtjcuXq', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
 (9, '454006', 'Margarett Heller', 'Cruickshank', 5, 'oconner.sydnie@example.org', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'GvbEM8VRr6', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
 (10, '916293', 'Dr. Ryder Gutmann V', 'McLaughlin', 5, 'dprice@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'i7IJ3Zi3g6', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
@@ -3164,19 +3181,19 @@ ALTER TABLE `order_dates`
 -- AUTO_INCREMENT de la tabla `order_requests`
 --
 ALTER TABLE `order_requests`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT de la tabla `order_request_details`
 --
 ALTER TABLE `order_request_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=514;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=120;
 
 --
 -- AUTO_INCREMENT de la tabla `order_request_new_items`
 --
 ALTER TABLE `order_request_new_items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `permissions`
