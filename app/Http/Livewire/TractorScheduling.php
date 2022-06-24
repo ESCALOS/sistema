@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
+use phpDocumentor\Reflection\Types\This;
 
 class TractorScheduling extends Component
 {
@@ -33,6 +34,42 @@ class TractorScheduling extends Component
     public $implement;
 
     protected $listeners = ['render'];
+
+    protected function rules(){
+        return [
+            'location' => 'required|exists:locations,id',
+            'lote' => 'required|exists:lotes,id',
+            'user' => 'required|exists:users,id',
+            'labor' => 'required|exists:labors,id',
+            'tractor' => 'required|exists:tractors,id',
+            'implement' => 'required|exists:implements,id',
+            'date' => 'required|date|date_format:Y-m-d',
+            'shift' => 'required|in:MAÑANA,NOCHE'
+        ];
+    }
+
+    protected function messages(){
+        return [
+            'location.required' => 'Seleccione una ubicación',
+            'lote.required' => 'Seleccione el lote',
+            'user.required' => 'Seleccione al operador',
+            'labor.required' => 'Seleccione la labor',
+            'tractor.required' => 'Seleccione el tractor',
+            'implement.required' => 'Seleccione el implemento',
+            'date.required' => 'Seleccione la fecha',
+            'shift.required' => 'Seleccione el turno',
+
+            'location.exists' => 'La ubicación no existe',
+            'lote.exists' => 'El lote no existe',
+            'user.exists' => 'El operador no existe',
+            'labor.exists' => 'La labor no existe',
+            'tractor.exists' => 'El tractor no existe',
+            'implement.exists' => 'El implmento no existe',
+            'date.date' => 'Debe ingresar un fecha',
+            'date.date_format' => 'Formato incorrecto',
+            'shift.in' => 'El turno no existe',
+        ];
+    }
 
     public function seleccionar($id){
         $this->idSchedule = $id;
@@ -61,6 +98,7 @@ class TractorScheduling extends Component
     }
 
     public function actualizar(){
+        $this->validate();
         $scheduling = ModelsTractorScheduling::find($this->idSchedule);
         $scheduling->lote_id = $this->lote;
         $scheduling->date = $this->date;

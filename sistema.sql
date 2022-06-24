@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 23-06-2022 a las 21:28:22
+-- Tiempo de generación: 24-06-2022 a las 15:26:13
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -115,7 +115,12 @@ OPEN cur_comp;
             /*-------------Obteniendo la cabecera de la solicitud--------------------------------------------------*/
             SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
             /*-------------Creando la solicitud de la pieza---------------------------------------------*/
-            INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price) VALUES (pedido,item_pieza,cantidad_pieza,precio_estimado_pieza);
+            IF EXISTS(SELECT * FROM order_request_details r WHERE r.order_request_id = pedido AND r.item_id = item_pieza) THEN
+            	UPDATE order_request_details r SET r.quantity = r.quantity + cantidad_pieza, r.estimated_price = r.estimated_price + precio_estimado_pieza WHERE r.order_request_id = pedido AND r.item_id = item_pieza;
+            ELSE
+            	INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price) VALUES (pedido,item_pieza,cantidad_pieza,precio_estimado_pieza);
+            END IF;
+
             END IF;
             END LOOP bucle2;
             SELECT 0 INTO pieza_final;
@@ -363,23 +368,6 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `componentes`
--- (Véase abajo para la vista actual)
---
-CREATE TABLE `componentes` (
-`item_id` bigint(20) unsigned
-,`nombre` varchar(255)
-,`parte` tinyint(1)
-,`tiempo_vida` decimal(8,2)
-,`hours` decimal(8,2)
-,`implement_id` bigint(20) unsigned
-,`perteneciente` char(0)
-,`perteneciente_id` int(1)
-);
-
--- --------------------------------------------------------
-
---
 -- Estructura Stand-in para la vista `componentes_del_implemento`
 -- (Véase abajo para la vista actual)
 --
@@ -462,6 +450,15 @@ CREATE TABLE `component_implement` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Volcado de datos para la tabla `component_implement`
+--
+
+INSERT INTO `component_implement` (`id`, `component_id`, `implement_id`, `hours`, `state`, `created_at`, `updated_at`) VALUES
+(1, 28, 1, '12.75', 'PENDIENTE', NULL, NULL),
+(2, 8, 1, '12.75', 'PENDIENTE', NULL, NULL),
+(3, 20, 1, '12.75', 'PENDIENTE', NULL, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -509,6 +506,21 @@ CREATE TABLE `component_part` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `component_part`
+--
+
+INSERT INTO `component_part` (`id`, `component_implement_id`, `part`, `hours`, `state`, `created_at`, `updated_at`) VALUES
+(1, 1, 2, '12.75', 'PENDIENTE', NULL, NULL),
+(2, 1, 13, '12.75', 'PENDIENTE', NULL, NULL),
+(3, 1, 33, '12.75', 'PENDIENTE', NULL, NULL),
+(4, 2, 4, '12.75', 'PENDIENTE', NULL, NULL),
+(5, 2, 11, '12.75', 'PENDIENTE', NULL, NULL),
+(6, 2, 23, '12.75', 'PENDIENTE', NULL, NULL),
+(7, 3, 4, '12.75', 'PENDIENTE', NULL, NULL),
+(8, 3, 29, '12.75', 'PENDIENTE', NULL, NULL),
+(9, 3, 33, '12.75', 'PENDIENTE', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -736,7 +748,7 @@ CREATE TABLE `implements` (
 --
 
 INSERT INTO `implements` (`id`, `implement_model_id`, `implement_number`, `hours`, `user_id`, `location_id`, `ceco_id`, `created_at`, `updated_at`) VALUES
-(1, 1, '5243', '66.95', 1, 1, 1, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
+(1, 1, '5243', '79.70', 1, 1, 1, '2022-06-20 21:21:59', '2022-06-24 13:00:49'),
 (2, 1, '2399', '24.94', 2, 1, 2, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
 (3, 1, '6977', '52.51', 3, 2, 3, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
 (4, 1, '9149', '81.06', 4, 2, 4, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
@@ -804,23 +816,6 @@ END;
 END IF
 $$
 DELIMITER ;
-
--- --------------------------------------------------------
-
---
--- Estructura Stand-in para la vista `implement_component_part`
--- (Véase abajo para la vista actual)
---
-CREATE TABLE `implement_component_part` (
-`item` bigint(20) unsigned
-,`nombre` varchar(255)
-,`parte` tinyint(4)
-,`tiempo_vida` decimal(8,2)
-,`hours` decimal(8,2)
-,`implement_id` bigint(20) unsigned
-,`perteneciente` varchar(255)
-,`perteneciente_id` decimal(20,0)
-);
 
 -- --------------------------------------------------------
 
@@ -1508,22 +1503,22 @@ CREATE TABLE `order_requests` (
 --
 
 INSERT INTO `order_requests` (`id`, `user_id`, `implement_id`, `state`, `estimated_price`, `validate_by`, `is_canceled`, `order_date_id`, `created_at`, `updated_at`) VALUES
-(17, 1, 1, 'PENDIENTE', '7700.37', NULL, 0, 1, NULL, NULL),
-(18, 2, 2, 'PENDIENTE', '7700.37', NULL, 0, 1, NULL, NULL),
-(19, 3, 3, 'PENDIENTE', '7700.37', NULL, 0, 1, NULL, NULL),
-(20, 4, 4, 'PENDIENTE', '7700.37', NULL, 0, 1, NULL, NULL),
-(21, 5, 5, 'PENDIENTE', '5639.88', NULL, 0, 1, NULL, NULL),
-(22, 6, 6, 'PENDIENTE', '5639.88', NULL, 0, 1, NULL, NULL),
-(23, 7, 7, 'PENDIENTE', '5639.88', NULL, 0, 1, NULL, NULL),
-(24, 8, 8, 'PENDIENTE', '5639.88', NULL, 0, 1, NULL, NULL),
-(25, 9, 9, 'PENDIENTE', '10609.59', NULL, 0, 1, NULL, NULL),
-(26, 10, 10, 'PENDIENTE', '10609.59', NULL, 0, 1, NULL, NULL),
-(27, 11, 11, 'PENDIENTE', '10609.59', NULL, 0, 1, NULL, NULL),
-(28, 12, 12, 'PENDIENTE', '10609.59', NULL, 0, 1, NULL, NULL),
-(29, 13, 13, 'PENDIENTE', '7882.66', NULL, 0, 1, NULL, NULL),
-(30, 14, 14, 'PENDIENTE', '7882.66', NULL, 0, 1, NULL, NULL),
-(31, 15, 15, 'PENDIENTE', '7882.66', NULL, 0, 1, NULL, NULL),
-(32, 16, 16, 'PENDIENTE', '10157.03', NULL, 0, 1, NULL, NULL);
+(33, 1, 1, 'PENDIENTE', '16360.55', NULL, 0, 1, NULL, NULL),
+(34, 2, 2, 'PENDIENTE', '16360.55', NULL, 0, 1, NULL, NULL),
+(35, 3, 3, 'PENDIENTE', '16360.55', NULL, 0, 1, NULL, NULL),
+(36, 4, 4, 'PENDIENTE', '16360.55', NULL, 0, 1, NULL, NULL),
+(37, 5, 5, 'PENDIENTE', '9823.00', NULL, 0, 1, NULL, NULL),
+(38, 6, 6, 'PENDIENTE', '9823.00', NULL, 0, 1, NULL, NULL),
+(39, 7, 7, 'PENDIENTE', '9823.00', NULL, 0, 1, NULL, NULL),
+(40, 8, 8, 'PENDIENTE', '9823.00', NULL, 0, 1, NULL, NULL),
+(41, 9, 9, 'PENDIENTE', '19707.23', NULL, 0, 1, NULL, NULL),
+(42, 10, 10, 'PENDIENTE', '19707.23', NULL, 0, 1, NULL, NULL),
+(43, 11, 11, 'PENDIENTE', '19707.23', NULL, 0, 1, NULL, NULL),
+(44, 12, 12, 'PENDIENTE', '19707.23', NULL, 0, 1, NULL, NULL),
+(45, 13, 13, 'PENDIENTE', '15727.94', NULL, 0, 1, NULL, NULL),
+(46, 14, 14, 'PENDIENTE', '15727.94', NULL, 0, 1, NULL, NULL),
+(47, 15, 15, 'PENDIENTE', '15727.94', NULL, 0, 1, NULL, NULL),
+(48, 16, 16, 'PENDIENTE', '30967.39', NULL, 0, 1, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1548,202 +1543,118 @@ CREATE TABLE `order_request_details` (
 --
 
 INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quantity`, `estimated_price`, `state`, `observation`, `created_at`, `updated_at`) VALUES
-(206, 17, 9, '1.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(207, 17, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(208, 17, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(209, 17, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(210, 17, 9, '1.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(211, 17, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(212, 17, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(213, 17, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(214, 17, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(215, 17, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(216, 17, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(217, 17, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(218, 18, 9, '1.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(219, 18, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(220, 18, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(221, 18, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(222, 18, 9, '1.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(223, 18, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(224, 18, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(225, 18, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(226, 18, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(227, 18, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(228, 18, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(229, 18, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(230, 19, 9, '1.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(231, 19, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(232, 19, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(233, 19, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(234, 19, 9, '1.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(235, 19, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(236, 19, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(237, 19, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(238, 19, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(239, 19, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(240, 19, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(241, 19, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(242, 20, 9, '1.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(243, 20, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(244, 20, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(245, 20, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(246, 20, 9, '1.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(247, 20, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(248, 20, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(249, 20, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(250, 20, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(251, 20, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(252, 20, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(253, 20, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(254, 21, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(255, 21, 9, '1.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(256, 21, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(257, 21, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(258, 21, 9, '1.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(259, 21, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(260, 21, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(261, 21, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(262, 21, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(263, 21, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(264, 21, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(265, 21, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(266, 22, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(267, 22, 9, '1.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(268, 22, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(269, 22, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(270, 22, 9, '1.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(271, 22, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(272, 22, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(273, 22, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(274, 22, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(275, 22, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(276, 22, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(277, 22, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(278, 23, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(279, 23, 9, '1.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(280, 23, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(281, 23, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(282, 23, 9, '1.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(283, 23, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(284, 23, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(285, 23, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(286, 23, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(287, 23, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(288, 23, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(289, 23, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(290, 24, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(291, 24, 9, '1.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(292, 24, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(293, 24, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(294, 24, 9, '1.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(295, 24, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(296, 24, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(297, 24, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(298, 24, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(299, 24, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(300, 24, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(301, 24, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(302, 25, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(303, 25, 15, '1.00', '958.75', 'PENDIENTE', NULL, NULL, NULL),
-(304, 25, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(305, 25, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(306, 25, 15, '1.00', '958.75', 'PENDIENTE', NULL, NULL, NULL),
-(307, 25, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(308, 25, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(309, 25, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(310, 25, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(311, 25, 29, '11.00', '378.24', 'PENDIENTE', NULL, NULL, NULL),
-(312, 25, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(313, 25, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(314, 26, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(315, 26, 15, '1.00', '958.75', 'PENDIENTE', NULL, NULL, NULL),
-(316, 26, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(317, 26, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(318, 26, 15, '1.00', '958.75', 'PENDIENTE', NULL, NULL, NULL),
-(319, 26, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(320, 26, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(321, 26, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(322, 26, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(323, 26, 29, '11.00', '378.24', 'PENDIENTE', NULL, NULL, NULL),
-(324, 26, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(325, 26, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(326, 27, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(327, 27, 15, '1.00', '958.75', 'PENDIENTE', NULL, NULL, NULL),
-(328, 27, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(329, 27, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(330, 27, 15, '1.00', '958.75', 'PENDIENTE', NULL, NULL, NULL),
-(331, 27, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(332, 27, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(333, 27, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(334, 27, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(335, 27, 29, '11.00', '378.24', 'PENDIENTE', NULL, NULL, NULL),
-(336, 27, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(337, 27, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(338, 28, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(339, 28, 15, '1.00', '958.75', 'PENDIENTE', NULL, NULL, NULL),
-(340, 28, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(341, 28, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(342, 28, 15, '1.00', '958.75', 'PENDIENTE', NULL, NULL, NULL),
-(343, 28, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(344, 28, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(345, 28, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(346, 28, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(347, 28, 29, '11.00', '378.24', 'PENDIENTE', NULL, NULL, NULL),
-(348, 28, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(349, 28, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(350, 29, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(351, 29, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(352, 29, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(353, 29, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(354, 29, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(355, 29, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
-(356, 29, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(357, 29, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(358, 29, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(359, 29, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(360, 29, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(361, 29, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(362, 30, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(363, 30, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(364, 30, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(365, 30, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(366, 30, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(367, 30, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
-(368, 30, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(369, 30, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(370, 30, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(371, 30, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(372, 30, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(373, 30, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(374, 31, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(375, 31, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(376, 31, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(377, 31, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(378, 31, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(379, 31, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
-(380, 31, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(381, 31, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(382, 31, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(383, 31, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(384, 31, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(385, 31, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(386, 32, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(387, 32, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(388, 32, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(389, 32, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(390, 32, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(391, 32, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
-(392, 32, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(393, 32, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(394, 32, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(395, 32, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(396, 32, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(397, 32, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(398, 32, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(399, 32, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(400, 32, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(401, 32, 57, '1.00', '502.17', 'PENDIENTE', NULL, NULL, NULL);
+(402, 33, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
+(403, 33, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
+(404, 33, 44, '2.00', '1909.30', 'PENDIENTE', NULL, NULL, NULL),
+(405, 33, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
+(406, 33, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(407, 33, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(408, 33, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
+(409, 34, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
+(410, 34, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
+(411, 34, 44, '2.00', '1909.30', 'PENDIENTE', NULL, NULL, NULL),
+(412, 34, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
+(413, 34, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(414, 34, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(415, 34, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
+(416, 35, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
+(417, 35, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
+(418, 35, 44, '2.00', '1909.30', 'PENDIENTE', NULL, NULL, NULL),
+(419, 35, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
+(420, 35, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(421, 35, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(422, 35, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
+(423, 36, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
+(424, 36, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
+(425, 36, 44, '2.00', '1909.30', 'PENDIENTE', NULL, NULL, NULL),
+(426, 36, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
+(427, 36, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(428, 36, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(429, 36, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
+(430, 37, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
+(431, 37, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
+(432, 37, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
+(433, 37, 52, '3.00', '649.92', 'PENDIENTE', NULL, NULL, NULL),
+(434, 37, 57, '2.00', '1004.34', 'PENDIENTE', NULL, NULL, NULL),
+(435, 37, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(436, 37, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
+(437, 38, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
+(438, 38, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
+(439, 38, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
+(440, 38, 52, '3.00', '649.92', 'PENDIENTE', NULL, NULL, NULL),
+(441, 38, 57, '2.00', '1004.34', 'PENDIENTE', NULL, NULL, NULL),
+(442, 38, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(443, 38, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
+(444, 39, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
+(445, 39, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
+(446, 39, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
+(447, 39, 52, '3.00', '649.92', 'PENDIENTE', NULL, NULL, NULL),
+(448, 39, 57, '2.00', '1004.34', 'PENDIENTE', NULL, NULL, NULL),
+(449, 39, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(450, 39, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
+(451, 40, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
+(452, 40, 9, '2.00', '724.84', 'PENDIENTE', NULL, NULL, NULL),
+(453, 40, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
+(454, 40, 52, '3.00', '649.92', 'PENDIENTE', NULL, NULL, NULL),
+(455, 40, 57, '2.00', '1004.34', 'PENDIENTE', NULL, NULL, NULL),
+(456, 40, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(457, 40, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
+(458, 41, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(459, 41, 15, '2.00', '1917.50', 'PENDIENTE', NULL, NULL, NULL),
+(460, 41, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
+(461, 41, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
+(462, 41, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(463, 41, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
+(464, 41, 29, '11.00', '378.24', 'PENDIENTE', NULL, NULL, NULL),
+(465, 42, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(466, 42, 15, '2.00', '1917.50', 'PENDIENTE', NULL, NULL, NULL),
+(467, 42, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
+(468, 42, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
+(469, 42, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(470, 42, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
+(471, 42, 29, '11.00', '378.24', 'PENDIENTE', NULL, NULL, NULL),
+(472, 43, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(473, 43, 15, '2.00', '1917.50', 'PENDIENTE', NULL, NULL, NULL),
+(474, 43, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
+(475, 43, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
+(476, 43, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(477, 43, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
+(478, 43, 29, '11.00', '378.24', 'PENDIENTE', NULL, NULL, NULL),
+(479, 44, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
+(480, 44, 15, '2.00', '1917.50', 'PENDIENTE', NULL, NULL, NULL),
+(481, 44, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL),
+(482, 44, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
+(483, 44, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(484, 44, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
+(485, 44, 29, '11.00', '378.24', 'PENDIENTE', NULL, NULL, NULL),
+(486, 45, 3, '2.00', '1385.96', 'PENDIENTE', NULL, NULL, NULL),
+(487, 45, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
+(488, 45, 52, '2.00', '433.28', 'PENDIENTE', NULL, NULL, NULL),
+(489, 45, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
+(490, 45, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
+(491, 45, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(492, 45, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
+(493, 46, 3, '2.00', '1385.96', 'PENDIENTE', NULL, NULL, NULL),
+(494, 46, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
+(495, 46, 52, '2.00', '433.28', 'PENDIENTE', NULL, NULL, NULL),
+(496, 46, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
+(497, 46, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
+(498, 46, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(499, 46, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
+(500, 47, 3, '2.00', '1385.96', 'PENDIENTE', NULL, NULL, NULL),
+(501, 47, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
+(502, 47, 52, '2.00', '433.28', 'PENDIENTE', NULL, NULL, NULL),
+(503, 47, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
+(504, 47, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
+(505, 47, 57, '4.00', '2008.68', 'PENDIENTE', NULL, NULL, NULL),
+(506, 47, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
+(507, 48, 3, '3.00', '2078.94', 'PENDIENTE', NULL, NULL, NULL),
+(508, 48, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
+(509, 48, 52, '2.00', '433.28', 'PENDIENTE', NULL, NULL, NULL),
+(510, 48, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
+(511, 48, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
+(512, 48, 57, '6.00', '3013.02', 'PENDIENTE', NULL, NULL, NULL),
+(513, 48, 24, '2.00', '1154.10', 'PENDIENTE', NULL, NULL, NULL);
 
 --
 -- Disparadores `order_request_details`
@@ -1778,36 +1689,6 @@ CREATE TABLE `order_request_new_items` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Estructura Stand-in para la vista `partes`
--- (Véase abajo para la vista actual)
---
-CREATE TABLE `partes` (
-`item` bigint(20) unsigned
-,`nombre` varchar(255)
-,`parte` tinyint(1)
-,`tiempo_vida` decimal(8,2)
-,`hours` decimal(8,2)
-,`implement_id` bigint(20) unsigned
-,`perteneciente` varchar(255)
-,`perteneciente_id` bigint(20) unsigned
-);
-
--- --------------------------------------------------------
-
---
--- Estructura Stand-in para la vista `partes_del_componente`
--- (Véase abajo para la vista actual)
---
-CREATE TABLE `partes_del_componente` (
-`part_id` bigint(20) unsigned
-,`item_id` bigint(20) unsigned
-,`item` varchar(255)
-,`componente_id` bigint(20) unsigned
-);
 
 -- --------------------------------------------------------
 
@@ -2112,7 +1993,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('iOHY9ShToQChGdS1Nl5cpCxqbbWaKqEjIYjURj3U', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiZjlnUmRoNXJaenI4WllPN3dxRmk5TVdRMTVlRE44OEZXT1F1cVU0YyI7czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo0ODoiaHR0cDovL3Npc3RlbWEvcGxhbm5lci92YWxpZGF0ZS1yZXF1ZXN0LW1hdGVyaWFsIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1656011257);
+('eOvIcKPflhK2wkAgEoM1xZZZUBCpGGuyIA1bptJO', 7, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiTXRHS0tyVVl2Wld2UjB5bFd3c08zNE5WVWNoOHZHa0pqemU4djdxNCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjAzOiJodHRwOi8vc2lzdGVtYS9saXZld2lyZS9wcmV2aWV3LWZpbGUvU2liWWY2Yng3a2JabnNTQ3plVmNadDdIMEVyMFNsLW1ldGFSa0pmU1UxSFh6RTJNRE0zTlRRNE5EWXhNRGt1YW5Cbi0uanBnP2V4cGlyZXM9MTY1NjA3ODcwNSZzaWduYXR1cmU9MDMwNmIyODdlNTQ5ZjZhNmViOGE5YmE4NTM3MzcxOTlmZTk5OGRjNzc5NzkwM2QzYWE5YTZmZTQ4YjExYmNjNSI7fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjc7fQ==', 1656076944);
 
 -- --------------------------------------------------------
 
@@ -2262,7 +2143,7 @@ CREATE TABLE `tractors` (
 
 INSERT INTO `tractors` (`id`, `tractor_model_id`, `tractor_number`, `hour_meter`, `location_id`, `created_at`, `updated_at`) VALUES
 (1, 1, '72307', '268.00', 1, '2022-06-20 21:22:03', '2022-06-20 21:22:03'),
-(2, 1, '76737', '435.00', 1, '2022-06-20 21:22:03', '2022-06-20 21:22:03'),
+(2, 1, '76737', '450.00', 1, '2022-06-20 21:22:03', '2022-06-24 13:00:49'),
 (3, 1, '65116', '390.00', 2, '2022-06-20 21:22:04', '2022-06-20 21:22:04'),
 (4, 1, '76977', '414.00', 2, '2022-06-20 21:22:04', '2022-06-20 21:22:04'),
 (5, 2, '72317', '342.00', 3, '2022-06-20 21:22:04', '2022-06-20 21:22:04'),
@@ -2327,6 +2208,13 @@ CREATE TABLE `tractor_reports` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
+-- Volcado de datos para la tabla `tractor_reports`
+--
+
+INSERT INTO `tractor_reports` (`id`, `user_id`, `tractor_id`, `labor_id`, `correlative`, `date`, `shift`, `implement_id`, `hour_meter_start`, `hour_meter_end`, `hours`, `observations`, `lote_id`, `is_canceled`, `created_at`, `updated_at`) VALUES
+(1, 1, 2, 1, 'sadada', '2022-06-23', 'MAÑANA', 1, '435.00', '450.00', '15.00', '', 1, 0, '2022-06-24 17:57:46', '2022-06-24 18:00:49');
+
+--
 -- Disparadores `tractor_reports`
 --
 DELIMITER $$
@@ -2381,6 +2269,17 @@ CREATE TABLE `tractor_schedulings` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Volcado de datos para la tabla `tractor_schedulings`
+--
+
+INSERT INTO `tractor_schedulings` (`id`, `user_id`, `labor_id`, `tractor_id`, `implement_id`, `date`, `shift`, `lote_id`, `is_canceled`, `created_at`, `updated_at`) VALUES
+(1, 7, 2, 7, 7, '2022-06-25', 'MAÑANA', 7, 1, '2022-06-24 17:07:11', '2022-06-24 17:08:20'),
+(2, 8, 1, 7, 8, '2022-06-25', 'MAÑANA', 7, 0, '2022-06-24 17:07:23', '2022-06-24 17:07:23'),
+(3, 5, 1, 5, 5, '2022-06-25', 'NOCHE', 5, 0, '2022-06-24 17:07:42', '2022-06-24 17:08:11'),
+(4, 6, 4, 5, 6, '2022-06-25', 'NOCHE', 5, 0, '2022-06-24 17:07:51', '2022-06-24 17:07:51'),
+(5, 5, 3, 5, 5, '2022-06-25', 'MAÑANA', 5, 1, '2022-06-24 17:37:42', '2022-06-24 17:40:25');
+
 -- --------------------------------------------------------
 
 --
@@ -2413,10 +2312,10 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `code`, `name`, `lastname`, `location_id`, `email`, `email_verified_at`, `password`, `two_factor_secret`, `two_factor_recovery_codes`, `two_factor_confirmed_at`, `is_admin`, `remember_token`, `current_team_id`, `profile_photo_path`, `created_at`, `updated_at`) VALUES
 (1, '777269', 'Mr. Ford Vandervort', 'Kunze', 1, 'roob.brianne@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '9qbcg7etDUazjid2a1WnwCiA2DAYd6bQZ0bFlxOGd6bdtq9vUzYTO0X3q59R', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
-(2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'T0p7QLfD2PVjJGA95zsmccnTFyjIJ4eNrTUqm0OmfalkZA3BzKsNd5k4rTxp', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
-(3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'GQYEgLidb9pHy4dYvwkzU3dFu83VQcDFzw21NgONh8TkSQtgyX09jVQfJafb', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'sk4t50oqcxSP5yA03upshTFLvzbWRjYmNY1CqhkdSdOs0Zkf8ZBLkqXK6I3a', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '1CfCRQSvYl7ibHnk20sLC6wg31wsTn8cfjXGzgu9pnmt1rbm43n3TBLY7c6T', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'zuqVwejbr3aTIFNjQbxmZay9UCXghe6TF7IaxSyPVrHckyhrRRnFQrbB4nwF', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
+(3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'uq6E5hTmHTAhPCIyjWdMZmibZaDYvIDMYCli6WpEe57WJL1jtIBFEbk9R8sW', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'nRtVWucswjxIf5asU5m3CIbkkUkmy8aBlnBhLP717c83gohWPlJ3ThIVTOmA', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'JQIrgQxqEDHQWGQsEwTeZeBm54zyMfZXkk0IZiyecTqYXHMe6QCIFdyhy7Ij', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (6, '502387', 'Bella Block', 'Bashirian', 3, 'sibyl08@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'SuqJiAy8in0Buwrj1x8QbyIifgeAk2ZjfBtdzIzGvU7AfmBsfji66BbmsZSU', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (7, '981787', 'Jaylon Prosacco', 'Langosh', 4, 'pleuschke@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'NXHHGbjAGN', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
 (8, '588440', 'Irving Strosin', 'Langosh', 4, 'mercedes57@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '2KTwtjcuXq', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
@@ -2531,47 +2430,11 @@ INSERT INTO `zones` (`id`, `code`, `zone`, `created_at`, `updated_at`) VALUES
 -- --------------------------------------------------------
 
 --
--- Estructura para la vista `componentes`
---
-DROP TABLE IF EXISTS `componentes`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `componentes`  AS SELECT `c`.`item_id` AS `item_id`, `c`.`component` AS `nombre`, `c`.`is_part` AS `parte`, `c`.`lifespan` AS `tiempo_vida`, `ci`.`hours` AS `hours`, `ci`.`implement_id` AS `implement_id`, '' AS `perteneciente`, 0 AS `perteneciente_id` FROM (`component_implement` `ci` join `components` `c` on(`ci`.`component_id` = `c`.`id`)) WHERE `ci`.`state` = 'PENDIENTE''PENDIENTE'  ;
-
--- --------------------------------------------------------
-
---
 -- Estructura para la vista `componentes_del_implemento`
 --
 DROP TABLE IF EXISTS `componentes_del_implemento`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `componentes_del_implemento`  AS SELECT `c`.`id` AS `component_id`, `c`.`item_id` AS `item_id`, `c`.`component` AS `item`, `i`.`id` AS `implement_id` FROM (((`components` `c` join `component_implement_model` `cim` on(`c`.`id` = `cim`.`component_id`)) join `implements` `i` on(`i`.`implement_model_id` = `cim`.`implement_model_id`)) join `items` `it` on(`it`.`id` = `c`.`item_id`))  ;
-
--- --------------------------------------------------------
-
---
--- Estructura para la vista `implement_component_part`
---
-DROP TABLE IF EXISTS `implement_component_part`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `implement_component_part`  AS SELECT `partes`.`item` AS `item`, `partes`.`nombre` AS `nombre`, `partes`.`parte` AS `parte`, `partes`.`tiempo_vida` AS `tiempo_vida`, `partes`.`hours` AS `hours`, `partes`.`implement_id` AS `implement_id`, `partes`.`perteneciente` AS `perteneciente`, `partes`.`perteneciente_id` AS `perteneciente_id` FROM `partes` union all select `componentes`.`item_id` AS `item_id`,`componentes`.`nombre` AS `nombre`,`componentes`.`parte` AS `parte`,`componentes`.`tiempo_vida` AS `tiempo_vida`,`componentes`.`hours` AS `hours`,`componentes`.`implement_id` AS `implement_id`,`componentes`.`perteneciente` AS `perteneciente`,`componentes`.`perteneciente_id` AS `perteneciente_id` from `componentes`  ;
-
--- --------------------------------------------------------
-
---
--- Estructura para la vista `partes`
---
-DROP TABLE IF EXISTS `partes`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `partes`  AS SELECT `c`.`item_id` AS `item`, `c`.`component` AS `nombre`, `c`.`is_part` AS `parte`, `c`.`lifespan` AS `tiempo_vida`, `cp`.`hours` AS `hours`, `ci`.`implement_id` AS `implement_id`, `cc`.`component` AS `perteneciente`, `cc`.`id` AS `perteneciente_id` FROM (((`components` `c` join `component_part` `cp` on(`c`.`id` = `cp`.`part`)) join `component_implement` `ci` on(`cp`.`component_implement_id` = `ci`.`id`)) join `components` `cc` on(`ci`.`component_id` = `cc`.`id`)) WHERE `cp`.`state` = 'PENDIENTE''PENDIENTE'  ;
-
--- --------------------------------------------------------
-
---
--- Estructura para la vista `partes_del_componente`
---
-DROP TABLE IF EXISTS `partes_del_componente`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `partes_del_componente`  AS SELECT `p`.`id` AS `part_id`, `p`.`item_id` AS `item_id`, `p`.`component` AS `item`, `c`.`id` AS `componente_id` FROM ((`components` `p` join `component_part_model` `cpm` on(`p`.`id` = `cpm`.`part`)) join `components` `c` on(`c`.`id` = `cpm`.`component`))  ;
 
 -- --------------------------------------------------------
 
@@ -3151,7 +3014,7 @@ ALTER TABLE `components`
 -- AUTO_INCREMENT de la tabla `component_implement`
 --
 ALTER TABLE `component_implement`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `component_implement_model`
@@ -3163,7 +3026,7 @@ ALTER TABLE `component_implement_model`
 -- AUTO_INCREMENT de la tabla `component_part`
 --
 ALTER TABLE `component_part`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `component_part_model`
@@ -3301,13 +3164,13 @@ ALTER TABLE `order_dates`
 -- AUTO_INCREMENT de la tabla `order_requests`
 --
 ALTER TABLE `order_requests`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- AUTO_INCREMENT de la tabla `order_request_details`
 --
 ALTER TABLE `order_request_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=402;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=514;
 
 --
 -- AUTO_INCREMENT de la tabla `order_request_new_items`
@@ -3421,13 +3284,13 @@ ALTER TABLE `tractor_models`
 -- AUTO_INCREMENT de la tabla `tractor_reports`
 --
 ALTER TABLE `tractor_reports`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `tractor_schedulings`
 --
 ALTER TABLE `tractor_schedulings`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `users`
@@ -3900,7 +3763,12 @@ OPEN cur_comp;
             /*-------------Obteniendo la cabecera de la solicitud--------------------------------------------------*/
             SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
             /*-------------Creando la solicitud de la pieza---------------------------------------------*/
-            INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price) VALUES (pedido,item_pieza,cantidad_pieza,precio_estimado_pieza);
+            IF EXISTS(SELECT * FROM order_request_details r WHERE r.order_request_id = pedido AND r.item_id = item_pieza) THEN
+            	UPDATE order_request_details r SET r.quantity = r.quantity + cantidad_pieza, r.estimated_price = r.estimated_price + precio_estimado_pieza WHERE r.order_request_id = pedido AND r.item_id = item_pieza;
+            ELSE
+            	INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price) VALUES (pedido,item_pieza,cantidad_pieza,precio_estimado_pieza);
+            END IF;
+
             END IF;
             END LOOP bucle2;
             SELECT 0 INTO pieza_final;

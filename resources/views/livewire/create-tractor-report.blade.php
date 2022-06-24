@@ -47,7 +47,7 @@
                         @endforeach
                     </select>
 
-                    <x-jet-input-error for="location"/>
+                    <x-jet-input-error for="lote"/>
 
                 </div>
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 2 span/ 2 span">

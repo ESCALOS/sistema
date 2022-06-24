@@ -29,6 +29,7 @@ class CreateTractorReport extends Component
     public $observations = "";
 
     protected $rules = [
+        'location' => 'required|exists:locations,id',
         'lote' => 'required|exists:lotes,id',
         'correlative' => 'required',
         'date' => 'required|date|date_format:Y-m-d',
@@ -38,6 +39,27 @@ class CreateTractorReport extends Component
         'labor' => 'required|exists:labors,id',
         'implement' => 'required|exists:implements,id',
         'hour_meter_end' => "required|gt:horometro_inicial",
+    ];
+
+    protected $messages = [
+        'location.required' =>'Seleccione una ubicación',
+        'location.exists' => 'La ubicación no existe',
+        'lote.required' => 'Seleccione el lote',
+        'lote.exists' => 'El lote no existe',
+        'correlative.required' => 'Ingrese el correlativo',
+        'date.required' => 'Seleccione la fecha',
+        'date.date' => 'Debe de ingresar una fecha',
+        'shift.required' => 'Seleccione el turno',
+        'user.required' => 'Seleccione al operador',
+        'user.exists' => 'El operador no existe',
+        'tractor.required' => 'Seleccione al tractor',
+        'tractor.exists' => 'El tractor no existe',
+        'labor.required' => 'Seleccione la labor',
+        'labor.exists' => 'La labor no existe',
+        'implement.required' => 'Seleccione el implemento',
+        'implement.exists' => 'El implemento no existe',
+        'hour_meter_end.required' => 'Ingrese el horometro final',
+        'hour_meter_end.gt' => 'El horometro final debe ser mayor que el inicial'
     ];
 
     public function store(){

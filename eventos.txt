@@ -2,6 +2,9 @@
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` EVENT `liberar_material_event` ON SCHEDULE EVERY 1 MONTH STARTS '2022-05-18 09:00:54' ON COMPLETION NOT PRESERVE DISABLE DO UPDATE operator_assigned_stocks SET state = "LIBERADO", quantity = 0, price = 0 WHERE DATE_ADD(updated_at, INTERVAL 3 MONTH) < CURRENT_TIMESTAMP AND quantity > 0 //
 
+/*----------------Evento para asignar monto al ceco-------------------------------------*/
+CREATE DEFINER=`root`@`localhost` EVENT `asignar_monto_ceco` ON SCHEDULE EVERY 1 MONTH STARTS '2022-06-01 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO UPDATE ceco_allocation_amounts SET caa.is_allocated = true WHERE date <= CURDATE() AND is_allocated = false;
+
 /*-Listar materiales para el pedido-----------------*/
 DELIMITER //
 CREATE DEFINER=`root`@`localhost` EVENT `Listar_materiales_pedido` ON SCHEDULE EVERY 1 DAY STARTS '2022-06-27 00:00:00' ON COMPLETION PRESERVE DISABLE DO BEGIN
@@ -94,7 +97,12 @@ OPEN cur_comp;
             /*-------------Obteniendo la cabecera de la solicitud--------------------------------------------------*/
             SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
             /*-------------Creando la solicitud de la pieza---------------------------------------------*/
-            INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price) VALUES (pedido,item_pieza,cantidad_pieza,precio_estimado_pieza);
+            IF EXISTS(SELECT * FROM order_request_details r WHERE r.order_request_id = pedido AND r.item_id = item_pieza) THEN
+            	UPDATE order_request_details r SET r.quantity = r.quantity + cantidad_pieza, r.estimated_price = r.estimated_price + precio_estimado_pieza WHERE r.order_request_id = pedido AND r.item_id = item_pieza;
+            ELSE
+            	INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price) VALUES (pedido,item_pieza,cantidad_pieza,precio_estimado_pieza);
+            END IF;
+
             END IF;
             END LOOP bucle2;
             SELECT 0 INTO pieza_final;
@@ -107,6 +115,3 @@ UPDATE order_dates SET state = "ABIERTO" WHERE id = fecha_solicitud;
 END;
 END IF;
 END //
-
-/*----------------Evento para asignar monto al ceco-------------------------------------*/
-CREATE DEFINER=`root`@`localhost` EVENT `asignar_monto_ceco` ON SCHEDULE EVERY 1 MONTH STARTS '2022-06-01 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO UPDATE ceco_allocation_amounts SET caa.is_allocated = true WHERE date <= CURDATE() AND is_allocated = false;

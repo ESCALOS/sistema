@@ -49,6 +49,25 @@ class TractorReport extends Component
         'hour_meter_end' => "required|gt:hour_meter_start",
     ];
 
+    protected $messages = [
+        'lote.required' => 'Seleccione el lote',
+        'lote.exists' => 'El lote no existe',
+        'correlative.required' => 'Ingrese el correlativo',
+        'date.required' => 'Seleccione la fecha',
+        'date.date' => 'Debe de ingresar una fecha',
+        'shift.required' => 'Seleccione el turno',
+        'user.required' => 'Seleccione al operador',
+        'user.exists' => 'El operador no existe',
+        'tractor.required' => 'Seleccione al tractor',
+        'tractor.exists' => 'El tractor no existe',
+        'labor.required' => 'Seleccione la labor',
+        'labor.exists' => 'La labor no existe',
+        'implement.required' => 'Seleccione el implemento',
+        'implement.exists' => 'El implemento no existe',
+        'hour_meter_end.required' => 'Ingrese el horometro final',
+        'hour_meter_end.gt' => 'El horometro final debe ser mayor que el inicial'
+    ];
+
     protected $listeners = ['render'];
 
     public function seleccionar($id){
@@ -80,6 +99,7 @@ class TractorReport extends Component
     }
 
     public function actualizar(){
+        $this->validate();
         $reporte = ModelsTractorReport::find($this->idReporte);
         $reporte->lote_id = $this->lote;
         $reporte->correlative = $this->correlative;
