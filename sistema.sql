@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 25-06-2022 a las 19:02:16
+-- Tiempo de generación: 25-06-2022 a las 20:21:51
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -455,9 +455,9 @@ CREATE TABLE `component_implement` (
 --
 
 INSERT INTO `component_implement` (`id`, `component_id`, `implement_id`, `hours`, `state`, `created_at`, `updated_at`) VALUES
-(1, 28, 1, '12.75', 'PENDIENTE', NULL, NULL),
-(2, 8, 1, '12.75', 'PENDIENTE', NULL, NULL),
-(3, 20, 1, '12.75', 'PENDIENTE', NULL, NULL);
+(1, 28, 1, '24.65', 'PENDIENTE', NULL, NULL),
+(2, 8, 1, '24.65', 'PENDIENTE', NULL, NULL),
+(3, 20, 1, '24.65', 'PENDIENTE', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -512,15 +512,15 @@ CREATE TABLE `component_part` (
 --
 
 INSERT INTO `component_part` (`id`, `component_implement_id`, `part`, `hours`, `state`, `created_at`, `updated_at`) VALUES
-(1, 1, 2, '12.75', 'PENDIENTE', NULL, NULL),
-(2, 1, 13, '12.75', 'PENDIENTE', NULL, NULL),
-(3, 1, 33, '12.75', 'PENDIENTE', NULL, NULL),
-(4, 2, 4, '12.75', 'PENDIENTE', NULL, NULL),
-(5, 2, 11, '12.75', 'PENDIENTE', NULL, NULL),
-(6, 2, 23, '12.75', 'PENDIENTE', NULL, NULL),
-(7, 3, 4, '12.75', 'PENDIENTE', NULL, NULL),
-(8, 3, 29, '12.75', 'PENDIENTE', NULL, NULL),
-(9, 3, 33, '12.75', 'PENDIENTE', NULL, NULL);
+(1, 1, 2, '24.65', 'PENDIENTE', NULL, NULL),
+(2, 1, 13, '24.65', 'PENDIENTE', NULL, NULL),
+(3, 1, 33, '24.65', 'PENDIENTE', NULL, NULL),
+(4, 2, 4, '24.65', 'PENDIENTE', NULL, NULL),
+(5, 2, 11, '24.65', 'PENDIENTE', NULL, NULL),
+(6, 2, 23, '24.65', 'PENDIENTE', NULL, NULL),
+(7, 3, 4, '24.65', 'PENDIENTE', NULL, NULL),
+(8, 3, 29, '24.65', 'PENDIENTE', NULL, NULL),
+(9, 3, 33, '24.65', 'PENDIENTE', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -748,7 +748,7 @@ CREATE TABLE `implements` (
 --
 
 INSERT INTO `implements` (`id`, `implement_model_id`, `implement_number`, `hours`, `user_id`, `location_id`, `ceco_id`, `created_at`, `updated_at`) VALUES
-(1, 1, '5243', '79.70', 1, 1, 1, '2022-06-20 21:21:59', '2022-06-24 13:00:49'),
+(1, 1, '5243', '91.60', 1, 1, 1, '2022-06-20 21:21:59', '2022-06-25 17:19:32'),
 (2, 1, '2399', '24.94', 2, 1, 2, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
 (3, 1, '6977', '52.51', 3, 2, 3, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
 (4, 1, '9149', '81.06', 4, 2, 4, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
@@ -1515,8 +1515,8 @@ CREATE TABLE `order_requests` (
 
 INSERT INTO `order_requests` (`id`, `user_id`, `implement_id`, `state`, `validate_by`, `is_canceled`, `order_date_id`, `created_at`, `updated_at`) VALUES
 (33, 1, 1, 'CERRADO', NULL, 0, 1, NULL, '2022-06-25 22:01:06'),
-(34, 2, 2, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
-(35, 3, 3, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
+(34, 2, 2, 'CERRADO', NULL, 0, 1, NULL, '2022-06-25 23:14:46'),
+(35, 3, 3, 'CERRADO', NULL, 0, 1, NULL, '2022-06-25 23:17:37'),
 (36, 4, 4, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
 (37, 5, 5, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
 (38, 6, 6, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
@@ -1561,20 +1561,20 @@ INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quant
 (240, 33, 57, '2.00', '502.17', 'PENDIENTE', NULL, NULL, '2022-06-25 21:51:37'),
 (241, 33, 3, '0.00', '692.98', 'PENDIENTE', NULL, NULL, '2022-06-25 21:51:40'),
 (242, 33, 24, '0.00', '577.05', 'PENDIENTE', NULL, NULL, '2022-06-25 21:51:34'),
-(243, 34, 9, '2.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(244, 34, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(245, 34, 44, '2.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(246, 34, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(247, 34, 57, '4.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(248, 34, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(249, 34, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
+(243, 34, 9, '2.00', '362.42', 'ACEPTADO', NULL, NULL, '2022-06-25 23:18:50'),
+(244, 34, 21, '0.00', '785.44', 'PENDIENTE', NULL, NULL, '2022-06-25 23:14:12'),
+(245, 34, 44, '0.00', '954.65', 'PENDIENTE', NULL, NULL, '2022-06-25 23:14:39'),
+(246, 34, 52, '0.00', '216.64', 'PENDIENTE', NULL, NULL, '2022-06-25 23:14:34'),
+(247, 34, 57, '4.00', '502.17', 'MODIFICADO', NULL, NULL, '2022-06-25 23:19:11'),
+(248, 34, 3, '0.00', '692.98', 'PENDIENTE', NULL, NULL, '2022-06-25 23:14:29'),
+(249, 34, 24, '0.00', '577.05', 'PENDIENTE', NULL, NULL, '2022-06-25 23:14:25'),
 (250, 35, 9, '2.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(251, 35, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
-(252, 35, 44, '2.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(253, 35, 52, '1.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
+(251, 35, 21, '3.00', '785.44', 'PENDIENTE', NULL, NULL, '2022-06-25 23:17:34'),
+(252, 35, 44, '0.00', '954.65', 'PENDIENTE', NULL, NULL, '2022-06-25 23:17:29'),
+(253, 35, 52, '0.00', '216.64', 'PENDIENTE', NULL, NULL, '2022-06-25 23:17:25'),
 (254, 35, 57, '4.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(255, 35, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(256, 35, 24, '1.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
+(255, 35, 3, '0.00', '692.98', 'PENDIENTE', NULL, NULL, '2022-06-25 23:17:17'),
+(256, 35, 24, '0.00', '577.05', 'PENDIENTE', NULL, NULL, '2022-06-25 23:17:21'),
 (257, 36, 9, '2.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
 (258, 36, 21, '2.00', '785.44', 'PENDIENTE', NULL, NULL, NULL),
 (259, 36, 44, '2.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
@@ -1666,7 +1666,10 @@ INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quant
 (345, 48, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
 (346, 48, 57, '6.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
 (347, 48, 24, '2.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(348, 33, 17, '1.00', '906.47', 'PENDIENTE', '', '2022-06-25 21:51:57', '2022-06-25 21:51:57');
+(348, 33, 17, '1.00', '906.47', 'PENDIENTE', '', '2022-06-25 21:51:57', '2022-06-25 21:51:57'),
+(349, 34, 8, '2.00', '563.25', 'PENDIENTE', '', '2022-06-25 22:19:52', '2022-06-25 23:14:20'),
+(350, 34, 9, '2.00', '370.00', 'VALIDADO', 'Cambiado el precio', '2022-06-25 23:18:50', '2022-06-25 23:18:50'),
+(351, 34, 57, '3.00', '500.00', 'VALIDADO', '', '2022-06-25 23:19:11', '2022-06-25 23:19:11');
 
 -- --------------------------------------------------------
 
@@ -1694,7 +1697,8 @@ CREATE TABLE `order_request_new_items` (
 
 INSERT INTO `order_request_new_items` (`id`, `order_request_id`, `new_item`, `quantity`, `measurement_unit_id`, `brand`, `datasheet`, `image`, `observation`, `created_at`, `updated_at`) VALUES
 (9, 33, 'Ruka', '3.00', 3, 'saa', '-sad\n-sa\n-sa', 'public/newMaterials/zHyV8jgLSvA3k9SovgkQP6pehGMkaLVgHhWm51w2.jpg', '', '2022-06-25 21:53:12', '2022-06-25 21:53:12'),
-(10, 33, 'Shino', '3.00', 9, 'Suryuu', '-ssa\n-sa\n-ñláéíóú', 'public/newMaterials/hvhXgQ5Myw77Np2aIOPZtaGSarDTcgEkCWnnuU1t.jpg', '', '2022-06-25 21:54:03', '2022-06-25 21:54:03');
+(10, 33, 'Shino', '3.00', 9, 'Suryuu', '-ssa\n-sa\n-ñláéíóú', 'public/newMaterials/hvhXgQ5Myw77Np2aIOPZtaGSarDTcgEkCWnnuU1t.jpg', '', '2022-06-25 21:54:03', '2022-06-25 21:54:03'),
+(11, 35, 'YAMI', '32.00', 3, 'SDSA', 'SDASD', 'public/newMaterials/h8jbuHVOvBZmHiy6luMaYxfILhTYYweUqZga4BwR.png', '', '2022-06-25 23:17:09', '2022-06-25 23:17:09');
 
 -- --------------------------------------------------------
 
@@ -1999,7 +2003,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('shTiFIkRCaqWlcsTRtqUhMPrCo5ARwI7EoPiiIni', 1, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoidmM3YVNZWFlUcHQ1UVZwa0llZWdpUDhyanhZNmh1dWNnMVBzeDhMQyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDQ6Imh0dHA6Ly9zaXN0ZW1hL29wZXJhdG9yL3NvbGljaXRhci1tYXRlcmlhbGVzIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTtzOjIxOiJwYXNzd29yZF9oYXNoX3NhbmN0dW0iO3M6NjA6IiQyeSQxMCQ5MklYVU5wa2pPMHJPUTVieU1pLlllNG9Lb0VhM1JvOWxsQy8ub2cvYXQyLnVoZVdHL2lnaSI7fQ==', 1656176466);
+('QCzTGMtxTjgCJNqiYT7A5mMsH1XuxkIF55kW0ffh', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiVHpid0lMSlVOT1VvSzRmT1ZLb2tNaFMzejBQSldLNGsxZ01hMmtLdyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDg6Imh0dHA6Ly9zaXN0ZW1hL3BsYW5uZXIvdmFsaWRhdGUtcmVxdWVzdC1tYXRlcmlhbCI7fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjQ7fQ==', 1656181152);
 
 -- --------------------------------------------------------
 
@@ -2148,7 +2152,7 @@ CREATE TABLE `tractors` (
 --
 
 INSERT INTO `tractors` (`id`, `tractor_model_id`, `tractor_number`, `hour_meter`, `location_id`, `created_at`, `updated_at`) VALUES
-(1, 1, '72307', '268.00', 1, '2022-06-20 21:22:03', '2022-06-20 21:22:03'),
+(1, 1, '72307', '282.00', 1, '2022-06-20 21:22:03', '2022-06-25 17:19:32'),
 (2, 1, '76737', '450.00', 1, '2022-06-20 21:22:03', '2022-06-24 13:00:49'),
 (3, 1, '65116', '390.00', 2, '2022-06-20 21:22:04', '2022-06-20 21:22:04'),
 (4, 1, '76977', '414.00', 2, '2022-06-20 21:22:04', '2022-06-20 21:22:04'),
@@ -2218,7 +2222,8 @@ CREATE TABLE `tractor_reports` (
 --
 
 INSERT INTO `tractor_reports` (`id`, `user_id`, `tractor_id`, `labor_id`, `correlative`, `date`, `shift`, `implement_id`, `hour_meter_start`, `hour_meter_end`, `hours`, `observations`, `lote_id`, `is_canceled`, `created_at`, `updated_at`) VALUES
-(1, 1, 2, 1, 'sadada', '2022-06-23', 'MAÑANA', 1, '435.00', '450.00', '15.00', '', 1, 0, '2022-06-24 17:57:46', '2022-06-24 18:00:49');
+(1, 1, 2, 1, 'sadada', '2022-06-23', 'MAÑANA', 1, '435.00', '450.00', '15.00', '', 1, 0, '2022-06-24 17:57:46', '2022-06-24 18:00:49'),
+(2, 2, 1, 3, '12553', '2022-06-24', 'NOCHE', 1, '268.00', '282.00', '14.00', '', 1, 0, '2022-06-25 22:07:10', '2022-06-25 22:19:32');
 
 --
 -- Disparadores `tractor_reports`
@@ -2317,9 +2322,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `code`, `name`, `lastname`, `location_id`, `email`, `email_verified_at`, `password`, `two_factor_secret`, `two_factor_recovery_codes`, `two_factor_confirmed_at`, `is_admin`, `remember_token`, `current_team_id`, `profile_photo_path`, `created_at`, `updated_at`) VALUES
-(1, '777269', 'Mr. Ford Vandervort', 'Kunze', 1, 'roob.brianne@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '9qbcg7etDUazjid2a1WnwCiA2DAYd6bQZ0bFlxOGd6bdtq9vUzYTO0X3q59R', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
-(2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'zuqVwejbr3aTIFNjQbxmZay9UCXghe6TF7IaxSyPVrHckyhrRRnFQrbB4nwF', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
-(3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'AEjm4n1ZK8uKSfuz9MFA0quA7SH9TRWpCEk0driJUnA3OMKietmYRDfEC6fq', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(1, '777269', 'Mr. Ford Vandervort', 'Kunze', 1, 'roob.brianne@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'WPn7K7yearpM20WS3s964CPUZ2vtDhTFL8wlqrSDztRxP3X56ohOycrlwG8V', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
+(2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'qjtNQRhjZdmg8HRE0u10LicN4SNnzdAdTBhC3alZ6XObOEqMRnPEt2iaq1kQ', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
+(3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '6DZQ34tOJH78Gt25Ow8HPJTM2wX4MeBQEEzbRfvprUiCQCiFhEKY86Y7k0x0', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'HVxt44HPZd35sT2XW7pqxlyeeVJAdEY88JV7T44GkjOdrlzrU0KF2A3ngcHp', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'JQIrgQxqEDHQWGQsEwTeZeBm54zyMfZXkk0IZiyecTqYXHMe6QCIFdyhy7Ij', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (6, '502387', 'Bella Block', 'Bashirian', 3, 'sibyl08@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '3NXfsNa9xGchlBQ9iIbNaHjLcFz5unflenQ1Z74g5YCsxiXyXk0bKpoWgElS', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
@@ -3176,13 +3181,13 @@ ALTER TABLE `order_requests`
 -- AUTO_INCREMENT de la tabla `order_request_details`
 --
 ALTER TABLE `order_request_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=349;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=352;
 
 --
 -- AUTO_INCREMENT de la tabla `order_request_new_items`
 --
 ALTER TABLE `order_request_new_items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT de la tabla `permissions`
@@ -3290,7 +3295,7 @@ ALTER TABLE `tractor_models`
 -- AUTO_INCREMENT de la tabla `tractor_reports`
 --
 ALTER TABLE `tractor_reports`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `tractor_schedulings`
