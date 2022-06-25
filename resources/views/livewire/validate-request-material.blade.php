@@ -46,7 +46,7 @@
 <!-- Listar usuarios que tienen pedidos por validar  -->
     @if ($tlocation != 0 && $users->count())
     <div class="grid grid-cols-1 sm:grid-cols-3 mt-4 p-6 gap-4">
-            @foreach ($users as $user)
+        @foreach ($users as $user)
     <!-- Cards de los usuarios con pedidos pendientes a validar  -->
         <div class="max-w-sm p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
             <div class="flex flex-col items-center text-center">
@@ -58,7 +58,7 @@
                 </div>
             </div>
         </div>
-            @endforeach
+        @endforeach
     </div>
     @endif
 <!-- Modal para validar materiales por usuario  -->
@@ -144,7 +144,7 @@
                                 <h1 class="text-lg font-bold">Materiales Validados</h1>
                             </div>
                             <div>
-                                <h1 class="text-lg font-bold {{$monto_real > $monto_asignado ? 'text-red-500' : 'text-green-500'}} ">Precio Real: S/.{{$monto_usado}}</h1>
+                                <h1 class="text-lg font-bold {{$monto_real > $monto_asignado ? 'text-red-500' : 'text-green-500'}} ">Precio Real: S/.{{$monto_real}}</h1>
                             </div>
                         </div>
                         <div style="height:200px;overflow:auto">

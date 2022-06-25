@@ -3,7 +3,7 @@
         <div class="w-full lg:w-5/6">
             <div x-data="{ open:false }">
                 <div class="text-center mb-4" x-on:click="open = !open">
-                    <x-jet-button>Filtros  {{auth()->user()->role}} </x-jet-button>
+                    <x-jet-button>Filtros  </x-jet-button>
                 </div>
                 <div x-show="open" class="bg-white shadow-md rounded my-6">
                     <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3" wire:ignore>
@@ -11,18 +11,26 @@
                             <label for="stractor">Tractor:</label><br>
                             <select id="stractor" class="select2" wire:model='stractor'>
                                 <option value="0">Seleccione el tractor</option>
-                                @foreach ($tractors as $tractor)
+                                @foreach ($filtro_tractores as $tractor)
                                     <option value="{{ $tractor->id }}">{{ $tractor->tractorModel->model }}
                                         {{ $tractor->tractor_number }}</option>
                                 @endforeach
                             </select>
                         </div>
-
+                        <div class="px-6 py-2">
+                            <label for="slabor">Labor:</label><br>
+                            <select id="slabor" class="select2" wire:model='slabor'>
+                                <option value="">Seleccione la labor</option>
+                                @foreach ($labors as $labor)
+                                    <option value="{{ $labor->id }}">{{ $labor->labor }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                         <div class="px-6 py-2">
                             <label for="simplement">Implemento:</label><br>
                             <select id="simplement" class="select2" wire:model='simplement'>
                                 <option value="0">Seleccione el implemento</option>
-                                @foreach ($implements as $implement)
+                                @foreach ($filtro_implementos as $implement)
                                     <option value="{{ $implement->id }}">{{ $implement->implementModel->implement_model }} {{ $implement->implement_number }}</option>
                                 @endforeach
                             </select>

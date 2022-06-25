@@ -98,7 +98,7 @@ OPEN cur_comp;
             SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
             /*-------------Creando la solicitud de la pieza---------------------------------------------*/
             IF EXISTS(SELECT * FROM order_request_details r WHERE r.order_request_id = pedido AND r.item_id = item_pieza) THEN
-            	UPDATE order_request_details r SET r.quantity = r.quantity + cantidad_pieza, r.estimated_price = r.estimated_price + precio_estimado_pieza WHERE r.order_request_id = pedido AND r.item_id = item_pieza;
+            	UPDATE order_request_details r SET r.quantity = r.quantity + cantidad_pieza WHERE r.order_request_id = pedido AND r.item_id = item_pieza;
             ELSE
             	INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price) VALUES (pedido,item_pieza,cantidad_pieza,precio_estimado_pieza);
             END IF;

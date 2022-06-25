@@ -40,7 +40,7 @@
         </div>
         @if ($idImplemento != 0)
         <div style="display:flex; align-items:center;justify-content:center" class="px-6 py-4">
-            <button wire:click="$emit('confirmarCerrarPedido','pxwuxakalx 6977')" class="w-full h-16 bg-orange-500 text-2xl font-bold hover:bg-orange-700 text-white rounded-full">
+            <button wire:click="$emit('confirmarCerrarPedido','{{$implemento}}')" class="w-full h-16 bg-orange-500 text-2xl font-bold hover:bg-orange-700 text-white rounded-full">
                 Cerrar Pedido
             </button>
         </div>
@@ -170,16 +170,17 @@
             {{ strtoupper($material_edit_name) }}
         </x-slot>
         <x-slot name="content">
-            <div>
 
-            </div>
-            <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
-                <x-jet-label class="text-md">Cantidad:</x-jet-label>
-                <x-jet-input type="number" min="0" style="height:30px;width: 100%" wire:model="quantity_edit" />
+            <x-jet-label class="text-md">Cantidad:</x-jet-label>
+                <div class="flex">
 
-                <x-jet-input-error for="quantity_edit"/>
+                    <input class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" wire:model="quantity_edit" />
 
-            </div>
+                    <x-jet-input-error for="quantity_edit"/>
+                    <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
+                        {{$measurement_unit_edit}}
+                    </span>
+                </div>
         </x-slot>
         <x-slot name="footer">
             <x-jet-button wire:loading.attr="disabled" wire:click="actualizar()">

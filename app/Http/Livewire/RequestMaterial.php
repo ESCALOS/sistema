@@ -51,6 +51,7 @@ class RequestMaterial extends Component
     public $material_new_edit_image_old;
 
     public $quantity_edit;
+    public $measurement_unit_edit;
 
     protected $listeners = ['render','cerrarPedido'];
 
@@ -143,6 +144,7 @@ class RequestMaterial extends Component
         $material = OrderRequestDetail::find($id);
         $this->material_edit_name = $material->item->item;
         $this->quantity_edit = floatval($material->quantity);
+        $this->measurement_unit_edit = $material->item->measurementUnit->abbreviation;
         $this->open_edit = true;
     }
 
@@ -210,19 +212,24 @@ class RequestMaterial extends Component
         /*--------------Obtener los datos del implemento y su ceco respectivo----------------------------*/
         if ($this->idImplemento > 0) {
             $implement = Implement::find($this->idImplemento);
+            $this->implemento = $implement->implementModel->implement_model.' '.$implement->implement_number;
 
              /*--------Obtener las fechas de llegada del pedido-------------------------------------*/
             $fecha_llegada1 = Carbon::parse($this->fecha_pedido_llegada);
             $fecha_llegada2 = $fecha_llegada1->addMonth();
             /*---------------------Obtener el monto Asignado para los meses de llegada del pedido-------------*/
-            $ceco_allocations = CecoAllocationAmount::where('ceco_id',$implement->ceco_id)->whereDate('date','>=',$this->fecha_pedido_llegada)->whereDate('date','<=',$fecha_llegada2)->sum('allocation_amount');
-            $this->monto_asignado = $ceco_allocations;
+            $this->monto_asignado = CecoAllocationAmount::where('ceco_id',$implement->ceco_id)->whereDate('date','>=',$this->fecha_pedido_llegada)->whereDate('date','<=',$fecha_llegada2)->sum('allocation_amount');
 
             /*-------------------Obtener el monto usado por el ceco en total-------------------------------------------*/
-            $solicitudes_por_ceco = OrderRequest::join('implements', function ($join){
-                $join->on('implements.id','=','order_requests.implement_id');
-            })->where('implements.ceco_id','=',$implement->ceco_id)->sum('order_requests.estimated_price');
-            $this->monto_usado = $solicitudes_por_ceco;
+            $this->monto_usado = OrderRequestDetail::join('order_requests', function ($join){
+                                                        $join->on('order_requests.id','=','order_request_details.order_request_id');
+                                                    })->join('implements', function ($join){
+                                                        $join->on('implements.id','=','order_requests.implement_id');
+                                                    })->where('implements.ceco_id','=',$implement->ceco_id)
+                                                      ->where('order_request_details.state','=','PENDIENTE')
+                                                      ->where('order_request_details.quantity','<>',0)
+                                                      ->selectRaw('SUM(order_request_details.estimated_price*order_request_details.quantity) AS total')
+                                                      ->value('total');
 
         } else {
             $this->monto_asignado = 0;

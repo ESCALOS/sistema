@@ -87,7 +87,7 @@ class ValidateRequestMaterial extends Component
         $this->incluidos = [];
     }
     public function updatedOpenValidateResquest(){
-        $this->reset('idOperador','operador','idImplemento','idSolicitudPedido');
+        $this->reset('idOperador','operador','idImplemento','idSolicitudPedido','monto_asignado','monto_usado','monto_real');
     }
     public function updatedOpenValidateMaterial(){
         $this->reset('idMaterial','material','cantidad','precio','precioTotal','observation');
@@ -98,45 +98,20 @@ class ValidateRequestMaterial extends Component
         $this->open_validate_resquest = true;
     }
     public function updatedIdImplemento(){
-        if($this->idImplemento > 0){
-            $order_request = OrderRequest::where('implement_id',$this->idImplemento)->where('state',"CERRADO")->first();
-            if($order_request != null){
-                $this->idSolicitudPedido = $order_request->id;
-            }else{
-                $this->idSolicitudPedido = 0;
-            }
-            $implement = Implement::find($this->idImplemento);
-
-            /*--------Obtener las fechas de llegada del pedido-------------------------------------*/
-            $fecha_llegada1 = Carbon::parse($this->fecha_pedido_llegada);
-            $fecha_llegada2 = $fecha_llegada1->addMonth();
-            /*---------------------Obtener el monto Asignado para los meses de llegada del pedido-------------*/
-            $this->monto_asignado = CecoAllocationAmount::where('ceco_id',$implement->ceco_id)->whereDate('date','>=',$this->fecha_pedido_llegada)->whereDate('date','<=',$fecha_llegada2)->sum('allocation_amount');
-
-            /*-------------------Obtener el monto usado por el ceco en total-------------------------------------------*/
-            $this->monto_usado = OrderRequestDetail::join('order_requests', function ($join){
-                                                        $join->on('order_requests.id','=','order_request_details.order_request_id');
-                                                    })->join('implements', function ($join){
-                                                        $join->on('implements.id','=','order_requests.implement_id');
-                                                    })->where('implements.ceco_id','=',$implement->ceco_id)
-                                                      ->where('order_request_details.state','=','PENDIENTE')
-                                                      ->sum('order_request_details.estimated_price');
-
-
-
-            /*-------------------Obtener el monto real por el ceco en total-------------------------------------------*/
-            $this->monto_real = OrderRequest::join('implements', function ($join){
-                $join->on('implements.id','=','order_requests.implement_id');
-            })->where('implements.ceco_id','=',$implement->ceco_id)->sum('order_requests.estimated_price');
-
+        $order_request = OrderRequest::where('implement_id',$this->idImplemento)->where('state',"CERRADO")->first();
+        if($order_request != null){
+            $this->idSolicitudPedido = $order_request->id;
         }else{
             $this->idSolicitudPedido = 0;
             $this->monto_asignado = 0;
             $this->monto_usado = 0;
+            $this->monto_real = 0;
         }
-
     }
     public function updatedCantidad(){
+        $this->precioTotal = floatval($this->precio) * floatval($this->cantidad);
+    }
+    public function updatedPrecio(){
         $this->precioTotal = floatval($this->precio) * floatval($this->cantidad);
     }
 /*----------------Validar o Rechazar Materiales ---------------------------------------------*/
@@ -147,7 +122,7 @@ class ValidateRequestMaterial extends Component
         $this->material = strtoupper($material->item->item);
         $this->cantidad = floatval($material->quantity);
         $this->cantidad_pedida = floatval($material->quantity);
-        $this->precio = floatval($material->estimated_price);
+        $this->precio = floatval($material->item->estimated_price);
         $this->precioTotal = floatval($this->precio) * floatval($this->cantidad);
     }
     public function validarMaterial(){
@@ -224,6 +199,38 @@ class ValidateRequestMaterial extends Component
         $users = DB::table('users')->whereIn('id',$this->incluidos)->get();
 
 /*----------------------DATOS DEL MODAL DE VALIDACIÓN --------------------------------------------------------------------------*/
+        /*-----------MOstrar montos del ceco-----------------------------------------------*/
+        if($this->idImplemento > 0){
+            $implement = Implement::find($this->idImplemento);
+
+            /*--------Obtener las fechas de llegada del pedido-------------------------------------*/
+            $fecha_llegada1 = Carbon::parse($this->fecha_pedido_llegada);
+            $fecha_llegada2 = $fecha_llegada1->addMonth();
+            /*---------------------Obtener el monto Asignado para los meses de llegada del pedido-------------*/
+            $this->monto_asignado = CecoAllocationAmount::where('ceco_id',$implement->ceco_id)->whereDate('date','>=',$this->fecha_pedido_llegada)->whereDate('date','<=',$fecha_llegada2)->sum('allocation_amount');
+
+            /*-------------------Obtener el monto usado por el ceco en total-------------------------------------------*/
+            $this->monto_usado = OrderRequestDetail::join('order_requests', function ($join){
+                                                        $join->on('order_requests.id','=','order_request_details.order_request_id');
+                                                    })->join('implements', function ($join){
+                                                        $join->on('implements.id','=','order_requests.implement_id');
+                                                    })->where('implements.ceco_id','=',$implement->ceco_id)
+                                                      ->where('order_request_details.state','=','PENDIENTE')
+                                                      ->where('order_request_details.quantity','<>',0)
+                                                      ->selectRaw('SUM(order_request_details.estimated_price*order_request_details.quantity) AS total')
+                                                      ->value('total');
+
+
+            /*-------------------Obtener el monto real por el ceco en total-------------------------------------------*/
+            $this->monto_real = OrderRequestDetail::join('order_requests', function ($join){
+                                                        $join->on('order_requests.id','=','order_request_details.order_request_id');
+                                                    })->join('implements', function ($join){
+                                                        $join->on('implements.id','=','order_requests.implement_id');
+                                                    })->where('implements.ceco_id','=',$implement->ceco_id)
+                                                      ->where('order_request_details.state','=','VALIDADO')
+                                                      ->sum('order_request_details.estimated_price');
+
+        }
         /*-----------Implementos del usuario------------------------------------*/
         $implements = OrderRequest::join('implements', function($join){
             $join->on('implements.id','=','order_requests.implement_id');
