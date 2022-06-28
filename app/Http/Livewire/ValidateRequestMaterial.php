@@ -228,7 +228,9 @@ class ValidateRequestMaterial extends Component
                                                         $join->on('implements.id','=','order_requests.implement_id');
                                                     })->where('implements.ceco_id','=',$implement->ceco_id)
                                                       ->where('order_request_details.state','=','VALIDADO')
-                                                      ->sum('order_request_details.estimated_price');
+                                                      ->where('order_request_details.quantity','<>',0)
+                                                      ->selectRaw('SUM(order_request_details.estimated_price*order_request_details.quantity) AS total')
+                                                      ->value('total');
 
         }
         /*-----------Implementos del usuario------------------------------------*/

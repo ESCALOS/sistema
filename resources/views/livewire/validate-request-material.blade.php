@@ -95,7 +95,7 @@
                                 <h1 class="text-lg font-bold">Materiales No Validados</h1>
                             </div>
                             <div>
-                                <h1 class="text-lg font-bold {{$monto_usado > $monto_asignado ? 'text-red-500' : 'text-green-500'}}">Precio Estimado: S/.{{$monto_usado}}</h1>
+                                <h1 class="text-lg font-bold {{$monto_usado > $monto_asignado ? 'text-red-500' : 'text-green-500'}}">Precio Estimado: S/.{{number_format($monto_usado,2)}}</h1>
                             </div>
                         </div>
                         <div style="height:200px;overflow:auto">
@@ -144,7 +144,7 @@
                                 <h1 class="text-lg font-bold">Materiales Validados</h1>
                             </div>
                             <div>
-                                <h1 class="text-lg font-bold {{$monto_real > $monto_asignado ? 'text-red-500' : 'text-green-500'}} ">Precio Real: S/.{{$monto_real}}</h1>
+                                <h1 class="text-lg font-bold {{$monto_real > $monto_asignado ? 'text-red-500' : 'text-green-500'}} ">Precio Real: S/.{{number_format($monto_real,2)}}</h1>
                             </div>
                         </div>
                         <div style="height:200px;overflow:auto">
