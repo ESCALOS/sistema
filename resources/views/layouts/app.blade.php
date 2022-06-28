@@ -51,7 +51,8 @@
                 })
             });
         @if (Route::is('operator.request-materials'))
-/*--------------------Confirmacion para cerra el pedido--------------------------------------*/
+/*----------ALERTAS PARA LA CONFIRMACION DE CERRAR PEDIDO(OPERADOR) ------------------------*/
+    /*--------------------Confirmacion para cerra el pedido--------------------------------------*/
             Livewire.on('confirmarCerrarPedido', implemento =>{
                 Swal.fire({
                     title: '¿Está seguro de cerrar el pedido de '+implemento+'?',
@@ -76,8 +77,9 @@
                 })
             });
         @endif
+/*--------------ALERTAS PARA LA VISTA DE VALIDAR SOLICITUD DE PEDIDO(PLANNER)--------------*/
         @if(Route::is('planner.validate-request-materials'))
-/*--------------------Confirmacion Reinsertar Pedido Rechazado--------------------------------------*/
+    /*--------------------Confirmacion Reinsertar Pedido Rechazado--------------------------------------*/
             Livewire.on('confirmarReinsertarRechazado', solicitud =>{
                 Swal.fire({
                     title: '¿Está seguro de reinsertar el material '+solicitud[1]+'?',
@@ -94,13 +96,52 @@
                         Livewire.emit('reinsertarRechazado',solicitud[0]);
 
                         Swal.fire(
-                            'Pedido Reinsertado!',
-                            'El pedido se encuentra pendiente a validar',
+                            'Material Reinsertado!',
+                            'El material se encuentra pendiente a validar',
                             'success'
                         )
                     }
                 })
             });
+    /*----------Confirmación para cerrar solicitud de pedido-----------------*/
+            Livewire.on('confirmarValidarSolicitudPedido', solicitud =>{
+                if(solicitud[0]<=0){
+                    Swal.fire(
+                                'Implemento no seleccionado',
+                                'Seleccione un implemento',
+                                'error'
+                            )
+                }else if(solicitud[2]>0){
+                    Swal.fire(
+                                'Hay pedidos no validados',
+                                'Valide o rechace los pedidos',
+                                'info'
+                            )
+                }else{
+                    Swal.fire({
+                    title: '¿Validar la solcitud de pedido del implemento '+solicitud[1]+'?',
+                    text: "Esta acción es irreversible",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, validar!',
+                    cancelButtonText: 'No, cancelar!',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+
+                            Livewire.emitTo('validate-request-material','validarSolicitudPedido');
+
+                            Swal.fire(
+                                'Solicitud de pedido validado!',
+                                'El pedido se validó correctamente',
+                                'success'
+                            )
+                        }
+                    })
+                }
+            });
+
         @endif
         </script>
     </body>

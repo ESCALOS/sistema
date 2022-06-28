@@ -64,7 +64,7 @@
 <!-- Modal para validar materiales por usuario  -->
     <x-jet-dialog-modal maxWidth="2xl" wire:model="open_validate_resquest">
         <x-slot name="title">
-            Pedido de {{$operador}}
+            Pedido de {{$operador}} {{$tipo_validacion}}
         </x-slot>
         <x-slot name="content">
             <div class="grid grid-cols-2 sm:grid-cols-1 gap-4">
@@ -164,7 +164,7 @@
                                 </thead>
                                 <tbody class="text-gray-600 text-sm font-light">
                                     @foreach ($order_request_detail_planner as $request)
-                                        <tr wire:dblclick="editar({{$request->id}})" class="border-b border-gray-200 unselected">
+                                        <tr wire:dblclick="mostrarModalValidarMaterial({{$request->id}})" class="border-b border-gray-200 unselected">
                                             <td class="py-3 px-6 text-center">
                                                 <div>
                                                     <span class="font-medium">{{$request->item->sku}} </span>
@@ -229,7 +229,9 @@
                 </div>
         </x-slot>
         <x-slot name="footer">
-            <button wire:loading.attr="disabled" {{$idImplemento <= 0 ? 'disabled' : '' }} wire:click="store()" style="width: 200px" class="px-4 py-2 {{ $idImplemento > 0 ? 'bg-blue-500 hover:bg-blue-700' : 'bg-blue-400 opacity-75' }} text-white rounded-md">
+
+            <x-jet-input-error for="monto_usado"/>
+            <button wire:loading.attr="disabled" {{$idImplemento <= 0 ? 'disabled' : '' }} wire:click="$emit('confirmarValidarSolicitudPedido',[{{$idSolicitudPedido}},'{{$implemento}}',{{$monto_usado}}])" style="width: 200px" class="px-4 py-2 {{ $idImplemento > 0 ? 'bg-blue-500 hover:bg-blue-700' : 'bg-blue-400 opacity-75' }} text-white rounded-md">
                 Validar
             </button>
             <button wire:loading.attr="disabled" {{$idImplemento <=0 ? 'disabled' : '' }} wire:click="$emit('confirmarSolicitarCorrecion')" style="width: 200px" class="ml-2 px-4 py-2 {{ $idImplemento > 0 ? 'bg-green-500 hover:bg-green-700' : 'bg-green-400 opacity-75' }}  text-white rounded-md">
@@ -261,9 +263,9 @@
                 <x-jet-input-error for="cantidad"/>
             </div>
             <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
-                <x-jet-label>Precio Unitario Estimado</span></x-jet-label>
+                <x-jet-label>Precio Unitario</span></x-jet-label>
                 <x-jet-input type="number" min="0" style="height:30px;width: 100%" class="text-center" wire:model="precio"/>
-
+                <x-jet-input-error for="precio"/>
             </div>
             <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
                 <x-jet-label>Precio Total</span></x-jet-label>
