@@ -372,7 +372,7 @@
         <x-slot name="content">
             <div class="grid grid-cols-2">
             <!-- Material Solicitado por el operador -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2">
                     <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
                         <x-jet-label>Marca:</x-jet-label>
                         <x-jet-input type="text" style="height:30px;width: 100%" disabled value="{{$material_nuevo_marca}}"/>
@@ -385,12 +385,12 @@
                         <x-jet-label>Especificaciones:</x-jet-label>
                         <textarea class="form-control w-full text-sm" rows=5 wire:model.defer="material_nuevo_ficha_tecnica"></textarea>
                     </div>
-                    <div class="py-2" style="grid-column: 2 span/ 2 span;width:220px; height:220px">
-                        <img src="{{ str_replace('public','/storage',$material_nuevo_imagen) }}">
+                    <div class="py-2" style="grid-column: 2 span/ 2 span;width:220px; height:220px" class="mx-auto">
+                        <img class="" src="{{ str_replace('public','/storage',$material_nuevo_imagen) }}">
                     </div>
                 </div>
             <!-- CRUD para agregar el material -->
-                <div class="grid grid-cols-1 gap-4">
+                <div class="grid grid-cols-1">
                     <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                         <x-jet-label>Sku:</x-jet-label>
                         <x-jet-input type="number" min="0" style="height:30px;width: 100%" wire:model="create_material_sku" />
@@ -455,6 +455,12 @@
             </div>
         </x-slot>
         <x-slot name="footer">
+            <x-jet-button wire:loading.attr="disabled" wire:click="nuevoMaterial()">
+                Guardar
+            </x-jet-button>
+            <div wire:loading wire:target="nuevoMaterial()">
+                Registrando...
+            </div>
             <x-jet-secondary-button wire:click="$set('open_detail_new_material',false)" class="ml-2">
                 Cerrar
             </x-jet-secondary-button>
