@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('brand');
             $table->text('datasheet');
             $table->string('image',2048)->nullable();
+            $table->enum('state',['PENDIENTE','CREADO','RECHAZADO'])->default('PENDIENTE');
             $table->text('observation');
             $table->timestamps();
         });

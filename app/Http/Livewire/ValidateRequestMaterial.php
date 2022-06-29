@@ -5,9 +5,11 @@ namespace App\Http\Livewire;
 use App\Models\CecoAllocationAmount;
 use App\Models\Implement;
 use App\Models\Location;
+use App\Models\MeasurementUnit;
 use App\Models\OrderDate;
 use App\Models\OrderRequest;
 use App\Models\OrderRequestDetail;
+use App\Models\OrderRequestNewItem;
 use App\Models\Sede;
 use App\Models\Zone;
 use Illuminate\Support\Facades\DB;
@@ -16,15 +18,16 @@ use Carbon\Carbon;
 
 class ValidateRequestMaterial extends Component
 {
-
+/*---------------------------VARIABLES PÚBLICAS-------------------*/
+/*------------------------Modal general--------------------------*/
     public $open_validate_resquest = false;
-
+/*------Estado de la solicitud (PENDIENTE,CERRADO,VALIDADO,RECHAZADO)---------*/
     public $estado_solicitud = "";
-
+/*-----------Montos disponibles y usados---------------------------*/
     public $monto_usado = 0;
     public $monto_asignado = 0;
     public $monto_real = 0;
-
+/*--------------------Datos para el modal de materiales------------*/
     public $open_validate_material = false;
     public $idMaterial = 0;
     public $material = "";
@@ -33,24 +36,39 @@ class ValidateRequestMaterial extends Component
     public $precio = 0;
     public $precioTotal = 0;
     public $observation = "";
-
+    public $measurement_unit = "";
+/*------------------------Datos del pedido en curso----------------------*/
     public $idFechaPedido = 0;
     public $fecha_pedido = "";
     public $fecha_pedido_llegada;
-
+/*--------------------Datos del operador-------------*/
     public $idOperador = 0;
     public $operador = "";
-
+/*-----------------Datos del implemento----------------*/
     public $idImplemento = 0;
     public $implemento = "";
-
+/*---------------Id del pedido (Order Request)-------------------------*/
     public $idSolicitudPedido = 0;
+/*------------------Datos para los materiales nuevos --------------------*/
+    public $open_validate_new_material = false;
+    public $cantidad_materiales_nuevos = 0;
 
+    public $open_detail_new_material = false;
+    public $material_nuevo_nombre = "";
+    public $material_nuevo_marca = "";
+    public $material_nuevo_cantidad = 0;
+    public $material_nuevo_unidad_medida = "";
+    public $material_nuevo_ficha_tecnica = "";
+    public $material_nuevo_imagen = "";
+    public $material_nuevo_observacion = "";
+
+/*--------------Filtros para encontrar los usuarios que tienen pedidos sin validar-------*/
     public $tzone = 0;
     public $tsede = 0;
     public $tlocation = 0;
-
+/*--------------Array para almacenar a los usuarios que tienen pedidos sin validar------------------*/
     public $incluidos = [];
+/*-----------------------Listeners, rules and messages----------------------------------------------------*/
 
     protected $listeners = ['reinsertarRechazado','validarSolicitudPedido'];
 
@@ -73,7 +91,7 @@ class ValidateRequestMaterial extends Component
             'monto_usado.min' => 'Faltan validar materiales'
         ];
     }
-/*----------------Funciones dinámicas------------------------------------------------------*/
+/*----------------FUNCIONES DIŃAMICAS (UPDATED VARIABLES)------------------------------------------------------*/
     public function updatedTzone(){
         $this->reset('tsede','tlocation','idOperador','operador','idImplemento','idSolicitudPedido','monto_asignado','monto_usado','monto_real');
         $this->incluidos = [];
@@ -87,25 +105,22 @@ class ValidateRequestMaterial extends Component
         $this->incluidos = [];
     }
     public function updatedOpenValidateResquest(){
-        $this->reset('idOperador','operador','idImplemento','idSolicitudPedido','monto_asignado','monto_usado','monto_real');
+        $this->reset('idOperador','operador','idImplemento','idSolicitudPedido','monto_asignado','monto_usado','monto_real','cantidad_materiales_nuevos');
     }
     public function updatedOpenValidateMaterial(){
-        $this->reset('idMaterial','material','cantidad','precio','precioTotal','observation');
-    }
-    public function mostrarImplementos($id,$name,$lastname){
-        $this->idOperador = $id;
-        $this->operador = $name.' '.$lastname;
-        $this->open_validate_resquest = true;
+        $this->reset('idMaterial','material','cantidad','precio','precioTotal','observation','cantidad_materiales_nuevos');
     }
     public function updatedIdImplemento(){
         $order_request = OrderRequest::where('implement_id',$this->idImplemento)->where('state',"CERRADO")->first();
         if($order_request != null){
             $this->idSolicitudPedido = $order_request->id;
+            $this->cantidad_materiales_nuevos = OrderRequestNewItem::where('order_request_id',$this->idSolicitudPedido)->where('state','PENDIENTE')->count();
         }else{
             $this->idSolicitudPedido = 0;
             $this->monto_asignado = 0;
             $this->monto_usado = 0;
             $this->monto_real = 0;
+            $this->cantidad_materiales_nuevos = 0;
         }
     }
     public function updatedCantidad(){
@@ -114,7 +129,8 @@ class ValidateRequestMaterial extends Component
     public function updatedPrecio(){
         $this->precioTotal = floatval($this->precio) * floatval($this->cantidad);
     }
-/*----------------Validar o Rechazar Materiales ---------------------------------------------*/
+/*----------------Validar o Rechazar Materiales---------------------------------------------*/
+
     public function mostrarModalValidarMaterial($id){
         $this->open_validate_material = true;
         $this->idMaterial = $id;
@@ -133,6 +149,7 @@ class ValidateRequestMaterial extends Component
         $this->precioTotal = floatval($this->precio) * floatval($this->cantidad);
         $this->observation = $material->observation;
         $this->estado_solicitud = $material->state;
+        $this->measurement_unit = $material->item->measurementUnit->measurement_unit;
     }
     /*-------------------Verificar estado del pedido--------------------------------*/
     private function estadoPedido($solicitada,$validada){
@@ -200,7 +217,13 @@ class ValidateRequestMaterial extends Component
         $material->state = "PENDIENTE";
         $material->save();
     }
-    /*-------------------------Validar Solicitud de Pedido--------------------------------------------------*/
+/*-------------------------VALIDAR SOLICITUD DEL OPERADOR--------------------------------------------------*/
+    /*-----------Mostrar modal de solicitudes-----------------------------*/
+    public function mostrarImplementos($id,$name,$lastname){
+        $this->idOperador = $id;
+        $this->operador = $name.' '.$lastname;
+        $this->open_validate_resquest = true;
+    }
     public function validarSolicitudPedido(){
         /*---------------------Verificar si no existe ningún material pendiente en validar-----*/
         if(OrderRequestDetail::where('order_request_id',$this->idSolicitudPedido)->where('quantity','>',0)->where('state','PENDIENTE')->doesntExist()){
@@ -211,6 +234,22 @@ class ValidateRequestMaterial extends Component
         }
 
     }
+/*---------------------------MATERIALES NUEVOS--------------------------------------------------------------*/
+    public function mostrarModalMaterialNuevo(){
+        $this->open_validate_new_material = true;
+    }
+    public function detalleMaterialNuevo($id){
+        $material_nuevo = OrderRequestNewItem::find($id);
+        $this->material_nuevo_nombre = $material_nuevo->new_item;
+        $this->material_nuevo_marca = $material_nuevo->brand;
+        $this->material_nuevo_cantidad = $material_nuevo->quantity;
+        $this->material_nuevo_unidad_medida = $material_nuevo->measurement_unit_id;
+        $this->material_nuevo_ficha_tecnica = $material_nuevo->datasheet;
+        $this->material_nuevo_imagen = $material_nuevo->image;
+        $this->material_nuevo_observacion = $material_nuevo->observation;
+        $this->open_detail_new_material = true;
+    }
+/*----------------------RENDER--------------------------------------------*/
     public function render()
     {
     /*------------------DATOS PARA LAS SOLICITUDES DE PEDIDO POR USUARIO----------------------------*/
@@ -292,8 +331,11 @@ class ValidateRequestMaterial extends Component
         })->get();
 
         $order_request_detail_rechazado = OrderRequestDetail::where('order_request_id',$this->idSolicitudPedido)->where('quantity','>',0)->where('state','RECHAZADO')->get();
-
-        return view('livewire.validate-request-material', compact('zones', 'sedes', 'locations','users','implements','order_request_detail_operator','order_request_detail_planner','order_request_detail_rechazado'));
+    /*--------------------DATOS PARA EL MODAL DE MATERIALES NUEVOS-----------------------------------------------------------------------------------------------------------------*/
+        $order_request_new_materials = OrderRequestNewItem::where('order_request_id',$this->idSolicitudPedido)->where('state','PENDIENTE')->get();
+        $measurement_units = MeasurementUnit::all();
+    /*-------------------------------RENDERIZAR LA VISTA--------------------------------------------------------------*/
+        return view('livewire.validate-request-material', compact('zones', 'sedes', 'locations','users','implements','order_request_detail_operator','order_request_detail_planner','order_request_detail_rechazado','order_request_new_materials','measurement_units'));
     /*---------------------------------------------------------------------------------------------------*/
     }
 }

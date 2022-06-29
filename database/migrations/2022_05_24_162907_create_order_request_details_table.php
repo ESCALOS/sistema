@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('item_id')->constrained();
             $table->decimal('quantity',8,2);
             $table->decimal('estimated_price',8,2);
-            $table->enum('state',['PENDIENTE','ACEPTADO','MODIFICADO','RECHAZADO','VALIDADO','CONCLUIDO'])->default('PENDIENTE');
+            $table->enum('state',['PENDIENTE','ACEPTADO','MODIFICADO','RECHAZADO','VALIDADO','INCOMPLETO','CONCLUIDO'])->default('PENDIENTE');
             $table->text('observation')->nullable();
             $table->timestamps();
         });

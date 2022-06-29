@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('implement_id')->constrained();
-            $table->enum('state',['PENDIENTE','CERRADO','VALIDADO','RECHAZADO','CONCLUIDO'])->default('PENDIENTE');
+            $table->enum('state',['PENDIENTE','CERRADO','VALIDADO','RECHAZADO','INCOMPLETO','CONCLUIDO'])->default('PENDIENTE');
             $table->unsignedBigInteger('validate_by')->nullable();
             $table->foreign('validate_by')->references('id')->on('users');
             $table->boolean('is_canceled')->default(false);
