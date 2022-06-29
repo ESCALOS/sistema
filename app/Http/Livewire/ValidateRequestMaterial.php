@@ -21,8 +21,6 @@ class ValidateRequestMaterial extends Component
 
     public $estado_solicitud = "";
 
-    public $tipo_validacion = "";
-
     public $monto_usado = 0;
     public $monto_asignado = 0;
     public $monto_real = 0;
@@ -57,13 +55,11 @@ class ValidateRequestMaterial extends Component
     protected $listeners = ['reinsertarRechazado','validarSolicitudPedido'];
 
     protected function rules(){
-        if($this->tipo_validacion == "MATERIAL"){
-            return [
-                'cantidad' => ['required','numeric','lte:cantidad_pedida','min:0'],
-                'precio' => ['required','numeric','min:0.01'],
-                'observation' => 'required'
-            ];
-        }
+        return [
+            'cantidad' => ['required','numeric','lte:cantidad_pedida','min:0'],
+            'precio' => ['required','numeric','min:0.01'],
+            'observation' => 'required'
+        ];
     }
 
     protected function messages(){
@@ -148,7 +144,6 @@ class ValidateRequestMaterial extends Component
     }
     /*---------------------Validar materiales----------------------------------------------*/
     public function validarMaterial(){
-        $this->tipo_validacion = "MATERIAL";
         $this->validate();
         $material = OrderRequestDetail::find($this->idMaterial);
         /*-------------PEDIDOS PENDIENTES A VALIDAR--------------------*/
@@ -207,9 +202,11 @@ class ValidateRequestMaterial extends Component
     }
     /*-------------------------Validar Solicitud de Pedido--------------------------------------------------*/
     public function validarSolicitudPedido(){
-        $this->tipo_validacion = "SOLICITUD";
+        /*---------------------Verificar si no existe ningún material pendiente en validar-----*/
         if(OrderRequestDetail::where('order_request_id',$this->idSolicitudPedido)->where('quantity','>',0)->where('state','PENDIENTE')->doesntExist()){
-
+            $order_request = OrderRequest::find($this->idSolicitudPedido);
+            $order_request->state = "VALIDADO";
+            $order_request->save();
             $this->open_validate_resquest = false;
         }
 

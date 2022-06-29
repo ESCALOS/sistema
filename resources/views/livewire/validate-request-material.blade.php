@@ -64,7 +64,7 @@
 <!-- Modal para validar materiales por usuario  -->
     <x-jet-dialog-modal maxWidth="2xl" wire:model="open_validate_resquest">
         <x-slot name="title">
-            Pedido de {{$operador}} {{$tipo_validacion}}
+            Pedido de {{$operador}}
         </x-slot>
         <x-slot name="content">
             <div class="grid grid-cols-2 sm:grid-cols-1 gap-4">
