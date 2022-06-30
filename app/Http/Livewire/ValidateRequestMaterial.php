@@ -57,6 +57,7 @@ class ValidateRequestMaterial extends Component
 /*------------------Datos para los materiales nuevos --------------------*/
     /*----------Estado del modal----------------*/
     public $open_validate_new_material = false;
+    public $idMaterialNuevo = 0;
     /*----------Cantidad de materiales nuevos----*/
     public $cantidad_materiales_nuevos = 0;
     /*--------------Estado del modal del detalle de material nuevo-----*/
@@ -104,7 +105,7 @@ class ValidateRequestMaterial extends Component
                     'create_material_sku' => ['required','numeric','unique:items,sku'],
                     'create_material_item' => ['required','unique:items,item'],
                     'create_material_brand' => ['required','exists:brands,id'],
-                    'create_material_type' => ['required',Rule::in(['FUNGIBLE','COMPONENTE','PIEZA','HERRAMIENTA'])],
+                    'create_material_type' => ['required',Rule::in(['FUNGIBLE','HERRAMIENTA'])],
                     'create_material_measurement_unit' => ['required','exists:measurement_units,id'],
                     'create_material_estimated_price' => ['required','numeric','min:0.01'],
                     'create_material_quantity' => ['required','numeric','lte:material_nuevo_cantidad','min:1']
@@ -204,7 +205,7 @@ class ValidateRequestMaterial extends Component
     }
     public function updatedOpenDetailNewMaterial(){
         if(!$this->open_detail_new_material){
-            $this->reset('material_nuevo_nombre','material_nuevo_marca','material_nuevo_cantidad','material_nuevo_unidad_medida','material_nuevo_ficha_tecnica','material_nuevo_imagen','create_material_sku','create_material_item','create_material_brand','create_material_type','create_material_measurement_unit','create_material_estimated_price','create_material_quantity');
+            $this->reset('idMaterialNuevo','material_nuevo_nombre','material_nuevo_marca','material_nuevo_cantidad','material_nuevo_unidad_medida','material_nuevo_ficha_tecnica','material_nuevo_imagen','create_material_sku','create_material_item','create_material_brand','create_material_type','create_material_measurement_unit','create_material_estimated_price','create_material_quantity');
             $this->resetValidation();
         }
     }
@@ -371,7 +372,7 @@ class ValidateRequestMaterial extends Component
         $this->validacion = "MARCA";
         $this->validate();
         $marca_nueva = Brand::create([
-            'brand' => strtolower($this->create_new_brand)
+            'brand' => strtolower($this->eliminar_acentos($this->create_new_brand))
         ]);
         $this->create_material_brand = $marca_nueva->id;
         $this->open_add_new_brand = false;
@@ -379,6 +380,7 @@ class ValidateRequestMaterial extends Component
     }
     public function detalleMaterialNuevo($id){
         $material_nuevo = OrderRequestNewItem::find($id);
+        $this->idMaterialNuevo = $id;
         /*-----------Datos para la vista del pedido del operador--------------*/
         $this->material_nuevo_nombre = $material_nuevo->new_item;
         $this->material_nuevo_marca = $material_nuevo->brand;
@@ -402,6 +404,28 @@ class ValidateRequestMaterial extends Component
     public function agregarMaterialNuevo(){
         $this->validacion = 'NUEVO';
         $this->validate();
+        /*----------------Crear el nuevo item---------------------------------*/
+        $nuevo_item = Item::create([
+            'sku' => $this->create_material_sku,
+            'item' => strtolower($this->eliminar_acentos($this->create_material_item)),
+            'brand_id' => $this->create_material_brand,
+            'measurement_unit_id' => $this->create_material_measurement_unit,
+            'estimated_price' => $this->create_material_estimated_price,
+            'type' => $this->create_material_type,
+        ]);
+        /*----------------Crear el detalle de solictud como validado--------------------*/
+        OrderRequestDetail::create([
+            'order_request_id' => $this->idSolicitudPedido,
+            'item_id' => $nuevo_item->id,
+            'quantity' => $this->create_material_quantity,
+            'estimated_price' => $this->create_material_estimated_price,
+            'state' => 'VALIDADO',
+        ]);
+        /*---------Actualizar la solicitud de nuevo material a creado-----------------------*/
+        $item_creado = OrderRequestNewItem::find($this->idMaterialNuevo);
+        $item_creado->state = 'CREADO';
+        $item_creado->save();
+
 
     }
 /*----------------------RENDER--------------------------------------------*/

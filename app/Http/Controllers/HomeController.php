@@ -21,7 +21,7 @@ class HomeController extends Controller
         }else if($user->hasRole('planner')){
             return redirect()->route('planner.validate-request-materials');
         }else{
-            return view('welcome');
+            return view('dashboard');
         }
     }
 }

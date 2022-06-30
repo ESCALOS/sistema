@@ -425,8 +425,6 @@
                         <select class="form-select" style="width: 100%;text-align: center" wire:model='create_material_type'>
                             <option value="">Seleccione una opción</option>
                             <option>FUNGIBLE</option>
-                            <option>COMPONENTE</option>
-                            <option>PIEZA</option>
                             <option>HERRAMIENTA</option>
                         </select>
 
