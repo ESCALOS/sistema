@@ -54,8 +54,12 @@ class ValidateRequestMaterial extends Component
     public $cantidad_materiales_nuevos = 0;
 
     public $open_detail_new_material = false;
+
+    public $material_nuevo_pedido_nombre = "";
+    public $material_nuevo_pedido_marca = "";
+
     public $material_nuevo_nombre = "";
-    public $material_nuevo_marca = "";
+    public $material_nuevo_marca = 0;
     public $material_nuevo_cantidad = 0;
     public $material_nuevo_unidad_medida = "";
     public $material_nuevo_ficha_tecnica = "";
@@ -240,10 +244,15 @@ class ValidateRequestMaterial extends Component
     }
     public function detalleMaterialNuevo($id){
         $material_nuevo = OrderRequestNewItem::find($id);
+
+        $this->material_nuevo_pedido_nombre = $material_nuevo->new_item;
+        $this->material_nuevo_pedido_marca = $material_nuevo->brand;
+        $this->material_nuevo_pedido_cantidad = $material_nuevo->quantity;
+
         $this->material_nuevo_nombre = $material_nuevo->new_item;
         $this->material_nuevo_marca = $material_nuevo->brand;
         $this->material_nuevo_cantidad = $material_nuevo->quantity;
-        $this->material_nuevo_unidad_medida = $material_nuevo->measurement_unit_id;
+        $this->material_nuevo_unidad_medida = $material_nuevo->measurementUnit->measurement_unit;
         $this->material_nuevo_ficha_tecnica = $material_nuevo->datasheet;
         $this->material_nuevo_imagen = $material_nuevo->image;
         $this->material_nuevo_observacion = $material_nuevo->observation;

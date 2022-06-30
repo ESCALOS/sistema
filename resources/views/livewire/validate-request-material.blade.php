@@ -385,8 +385,8 @@
                         <x-jet-label>Especificaciones:</x-jet-label>
                         <textarea class="form-control w-full text-sm" rows=5 wire:model.defer="material_nuevo_ficha_tecnica"></textarea>
                     </div>
-                    <div class="py-2" style="grid-column: 2 span/ 2 span;width:220px; height:220px" class="mx-auto">
-                        <img class="" src="{{ str_replace('public','/storage',$material_nuevo_imagen) }}">
+                    <div class="p-2" style="margin-left:15px;margin-right:15px;grid-column: 2 span/ 2 span;height:16rem">
+                            <img style="display:inline;height:100%" src="{{ str_replace('public','/storage',$material_nuevo_imagen) }}">
                     </div>
                 </div>
             <!-- CRUD para agregar el material -->
