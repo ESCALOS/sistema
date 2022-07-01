@@ -88,8 +88,7 @@ class ValidateRequestMaterial extends Component
 /*--------------Array para almacenar a los usuarios que tienen pedidos sin validar------------------*/
     public $incluidos = [];
 /*-----------------------LISTENERS, RULES AND MESSAGES----------------------------------------------------*/
-
-    protected $listeners = ['reinsertarRechazado','validarSolicitudPedido'];
+    protected $listeners = ['reinsertarRechazado','validarSolicitudPedido','rechazarMaterialNuevo'];
 
     protected function rules(){
         switch ($this->validacion) {
@@ -172,7 +171,6 @@ class ValidateRequestMaterial extends Component
         if(!$this->open_validate_resquest){
             $this->resetExcept(['tzone','tsede','tlocation','open_validate_resquest']);
         }
-
     }
     public function updatedOpenValidateMaterial(){
         if(!$this->open_validate_material){
@@ -323,8 +321,9 @@ class ValidateRequestMaterial extends Component
         $this->open_validate_resquest = true;
     }
     public function validarSolicitudPedido(){
-        /*---------------------Verificar si no existe ningún material pendiente en validar-----*/
-        if(OrderRequestDetail::where('order_request_id',$this->idSolicitudPedido)->where('quantity','>',0)->where('state','PENDIENTE')->doesntExist()){
+        /*---------------------Verificar si no existe ningún material existente y nuevo pendiente en validar y-----*/
+        if(OrderRequestDetail::where('order_request_id',$this->idSolicitudPedido)->where('quantity','>',0)->where('state','PENDIENTE')->doesntExist() &&
+        OrderRequestNewItem::where('order_request_id',$this->idSolicitudPedido)->where('state','PENDIENTE')->doesntExist()){
             $order_request = OrderRequest::find($this->idSolicitudPedido);
             $order_request->state = "VALIDADO";
             $order_request->save();

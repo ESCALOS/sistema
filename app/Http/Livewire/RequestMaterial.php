@@ -102,6 +102,7 @@ class RequestMaterial extends Component
     public function updatedMaterialNewEditImage(){
         $nombre_de_imagen = $this->material_new_edit_image->getClientOriginalName();
         if(!preg_match('/.jpg$/i',$nombre_de_imagen)
+        && !preg_match('/.jpeg$/i',$nombre_de_imagen)
         && !preg_match('/.png$/i',$nombre_de_imagen)
         && !preg_match('/.gif$/i',$nombre_de_imagen)
         && !preg_match('/.svg$/i',$nombre_de_imagen)){

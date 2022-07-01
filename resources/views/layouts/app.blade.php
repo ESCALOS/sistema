@@ -104,23 +104,29 @@
                 })
             });
     /*----------Confirmación para cerrar solicitud de pedido-----------------*/
-    /*-------[0] => id   --  [1] => Nombre Implemento -- [2] => Monto Usado-------------*/
+        /*-------[0] => id   --  [1] => Nombre Implemento -- [2] => Monto Usado-------------*/
             Livewire.on('confirmarValidarSolicitudPedido', solicitud =>{
-                if(solicitud[0]<=0){
+                if(solicitud[0] <= 0){
                     Swal.fire(
                                 'Implemento no seleccionado',
                                 'Seleccione un implemento',
                                 'error'
                             )
-                }else if(solicitud[2]>0){
+                }else if(solicitud[2] > 0){
                     Swal.fire(
-                                'Hay pedidos no validados'+solicitud[3],
+                                'Hay pedidos pendientes a validar',
+                                'Valide o rechace los pedidos',
+                                'info'
+                            )
+                }else if(solicitud[3] > 0){
+                    Swal.fire(
+                                'Hay ' + solicitud[3] + ' materiales nuevos por validar',
                                 'Valide o rechace los pedidos',
                                 'info'
                             )
                 }else{
                     Swal.fire({
-                    title: '¿Validar la solicitud de pedido del implemento '+solicitud[1]+solicitud[3]+'?',
+                    title: '¿Validar la solicitud de pedido del implemento '+solicitud[1]+'?',
                     text: "Esta acción es irreversible",
                     icon: 'warning',
                     showCancelButton: true,
@@ -167,6 +173,8 @@
                     })
             });
         @endif
+    /*----------------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------------------*/
         </script>
     </body>
 </html>
