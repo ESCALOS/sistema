@@ -327,8 +327,16 @@ class ValidateRequestMaterial extends Component
             $order_request = OrderRequest::find($this->idSolicitudPedido);
             $order_request->state = "VALIDADO";
             $order_request->save();
-            $this->open_validate_resquest = false;
+            $this->resetExcept(['tzone','tsede','tlocation']);
+            $this->render();
         }
+    }
+    public function rechazarSolcitudPedido(){
+        $order_request = OrderRequest::find($this->idSolicitudPedido);
+        $order_request->state = "RECHAZADO";
+        $order_request->save();
+        $this->resetExcept(['tzone','tsede','tlocation']);
+        $this->render();
     }
 /*--------------------------FORMATEAR MARCA-----------------------------------------------------------------*/
     function eliminar_acentos($cadena){
