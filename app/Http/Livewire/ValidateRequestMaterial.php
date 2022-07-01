@@ -88,7 +88,7 @@ class ValidateRequestMaterial extends Component
 /*--------------Array para almacenar a los usuarios que tienen pedidos sin validar------------------*/
     public $incluidos = [];
 /*-----------------------LISTENERS, RULES AND MESSAGES----------------------------------------------------*/
-    protected $listeners = ['reinsertarRechazado','validarSolicitudPedido','rechazarMaterialNuevo'];
+    protected $listeners = ['reinsertarRechazado','validarSolicitudPedido','rechazarMaterialNuevo','rechazarSolicitudPedido'];
 
     protected function rules(){
         switch ($this->validacion) {
@@ -331,7 +331,7 @@ class ValidateRequestMaterial extends Component
             $this->render();
         }
     }
-    public function rechazarSolcitudPedido(){
+    public function rechazarSolicitudPedido(){
         $order_request = OrderRequest::find($this->idSolicitudPedido);
         $order_request->state = "RECHAZADO";
         $order_request->save();

@@ -245,9 +245,9 @@
             <button wire:loading.attr="disabled" wire:click="$emit('confirmarValidarSolicitudPedido',[{{$idSolicitudPedido}},'{{$implemento}}',{{$monto_usado}},{{$cantidad_materiales_nuevos}}])" style="width: 200px" class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md">
                 Validar
             </button>
-            <div wire:loading wire:target="store">
-                Registrando...
-            </div>
+            <button wire:loading.attr="disabled" wire:click="$emit('confirmarRechazarSolicitudPedido','{{$implemento}}'" style="width: 200px" class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md">
+                Rechazar
+            </button>
         @endif
             <x-jet-secondary-button wire:click="$set('open_validate_resquest',false)" class="ml-2">
                 Cancelar
@@ -305,7 +305,7 @@
             </x-jet-secondary-button>
         </x-slot>
     </x-jet-dialog-modal>
-     <!------------------------ MODAL PARA VALIDAR O RECHAZAR MATERIALES --------------------------------------->
+<!------------------------ MODAL PARA VALIDAR O RECHAZAR MATERIALES --------------------------------------->
     <x-jet-dialog-modal wire:model='open_validate_new_material'>
         <x-slot name="title">
            Materiales Nuevos Solicitados por {{$operador}}

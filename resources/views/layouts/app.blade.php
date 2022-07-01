@@ -104,7 +104,7 @@
                 })
             });
     /*----------Confirmación para cerrar solicitud de pedido-----------------*/
-        /*-------[0] => id   --  [1] => Nombre Implemento -- [2] => Monto Usado-------------*/
+        /*-------[0] => id   --  [1] => Nombre Implemento -- [2] => Monto Usado--  [3] => Cantidad de materiales nuevos pendientes -----------*/
             Livewire.on('confirmarValidarSolicitudPedido', solicitud =>{
                 if(solicitud[0] <= 0){
                     Swal.fire(
@@ -148,6 +148,32 @@
                     })
                 }
             });
+    /*------------------------Rechazar solicitud de pedido ---------------------------------*/
+        /*------------- [0] => Nombre Implemento ---------------------------------*/
+        Livewire.on('confirmarRechazarSolicitudPedido', implemento =>{
+
+            Swal.fire({
+            title: 'Rechazar la solicitud de pedido del implemento '+implemento+'?',
+            text: "Esta acción es irreversible",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, validar!',
+            cancelButtonText: 'No, cancelar!',
+            }).then((result) => {
+                if (result.isConfirmed) {
+
+                    Livewire.emitTo('validate-request-material','rechazarSolicitudPedido');
+
+                    Swal.fire(
+                        'Solicitud de pedido rechazada!',
+                        'El pedido se rechazó correctamente',
+                        'success'
+                    )
+                }
+            })
+        });
     /*----------Confirmar recharzar nuevo material-------------------------------*/
             Livewire.on('confirmarRechazarMaterialNuevo', nombre_material =>{
                 Swal.fire({
