@@ -472,7 +472,7 @@
             </x-jet-secondary-button>
         </x-slot>
     </x-jet-dialog-modal>
-<!--------------------Modal agregar marca-------------------------->
+<!--------------------MODAL PARA AGREGAR MARCA-------------------------->
     <x-jet-dialog-modal maxWidth="sm" wire:model='open_add_new_brand'>
         <x-slot name="title">
             Agregar nueva marca

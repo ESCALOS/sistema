@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.1.1
+-- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 01-07-2022 a las 07:00:57
--- Versión del servidor: 10.4.22-MariaDB
--- Versión de PHP: 8.1.2
+-- Tiempo de generación: 01-07-2022 a las 21:07:55
+-- Versión del servidor: 10.4.24-MariaDB
+-- Versión de PHP: 8.1.6
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -25,7 +25,7 @@ DELIMITER $$
 --
 -- Procedimientos
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `aa` ()  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `aa` ()   BEGIN
 /*-------Variables para la fecha para abrir el pedido--------*/
 DECLARE fecha_solicitud INT;
 DECLARE fecha_abrir_solicitud DATE;
@@ -201,7 +201,8 @@ INSERT INTO `brands` (`id`, `brand`, `created_at`, `updated_at`) VALUES
 (39, 'suryuu', '2022-06-30 22:21:26', '2022-06-30 22:21:26'),
 (40, 'banpresto', '2022-06-30 22:22:14', '2022-06-30 22:22:14'),
 (41, 'figma', '2022-07-01 09:30:18', '2022-07-01 09:30:18'),
-(42, 'pop up', '2022-07-01 09:37:51', '2022-07-01 09:37:51');
+(42, 'pop up', '2022-07-01 09:37:51', '2022-07-01 09:37:51'),
+(43, 'crossfire', '2022-07-01 20:48:48', '2022-07-01 20:48:48');
 
 -- --------------------------------------------------------
 
@@ -930,7 +931,11 @@ INSERT INTO `items` (`id`, `sku`, `item`, `brand_id`, `measurement_unit_id`, `es
 (60, '88387187', 'ouenaesm', 19, 25, '473.77', 'FUNGIBLE', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (63, '35214885', 'shino', 39, 9, '560.00', 'FUNGIBLE', 1, '2022-07-01 09:28:01', '2022-07-01 09:28:01'),
 (64, '35214884', 'ruka', 41, 3, '7850.00', 'HERRAMIENTA', 1, '2022-07-01 09:30:29', '2022-07-01 09:30:29'),
-(65, '4522126', 'yami', 42, 3, '2600.00', 'HERRAMIENTA', 1, '2022-07-01 09:38:12', '2022-07-01 09:38:12');
+(65, '4522126', 'yami', 42, 3, '2600.00', 'HERRAMIENTA', 1, '2022-07-01 09:38:12', '2022-07-01 09:38:12'),
+(66, '1485236', 'kotori', 43, 1, '69.50', 'FUNGIBLE', 1, '2022-07-01 20:49:10', '2022-07-01 20:49:10'),
+(67, '4588856', 'siesta', 42, 1, '150.00', 'FUNGIBLE', 1, '2022-07-01 21:14:02', '2022-07-01 21:14:02'),
+(68, '458225', 'kurumi tokisaki', 41, 1, '36.00', 'FUNGIBLE', 1, '2022-07-01 21:41:08', '2022-07-01 21:41:08'),
+(69, '522544', 'neptunia', 40, 4, '452.00', 'FUNGIBLE', 1, '2022-07-01 22:36:30', '2022-07-01 22:36:30');
 
 --
 -- Disparadores `items`
@@ -1521,14 +1526,14 @@ CREATE TABLE `order_requests` (
 --
 
 INSERT INTO `order_requests` (`id`, `user_id`, `implement_id`, `state`, `validate_by`, `is_canceled`, `order_date_id`, `created_at`, `updated_at`) VALUES
-(33, 1, 1, 'CERRADO', NULL, 0, 1, NULL, '2022-06-25 22:01:06'),
-(34, 2, 2, 'CERRADO', NULL, 0, 1, NULL, '2022-06-25 23:14:46'),
+(33, 1, 1, 'VALIDADO', NULL, 0, 1, NULL, '2022-07-01 23:31:05'),
+(34, 2, 2, 'VALIDADO', NULL, 0, 1, NULL, '2022-07-01 23:31:27'),
 (35, 3, 3, 'CERRADO', NULL, 0, 1, NULL, '2022-06-25 23:17:37'),
 (36, 4, 4, 'CERRADO', NULL, 0, 1, NULL, '2022-06-29 16:40:39'),
-(37, 5, 5, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
-(38, 6, 6, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
-(39, 7, 7, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
-(40, 8, 8, 'CERRADO', NULL, 0, 1, NULL, '2022-06-30 18:39:42'),
+(37, 5, 5, 'CERRADO', NULL, 0, 1, NULL, '2022-07-01 22:28:20'),
+(38, 6, 6, 'VALIDADO', NULL, 0, 1, NULL, '2022-07-01 23:32:15'),
+(39, 7, 7, 'CERRADO', NULL, 0, 1, NULL, '2022-07-01 23:28:24'),
+(40, 8, 8, 'CERRADO', NULL, 0, 1, NULL, '2022-07-01 23:00:37'),
 (41, 9, 9, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
 (42, 10, 10, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
 (43, 11, 11, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
@@ -1537,6 +1542,22 @@ INSERT INTO `order_requests` (`id`, `user_id`, `implement_id`, `state`, `validat
 (46, 14, 14, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
 (47, 15, 15, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
 (48, 16, 16, 'PENDIENTE', NULL, 0, 1, NULL, NULL);
+
+--
+-- Disparadores `order_requests`
+--
+DELIMITER $$
+CREATE TRIGGER `rechazar_solicitud_pedido` AFTER UPDATE ON `order_requests` FOR EACH ROW BEGIN
+IF(new.state = "RECHAZADO") THEN
+    IF EXISTS(SELECT * FROM order_request_details WHERE order_request_id = new.id AND state = "VALIDADO") THEN
+    DELETE FROM order_request_details WHERE order_request_id = new.id AND state = "VALIDADO";
+    END IF;
+	UPDATE order_request_details SET state = "RECHAZADO" WHERE order_request_id = new.id AND state <> "VALIDADO";
+    UPDATE order_request_new_items SET state = "RECHAZADO" WHERE order_request_id = new.id;
+END IF;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -1561,14 +1582,14 @@ CREATE TABLE `order_request_details` (
 --
 
 INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quantity`, `estimated_price`, `state`, `observation`, `created_at`, `updated_at`) VALUES
-(236, 33, 9, '2.00', '362.42', 'PENDIENTE', NULL, NULL, '2022-06-29 19:48:56'),
+(236, 33, 9, '2.00', '362.42', 'RECHAZADO', 'as', NULL, '2022-07-01 18:15:49'),
 (237, 33, 21, '1.00', '785.44', 'ACEPTADO', 'NGG', NULL, '2022-07-01 09:28:45'),
 (238, 33, 44, '1.00', '954.65', 'ACEPTADO', 'Se aceptó todo.', NULL, '2022-07-01 09:34:51'),
 (239, 33, 52, '2.00', '216.64', 'ACEPTADO', 'ÑÑ', NULL, '2022-07-01 09:34:57'),
-(240, 33, 57, '2.00', '502.17', 'PENDIENTE', NULL, NULL, '2022-06-29 19:37:00'),
+(240, 33, 57, '2.00', '502.17', 'ACEPTADO', 'as', NULL, '2022-07-01 23:30:57'),
 (241, 33, 3, '0.00', '692.98', 'PENDIENTE', NULL, NULL, '2022-06-25 21:51:40'),
 (242, 33, 24, '0.00', '577.05', 'PENDIENTE', NULL, NULL, '2022-06-25 21:51:34'),
-(243, 34, 9, '2.00', '362.42', 'ACEPTADO', NULL, NULL, '2022-06-28 20:21:21'),
+(243, 34, 9, '2.00', '362.42', 'ACEPTADO', 'a', NULL, '2022-07-01 23:31:24'),
 (244, 34, 21, '0.00', '785.44', 'PENDIENTE', NULL, NULL, '2022-06-25 23:14:12'),
 (245, 34, 44, '0.00', '954.65', 'PENDIENTE', NULL, NULL, '2022-06-25 23:14:39'),
 (246, 34, 52, '0.00', '216.64', 'PENDIENTE', NULL, NULL, '2022-06-25 23:14:34'),
@@ -1576,7 +1597,7 @@ INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quant
 (248, 34, 3, '0.00', '692.98', 'PENDIENTE', NULL, NULL, '2022-06-25 23:14:29'),
 (249, 34, 24, '0.00', '577.05', 'PENDIENTE', NULL, NULL, '2022-06-25 23:14:25'),
 (250, 35, 9, '2.00', '362.42', 'RECHAZADO', 'AA', NULL, '2022-07-01 09:43:02'),
-(251, 35, 21, '3.00', '785.44', 'MODIFICADO', 'ASA', NULL, '2022-07-01 09:42:48'),
+(251, 35, 21, '3.00', '785.44', 'PENDIENTE', 'ASA', NULL, '2022-07-01 21:39:51'),
 (252, 35, 44, '0.00', '954.65', 'PENDIENTE', NULL, NULL, '2022-06-25 23:17:29'),
 (253, 35, 52, '0.00', '216.64', 'PENDIENTE', NULL, NULL, '2022-06-25 23:17:25'),
 (254, 35, 57, '4.00', '502.17', 'MODIFICADO', 'AS', NULL, '2022-07-01 09:42:24'),
@@ -1589,34 +1610,34 @@ INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quant
 (261, 36, 57, '4.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
 (262, 36, 3, '0.00', '692.98', 'PENDIENTE', NULL, NULL, '2022-06-29 16:39:48'),
 (263, 36, 24, '0.00', '577.05', 'PENDIENTE', NULL, NULL, '2022-06-29 16:39:52'),
-(264, 37, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(265, 37, 9, '2.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(266, 37, 24, '2.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(267, 37, 52, '3.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(268, 37, 57, '2.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(269, 37, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(270, 37, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(271, 38, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(272, 38, 9, '2.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(273, 38, 24, '2.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(274, 38, 52, '3.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(275, 38, 57, '2.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(276, 38, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(277, 38, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(278, 39, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(279, 39, 9, '2.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(280, 39, 24, '2.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(281, 39, 52, '3.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
-(282, 39, 57, '2.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
-(283, 39, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(284, 39, 44, '1.00', '954.65', 'PENDIENTE', NULL, NULL, NULL),
-(285, 40, 4, '1.00', '459.05', 'PENDIENTE', NULL, NULL, NULL),
-(286, 40, 9, '2.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(287, 40, 24, '2.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(288, 40, 52, '3.00', '216.64', 'PENDIENTE', NULL, NULL, NULL),
+(264, 37, 4, '0.00', '459.05', 'PENDIENTE', NULL, NULL, '2022-07-01 22:23:22'),
+(265, 37, 9, '1.00', '362.42', 'RECHAZADO', 'j', NULL, '2022-07-01 22:39:00'),
+(266, 37, 24, '2.00', '577.05', 'ACEPTADO', 'jk', NULL, '2022-07-01 22:36:52'),
+(267, 37, 52, '3.00', '216.64', 'ACEPTADO', 'jj', NULL, '2022-07-01 22:36:41'),
+(268, 37, 57, '0.00', '502.17', 'PENDIENTE', NULL, NULL, '2022-07-01 22:23:16'),
+(269, 37, 3, '0.00', '692.98', 'PENDIENTE', NULL, NULL, '2022-07-01 22:23:13'),
+(270, 37, 44, '0.00', '954.65', 'PENDIENTE', NULL, NULL, '2022-07-01 22:23:10'),
+(271, 38, 4, '0.00', '459.05', 'PENDIENTE', NULL, NULL, '2022-07-01 21:04:03'),
+(272, 38, 9, '2.00', '362.42', 'ACEPTADO', 'da', NULL, '2022-07-01 22:06:18'),
+(273, 38, 24, '0.00', '577.05', 'PENDIENTE', NULL, NULL, '2022-07-01 21:04:06'),
+(274, 38, 52, '3.00', '216.64', 'MODIFICADO', 'da', NULL, '2022-07-01 22:05:55'),
+(275, 38, 57, '2.00', '502.17', 'MODIFICADO', 'sad', NULL, '2022-07-01 22:07:00'),
+(276, 38, 3, '0.00', '692.98', 'PENDIENTE', NULL, NULL, '2022-07-01 21:04:10'),
+(277, 38, 44, '1.00', '954.65', 'ACEPTADO', 'da', NULL, '2022-07-01 22:06:08'),
+(278, 39, 4, '0.00', '459.05', 'PENDIENTE', NULL, NULL, '2022-07-01 20:45:50'),
+(279, 39, 9, '0.00', '362.42', 'PENDIENTE', NULL, NULL, '2022-07-01 20:45:47'),
+(280, 39, 24, '2.00', '577.05', 'ACEPTADO', 'sas', NULL, '2022-07-01 23:28:13'),
+(281, 39, 52, '0.00', '216.64', 'PENDIENTE', NULL, NULL, '2022-07-01 20:45:39'),
+(282, 39, 57, '4.00', '502.17', 'MODIFICADO', 'asas', NULL, '2022-07-01 23:28:19'),
+(283, 39, 3, '0.00', '692.98', 'PENDIENTE', NULL, NULL, '2022-07-01 20:45:35'),
+(284, 39, 44, '0.00', '954.65', 'PENDIENTE', NULL, NULL, '2022-07-01 20:45:56'),
+(285, 40, 4, '1.00', '459.05', 'ACEPTADO', 'asd', NULL, '2022-07-01 22:57:16'),
+(286, 40, 9, '2.00', '362.42', 'ACEPTADO', 'sadad', NULL, '2022-07-01 22:57:39'),
+(287, 40, 24, '2.00', '577.05', 'ACEPTADO', 'dasd', NULL, '2022-07-01 22:58:05'),
+(288, 40, 52, '3.00', '216.64', 'ACEPTADO', 'dad', NULL, '2022-07-01 22:57:25'),
 (289, 40, 57, '0.00', '502.17', 'PENDIENTE', NULL, NULL, '2022-06-30 18:38:55'),
-(290, 40, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
-(291, 40, 44, '2.00', '954.65', 'PENDIENTE', NULL, NULL, '2022-06-30 18:39:04'),
+(290, 40, 3, '1.00', '692.98', 'RECHAZADO', 'dad', NULL, '2022-07-01 22:57:35'),
+(291, 40, 44, '2.00', '954.65', 'MODIFICADO', 'dad', NULL, '2022-07-01 22:57:31'),
 (292, 41, 3, '1.00', '692.98', 'PENDIENTE', NULL, NULL, NULL),
 (293, 41, 15, '2.00', '958.75', 'PENDIENTE', NULL, NULL, NULL),
 (294, 41, 24, '2.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
@@ -1673,22 +1694,42 @@ INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quant
 (345, 48, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
 (346, 48, 57, '6.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
 (347, 48, 24, '2.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(348, 33, 17, '1.00', '906.47', 'RECHAZADO', 'LNK', '2022-06-25 21:51:57', '2022-07-01 09:35:07'),
+(348, 33, 17, '1.00', '906.47', 'RECHAZADO', 'LNK', '2022-06-25 21:51:57', '2022-07-01 18:15:24'),
 (349, 34, 8, '2.00', '563.25', 'RECHAZADO', 'Se rechazó todo.', '2022-06-25 22:19:52', '2022-06-29 00:17:01'),
-(365, 34, 9, '2.00', '880.00', 'VALIDADO', 'ok', '2022-06-28 20:21:20', '2022-06-28 23:44:52'),
 (374, 34, 57, '4.00', '502.17', 'VALIDADO', 'Se aceptop todo completo', '2022-06-29 00:16:11', '2022-06-29 00:16:11'),
 (375, 36, 8, '1.00', '563.25', 'PENDIENTE', '', '2022-06-29 16:40:28', '2022-06-29 16:40:28'),
 (379, 33, 63, '3.00', '600.00', 'ACEPTADO', NULL, '2022-07-01 09:28:01', '2022-07-01 09:28:17'),
 (380, 33, 63, '3.00', '610.00', 'VALIDADO', 'NJ', '2022-07-01 09:28:01', '2022-07-01 09:34:44'),
 (381, 33, 21, '1.00', '800.00', 'VALIDADO', 'NGG', '2022-07-01 09:28:45', '2022-07-01 09:33:03'),
 (382, 33, 64, '3.00', '7850.00', 'MODIFICADO', NULL, '2022-07-01 09:30:29', '2022-07-01 09:30:29'),
-(383, 33, 64, '2.00', '785.00', 'VALIDADO', 'ÑL', '2022-07-01 09:30:29', '2022-07-01 09:30:43'),
+(383, 33, 64, '1.00', '785.00', 'VALIDADO', 'ÑL', '2022-07-01 09:30:29', '2022-07-01 17:29:48'),
 (384, 33, 44, '1.00', '954.65', 'VALIDADO', 'Se aceptó todo.', '2022-07-01 09:34:51', '2022-07-01 09:34:51'),
 (385, 33, 52, '2.00', '216.64', 'VALIDADO', 'ÑÑ', '2022-07-01 09:34:57', '2022-07-01 09:34:57'),
 (386, 35, 65, '32.00', '2600.00', 'MODIFICADO', NULL, '2022-07-01 09:38:12', '2022-07-01 09:38:12'),
-(387, 35, 65, '1.00', '2600.00', 'VALIDADO', '5', '2022-07-01 09:38:12', '2022-07-01 09:38:29'),
+(387, 35, 65, '2.00', '260.00', 'VALIDADO', '5', '2022-07-01 09:38:12', '2022-07-01 21:36:35'),
 (388, 35, 57, '2.00', '502.17', 'VALIDADO', 'AS', '2022-07-01 09:42:24', '2022-07-01 09:42:24'),
-(389, 35, 21, '1.00', '785.44', 'VALIDADO', 'ASA', '2022-07-01 09:42:42', '2022-07-01 09:42:55');
+(390, 39, 66, '180.00', '69.50', 'VALIDADO', NULL, '2022-07-01 20:49:10', '2022-07-01 20:49:10'),
+(391, 39, 67, '400.00', '150.00', 'MODIFICADO', NULL, '2022-07-01 21:14:02', '2022-07-01 21:14:02'),
+(392, 39, 67, '100.00', '150.00', 'VALIDADO', NULL, '2022-07-01 21:14:02', '2022-07-01 21:14:02'),
+(393, 38, 68, '45.00', '36.00', 'MODIFICADO', NULL, '2022-07-01 21:41:08', '2022-07-01 22:06:37'),
+(394, 38, 68, '22.00', '36.00', 'VALIDADO', 'sda', '2022-07-01 21:41:08', '2022-07-01 22:06:51'),
+(395, 38, 52, '2.00', '216.64', 'VALIDADO', 'da', '2022-07-01 22:05:55', '2022-07-01 22:05:55'),
+(396, 38, 44, '1.00', '1000.00', 'VALIDADO', 'da', '2022-07-01 22:06:08', '2022-07-01 22:06:08'),
+(397, 38, 9, '2.00', '350.00', 'VALIDADO', 'da', '2022-07-01 22:06:18', '2022-07-01 22:06:18'),
+(398, 38, 57, '1.00', '506.00', 'VALIDADO', 'sad', '2022-07-01 22:06:27', '2022-07-01 22:07:00'),
+(399, 37, 69, '2.00', '452.00', 'MODIFICADO', NULL, '2022-07-01 22:36:30', '2022-07-01 22:36:30'),
+(400, 37, 69, '1.00', '440.00', 'VALIDADO', 'jk', '2022-07-01 22:36:30', '2022-07-01 22:37:32'),
+(401, 37, 52, '3.00', '150.00', 'VALIDADO', 'jj', '2022-07-01 22:36:41', '2022-07-01 22:37:46'),
+(402, 37, 24, '2.00', '650.00', 'VALIDADO', 'jk', '2022-07-01 22:36:52', '2022-07-01 22:37:54'),
+(403, 40, 4, '1.00', '500.00', 'VALIDADO', 'asd', '2022-07-01 22:57:16', '2022-07-01 22:58:28'),
+(404, 40, 52, '3.00', '200.00', 'VALIDADO', 'dad', '2022-07-01 22:57:25', '2022-07-01 22:58:20'),
+(405, 40, 44, '1.00', '900.00', 'VALIDADO', 'dad', '2022-07-01 22:57:31', '2022-07-01 22:58:44'),
+(406, 40, 9, '2.00', '350.00', 'VALIDADO', 'sadad', '2022-07-01 22:57:39', '2022-07-01 22:58:12'),
+(407, 40, 24, '2.00', '1328.00', 'VALIDADO', 'dasd', '2022-07-01 22:58:05', '2022-07-01 22:59:52'),
+(408, 39, 24, '2.00', '577.05', 'VALIDADO', 'sas', '2022-07-01 23:28:13', '2022-07-01 23:28:13'),
+(409, 39, 57, '3.00', '502.17', 'VALIDADO', 'asas', '2022-07-01 23:28:19', '2022-07-01 23:28:19'),
+(410, 33, 57, '2.00', '420.00', 'VALIDADO', 'as', '2022-07-01 23:30:57', '2022-07-01 23:30:57'),
+(411, 34, 9, '2.00', '362.42', 'VALIDADO', 'a', '2022-07-01 23:31:24', '2022-07-01 23:31:24');
 
 -- --------------------------------------------------------
 
@@ -1721,7 +1762,14 @@ INSERT INTO `order_request_new_items` (`id`, `order_request_id`, `new_item`, `qu
 (10, 33, 'Shino', '3.00', 9, 'Suryuu', '-ssa\n-sa\n-ñláéíóú', 'public/newMaterials/hvhXgQ5Myw77Np2aIOPZtaGSarDTcgEkCWnnuU1t.jpg', 'CREADO', 63, '', '2022-06-25 21:54:03', '2022-07-01 09:28:01'),
 (11, 35, 'YAMI', '32.00', 3, 'SDSA', 'SDASD', 'public/newMaterials/h8jbuHVOvBZmHiy6luMaYxfILhTYYweUqZga4BwR.jpg', 'CREADO', 65, '', '2022-06-25 23:17:09', '2022-07-01 09:38:12'),
 (12, 36, 'Perno ed 1/2\"', '12.00', 1, '33', 'das', 'public/newMaterials/zxhcqq8HPDSqiOTKo9U3eIYyDaHvgUdxiJaBXXKu.png', 'RECHAZADO', NULL, '', '2022-06-29 16:39:43', '2022-07-01 09:56:10'),
-(13, 40, 'ARDUINO UNO', '12.00', 2, 'ARDUINO', '-NINGUNA', 'public/newMaterials/q1iWW0wnARQXTPrSY6B0fnt6tttmBrgoMnALg5EU.png', 'RECHAZADO', NULL, '', '2022-06-30 18:38:42', '2022-07-01 09:59:58');
+(13, 40, 'ARDUINO UNO', '12.00', 2, 'ARDUINO', '-NINGUNA', 'public/newMaterials/ZqdVsQCe4FRjdxjgNGKbSvrLI2PUAm7b66QAvmwR.jpg', 'RECHAZADO', NULL, '', '2022-06-30 18:38:42', '2022-07-01 09:59:58'),
+(14, 39, 'SIESTA', '400.00', 1, 'POP UP', '-Editado', 'public/newMaterials/3OgF3aUzTFg7dk37LkZhz6hz3S9wmloI2FotmG2g.jpg', 'CREADO', 67, '', '2022-07-01 18:21:35', '2022-07-01 21:14:03'),
+(16, 39, 'KOTORI', '320.00', 1, 'GHG', 'SDA', 'public/newMaterials/fCfInt5S1XjoTAazPQl6YmZjDARC0ZWepv7U13Du.jpg', 'CREADO', NULL, '', '2022-07-01 20:30:07', '2022-07-01 20:49:10'),
+(17, 38, 'Kurumi Tokisaki', '45.00', 1, 'figma', 'lknlk', 'public/newMaterials/L1RogEtjFauRgOxcNhhPwsBITzlYpWf9trIMBiDR.jpg', 'CREADO', 68, '', '2022-07-01 21:01:32', '2022-07-01 21:41:08'),
+(18, 38, 'ninin', '22.00', 6, 'pop up', '-sdad-', 'public/newMaterials/iALbNJDMxYFxqyc7wMlHyfPpCIPEF1OFBMrrqG7M.jpg', 'RECHAZADO', NULL, '', '2022-07-01 21:03:08', '2022-07-01 22:05:40'),
+(20, 37, 'NEPTUNIA', '2.00', 4, 'BANPRESTO', '-NUEVA', 'public/newMaterials/43jFlkhV3Uok4udePPLUQu3aXKxWbfdB71GeLE4A.jpg', 'CREADO', 69, '', '2022-07-01 22:26:00', '2022-07-01 22:36:30'),
+(21, 37, 'SIESTA', '5.00', 2, 'FIGMA', 'ADASD', 'public/newMaterials/U4DnnKLHf1ySJYNnij3X4GI9ATacV7ITTkfrcaIQ.jpg', 'PENDIENTE', NULL, '', '2022-07-01 22:26:28', '2022-07-01 22:26:28'),
+(22, 37, 'MAYURI', '6.00', 5, 'DATE A LIVE', '-MOVIE', 'public/newMaterials/DPzB3hATRpH7MGUsKihwXssugO14xAqn7loUCF80.jpg', 'PENDIENTE', NULL, '', '2022-07-01 22:27:13', '2022-07-01 22:27:27');
 
 -- --------------------------------------------------------
 
@@ -2026,7 +2074,8 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('I4Cbmv3OiwyuPwzbyZ2FTz6agMQCVIXOEKlWij7V', 4, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.66 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiQlZRZE5QQjl3M1NJa1pXRUdEM1d2bmRiU3pEQzdNa0Q2RjA5UGtRNyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjQzOiJodHRwOi8vc2lzdGVtYS50ZXN0L3BsYW5uZXIvdmFsaWRhci1wZWRpZG9zIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDt9', 1656651639);
+('ipeTv4YI7EKNOXcWMZ3Eqs4zc4pcWgelnxG5if36', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiMzdhQ3VZOVpUQVVFWFlwN2RIdkpZQTRFZnpxaWl0QURjNlVPM3lLeSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mzg6Imh0dHA6Ly9zaXN0ZW1hL3BsYW5uZXIvdmFsaWRhci1wZWRpZG9zIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDt9', 1656702407),
+('NyQJ2bauZubDSofNGiioR9zlkngGpsS9NWzEgJ64', NULL, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiamp0MEZ6MzVXUlBzTGR3aVpjR2ZoNmpzSkR5cWJEVWJlcWsyeXlNMSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MTQ6Imh0dHA6Ly9zaXN0ZW1hIjt9fQ==', 1656696529);
 
 -- --------------------------------------------------------
 
@@ -2312,7 +2361,9 @@ INSERT INTO `tractor_schedulings` (`id`, `user_id`, `labor_id`, `tractor_id`, `i
 (2, 8, 1, 7, 8, '2022-06-25', 'MAÑANA', 7, 0, '2022-06-24 17:07:23', '2022-06-24 17:07:23'),
 (3, 5, 1, 5, 5, '2022-06-25', 'NOCHE', 5, 0, '2022-06-24 17:07:42', '2022-06-24 17:08:11'),
 (4, 6, 4, 5, 6, '2022-06-25', 'NOCHE', 5, 0, '2022-06-24 17:07:51', '2022-06-24 17:07:51'),
-(5, 5, 3, 5, 5, '2022-06-25', 'MAÑANA', 5, 1, '2022-06-24 17:37:42', '2022-06-24 17:40:25');
+(5, 5, 3, 5, 5, '2022-06-25', 'MAÑANA', 5, 1, '2022-06-24 17:37:42', '2022-06-24 17:40:25'),
+(6, 6, 4, 5, 5, '2022-07-02', 'MAÑANA', 5, 0, '2022-07-01 22:28:34', '2022-07-01 22:28:34'),
+(7, 5, 4, 6, 6, '2022-07-02', 'NOCHE', 5, 0, '2022-07-01 22:28:45', '2022-07-01 22:28:45');
 
 -- --------------------------------------------------------
 
@@ -2349,7 +2400,7 @@ INSERT INTO `users` (`id`, `code`, `name`, `lastname`, `location_id`, `email`, `
 (2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'qjtNQRhjZdmg8HRE0u10LicN4SNnzdAdTBhC3alZ6XObOEqMRnPEt2iaq1kQ', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
 (3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '6DZQ34tOJH78Gt25Ow8HPJTM2wX4MeBQEEzbRfvprUiCQCiFhEKY86Y7k0x0', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'M5qsYueT3Y12habBcGR457E7SpDrFbbTACIRyVsTGVQPXG1nODJ4pTGM1373', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'JQIrgQxqEDHQWGQsEwTeZeBm54zyMfZXkk0IZiyecTqYXHMe6QCIFdyhy7Ij', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '3RGMRmsqNlZDg9LbH3BVRm8BK90WLmKWn2CqB5pLf4TS3cPwT2s0SWL7LRBv', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (6, '502387', 'Bella Block', 'Bashirian', 3, 'sibyl08@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '3NXfsNa9xGchlBQ9iIbNaHjLcFz5unflenQ1Z74g5YCsxiXyXk0bKpoWgElS', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (7, '981787', 'Jaylon Prosacco', 'Langosh', 4, 'pleuschke@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'rc7GJRvdk8Hja3W1jLepIOIhBPkUfcaM2TtoYLw1sJTXXmjxVBy2kQtGm8t1', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
 (8, '588440', 'Irving Strosin', 'Langosh', 4, 'mercedes57@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'Xz2S4RCr9v6EVwxQhozRejcp04TFyIs2GCHh2Tfl34GSok2M0yzbvy4gDfuv', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
@@ -2468,7 +2519,7 @@ INSERT INTO `zones` (`id`, `code`, `zone`, `created_at`, `updated_at`) VALUES
 --
 DROP TABLE IF EXISTS `componentes_del_implemento`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `componentes_del_implemento`  AS SELECT `c`.`id` AS `component_id`, `c`.`item_id` AS `item_id`, `c`.`component` AS `item`, `i`.`id` AS `implement_id` FROM (((`components` `c` join `component_implement_model` `cim` on(`c`.`id` = `cim`.`component_id`)) join `implements` `i` on(`i`.`implement_model_id` = `cim`.`implement_model_id`)) join `items` `it` on(`it`.`id` = `c`.`item_id`)) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `componentes_del_implemento`  AS SELECT `c`.`id` AS `component_id`, `c`.`item_id` AS `item_id`, `c`.`component` AS `item`, `i`.`id` AS `implement_id` FROM (((`components` `c` join `component_implement_model` `cim` on(`c`.`id` = `cim`.`component_id`)) join `implements` `i` on(`i`.`implement_model_id` = `cim`.`implement_model_id`)) join `items` `it` on(`it`.`id` = `c`.`item_id`))  ;
 
 -- --------------------------------------------------------
 
@@ -2477,7 +2528,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `pieza_simplificada`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `pieza_simplificada`  AS SELECT `p`.`item_id` AS `item_id`, `p`.`component` AS `part`, `c`.`item_id` AS `component_id` FROM ((`component_part_model` `cpm` join `components` `c` on(`c`.`id` = `cpm`.`component`)) join `components` `p` on(`p`.`id` = `cpm`.`part`)) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `pieza_simplificada`  AS SELECT `p`.`item_id` AS `item_id`, `p`.`component` AS `part`, `c`.`item_id` AS `component_id` FROM ((`component_part_model` `cpm` join `components` `c` on(`c`.`id` = `cpm`.`component`)) join `components` `p` on(`p`.`id` = `cpm`.`part`))  ;
 
 --
 -- Índices para tablas volcadas
@@ -3019,7 +3070,7 @@ ALTER TABLE `affected_movement`
 -- AUTO_INCREMENT de la tabla `brands`
 --
 ALTER TABLE `brands`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT de la tabla `cecos`
@@ -3121,7 +3172,7 @@ ALTER TABLE `implement_models`
 -- AUTO_INCREMENT de la tabla `items`
 --
 ALTER TABLE `items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=70;
 
 --
 -- AUTO_INCREMENT de la tabla `labors`
@@ -3205,13 +3256,13 @@ ALTER TABLE `order_requests`
 -- AUTO_INCREMENT de la tabla `order_request_details`
 --
 ALTER TABLE `order_request_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=390;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=412;
 
 --
 -- AUTO_INCREMENT de la tabla `order_request_new_items`
 --
 ALTER TABLE `order_request_new_items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT de la tabla `permissions`
@@ -3325,7 +3376,7 @@ ALTER TABLE `tractor_reports`
 -- AUTO_INCREMENT de la tabla `tractor_schedulings`
 --
 ALTER TABLE `tractor_schedulings`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `users`
