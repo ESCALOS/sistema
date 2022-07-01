@@ -88,7 +88,8 @@ class ValidateRequestMaterial extends Component
 /*--------------Array para almacenar a los usuarios que tienen pedidos sin validar------------------*/
     public $incluidos = [];
 /*-----------------------LISTENERS, RULES AND MESSAGES----------------------------------------------------*/
-    protected $listeners = ['reinsertarRechazado','validarSolicitudPedido','rechazarMaterialNuevo'];
+
+    protected $listeners = ['reinsertarRechazado','validarSolicitudPedido'];
 
     protected function rules(){
         switch ($this->validacion) {
@@ -156,23 +157,26 @@ class ValidateRequestMaterial extends Component
     }
 /*----------------FUNCIONES DIŃAMICAS (UPDATED VARIABLES)------------------------------------------------------*/
     public function updatedTzone(){
-        $this->reset('tsede','tlocation','idOperador','operador','idImplemento','idSolicitudPedido','monto_asignado','monto_usado','monto_real');
+        $this->resetExcept('tzone');
         $this->incluidos = [];
     }
     public function updatedTsede(){
-        $this->reset('tlocation','idOperador','operador','idImplemento','idSolicitudPedido','monto_asignado','monto_usado','monto_real');
+        $this->resetExcept(['tzone','tsede']);
         $this->incluidos = [];
     }
     public function updatedTlocation(){
-        $this->reset('idOperador','operador','idImplemento','idSolicitudPedido','monto_asignado','monto_usado','monto_real');
+        $this->resetExcept(['tzone','tsede','tlocation']);
         $this->incluidos = [];
     }
     public function updatedOpenValidateResquest(){
-        $this->reset('idOperador','operador','idImplemento','idSolicitudPedido','monto_asignado','monto_usado','monto_real','cantidad_materiales_nuevos');
+        if(!$this->open_validate_resquest){
+            $this->resetExcept(['tzone','tsede','tlocation','open_validate_resquest']);
+        }
+
     }
     public function updatedOpenValidateMaterial(){
         if(!$this->open_validate_material){
-            $this->reset('idMaterial','material','cantidad','precio','precioTotal','observation');
+            $this->reset(['idMaterial','material','cantidad','precio','precioTotal','observation']);
             $this->resetValidation();
         }
     }
@@ -203,9 +207,12 @@ class ValidateRequestMaterial extends Component
             $this->precioTotal = 0;
         }
     }
+    public function updatedOpenValidateNewMaterial(){
+        $this->cantidad_materiales_nuevos = OrderRequestNewItem::where('order_request_id',$this->idSolicitudPedido)->where('state','PENDIENTE')->count();
+    }
     public function updatedOpenDetailNewMaterial(){
         if(!$this->open_detail_new_material){
-            $this->reset('idMaterialNuevo','material_nuevo_nombre','material_nuevo_marca','material_nuevo_cantidad','material_nuevo_unidad_medida','material_nuevo_ficha_tecnica','material_nuevo_imagen','create_material_sku','create_material_item','create_material_brand','create_material_type','create_material_measurement_unit','create_material_estimated_price','create_material_quantity');
+            $this->reset(['idMaterialNuevo','material_nuevo_nombre','material_nuevo_marca','material_nuevo_cantidad','material_nuevo_unidad_medida','material_nuevo_ficha_tecnica','material_nuevo_imagen','create_material_sku','create_material_item','create_material_brand','create_material_type','create_material_measurement_unit','create_material_estimated_price','create_material_quantity']);
             $this->resetValidation();
         }
     }
@@ -214,7 +221,8 @@ class ValidateRequestMaterial extends Component
             $this->reset('create_new_brand');
         }
     }
-/*----------------Validar o Rechazar Materiales---------------------------------------------*/
+/*----------------VALIDAR O RECHAZAR MATERIALES---------------------------------------------*/
+    /*----------Mostrar modal------------------------------------------*/
     public function mostrarModalValidarMaterial($id){
         $this->open_validate_material = true;
         $this->idMaterial = $id;
@@ -283,6 +291,7 @@ class ValidateRequestMaterial extends Component
                 $material->observation = $this->observation;
             /*-------------Invalidar solicitud--------------------------------*/
             }else{
+                /*-----Obtener orden ya validada------------------------------*/
                 $order_validate->state = "PENDIENTE";
             }
             $order_validate->save();
@@ -431,14 +440,12 @@ class ValidateRequestMaterial extends Component
             'estimated_price' => $this->create_material_estimated_price,
             'state' => 'VALIDADO',
         ]);
-        
         /*---------Actualizar la solicitud de nuevo material a creado-----------------------*/
         $item_creado = OrderRequestNewItem::find($this->idMaterialNuevo);
         $item_creado->state = 'CREADO';
         $item_creado->item_id = $nuevo_item->id;
         $item_creado->save();
         /*--------Cerrar Modal---------------*/
-        $this->cantidad_materiales_nuevos = OrderRequestNewItem::where('order_request_id',$this->idSolicitudPedido)->where('state','PENDIENTE')->count();
         $this->open_detail_new_material = false;
     }
     public function rechazarMaterialNuevo(){
@@ -446,7 +453,6 @@ class ValidateRequestMaterial extends Component
         $item_no_creado->state = 'RECHAZADO';
         $item_no_creado->save();
         /*--------Cerrar Modal---------------*/
-        $this->cantidad_materiales_nuevos = OrderRequestNewItem::where('order_request_id',$this->idSolicitudPedido)->where('state','PENDIENTE')->count();
         $this->open_detail_new_material = false;
     }
 /*----------------------RENDER--------------------------------------------*/

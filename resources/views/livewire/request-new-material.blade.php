@@ -64,8 +64,8 @@
                 </div>
 
                 @if($material_new_image)
-                    <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 2 span/ 2 span">
-                        <img src="{{ $material_new_image->temporaryUrl() }}" class="w-full">
+                    <div class="p-2" style="margin-left:15px;margin-right:15px;grid-column: 2 span/ 2 span;height:16rem">
+                        <img style="display:inline;height:100%" src="{{ $material_new_image->temporaryUrl() }}">
                     </div>
                 @endif
             </div>

@@ -104,6 +104,7 @@
                 })
             });
     /*----------Confirmación para cerrar solicitud de pedido-----------------*/
+    /*-------[0] => id   --  [1] => Nombre Implemento -- [2] => Monto Usado-------------*/
             Livewire.on('confirmarValidarSolicitudPedido', solicitud =>{
                 if(solicitud[0]<=0){
                     Swal.fire(
@@ -113,13 +114,13 @@
                             )
                 }else if(solicitud[2]>0){
                     Swal.fire(
-                                'Hay pedidos no validados',
+                                'Hay pedidos no validados'+solicitud[3],
                                 'Valide o rechace los pedidos',
                                 'info'
                             )
                 }else{
                     Swal.fire({
-                    title: '¿Validar la solcitud de pedido del implemento '+solicitud[1]+'?',
+                    title: '¿Validar la solicitud de pedido del implemento '+solicitud[1]+solicitud[3]+'?',
                     text: "Esta acción es irreversible",
                     icon: 'warning',
                     showCancelButton: true,

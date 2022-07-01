@@ -233,7 +233,7 @@
                 </div>
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 3 span/ 3 span">
                     <x-jet-label>Imagen:</x-jet-label>
-                    <input type="file" style="height:30px;width: 100%" wire:model="material_new_edit_image" accept="image/*"/>
+                    <input type="file"  id="upload{{$iteration}}" style="height:30px;width: 100%" wire:model="material_new_edit_image" accept="image/*"/>
 
                     <x-jet-input-error for="material_new_edit_image"/>
 
@@ -246,12 +246,12 @@
                 </div>
 
                 @if($material_new_edit_image)
-                    <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 3 span/ 3 span">
-                        <img src="{{ $material_new_edit_image->temporaryUrl() }}" class="w-full">
+                <div class="p-2" style="margin-left:15px;margin-right:15px;grid-column: 3 span/ 3 span;height:16rem">
+                        <img style="display:inline;height:100%" src="{{ $material_new_edit_image->temporaryUrl() }}">
                     </div>
                 @else
-                    <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 3 span/ 3 span">
-                        <img src="{{ str_replace('public','/storage',$material_new_edit_image_old) }}" class="w-full">
+                    <div class="p-2" style="margin-left:15px;margin-right:15px;grid-column: 3 span/ 3 span;height:16rem">
+                        <img style="display:inline;height:100%" src="{{ str_replace('public','/storage',$material_new_edit_image_old) }}">
                     </div>
                 @endif
             </div>
