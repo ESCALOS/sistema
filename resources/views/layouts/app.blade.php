@@ -141,7 +141,30 @@
                     })
                 }
             });
+    /*----------Confirmar recharzar nuevo material-------------------------------*/
+            Livewire.on('confirmarRechazarMaterialNuevo', nombre_material =>{
+                Swal.fire({
+                    title: '¿Rechazar el material '+nombre_material+'?',
+                    text: "Esta acción es irreversible",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, rechazar!',
+                    cancelButtonText: 'No, cancelar!',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
 
+                            Livewire.emitTo('validate-request-material','rechazarMaterialNuevo');
+
+                            Swal.fire(
+                                'Solicitud de pedido validado!',
+                                'El pedido se validó correctamente',
+                                'success'
+                            )
+                        }
+                    })
+            });
         @endif
         </script>
     </body>

@@ -245,9 +245,6 @@
             <button wire:loading.attr="disabled" wire:click="$emit('confirmarValidarSolicitudPedido',[{{$idSolicitudPedido}},'{{$implemento}}',{{$monto_usado}}])" style="width: 200px" class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md">
                 Validar
             </button>
-            <!--<button wire:loading.attr="disabled" wire:click="$emit('confirmarSolicitarCorrecion')" style="width: 200px" class="ml-2 px-4 py-2 {{ $idImplemento > 0 ? 'bg-green-500 hover:bg-green-700' : 'bg-green-400 opacity-75' }}  text-white rounded-md">
-                Mandar a Corregir
-            </button>-->
             <div wire:loading wire:target="store">
                 Registrando...
             </div>
@@ -257,7 +254,7 @@
             </x-jet-secondary-button>
         </x-slot>
     </x-jet-dialog-modal>
-    <!------------------------ MODAL PARA VALIDAR O RECHAZAR MATERIAL --------------------------------------->
+<!------------------------ MODAL PARA VALIDAR O RECHAZAR MATERIAL --------------------------------------->
     <x-jet-dialog-modal maxWidth="sm" wire:model="open_validate_material">
         <x-slot name="title">
             <h1>{{$material}}</h1>
@@ -467,35 +464,39 @@
             <div wire:loading wire:target="agregarMaterialNuevo()">
                 Registrando...
             </div>
+            <x-jet-button class="ml-2" wire:loading.attr="disabled" wire:click="$emit('confirmarRechazarMaterialNuevo','{{$material_nuevo_nombre}}')">
+                Rechazar
+            </x-jet-button>
             <x-jet-secondary-button wire:click="$set('open_detail_new_material',false)" class="ml-2">
                 Cancelar
             </x-jet-secondary-button>
         </x-slot>
     </x-jet-dialog-modal>
 <!--------------------Modal agregar marca-------------------------->
-<x-jet-dialog-modal maxWidth="sm" wire:model='open_add_new_brand'>
-    <x-slot name="title">
-        Agregar nueva marca
-    </x-slot>
-    <x-slot name="content">
-        <div class="py-2 text-center" style="padding-left: 1rem; padding-right:1rem">
-            <x-jet-label>Marca:</x-jet-label>
-            <x-jet-input type="text" style="height:30px;width: 100%;text-align: center" wire:model="create_new_brand" />
+    <x-jet-dialog-modal maxWidth="sm" wire:model='open_add_new_brand'>
+        <x-slot name="title">
+            Agregar nueva marca
+        </x-slot>
+        <x-slot name="content">
+            <div class="py-2 text-center" style="padding-left: 1rem; padding-right:1rem">
+                <x-jet-label>Marca:</x-jet-label>
+                <x-jet-input type="text" style="height:30px;width: 100%;text-align: center" wire:model="create_new_brand" />
 
-            <x-jet-input-error for="create_new_brand"/>
+                <x-jet-input-error for="create_new_brand"/>
 
-        </div>
-    </x-slot>
-    <x-slot name="footer">
-        <x-jet-button wire:loading.attr="disabled" wire:click="addNewBrand()">
-            Guardar
-        </x-jet-button>
-        <div wire:loading wire:target="addNewBrand()">
-            Registrando...
-        </div>
-        <x-jet-secondary-button wire:click="$set('open_add_new_brand',false)" class="ml-2">
-            Cancelar
-        </x-jet-secondary-button>
-    </x-slot>
-</x-jet-dialog-modal>
+            </div>
+        </x-slot>
+        <x-slot name="footer">
+            <x-jet-button wire:loading.attr="disabled" wire:click="addNewBrand()">
+                Guardar
+            </x-jet-button>
+            <div wire:loading wire:target="addNewBrand()">
+                Registrando...
+            </div>
+            <x-jet-secondary-button wire:click="$set('open_add_new_brand',false)" class="ml-2">
+                Cancelar
+            </x-jet-secondary-button>
+        </x-slot>
+    </x-jet-dialog-modal>
+<!---------------------------------------------------------------------------------------->
 </div>

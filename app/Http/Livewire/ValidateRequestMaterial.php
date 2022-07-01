@@ -88,8 +88,7 @@ class ValidateRequestMaterial extends Component
 /*--------------Array para almacenar a los usuarios que tienen pedidos sin validar------------------*/
     public $incluidos = [];
 /*-----------------------LISTENERS, RULES AND MESSAGES----------------------------------------------------*/
-
-    protected $listeners = ['reinsertarRechazado','validarSolicitudPedido'];
+    protected $listeners = ['reinsertarRechazado','validarSolicitudPedido','rechazarMaterialNuevo'];
 
     protected function rules(){
         switch ($this->validacion) {
@@ -151,7 +150,8 @@ class ValidateRequestMaterial extends Component
             'create_material_estimated_price.min' => 'Nada es gratis en la vida',
             'create_material_quantity.required' => 'Ingresa la cantidad',
             'create_material_quantity.numeric' => 'Debe de ser un número',
-            'create_material_quantity.min' => 'Si no vas a pedir, rechazalo nomás'
+            'create_material_quantity.min' => 'Si no vas a pedir, rechazalo nomás',
+            'create_material_quantity.lte' => 'El operador solo pidió '.$this->material_nuevo_cantidad
         ];
     }
 /*----------------FUNCIONES DIŃAMICAS (UPDATED VARIABLES)------------------------------------------------------*/
@@ -215,7 +215,6 @@ class ValidateRequestMaterial extends Component
         }
     }
 /*----------------Validar o Rechazar Materiales---------------------------------------------*/
-
     public function mostrarModalValidarMaterial($id){
         $this->open_validate_material = true;
         $this->idMaterial = $id;
@@ -284,7 +283,6 @@ class ValidateRequestMaterial extends Component
                 $material->observation = $this->observation;
             /*-------------Invalidar solicitud--------------------------------*/
             }else{
-                /*-----Obtener orden ya validada------------------------------*/
                 $order_validate->state = "PENDIENTE";
             }
             $order_validate->save();
@@ -412,6 +410,18 @@ class ValidateRequestMaterial extends Component
             'measurement_unit_id' => $this->create_material_measurement_unit,
             'estimated_price' => $this->create_material_estimated_price,
             'type' => $this->create_material_type,
+        ]);/*-----------------Crear espejo para verificar si se aceptó o modificó----------*/
+        if($this->material_nuevo_cantidad == $this->create_material_quantity){
+            $estado_material_nuevo = "ACEPTADO";
+        }else{
+            $estado_material_nuevo = "MODIFICADO";
+        }
+        OrderRequestDetail::create([
+            'order_request_id' => $this->idSolicitudPedido,
+            'item_id' => $nuevo_item->id,
+            'quantity' => $this->material_nuevo_cantidad,
+            'estimated_price' => $this->create_material_estimated_price,
+            'state' => $estado_material_nuevo,
         ]);
         /*----------------Crear el detalle de solictud como validado--------------------*/
         OrderRequestDetail::create([
@@ -421,12 +431,23 @@ class ValidateRequestMaterial extends Component
             'estimated_price' => $this->create_material_estimated_price,
             'state' => 'VALIDADO',
         ]);
+        
         /*---------Actualizar la solicitud de nuevo material a creado-----------------------*/
         $item_creado = OrderRequestNewItem::find($this->idMaterialNuevo);
         $item_creado->state = 'CREADO';
+        $item_creado->item_id = $nuevo_item->id;
         $item_creado->save();
-
-
+        /*--------Cerrar Modal---------------*/
+        $this->cantidad_materiales_nuevos = OrderRequestNewItem::where('order_request_id',$this->idSolicitudPedido)->where('state','PENDIENTE')->count();
+        $this->open_detail_new_material = false;
+    }
+    public function rechazarMaterialNuevo(){
+        $item_no_creado = OrderRequestNewItem::find($this->idMaterialNuevo);
+        $item_no_creado->state = 'RECHAZADO';
+        $item_no_creado->save();
+        /*--------Cerrar Modal---------------*/
+        $this->cantidad_materiales_nuevos = OrderRequestNewItem::where('order_request_id',$this->idSolicitudPedido)->where('state','PENDIENTE')->count();
+        $this->open_detail_new_material = false;
     }
 /*----------------------RENDER--------------------------------------------*/
     public function render()

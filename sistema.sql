@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.0
+-- version 5.1.1
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 30-06-2022 a las 20:14:31
--- Versión del servidor: 10.4.24-MariaDB
--- Versión de PHP: 8.1.6
+-- Tiempo de generación: 01-07-2022 a las 07:00:57
+-- Versión del servidor: 10.4.22-MariaDB
+-- Versión de PHP: 8.1.2
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -25,7 +25,7 @@ DELIMITER $$
 --
 -- Procedimientos
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `aa` ()   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `aa` ()  BEGIN
 /*-------Variables para la fecha para abrir el pedido--------*/
 DECLARE fecha_solicitud INT;
 DECLARE fecha_abrir_solicitud DATE;
@@ -199,7 +199,9 @@ INSERT INTO `brands` (`id`, `brand`, `created_at`, `updated_at`) VALUES
 (29, 'alias', '2022-06-20 21:21:43', '2022-06-20 21:21:43'),
 (30, 'ad', '2022-06-20 21:21:43', '2022-06-20 21:21:43'),
 (39, 'suryuu', '2022-06-30 22:21:26', '2022-06-30 22:21:26'),
-(40, 'banpresto', '2022-06-30 22:22:14', '2022-06-30 22:22:14');
+(40, 'banpresto', '2022-06-30 22:22:14', '2022-06-30 22:22:14'),
+(41, 'figma', '2022-07-01 09:30:18', '2022-07-01 09:30:18'),
+(42, 'pop up', '2022-07-01 09:37:51', '2022-07-01 09:37:51');
 
 -- --------------------------------------------------------
 
@@ -925,7 +927,10 @@ INSERT INTO `items` (`id`, `sku`, `item`, `brand_id`, `measurement_unit_id`, `es
 (57, '66196453', 'peorviek', 26, 46, '502.17', 'PIEZA', 1, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (58, '85923667', 'qwieldov', 25, 1, '483.13', 'HERRAMIENTA', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (59, '55183394', 'qvjzldtw', 19, 50, '375.49', 'COMPONENTE', 1, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
-(60, '88387187', 'ouenaesm', 19, 25, '473.77', 'FUNGIBLE', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58');
+(60, '88387187', 'ouenaesm', 19, 25, '473.77', 'FUNGIBLE', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
+(63, '35214885', 'shino', 39, 9, '560.00', 'FUNGIBLE', 1, '2022-07-01 09:28:01', '2022-07-01 09:28:01'),
+(64, '35214884', 'ruka', 41, 3, '7850.00', 'HERRAMIENTA', 1, '2022-07-01 09:30:29', '2022-07-01 09:30:29'),
+(65, '4522126', 'yami', 42, 3, '2600.00', 'HERRAMIENTA', 1, '2022-07-01 09:38:12', '2022-07-01 09:38:12');
 
 --
 -- Disparadores `items`
@@ -1557,9 +1562,9 @@ CREATE TABLE `order_request_details` (
 
 INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quantity`, `estimated_price`, `state`, `observation`, `created_at`, `updated_at`) VALUES
 (236, 33, 9, '2.00', '362.42', 'PENDIENTE', NULL, NULL, '2022-06-29 19:48:56'),
-(237, 33, 21, '1.00', '785.44', 'PENDIENTE', NULL, NULL, '2022-06-29 19:36:48'),
-(238, 33, 44, '1.00', '954.65', 'PENDIENTE', 'Se aceptó todo.', NULL, '2022-06-30 22:09:35'),
-(239, 33, 52, '2.00', '216.64', 'PENDIENTE', NULL, NULL, '2022-06-29 19:37:04'),
+(237, 33, 21, '1.00', '785.44', 'ACEPTADO', 'NGG', NULL, '2022-07-01 09:28:45'),
+(238, 33, 44, '1.00', '954.65', 'ACEPTADO', 'Se aceptó todo.', NULL, '2022-07-01 09:34:51'),
+(239, 33, 52, '2.00', '216.64', 'ACEPTADO', 'ÑÑ', NULL, '2022-07-01 09:34:57'),
 (240, 33, 57, '2.00', '502.17', 'PENDIENTE', NULL, NULL, '2022-06-29 19:37:00'),
 (241, 33, 3, '0.00', '692.98', 'PENDIENTE', NULL, NULL, '2022-06-25 21:51:40'),
 (242, 33, 24, '0.00', '577.05', 'PENDIENTE', NULL, NULL, '2022-06-25 21:51:34'),
@@ -1570,11 +1575,11 @@ INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quant
 (247, 34, 57, '4.00', '502.17', 'ACEPTADO', 'Se aceptop todo completo', NULL, '2022-06-29 00:16:11'),
 (248, 34, 3, '0.00', '692.98', 'PENDIENTE', NULL, NULL, '2022-06-25 23:14:29'),
 (249, 34, 24, '0.00', '577.05', 'PENDIENTE', NULL, NULL, '2022-06-25 23:14:25'),
-(250, 35, 9, '2.00', '362.42', 'PENDIENTE', NULL, NULL, NULL),
-(251, 35, 21, '3.00', '785.44', 'PENDIENTE', NULL, NULL, '2022-06-25 23:17:34'),
+(250, 35, 9, '2.00', '362.42', 'RECHAZADO', 'AA', NULL, '2022-07-01 09:43:02'),
+(251, 35, 21, '3.00', '785.44', 'MODIFICADO', 'ASA', NULL, '2022-07-01 09:42:48'),
 (252, 35, 44, '0.00', '954.65', 'PENDIENTE', NULL, NULL, '2022-06-25 23:17:29'),
 (253, 35, 52, '0.00', '216.64', 'PENDIENTE', NULL, NULL, '2022-06-25 23:17:25'),
-(254, 35, 57, '4.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
+(254, 35, 57, '4.00', '502.17', 'MODIFICADO', 'AS', NULL, '2022-07-01 09:42:24'),
 (255, 35, 3, '0.00', '692.98', 'PENDIENTE', NULL, NULL, '2022-06-25 23:17:17'),
 (256, 35, 24, '0.00', '577.05', 'PENDIENTE', NULL, NULL, '2022-06-25 23:17:21'),
 (257, 36, 9, '1.00', '362.42', 'PENDIENTE', NULL, NULL, '2022-06-29 16:40:02'),
@@ -1668,11 +1673,22 @@ INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quant
 (345, 48, 53, '1.00', '952.16', 'PENDIENTE', NULL, NULL, NULL),
 (346, 48, 57, '6.00', '502.17', 'PENDIENTE', NULL, NULL, NULL),
 (347, 48, 24, '2.00', '577.05', 'PENDIENTE', NULL, NULL, NULL),
-(348, 33, 17, '1.00', '906.47', 'PENDIENTE', '', '2022-06-25 21:51:57', '2022-06-29 19:36:53'),
+(348, 33, 17, '1.00', '906.47', 'RECHAZADO', 'LNK', '2022-06-25 21:51:57', '2022-07-01 09:35:07'),
 (349, 34, 8, '2.00', '563.25', 'RECHAZADO', 'Se rechazó todo.', '2022-06-25 22:19:52', '2022-06-29 00:17:01'),
 (365, 34, 9, '2.00', '880.00', 'VALIDADO', 'ok', '2022-06-28 20:21:20', '2022-06-28 23:44:52'),
 (374, 34, 57, '4.00', '502.17', 'VALIDADO', 'Se aceptop todo completo', '2022-06-29 00:16:11', '2022-06-29 00:16:11'),
-(375, 36, 8, '1.00', '563.25', 'PENDIENTE', '', '2022-06-29 16:40:28', '2022-06-29 16:40:28');
+(375, 36, 8, '1.00', '563.25', 'PENDIENTE', '', '2022-06-29 16:40:28', '2022-06-29 16:40:28'),
+(379, 33, 63, '3.00', '600.00', 'ACEPTADO', NULL, '2022-07-01 09:28:01', '2022-07-01 09:28:17'),
+(380, 33, 63, '3.00', '610.00', 'VALIDADO', 'NJ', '2022-07-01 09:28:01', '2022-07-01 09:34:44'),
+(381, 33, 21, '1.00', '800.00', 'VALIDADO', 'NGG', '2022-07-01 09:28:45', '2022-07-01 09:33:03'),
+(382, 33, 64, '3.00', '7850.00', 'MODIFICADO', NULL, '2022-07-01 09:30:29', '2022-07-01 09:30:29'),
+(383, 33, 64, '2.00', '785.00', 'VALIDADO', 'ÑL', '2022-07-01 09:30:29', '2022-07-01 09:30:43'),
+(384, 33, 44, '1.00', '954.65', 'VALIDADO', 'Se aceptó todo.', '2022-07-01 09:34:51', '2022-07-01 09:34:51'),
+(385, 33, 52, '2.00', '216.64', 'VALIDADO', 'ÑÑ', '2022-07-01 09:34:57', '2022-07-01 09:34:57'),
+(386, 35, 65, '32.00', '2600.00', 'MODIFICADO', NULL, '2022-07-01 09:38:12', '2022-07-01 09:38:12'),
+(387, 35, 65, '1.00', '2600.00', 'VALIDADO', '5', '2022-07-01 09:38:12', '2022-07-01 09:38:29'),
+(388, 35, 57, '2.00', '502.17', 'VALIDADO', 'AS', '2022-07-01 09:42:24', '2022-07-01 09:42:24'),
+(389, 35, 21, '1.00', '785.44', 'VALIDADO', 'ASA', '2022-07-01 09:42:42', '2022-07-01 09:42:55');
 
 -- --------------------------------------------------------
 
@@ -1690,6 +1706,7 @@ CREATE TABLE `order_request_new_items` (
   `datasheet` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `image` varchar(2048) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `state` enum('PENDIENTE','CREADO','RECHAZADO') COLLATE utf8mb4_unicode_ci DEFAULT 'PENDIENTE',
+  `item_id` bigint(20) UNSIGNED DEFAULT NULL,
   `observation` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -1699,12 +1716,12 @@ CREATE TABLE `order_request_new_items` (
 -- Volcado de datos para la tabla `order_request_new_items`
 --
 
-INSERT INTO `order_request_new_items` (`id`, `order_request_id`, `new_item`, `quantity`, `measurement_unit_id`, `brand`, `datasheet`, `image`, `state`, `observation`, `created_at`, `updated_at`) VALUES
-(9, 33, 'Ruka', '3.00', 3, 'saa', '-sad\n-sa\n-sa', 'public/newMaterials/zHyV8jgLSvA3k9SovgkQP6pehGMkaLVgHhWm51w2.jpg', 'PENDIENTE', '', '2022-06-25 21:53:12', '2022-06-25 21:53:12'),
-(10, 33, 'Shino', '3.00', 9, 'Suryuu', '-ssa\n-sa\n-ñláéíóú', 'public/newMaterials/hvhXgQ5Myw77Np2aIOPZtaGSarDTcgEkCWnnuU1t.jpg', 'PENDIENTE', '', '2022-06-25 21:54:03', '2022-06-25 21:54:03'),
-(11, 35, 'YAMI', '32.00', 3, 'SDSA', 'SDASD', 'public/newMaterials/h8jbuHVOvBZmHiy6luMaYxfILhTYYweUqZga4BwR.png', 'PENDIENTE', '', '2022-06-25 23:17:09', '2022-06-25 23:17:09'),
-(12, 36, 'Perno ed 1/2\"', '12.00', 1, '33', 'das', 'public/newMaterials/zxhcqq8HPDSqiOTKo9U3eIYyDaHvgUdxiJaBXXKu.png', 'PENDIENTE', '', '2022-06-29 16:39:43', '2022-06-29 16:39:43'),
-(13, 40, 'ARDUINO UNO', '12.00', 2, 'ARDUINO', '-NINGUNA', 'public/newMaterials/q1iWW0wnARQXTPrSY6B0fnt6tttmBrgoMnALg5EU.png', 'PENDIENTE', '', '2022-06-30 18:38:42', '2022-06-30 18:38:42');
+INSERT INTO `order_request_new_items` (`id`, `order_request_id`, `new_item`, `quantity`, `measurement_unit_id`, `brand`, `datasheet`, `image`, `state`, `item_id`, `observation`, `created_at`, `updated_at`) VALUES
+(9, 33, 'Ruka', '3.00', 3, 'saa', '-sad\n-sa\n-sa', 'public/newMaterials/zHyV8jgLSvA3k9SovgkQP6pehGMkaLVgHhWm51w2.jpg', 'CREADO', 64, '', '2022-06-25 21:53:12', '2022-07-01 09:30:29'),
+(10, 33, 'Shino', '3.00', 9, 'Suryuu', '-ssa\n-sa\n-ñláéíóú', 'public/newMaterials/hvhXgQ5Myw77Np2aIOPZtaGSarDTcgEkCWnnuU1t.jpg', 'CREADO', 63, '', '2022-06-25 21:54:03', '2022-07-01 09:28:01'),
+(11, 35, 'YAMI', '32.00', 3, 'SDSA', 'SDASD', 'public/newMaterials/h8jbuHVOvBZmHiy6luMaYxfILhTYYweUqZga4BwR.jpg', 'CREADO', 65, '', '2022-06-25 23:17:09', '2022-07-01 09:38:12'),
+(12, 36, 'Perno ed 1/2\"', '12.00', 1, '33', 'das', 'public/newMaterials/zxhcqq8HPDSqiOTKo9U3eIYyDaHvgUdxiJaBXXKu.png', 'RECHAZADO', NULL, '', '2022-06-29 16:39:43', '2022-07-01 09:56:10'),
+(13, 40, 'ARDUINO UNO', '12.00', 2, 'ARDUINO', '-NINGUNA', 'public/newMaterials/q1iWW0wnARQXTPrSY6B0fnt6tttmBrgoMnALg5EU.png', 'RECHAZADO', NULL, '', '2022-06-30 18:38:42', '2022-07-01 09:59:58');
 
 -- --------------------------------------------------------
 
@@ -2009,7 +2026,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('5dNokXCTF6DAKLKr0zgF0C7oN4fAJU8jMj19rlAh', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiSUtTaEUzdGNLWjV2cGJRQUpYMzd6WEFuZ3JPUHFPbEttdUZaWXdUViI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mzg6Imh0dHA6Ly9zaXN0ZW1hL3BsYW5uZXIvdmFsaWRhci1wZWRpZG9zIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDt9', 1656612810);
+('I4Cbmv3OiwyuPwzbyZ2FTz6agMQCVIXOEKlWij7V', 4, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.66 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiQlZRZE5QQjl3M1NJa1pXRUdEM1d2bmRiU3pEQzdNa0Q2RjA5UGtRNyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjQzOiJodHRwOi8vc2lzdGVtYS50ZXN0L3BsYW5uZXIvdmFsaWRhci1wZWRpZG9zIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDt9', 1656651639);
 
 -- --------------------------------------------------------
 
@@ -2451,7 +2468,7 @@ INSERT INTO `zones` (`id`, `code`, `zone`, `created_at`, `updated_at`) VALUES
 --
 DROP TABLE IF EXISTS `componentes_del_implemento`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `componentes_del_implemento`  AS SELECT `c`.`id` AS `component_id`, `c`.`item_id` AS `item_id`, `c`.`component` AS `item`, `i`.`id` AS `implement_id` FROM (((`components` `c` join `component_implement_model` `cim` on(`c`.`id` = `cim`.`component_id`)) join `implements` `i` on(`i`.`implement_model_id` = `cim`.`implement_model_id`)) join `items` `it` on(`it`.`id` = `c`.`item_id`))  ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `componentes_del_implemento`  AS SELECT `c`.`id` AS `component_id`, `c`.`item_id` AS `item_id`, `c`.`component` AS `item`, `i`.`id` AS `implement_id` FROM (((`components` `c` join `component_implement_model` `cim` on(`c`.`id` = `cim`.`component_id`)) join `implements` `i` on(`i`.`implement_model_id` = `cim`.`implement_model_id`)) join `items` `it` on(`it`.`id` = `c`.`item_id`)) ;
 
 -- --------------------------------------------------------
 
@@ -2460,7 +2477,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `pieza_simplificada`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `pieza_simplificada`  AS SELECT `p`.`item_id` AS `item_id`, `p`.`component` AS `part`, `c`.`item_id` AS `component_id` FROM ((`component_part_model` `cpm` join `components` `c` on(`c`.`id` = `cpm`.`component`)) join `components` `p` on(`p`.`id` = `cpm`.`part`))  ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `pieza_simplificada`  AS SELECT `p`.`item_id` AS `item_id`, `p`.`component` AS `part`, `c`.`item_id` AS `component_id` FROM ((`component_part_model` `cpm` join `components` `c` on(`c`.`id` = `cpm`.`component`)) join `components` `p` on(`p`.`id` = `cpm`.`part`)) ;
 
 --
 -- Índices para tablas volcadas
@@ -2754,7 +2771,8 @@ ALTER TABLE `order_request_details`
 ALTER TABLE `order_request_new_items`
   ADD PRIMARY KEY (`id`),
   ADD KEY `order_request_new_items_order_request_id_foreign` (`order_request_id`),
-  ADD KEY `order_request_new_items_measurement_unit_id_foreign` (`measurement_unit_id`);
+  ADD KEY `order_request_new_items_measurement_unit_id_foreign` (`measurement_unit_id`),
+  ADD KEY `order_request_new_items_item_id_foreign` (`item_id`);
 
 --
 -- Indices de la tabla `password_resets`
@@ -3001,7 +3019,7 @@ ALTER TABLE `affected_movement`
 -- AUTO_INCREMENT de la tabla `brands`
 --
 ALTER TABLE `brands`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT de la tabla `cecos`
@@ -3103,7 +3121,7 @@ ALTER TABLE `implement_models`
 -- AUTO_INCREMENT de la tabla `items`
 --
 ALTER TABLE `items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
 
 --
 -- AUTO_INCREMENT de la tabla `labors`
@@ -3187,7 +3205,7 @@ ALTER TABLE `order_requests`
 -- AUTO_INCREMENT de la tabla `order_request_details`
 --
 ALTER TABLE `order_request_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=377;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=390;
 
 --
 -- AUTO_INCREMENT de la tabla `order_request_new_items`
@@ -3542,6 +3560,7 @@ ALTER TABLE `order_request_details`
 -- Filtros para la tabla `order_request_new_items`
 --
 ALTER TABLE `order_request_new_items`
+  ADD CONSTRAINT `order_request_new_items_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
   ADD CONSTRAINT `order_request_new_items_measurement_unit_id_foreign` FOREIGN KEY (`measurement_unit_id`) REFERENCES `measurement_units` (`id`),
   ADD CONSTRAINT `order_request_new_items_order_request_id_foreign` FOREIGN KEY (`order_request_id`) REFERENCES `order_requests` (`id`);
 
