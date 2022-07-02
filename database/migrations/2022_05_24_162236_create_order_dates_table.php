@@ -19,7 +19,7 @@ return new class extends Migration
             $table->date('close_request'); #Fecha que se cierra el pedido
             $table->date('order_date'); #Fecha que se hace el pedido
             $table->date('arrival_date'); #Fecha máxima de llegada
-            $table->enum('state' ,['PENDIENTE','GENERADO','CERRADO','VALIDADO','CONCLUIDO'])->default('PENDIENTE');
+            $table->enum('state' ,['PENDIENTE','ABIERTO','CERRADO'])->default('PENDIENTE');
             $table->timestamps();
         });
     }

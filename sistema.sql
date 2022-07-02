@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.0
+-- version 5.1.1
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 01-07-2022 a las 21:07:55
--- Versión del servidor: 10.4.24-MariaDB
--- Versión de PHP: 8.1.6
+-- Tiempo de generación: 02-07-2022 a las 06:51:48
+-- Versión del servidor: 10.4.22-MariaDB
+-- Versión de PHP: 8.1.2
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -25,7 +25,7 @@ DELIMITER $$
 --
 -- Procedimientos
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `aa` ()   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `aa` ()  BEGIN
 /*-------Variables para la fecha para abrir el pedido--------*/
 DECLARE fecha_solicitud INT;
 DECLARE fecha_abrir_solicitud DATE;
@@ -131,6 +131,21 @@ OPEN cur_comp;
 CLOSE cur_comp;
 UPDATE order_dates SET state = "ABIERTO" WHERE id = fecha_solicitud;
 END;
+END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `cerrarPedido` ()  BEGIN
+/*---Variables para la fecha para cerrar el pedido----------*/
+DECLARE fecha_solicitud INT;
+DECLARE fecha_cerrar_solicitud DATE;
+/*-------Obtener la fecha para cerrar el pedido-------*/
+SELECT id,close_request INTO fecha_solicitud, fecha_cerrar_solicitud FROM order_dates r WHERE r.state = "ABIERTO" ORDER BY open_request ASC LIMIT 1;
+/*----Validar la fecha de cierre de pedido-----------*/
+IF(fecha_cerrar_solicitud <= NOW()) THEN
+/*--------Cerrar pedido----------------*/
+UPDATE order_dates SET state = "CERRADO" WHERE state = "ABIERTO" LIMIT 1;
+/*-----------Rechazar solicitudes no validadas------------------*/
+UPDATE order_requests SET state = "RECHAZADO" WHERE order_date_id = fecha_solicitud AND (state = "PENDIENTE" OR state = "CERRADO");
 END IF;
 END$$
 
@@ -1488,7 +1503,7 @@ CREATE TABLE `order_dates` (
   `close_request` date NOT NULL,
   `order_date` date NOT NULL,
   `arrival_date` date NOT NULL,
-  `state` enum('PENDIENTE','ABIERTO','CERRADO','VALIDADO','CONCLUIDO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
+  `state` enum('PENDIENTE','ABIERTO','CERRADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1526,12 +1541,12 @@ CREATE TABLE `order_requests` (
 --
 
 INSERT INTO `order_requests` (`id`, `user_id`, `implement_id`, `state`, `validate_by`, `is_canceled`, `order_date_id`, `created_at`, `updated_at`) VALUES
-(33, 1, 1, 'VALIDADO', NULL, 0, 1, NULL, '2022-07-01 23:31:05'),
-(34, 2, 2, 'VALIDADO', NULL, 0, 1, NULL, '2022-07-01 23:31:27'),
+(33, 1, 1, 'VALIDADO', 4, 0, 1, NULL, '2022-07-02 08:15:48'),
+(34, 2, 2, 'CERRADO', NULL, 0, 1, NULL, '2022-07-01 23:31:27'),
 (35, 3, 3, 'CERRADO', NULL, 0, 1, NULL, '2022-06-25 23:17:37'),
 (36, 4, 4, 'CERRADO', NULL, 0, 1, NULL, '2022-06-29 16:40:39'),
 (37, 5, 5, 'CERRADO', NULL, 0, 1, NULL, '2022-07-01 22:28:20'),
-(38, 6, 6, 'VALIDADO', NULL, 0, 1, NULL, '2022-07-01 23:32:15'),
+(38, 6, 6, 'CERRADO', NULL, 0, 1, NULL, '2022-07-01 23:32:15'),
 (39, 7, 7, 'CERRADO', NULL, 0, 1, NULL, '2022-07-01 23:28:24'),
 (40, 8, 8, 'CERRADO', NULL, 0, 1, NULL, '2022-07-01 23:00:37'),
 (41, 9, 9, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
@@ -2075,7 +2090,8 @@ CREATE TABLE `sessions` (
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
 ('ipeTv4YI7EKNOXcWMZ3Eqs4zc4pcWgelnxG5if36', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiMzdhQ3VZOVpUQVVFWFlwN2RIdkpZQTRFZnpxaWl0QURjNlVPM3lLeSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mzg6Imh0dHA6Ly9zaXN0ZW1hL3BsYW5uZXIvdmFsaWRhci1wZWRpZG9zIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDt9', 1656702407),
-('NyQJ2bauZubDSofNGiioR9zlkngGpsS9NWzEgJ64', NULL, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiamp0MEZ6MzVXUlBzTGR3aVpjR2ZoNmpzSkR5cWJEVWJlcWsyeXlNMSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MTQ6Imh0dHA6Ly9zaXN0ZW1hIjt9fQ==', 1656696529);
+('NyQJ2bauZubDSofNGiioR9zlkngGpsS9NWzEgJ64', NULL, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiamp0MEZ6MzVXUlBzTGR3aVpjR2ZoNmpzSkR5cWJEVWJlcWsyeXlNMSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MTQ6Imh0dHA6Ly9zaXN0ZW1hIjt9fQ==', 1656696529),
+('QMa8DmdJmaIaaBXAAhoAsjUQbyVZ7vX5tOJVo7zR', 4, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.66 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoicWFtQUkwVlhYdFoxVXBiUTJYRllNTUJwamFGNGlhWGJoVGdwYXd1SyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjQzOiJodHRwOi8vc2lzdGVtYS50ZXN0L3BsYW5uZXIvdmFsaWRhci1wZWRpZG9zIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDt9', 1656731748);
 
 -- --------------------------------------------------------
 
@@ -2519,7 +2535,7 @@ INSERT INTO `zones` (`id`, `code`, `zone`, `created_at`, `updated_at`) VALUES
 --
 DROP TABLE IF EXISTS `componentes_del_implemento`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `componentes_del_implemento`  AS SELECT `c`.`id` AS `component_id`, `c`.`item_id` AS `item_id`, `c`.`component` AS `item`, `i`.`id` AS `implement_id` FROM (((`components` `c` join `component_implement_model` `cim` on(`c`.`id` = `cim`.`component_id`)) join `implements` `i` on(`i`.`implement_model_id` = `cim`.`implement_model_id`)) join `items` `it` on(`it`.`id` = `c`.`item_id`))  ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `componentes_del_implemento`  AS SELECT `c`.`id` AS `component_id`, `c`.`item_id` AS `item_id`, `c`.`component` AS `item`, `i`.`id` AS `implement_id` FROM (((`components` `c` join `component_implement_model` `cim` on(`c`.`id` = `cim`.`component_id`)) join `implements` `i` on(`i`.`implement_model_id` = `cim`.`implement_model_id`)) join `items` `it` on(`it`.`id` = `c`.`item_id`)) ;
 
 -- --------------------------------------------------------
 
@@ -2528,7 +2544,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `pieza_simplificada`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `pieza_simplificada`  AS SELECT `p`.`item_id` AS `item_id`, `p`.`component` AS `part`, `c`.`item_id` AS `component_id` FROM ((`component_part_model` `cpm` join `components` `c` on(`c`.`id` = `cpm`.`component`)) join `components` `p` on(`p`.`id` = `cpm`.`part`))  ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `pieza_simplificada`  AS SELECT `p`.`item_id` AS `item_id`, `p`.`component` AS `part`, `c`.`item_id` AS `component_id` FROM ((`component_part_model` `cpm` join `components` `c` on(`c`.`id` = `cpm`.`component`)) join `components` `p` on(`p`.`id` = `cpm`.`part`)) ;
 
 --
 -- Índices para tablas volcadas
@@ -3866,6 +3882,21 @@ OPEN cur_comp;
 CLOSE cur_comp;
 UPDATE order_dates SET state = "ABIERTO" WHERE id = fecha_solicitud;
 END;
+END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` EVENT `cerrarPedido` ON SCHEDULE EVERY 1 DAY STARTS '2022-07-01 00:00:00' ON COMPLETION NOT PRESERVE DISABLE DO BEGIN
+/*---Variables para la fecha para cerrar el pedido----------*/
+DECLARE fecha_solicitud INT;
+DECLARE fecha_cerrar_solicitud DATE;
+/*-------Obtener la fecha para cerrar el pedido-------*/
+SELECT id,close_request INTO fecha_solicitud, fecha_cerrar_solicitud FROM order_dates r WHERE r.state = "ABIERTO" ORDER BY open_request ASC LIMIT 1;
+/*----Validar la fecha de cierre de pedido-----------*/
+IF(fecha_cerrar_solicitud <= NOW()) THEN
+/*--------Cerrar pedido----------------*/
+UPDATE order_dates SET state = "CERRADO" WHERE state = "ABIERTO" LIMIT 1;
+/*-----------Rechazar solicitudes no validadas------------------*/
+UPDATE order_requests SET state = "RECHAZADO" WHERE order_date_id = fecha_solicitud AND (state = "PENDIENTE" OR state = "CERRADO");
 END IF;
 END$$
 

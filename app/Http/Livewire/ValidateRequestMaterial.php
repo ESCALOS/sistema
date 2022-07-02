@@ -17,6 +17,7 @@ use App\Models\Zone;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use phpDocumentor\Reflection\Types\This;
 
@@ -326,6 +327,7 @@ class ValidateRequestMaterial extends Component
         OrderRequestNewItem::where('order_request_id',$this->idSolicitudPedido)->where('state','PENDIENTE')->doesntExist()){
             $order_request = OrderRequest::find($this->idSolicitudPedido);
             $order_request->state = "VALIDADO";
+            $order_request->validate_by = Auth::user()->id;
             $order_request->save();
             $this->resetExcept(['tzone','tsede','tlocation']);
             $this->render();
