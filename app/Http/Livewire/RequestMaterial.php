@@ -27,7 +27,7 @@ class RequestMaterial extends Component
     public $monto_asignado = 0;
     public $monto_usado = 0;
 
-    public $fecha_pedido;
+    public $fecha_pedido = "";
     public $fecha_pedido_abierto;
     public $fecha_pedido_cierre;
     public $fecha_pedido_llegada;
@@ -199,13 +199,16 @@ class RequestMaterial extends Component
     public function render(){
 
         /*---------------Obtener la fecha del pedido------------------------------------------*/
-        $order_dates = OrderDate::where('state','ABIERTO')->first();
+        if(OrderDate::where('state','ABIERTO')->exists()){
+            $order_dates = OrderDate::where('state','ABIERTO')->first();
 
-        $this->fecha_pedido = $order_dates->order_date;
-        $this->fecha_pedido = date("d-m-Y", strtotime($this->fecha_pedido));
-        $this->fecha_pedido_abierto = $order_dates->open_request;
-        $this->fecha_pedido_cierre = $order_dates->close_request;
-        $this->fecha_pedido_llegada = $order_dates->arrival_date;
+            $this->fecha_pedido = $order_dates->order_date;
+            $this->fecha_pedido = date("d-m-Y", strtotime($this->fecha_pedido));
+            $this->fecha_pedido_abierto = $order_dates->open_request;
+            $this->fecha_pedido_cierre = $order_dates->close_request;
+            $this->fecha_pedido_llegada = $order_dates->arrival_date;
+        }
+
 
         /*---------------Obtener órdenes del implemento ya cerradas-----------------------------*/
         $ordenes_cerradas = OrderRequest::where('user_id', auth()->user()->id)->where('state', 'CERRADO')->get();

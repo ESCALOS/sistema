@@ -1,4 +1,5 @@
 <div>
+    @if($fecha_pedido != "")
     <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
         <div class="grid grid-cols-1 gap-4">
             <div class="text-center">
@@ -268,5 +269,13 @@
             </x-jet-secondary-button>
         </x-slot>
     </x-jet-dialog-modal>
-</div>
+    @else
+    <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
+        <div class="text-center">
+            <h1 class="font-bold text-4xl">
+                NO HAY PEDIDOS ABIERTOS
+            </h1>
+        </div>
+    </div>
+    @endif
 </div>

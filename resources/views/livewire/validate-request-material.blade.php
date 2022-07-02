@@ -1,4 +1,5 @@
 <div>
+    @if ($fecha_pedido != "")
 <!-- Fecha del pedido actual  -->
     <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
         <h1 class="font-bold text-2xl">{{$fecha_pedido}} </h1>
@@ -54,7 +55,7 @@
                 <h5 class="mb-1 text-lg font-medium text-gray-900 dark:text-white">{{ $user->name }} {{ $user->lastname }}</h5>
                 <span class="text-sm text-gray-500 dark:text-gray-400">Operario</span>
                 <div class="flex mt-4 space-x-3 lg:mt-6">
-                    <button wire:click="mostrarImplementos({{$user->id}},'{{$user->name}}','{{$user->lastname}}')" class="inline-flex items-center py-2 px-4 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Ver Pedido</button>
+                    <button wire:click="mostrarPedidos({{$user->id}},'{{$user->name}}','{{$user->lastname}}')" class="inline-flex items-center py-2 px-4 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Ver Pedido</button>
                 </div>
             </div>
         </div>
@@ -83,14 +84,14 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 shadow-xl mb-4">
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                     <x-jet-label>Implemento: </x-jet-label>
-                    <select class="form-select" style="width: 100%" wire:model="idImplemento">
+                    <select class="form-select" style="width: 100%" wire:model="id_implemento">
                         <option value="0">Seleccione una implemento</option>
                         @foreach ($implements as $implement)
                             <option value="{{ $implement->id }}"> {{$implement->implement_model}} {{ $implement->implement_number }} </option>
                         @endforeach
                     </select>
 
-                    <x-jet-input-error for="idImplemento"/>
+                    <x-jet-input-error for="id_implemento"/>
 
                 </div>
 
@@ -241,8 +242,8 @@
                 </div>
         </x-slot>
         <x-slot name="footer">
-        @if($idImplemento > 0)
-            <button wire:loading.attr="disabled" wire:click="$emit('confirmarValidarSolicitudPedido',[{{$idSolicitudPedido}},'{{$implemento}}',{{$monto_usado}},{{$cantidad_materiales_nuevos}}])" style="width: 200px" class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md">
+        @if($id_implemento > 0)
+            <button wire:loading.attr="disabled" wire:click="$emit('confirmarValidarSolicitudPedido',[{{$id_solicitud_pedido}},'{{$implemento}}',{{$monto_usado}},{{$cantidad_materiales_nuevos}}])" style="width: 200px" class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md">
                 Validar
             </button>
             <button wire:loading.attr="disabled" wire:click="$emit('confirmarRechazarSolicitudPedido','{{$implemento}}')" style="width: 200px" class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md">
@@ -498,5 +499,11 @@
             </x-jet-secondary-button>
         </x-slot>
     </x-jet-dialog-modal>
+<!---------------------MENSAJE CUANDO NO HAY PEDIDOS ABIERTOS-------------------------------------->
+    @else
+    <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
+        <h1 class="font-bold text-4xl">NO HAY PEDIDOS PARA VALIDAR</h1>
+    </div>
+    @endif
 <!---------------------------------------------------------------------------------------->
 </div>
