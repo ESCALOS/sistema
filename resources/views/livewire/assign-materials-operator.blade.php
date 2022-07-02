@@ -1,9 +1,9 @@
 <div>
-    <!-- Título de Asignar materiales  -->
+<!-- Título de Asignar materiales  -->
     <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
         <h1 class="font-bold text-2xl">Asignar materiales </h1>
     </div>
-    <!-- Filtrar operarios que tienen pedidos por zona, sede y ubicación  -->
+<!-- Filtrar operarios que tienen pedidos por zona, sede y ubicación  -->
     <div class="grid grid-cols-1 sm:grid-cols-{{ $tlocation > 0 ? '4' : ($tsede > 0 ? '3' : ($tzone > 0 ? '2' : '1'))}} gap-4">
         <div>
             <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
@@ -182,50 +182,38 @@
 <!------------------------ MODAL ASIGNAR MATERIAL --------------------------------------->
 <x-jet-dialog-modal maxWidth="sm" wire:model="open_assign_material">
     <x-slot name="title">
-        <h1>{{$material}}</h1>
+        <h1>{{$detalle_pedido_material}}</h1>
     </x-slot>
     <x-slot name="content">
         <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
             <x-jet-label>Cantidad Pedida</x-jet-label>
                <div class="flex">
-                 <input class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" wire:model="cantidad_pedida" />
+                 <input class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" wire:model="detalle_pedido_cantidad" />
 
-                <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
-                    {{$measurement_unit}}
+                <span class="detalle_pedido_unidad_medida-flex items-center pt-1 px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
+                    {{$detalle_pedido_unidad_medida}}
                 </span>
                 </div>
-            <x-jet-input-error for="cantidad"/>
+            <x-jet-input-error for="detalle_pedido_cantidad"/>
         </div>
         <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
             <x-jet-label>Precio Unitario</span></x-jet-label>
-            <x-jet-input type="number" min="0" style="height:30px;width: 100%" class="text-center" wire:model="precio"/>
-            <x-jet-input-error for="precio"/>
+            <x-jet-input readonly type="number" min="0" style="height:30px;width: 100%" class="text-center" value="{{$detalle_pedido_precio}}"/>
         </div>
         <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
             <x-jet-label>Precio Total</span></x-jet-label>
-            <x-jet-input type="number" min="0" disabled style="height:30px;width: 100%" class="text-center" value="{{$precioTotal}}"/>
+            <x-jet-input type="number" min="0" readonly style="height:30px;width: 100%" class="text-center" value="{{$detalle_pedido_precio_total}}"/>
 
-        </div>
-        <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 3 span/ 3 span">
-            <x-jet-label>Observaciones:</x-jet-label>
-            <textarea class="form-control w-full text-sm" rows=5 wire:model.defer="observation"></textarea>
-            <x-jet-input-error for="observation"/>
         </div>
     </x-slot>
     <x-slot name="footer">
-        @if ($cantidad == 0)
-            <x-jet-button wire:loading.attr="disabled" wire:click="validarMaterial()">
-                Rechazar
-            </x-jet-button>
-        @else
-            <x-jet-button wire:loading.attr="disabled" wire:click="validarMaterial()">
-                Validar
-            </x-jet-button>
-        @endif
+        <x-jet-button wire:loading.attr="disabled" wire:click="validarMaterial()">
+            Validar
+        </x-jet-button>
         <div wire:loading wire:target="validarMaterial">
             Registrando...
         </div>
-        <x-jet-secondary-button wire:click="$set('open_validate_material',false)" class="ml-2">
+        <x-jet-secondary-button wire:click="$set('open_assign_material',false)" class="ml-2">
             Cancelar
         </x-jet-secondary-button>
     </x-slot>

@@ -37,6 +37,12 @@ class AssignMaterialsOperator extends Component
     public $open_assign_material = false;
 /*-----------------ID DEL DETALLE DEL PEDIDO A ASIGNAR---------------*/
     public $id_detalle_pedido = false;
+/*-----------------DATOS DEL DETALLLE DEL PEDIDO A ASIGNAR-------------------------*/
+    public $detalle_pedido_material = "";
+    public $detalle_pedido_cantidad = 0;
+    public $detalle_pedido_unidad_medida = "";
+    public $detalle_pedid_precio = 0;
+    public $detalle_pedido_precio_total = 0;
 /*---------------------ESCUCHAR FUNCIONES-------------------*/
     protected $listeners = [];
 /*------------------REGLAS DE VALIDACION----------------------*/
@@ -91,6 +97,16 @@ class AssignMaterialsOperator extends Component
     public function modalAsignarOperador($id){
         $this->id_detalle_pedido = $id;
         $detalle_pedido = OrderRequestDetail::find($id);
+        $this->detalle_pedido_material = $detalle_pedido->item->item;
+        $this->detalle_pedido_cantidad = floatval($detalle_pedido->quantity);
+        $this->detalle_pedido_unidad_medida = $detalle_pedido->item->measurementUnit->abbreviation;
+        $this->detalle_pedido_precio = floatval($detalle_pedido->estimated_price);
+        if($this->detalle_pedido_cantidad > 0 && $this->detalle_pedid_precio > 0){
+            $this->detalle_pedido_precio_total = $this->detalle_pedido_cantidad * $this->detalle_pedid_precio;
+        }else{
+            $this->detalle_pedido_precio_total = 0;
+        }
+        $this->detalle_pedido_precio_total = 150.50;
         $this->open_assign_material =true;
 
     }
