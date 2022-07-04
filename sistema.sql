@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 04-07-2022 a las 20:18:58
+-- Tiempo de generación: 04-07-2022 a las 21:31:25
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -2044,6 +2044,14 @@ CREATE TABLE `risk_task_order` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Volcado de datos para la tabla `risk_task_order`
+--
+
+INSERT INTO `risk_task_order` (`id`, `risk_id`, `task_id`, `created_at`, `updated_at`) VALUES
+(1, 16, 18, '2022-07-04 18:25:09', '2022-07-04 18:25:09'),
+(2, 18, 28, '2022-07-04 18:25:09', '2022-07-04 18:25:09');
+
 -- --------------------------------------------------------
 
 --
@@ -3384,7 +3392,7 @@ ALTER TABLE `risks`
 -- AUTO_INCREMENT de la tabla `risk_task_order`
 --
 ALTER TABLE `risk_task_order`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
