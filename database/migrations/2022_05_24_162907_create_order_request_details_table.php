@@ -21,6 +21,7 @@ return new class extends Migration
             $table->decimal('estimated_price',8,2);
             $table->enum('state',['PENDIENTE','ACEPTADO','MODIFICADO','RECHAZADO','VALIDADO','INCOMPLETO','CONCLUIDO'])->default('PENDIENTE');
             $table->text('observation')->nullable();
+            $table->decimal('assigned_quantity',8,2)->default(0);
             $table->timestamps();
         });
     }

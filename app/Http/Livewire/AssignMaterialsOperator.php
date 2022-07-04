@@ -5,14 +5,18 @@ namespace App\Http\Livewire;
 use App\Models\CecoAllocationAmount;
 use App\Models\Implement;
 use App\Models\Location;
+use App\Models\OperatorStockDetail;
 use App\Models\OrderDate;
 use App\Models\OrderRequest;
 use App\Models\OrderRequestDetail;
 use App\Models\Sede;
+use App\Models\User;
+use App\Models\Warehouse;
 use App\Models\Zone;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class AssignMaterialsOperator extends Component
 {
@@ -37,27 +41,32 @@ class AssignMaterialsOperator extends Component
     public $open_assign_material = false;
 /*-----------------ID DEL DETALLE DEL PEDIDO A ASIGNAR---------------*/
     public $id_detalle_pedido = false;
+/*-----------------CANTIDAD PEDIDA-------------------------------------*/
+    public $detalle_pedido_cantidad_pedida = 0;
 /*-----------------DATOS DEL DETALLLE DEL PEDIDO A ASIGNAR-------------------------*/
     public $detalle_pedido_material = "";
     public $detalle_pedido_cantidad = 0;
     public $detalle_pedido_unidad_medida = "";
-    public $detalle_pedid_precio = 0;
+    public $detalle_pedido_precio = 0;
     public $detalle_pedido_precio_total = 0;
 /*---------------------ESCUCHAR FUNCIONES-------------------*/
     protected $listeners = [];
 /*------------------REGLAS DE VALIDACION----------------------*/
     protected function rules(){
         return [
-
+            'detalle_pedido_cantidad' =>['required','numeric','lte:detalle_pedido_cantidad_pedida','min:0.01'],
         ];
     }
-    /*-------------------MENSAJES DE VALIDACION---------------------*/
+/*-------------------MENSAJES DE VALIDACION---------------------*/
     protected function messages(){
         return [
-
+            'detalle_pedido_cantidad.required' => "Ingrese una cantidad",
+            'detalle_pedido_cantidad.numeric' => 'Debe ser un número',
+            'detalle_pedido_cantidad.min' => 'Asigne más cantidad',
+            'detalle_pedido_cantidad.lte' => 'Se pidió solo '.$this->detalle_pedido_cantidad_pedida,
         ];
     }
-    /*----------------TRIGGERS DE FILTROS--------------------------------------------------*/
+/*----------------TRIGGERS DE FILTROS--------------------------------------------------*/
     public function updatedTzone(){
         $this->reset(['tsede','tlocation','tfecha']);
         $this->incluidos = [];
@@ -76,7 +85,9 @@ class AssignMaterialsOperator extends Component
     }
 /*-------------------RESERTEAR CAMPOS AL CERRAR EL MODAL DE LA LISTA DE PEDIDOS---------------*/
     public function updatedOpenRequestList(){
-        $this->reset('id_implemento','implemento','id_solicitud_pedido');
+        if(!$this->open_request_list){
+            $this->reset('id_implemento','implemento','id_solicitud_pedido','id_operador','operador');
+        }
     }
 /*----------------MOSTRAR LISTA DE PEDIDOS CUANDO CAMBIE EL IMPLEMENTO-----*/
     public function updatedIdImplemento(){
@@ -99,20 +110,64 @@ class AssignMaterialsOperator extends Component
         $detalle_pedido = OrderRequestDetail::find($id);
         $this->detalle_pedido_material = $detalle_pedido->item->item;
         $this->detalle_pedido_cantidad = floatval($detalle_pedido->quantity);
+        $this->detalle_pedido_cantidad_pedida = floatval($detalle_pedido->quantity);
         $this->detalle_pedido_unidad_medida = $detalle_pedido->item->measurementUnit->abbreviation;
         $this->detalle_pedido_precio = floatval($detalle_pedido->estimated_price);
-        if($this->detalle_pedido_cantidad > 0 && $this->detalle_pedid_precio > 0){
-            $this->detalle_pedido_precio_total = $this->detalle_pedido_cantidad * $this->detalle_pedid_precio;
+        if($this->detalle_pedido_cantidad > 0 && $this->detalle_pedido_precio > 0){
+            $this->detalle_pedido_precio_total = $this->detalle_pedido_cantidad * $this->detalle_pedido_precio;
         }else{
             $this->detalle_pedido_precio_total = 0;
         }
-        $this->detalle_pedido_precio_total = 150.50;
         $this->open_assign_material =true;
-
+    }
+/*------------Actualizar precio según cantidad----------------------*/
+    public function updatedDetallePedidoCantidad(){
+        if($this->detalle_pedido_cantidad > 0){
+            $this->detalle_pedido_precio_total = $this->detalle_pedido_cantidad * $this->detalle_pedido_precio;
+        }else{
+            $this->detalle_pedido_precio_total = 0;
+        }
     }
 /*--------------ASIGNAR MATERIAL AL OPERADOR-------------------------*/
     public function asignarMaterial(){
-
+        $this->validate();
+        if($this->detalle_pedido_cantidad > 0 && $this->detalle_pedido_cantidad <= $this->detalle_pedido_cantidad_pedida){
+            /*-----------Obtener el detalle de la solicitud de pedido----------------------------*/
+            $detalle_pedido = OrderRequestDetail::find($this->id_detalle_pedido);
+            /*--------------------Obtener datos del operador-----------------------------*/
+            $operador_data = User::find($this->id_operador);
+            /*-----------Asignar cantidad al operador------------------------------------------*/
+            OperatorStockDetail::create([
+                'user_id' => $this->id_operador,
+                'item_id' => $detalle_pedido->item_id,
+                'movement' => 'INGRESO',
+                'quantity' => $this->detalle_pedido_cantidad,
+                'price' => $detalle_pedido->estimated_price,
+                'warehouse_id' => $operador_data->location_id,
+                'state' => "CONFIRMADO",
+                'order_request_detail_id' => $this->id_detalle_pedido,
+            ]);
+            /*--------Anotar la cantidad asignada en la solicityd de pedido--------------------------------*/
+            $detalle_pedido->assigned_quantity = $detalle_pedido->assigned_quantity + $this->detalle_pedido_cantidad;
+            $detalle_pedido->save();
+            /*---------Alertar de operación exitosa----------------*/
+            $this->emit('alert');
+            /*--------Cerrar Modal-----------------------*/
+            $this->open_assign_material = false;
+        }
+    }
+/*------------ANULAR MATERIAL ASIGNADO-------------------------------------*/
+    public function anularAsignacionMaterial($id){
+        /*------------Obtener el detalle del material asignado------------*/
+        $assigned_material = OperatorStockDetail::find($id);
+        /*--------------Obtener el dealle de la solicitud de pedido----------*/
+        $detalle_pedido = OrderRequestDetail::find($id);
+        /*--------------Actualizar la cantidad asignada----------------------*/
+        $detalle_pedido->assigned_quantity = $detalle_pedido->assigned_quantity - $assigned_material->quantity;
+        $detalle_pedido->save();
+        /*-------------------Actualizar el estado del material asignado-------*/
+        $assigned_material->state = "ANULADO";
+        $assigned_material->save();
     }
 /*-------------FUNCION RENDER-------------------------------------------*/
     public function render()

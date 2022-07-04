@@ -41,4 +41,7 @@ class Implement extends Model
     public function ceco(){
         return $this->belongsTo(Ceco::class);
     }
+    public function orderRequests(){
+        return $this->hasMany(OrderRequest::class);
+    }
 }
