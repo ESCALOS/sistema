@@ -134,7 +134,7 @@
                                         </td>
                                         <td class="py-3 px-6 text-center">
                                             <div>
-                                                <span class="font-medium">{{$request->quantity}} {{$request->item->measurementUnit->abbreviation}}</span>
+                                                <span class="font-medium">{{($request->quantity - $request->assigned_quantity)}} {{$request->item->measurementUnit->abbreviation}}</span>
                                             </div>
                                         </td>
                                     </tr>
@@ -164,7 +164,29 @@
                                     </tr>
                                 </thead>
                                 <tbody class="text-gray-600 text-sm font-light">
-
+                                    @isset($operator_stock)
+                                    @foreach ($operator_stock as $request)
+                                    <tr wire:dblclick="$emit('confirmarAnularAsignacionMaterial',[{{$request->id}},'{{$request->item->item}}'])" class="border-b border-gray-200 unselected">
+                                        <td class="py-3 px-6 text-center">
+                                            <div>
+                                                <span class="font-medium">{{$request->item->sku}} </span>
+                                            </div>
+                                        </td>
+                                        <td class="py-3 px-6 text-center">
+                                            <div>
+                                                <span class="font-bold {{$request->item->type == "PIEZA" ? 'text-red-500' : ( $request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "FUNGIBLE" ? 'text-amber-500' : 'text-blue-500')))}} ">
+                                                    {{ strtoupper($request->item->item) }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td class="py-3 px-6 text-center">
+                                            <div>
+                                                <span class="font-medium">{{($request->quantity - $request->assigned_quantity)}} {{$request->item->measurementUnit->abbreviation}}</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                    @endisset
                                 </tbody>
                             </table>
                         </div>

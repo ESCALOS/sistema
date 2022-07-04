@@ -22,6 +22,7 @@ return new class extends Migration
             $table->enum('state',['PENDIENTE','ACEPTADO','MODIFICADO','RECHAZADO','VALIDADO','INCOMPLETO','CONCLUIDO'])->default('PENDIENTE');
             $table->text('observation')->nullable();
             $table->decimal('assigned_quantity',8,2)->default(0);
+            $table->enum('assigned_state',['NO ASIGNADO','ASIGNADO'])->default('NO ASIGNADO');
             $table->timestamps();
         });
     }

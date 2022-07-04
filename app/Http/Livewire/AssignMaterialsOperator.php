@@ -5,6 +5,7 @@ namespace App\Http\Livewire;
 use App\Models\CecoAllocationAmount;
 use App\Models\Implement;
 use App\Models\Location;
+use App\Models\OperatorStock;
 use App\Models\OperatorStockDetail;
 use App\Models\OrderDate;
 use App\Models\OrderRequest;
@@ -50,7 +51,7 @@ class AssignMaterialsOperator extends Component
     public $detalle_pedido_precio = 0;
     public $detalle_pedido_precio_total = 0;
 /*---------------------ESCUCHAR FUNCIONES-------------------*/
-    protected $listeners = [];
+    protected $listeners = ['anularAsignacionMaterial'];
 /*------------------REGLAS DE VALIDACION----------------------*/
     protected function rules(){
         return [
@@ -63,7 +64,7 @@ class AssignMaterialsOperator extends Component
             'detalle_pedido_cantidad.required' => "Ingrese una cantidad",
             'detalle_pedido_cantidad.numeric' => 'Debe ser un número',
             'detalle_pedido_cantidad.min' => 'Asigne más cantidad',
-            'detalle_pedido_cantidad.lte' => 'Se pidió solo '.$this->detalle_pedido_cantidad_pedida,
+            'detalle_pedido_cantidad.lte' => 'Falta asignar solamente '.$this->detalle_pedido_cantidad_pedida,
         ];
     }
 /*----------------TRIGGERS DE FILTROS--------------------------------------------------*/
@@ -109,8 +110,8 @@ class AssignMaterialsOperator extends Component
         $this->id_detalle_pedido = $id;
         $detalle_pedido = OrderRequestDetail::find($id);
         $this->detalle_pedido_material = $detalle_pedido->item->item;
-        $this->detalle_pedido_cantidad = floatval($detalle_pedido->quantity);
-        $this->detalle_pedido_cantidad_pedida = floatval($detalle_pedido->quantity);
+        $this->detalle_pedido_cantidad = floatval($detalle_pedido->quantity - $detalle_pedido->assigned_quantity);
+        $this->detalle_pedido_cantidad_pedida = floatval($detalle_pedido->quantity - $detalle_pedido->assigned_quantity);
         $this->detalle_pedido_unidad_medida = $detalle_pedido->item->measurementUnit->abbreviation;
         $this->detalle_pedido_precio = floatval($detalle_pedido->estimated_price);
         if($this->detalle_pedido_cantidad > 0 && $this->detalle_pedido_precio > 0){
@@ -149,6 +150,9 @@ class AssignMaterialsOperator extends Component
             ]);
             /*--------Anotar la cantidad asignada en la solicityd de pedido--------------------------------*/
             $detalle_pedido->assigned_quantity = $detalle_pedido->assigned_quantity + $this->detalle_pedido_cantidad;
+            if($detalle_pedido->assigned_quantity == $detalle_pedido->quantity){
+                $detalle_pedido->assigned_state = 'ASIGNADO';
+            }
             $detalle_pedido->save();
             /*---------Alertar de operación exitosa----------------*/
             $this->emit('alert');
@@ -161,9 +165,12 @@ class AssignMaterialsOperator extends Component
         /*------------Obtener el detalle del material asignado------------*/
         $assigned_material = OperatorStockDetail::find($id);
         /*--------------Obtener el dealle de la solicitud de pedido----------*/
-        $detalle_pedido = OrderRequestDetail::find($id);
+        $detalle_pedido = OrderRequestDetail::find($assigned_material->order_request_detail_id);
         /*--------------Actualizar la cantidad asignada----------------------*/
         $detalle_pedido->assigned_quantity = $detalle_pedido->assigned_quantity - $assigned_material->quantity;
+        if($detalle_pedido->assigned_state =="ASIGNADO"){
+            $detalle_pedido->assigned_state = "NO ASIGNADO";
+        }
         $detalle_pedido->save();
         /*-------------------Actualizar el estado del material asignado-------*/
         $assigned_material->state = "ANULADO";
@@ -186,7 +193,7 @@ class AssignMaterialsOperator extends Component
         if($this->tlocation > 0 && $this->tfecha > 0){
             $order_requests = OrderRequest::join('implements',function ($join){
                 $join->on('order_requests.implement_id','=','implements.id');
-            })->where('implements.location_id',$this->tlocation)->where('order_date_id',$this->tfecha)->where('state','VALIDADO')->orWhere('state','INCOMPLETO')->get();
+            })->where('implements.location_id',$this->tlocation)->where('order_date_id',$this->tfecha)->where('state','VALIDADO')->get();
         }
         /*---------------------------Obtener los usuarios que tienen una solicitud cerrada----------*/
         if(isset($order_requests)){
@@ -203,10 +210,20 @@ class AssignMaterialsOperator extends Component
         })->join('implement_models', function($join){
             $join->on('implement_models.id','=','implements.implement_model_id');
         })->where('order_requests.user_id',$this->id_operador)->where('order_requests.state','VALIDADO')->select('implements.*','implement_models.implement_model')->get();
-    /*------------------OBTENER PEDIDO DEL IMPLEMENTO----------------------------------------*/
-        $order_request_detail = OrderRequestDetail::where('order_request_id',$this->id_solicitud_pedido)->where('quantity','>',0)->where('state','VALIDADO')->get();
+    /*-----------------------OBTENER PEDIDO DEL IMPLEMENTO--------------------------------------------*/
+        $order_request_detail = OrderRequestDetail::where('order_request_id',$this->id_solicitud_pedido)->where('state','VALIDADO')->where('assigned_state','NO ASIGNADO')->get();
+    /*-----------------------OBTENER ACUMULADO DE MATERIALES ASIGNADOS--------------------------------*/
+    if($this->id_solicitud_pedido > 0){
+        $operator_stock = OperatorStockDetail::join('order_request_details',function($join){
+                $join->on('order_request_details.id','=','operator_stock_details.order_request_detail_id');
+            })->join('order_requests',function($join){
+                $join->on('order_requests.id','=','order_request_details.order_request_id');
+            })->where('order_requests.id','=',$this->id_solicitud_pedido)->where('operator_stock_details.state','CONFIRMADO')->select('operator_stock_details.*')->get();
+    }else{
+        $operator_stock = NULL;
+    }
     /*----------------------DATOS DEL RENDERIZADOS---------------------------------------------------------*/
-        return view('livewire.assign-materials-operator', compact('zones', 'sedes', 'locations','order_dates','users','implements','order_request_detail'));
+        return view('livewire.assign-materials-operator', compact('zones', 'sedes', 'locations','order_dates','users','implements','order_request_detail','operator_stock'));
     /*---------------------------------------------------------------------------------------------------*/
     }
 }

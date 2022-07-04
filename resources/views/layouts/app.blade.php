@@ -51,7 +51,7 @@
                 })
             });
         @if (Route::is('operator.request-materials'))
-/*----------ALERTAS PARA LA CONFIRMACION DE CERRAR PEDIDO(OPERADOR) ------------------------*/
+/*--------------ALERTAS PARA LA CONFIRMACION DE CERRAR PEDIDO(OPERADOR) --------------------*/
     /*--------------------Confirmacion para cerra el pedido--------------------------------------*/
             Livewire.on('confirmarCerrarPedido', implemento =>{
                 Swal.fire({
@@ -76,9 +76,10 @@
                     }
                 })
             });
+/*------------------------------------------------------------------------------------------------------*/
         @endif
-/*--------------ALERTAS PARA LA VISTA DE VALIDAR SOLICITUD DE PEDIDO(PLANNER)--------------*/
         @if(Route::is('planner.validate-request-materials'))
+/*--------------ALERTAS PARA LA VISTA DE VALIDAR SOLICITUD DE PEDIDO(PLANNER)---------------*/
     /*--------------------Confirmacion Reinsertar Pedido Rechazado--------------------------------------*/
             Livewire.on('confirmarReinsertarRechazado', solicitud =>{
                 Swal.fire({
@@ -174,7 +175,7 @@
                 }
             })
         });
-    /*----------Confirmar recharzar nuevo material-------------------------------*/
+    /*----------------------Confirmar recharzar nuevo material-------------------------------*/
             Livewire.on('confirmarRechazarMaterialNuevo', nombre_material =>{
                 Swal.fire({
                     title: '¿Rechazar el material '+nombre_material+'?',
@@ -198,9 +199,35 @@
                         }
                     })
             });
+/*----------------------------------------------------------------------------------*/
         @endif
-    /*----------------------------------------------------------------------------------*/
-/*--------------------------------------------------------------------------------------*/
+        @if(Route::is('planner.assign-materials-operator'))
+/*--------------ALERTA PARA CONFIRMACION DE ANULAR ASIGNACION DE MATERIAL---------------------------*/
+        Livewire.on('confirmarAnularAsignacionMaterial', material =>{
+                Swal.fire({
+                    title: 'Anular la asignación de ' + material [1]+'?',
+                    text: "Esta acción es irreversible",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, anular!',
+                    cancelButtonText: 'No, cancelar!',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+
+                            Livewire.emit('anularAsignacionMaterial',material[0]);
+
+                            Swal.fire(
+                                'La asignación de ' + material[1] + ' ha sido anulada!',
+                                'Se anuló correctamente',
+                                'success'
+                            )
+                        }
+                    })
+            });
+/*------------------------------------------------------------------------------------------*/
+        @endif
         </script>
     </body>
 </html>
