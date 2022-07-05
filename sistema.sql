@@ -37,7 +37,7 @@ BEGIN
 DECLARE componente_final INT DEFAULT 0;
 DECLARE pieza_final  INT DEFAULT 0;
 /*-------------------------------------------------*/
-/*---------variables para almacenar variables del componente----------*/
+/*---------variables para almacenar datos del componente----------*/
 DECLARE pedido INT;  #order_request_id
 DECLARE implemento INT;
 DECLARE componente INT;
@@ -48,7 +48,7 @@ DECLARE horas DECIMAL(8,2);
 DECLARE cantidad DECIMAL(8,2);
 DECLARE precio_estimado DECIMAL(8,2);
 /*------------------------------------------------------------------------*/
-/*--------------variables para la pieza------------------------------------*/
+/*--------------variables para almacenar datos de la pieza------------------------------------*/
 DECLARE pieza INT;
 DECLARE item_pieza INT;
 DECLARE horas_pieza DECIMAL(8,2);
