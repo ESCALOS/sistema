@@ -18,6 +18,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('item_id')->unique()->constrained();
             $table->string('component')->unique();
+            $table->foreignId('system_id')->constrained();
             $table->boolean('is_part');
             $table->decimal('lifespan',8,2);
             $table->timestamps();

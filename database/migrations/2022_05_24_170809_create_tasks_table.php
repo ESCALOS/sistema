@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
-            $table->string('task')->unique();
+            $table->string('task');
             $table->foreignId('component_id')->constrained();
             $table->decimal('estimated_time',8,2);
             $table->timestamps();

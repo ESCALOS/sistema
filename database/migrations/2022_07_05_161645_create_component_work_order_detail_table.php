@@ -13,10 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('risks', function (Blueprint $table) {
+        Schema::create('component_work_order_detail', function (Blueprint $table) {
             $table->id();
-            $table->string('risk')->unique();
-            $table->string('abbreviation',5)->unique();
+            $table->foreignId('component_id')->constrained();
+            $table->foreignId('work_order_detail_id')->constrained();
             $table->timestamps();
         });
     }
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('risks');
+        Schema::dropIfExists('component_work_order_detail');
     }
 };

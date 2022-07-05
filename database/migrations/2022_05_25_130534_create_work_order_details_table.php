@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('work_order_id')->constrained();
             $table->foreignId('task_id')->constrained();
+            $table->enum('state',['RECOMENDADO','ACEPTADO','NO ACEPTADO']);
             $table->text('observation');
             $table->timestamps();
         });

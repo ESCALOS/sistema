@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 04-07-2022 a las 21:31:25
+-- Tiempo de generación: 05-07-2022 a las 21:26:25
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -37,7 +37,7 @@ BEGIN
 DECLARE componente_final INT DEFAULT 0;
 DECLARE pieza_final  INT DEFAULT 0;
 /*-------------------------------------------------*/
-/*---------variables para almacenar datos del componente----------*/
+/*---------variables para almacenar variables del componente----------*/
 DECLARE pedido INT;  #order_request_id
 DECLARE implemento INT;
 DECLARE componente INT;
@@ -48,7 +48,7 @@ DECLARE horas DECIMAL(8,2);
 DECLARE cantidad DECIMAL(8,2);
 DECLARE precio_estimado DECIMAL(8,2);
 /*------------------------------------------------------------------------*/
-/*--------------variables para almacenar datos de la pieza------------------------------------*/
+/*--------------variables para la pieza------------------------------------*/
 DECLARE pieza INT;
 DECLARE item_pieza INT;
 DECLARE horas_pieza DECIMAL(8,2);
@@ -147,6 +147,24 @@ UPDATE order_dates SET state = "CERRADO" WHERE state = "ABIERTO" LIMIT 1;
 END IF;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `tarea_reponer_componentes` ()   BEGIN
+DECLARE componente INT;
+DECLARE componente_final INT DEFAULT 0;
+DECLARE cur_componente CURSOR FOR SELECT id FROM components;
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET componente_final = 1;
+OPEN cur_componente;
+	bucle:LOOP
+    IF componente_final = 1 THEN
+    	LEAVE bucle;
+  	END IF;
+    FETCH cur_componente INTO componente;
+    IF NOT EXISTS(SELECT * FROM tasks WHERE component_id = componente AND task = "Reponer") THEN
+    INSERT INTO tasks (task,component_id,estimated_time) VALUES ('Reponer',componente,15);
+    END IF;
+    END LOOP bucle;
+CLOSE cur_componente;
+END$$
+
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -177,7 +195,15 @@ INSERT INTO `affected_movement` (`id`, `operator_stock_id`, `operator_stock_deta
 (7, 7, 8, 7, 7),
 (8, 7, 9, 8, 7),
 (9, 8, 10, 9, 7),
-(10, 8, 11, 10, 7);
+(10, 8, 11, 10, 7),
+(11, 8, 12, 11, 7),
+(12, 8, 13, 12, 7),
+(13, 8, 14, 13, 7),
+(14, 8, 15, 14, 7),
+(15, 8, 16, 15, 7),
+(16, 8, 17, 16, 7),
+(17, 9, 18, 17, 8),
+(18, 9, 19, 18, 8);
 
 -- --------------------------------------------------------
 
@@ -422,6 +448,7 @@ CREATE TABLE `components` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `item_id` bigint(20) UNSIGNED NOT NULL,
   `component` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `system_id` bigint(20) UNSIGNED DEFAULT NULL,
   `is_part` tinyint(1) NOT NULL,
   `lifespan` decimal(8,2) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -432,41 +459,41 @@ CREATE TABLE `components` (
 -- Volcado de datos para la tabla `components`
 --
 
-INSERT INTO `components` (`id`, `item_id`, `component`, `is_part`, `lifespan`, `created_at`, `updated_at`) VALUES
-(1, 2, 'fenphxjv', 0, '4829.00', NULL, NULL),
-(2, 3, 'uodoiizm', 1, '258.00', NULL, NULL),
-(3, 4, 'inqxlhvr', 1, '344.00', NULL, NULL),
-(4, 9, 'ynxsloty', 1, '443.00', NULL, NULL),
-(5, 10, 'vdmjztzo', 0, '1844.00', NULL, NULL),
-(6, 13, 'xazvmvok', 0, '929.00', NULL, NULL),
-(7, 15, 'malgbbvu', 1, '411.00', NULL, NULL),
-(8, 17, 'iinqimeg', 0, '2765.00', NULL, NULL),
-(9, 18, 'jrnuwort', 0, '1495.00', NULL, NULL),
-(10, 19, 'glqsvril', 0, '4180.00', NULL, NULL),
-(11, 21, 'qrrmsgax', 1, '142.00', NULL, NULL),
-(12, 23, 'tqgvkyjd', 0, '4542.00', NULL, NULL),
-(13, 24, 'hnvixqmu', 1, '346.00', NULL, NULL),
-(14, 25, 'nnxqjpih', 1, '367.00', NULL, NULL),
-(15, 26, 'ztypliaa', 1, '297.00', NULL, NULL),
-(16, 27, 'uufgzlwz', 0, '3841.00', NULL, NULL),
-(17, 29, 'sjepvnhk', 1, '30.00', NULL, NULL),
-(18, 32, 'vzjkkcej', 1, '496.00', NULL, NULL),
-(19, 33, 'qyltgffe', 0, '3903.00', NULL, NULL),
-(20, 34, 'oozarwvm', 0, '4639.00', NULL, NULL),
-(21, 39, 'uydbihgf', 0, '1485.00', NULL, NULL),
-(22, 43, 'pvphmrrt', 0, '3510.00', NULL, NULL),
-(23, 44, 'odzxmwyq', 1, '310.00', NULL, NULL),
-(24, 45, 'spnpzerr', 0, '4948.00', NULL, NULL),
-(25, 46, 'abqkzfka', 0, '452.00', NULL, NULL),
-(26, 47, 'tdtlgqur', 0, '2414.00', NULL, NULL),
-(27, 48, 'omzaqrnd', 0, '717.00', NULL, NULL),
-(28, 51, 'igkjtofr', 0, '1342.00', NULL, NULL),
-(29, 52, 'lxlrfbxf', 1, '456.00', NULL, NULL),
-(30, 53, 'tjhhvizw', 1, '377.00', NULL, NULL),
-(31, 54, 'fubvgxmw', 1, '18.00', NULL, NULL),
-(32, 55, 'upvgdrsm', 0, '4575.00', NULL, NULL),
-(33, 57, 'peorviek', 1, '234.00', NULL, NULL),
-(34, 59, 'qvjzldtw', 0, '2974.00', NULL, NULL);
+INSERT INTO `components` (`id`, `item_id`, `component`, `system_id`, `is_part`, `lifespan`, `created_at`, `updated_at`) VALUES
+(1, 2, 'fenphxjv', 5, 0, '4829.00', NULL, NULL),
+(2, 3, 'uodoiizm', NULL, 1, '258.00', NULL, NULL),
+(3, 4, 'inqxlhvr', NULL, 1, '344.00', NULL, NULL),
+(4, 9, 'ynxsloty', NULL, 1, '443.00', NULL, NULL),
+(5, 10, 'vdmjztzo', 1, 0, '1844.00', NULL, NULL),
+(6, 13, 'xazvmvok', 1, 0, '929.00', NULL, NULL),
+(7, 15, 'malgbbvu', NULL, 1, '411.00', NULL, NULL),
+(8, 17, 'iinqimeg', 6, 0, '2765.00', NULL, NULL),
+(9, 18, 'jrnuwort', 3, 0, '1495.00', NULL, NULL),
+(10, 19, 'glqsvril', 6, 0, '4180.00', NULL, NULL),
+(11, 21, 'qrrmsgax', NULL, 1, '142.00', NULL, NULL),
+(12, 23, 'tqgvkyjd', 4, 0, '4542.00', NULL, NULL),
+(13, 24, 'hnvixqmu', NULL, 1, '346.00', NULL, NULL),
+(14, 25, 'nnxqjpih', NULL, 1, '367.00', NULL, NULL),
+(15, 26, 'ztypliaa', NULL, 1, '297.00', NULL, NULL),
+(16, 27, 'uufgzlwz', 4, 0, '3841.00', NULL, NULL),
+(17, 29, 'sjepvnhk', NULL, 1, '30.00', NULL, NULL),
+(18, 32, 'vzjkkcej', NULL, 1, '496.00', NULL, NULL),
+(19, 33, 'qyltgffe', 4, 0, '3903.00', NULL, NULL),
+(20, 34, 'oozarwvm', 4, 0, '4639.00', NULL, NULL),
+(21, 39, 'uydbihgf', 4, 0, '1485.00', NULL, NULL),
+(22, 43, 'pvphmrrt', 5, 0, '3510.00', NULL, NULL),
+(23, 44, 'odzxmwyq', NULL, 1, '310.00', NULL, NULL),
+(24, 45, 'spnpzerr', 2, 0, '4948.00', NULL, NULL),
+(25, 46, 'abqkzfka', 1, 0, '452.00', NULL, NULL),
+(26, 47, 'tdtlgqur', 6, 0, '2414.00', NULL, NULL),
+(27, 48, 'omzaqrnd', 4, 0, '717.00', NULL, NULL),
+(28, 51, 'igkjtofr', 4, 0, '1342.00', NULL, NULL),
+(29, 52, 'lxlrfbxf', NULL, 1, '456.00', NULL, NULL),
+(30, 53, 'tjhhvizw', NULL, 1, '377.00', NULL, NULL),
+(31, 54, 'fubvgxmw', NULL, 1, '18.00', NULL, NULL),
+(32, 55, 'upvgdrsm', 5, 0, '4575.00', NULL, NULL),
+(33, 57, 'peorviek', NULL, 1, '234.00', NULL, NULL),
+(34, 59, 'qvjzldtw', 3, 0, '2974.00', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -502,28 +529,26 @@ INSERT INTO `component_implement` (`id`, `component_id`, `implement_id`, `hours`
 CREATE TABLE `component_implement_model` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `component_id` bigint(20) UNSIGNED NOT NULL,
-  `implement_model_id` bigint(20) UNSIGNED NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `implement_model_id` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `component_implement_model`
 --
 
-INSERT INTO `component_implement_model` (`id`, `component_id`, `implement_model_id`, `created_at`, `updated_at`) VALUES
-(1, 28, 1, NULL, NULL),
-(2, 8, 1, NULL, NULL),
-(3, 20, 1, NULL, NULL),
-(4, 20, 2, NULL, NULL),
-(5, 19, 2, NULL, NULL),
-(6, 22, 2, NULL, NULL),
-(7, 10, 3, NULL, NULL),
-(8, 5, 3, NULL, NULL),
-(9, 21, 3, NULL, NULL),
-(10, 28, 4, NULL, NULL),
-(11, 27, 4, NULL, NULL),
-(12, 22, 4, NULL, NULL);
+INSERT INTO `component_implement_model` (`id`, `component_id`, `implement_model_id`) VALUES
+(8, 5, 3),
+(2, 8, 1),
+(7, 10, 3),
+(5, 19, 2),
+(3, 20, 1),
+(4, 20, 2),
+(9, 21, 3),
+(6, 22, 2),
+(12, 22, 4),
+(11, 27, 4),
+(1, 28, 1),
+(10, 28, 4);
 
 -- --------------------------------------------------------
 
@@ -565,84 +590,82 @@ INSERT INTO `component_part` (`id`, `component_implement_id`, `part`, `hours`, `
 CREATE TABLE `component_part_model` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `component` bigint(20) UNSIGNED NOT NULL,
-  `part` bigint(20) UNSIGNED NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `part` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `component_part_model`
 --
 
-INSERT INTO `component_part_model` (`id`, `component`, `part`, `created_at`, `updated_at`) VALUES
-(1, 1, 13, NULL, NULL),
-(2, 1, 31, NULL, NULL),
-(3, 1, 2, NULL, NULL),
-(4, 5, 2, NULL, NULL),
-(5, 5, 7, NULL, NULL),
-(6, 5, 13, NULL, NULL),
-(7, 6, 30, NULL, NULL),
-(8, 6, 15, NULL, NULL),
-(9, 6, 7, NULL, NULL),
-(10, 8, 11, NULL, NULL),
-(11, 8, 4, NULL, NULL),
-(12, 8, 23, NULL, NULL),
-(13, 9, 11, NULL, NULL),
-(14, 9, 29, NULL, NULL),
-(15, 9, 3, NULL, NULL),
-(16, 10, 33, NULL, NULL),
-(17, 10, 7, NULL, NULL),
-(18, 10, 29, NULL, NULL),
-(19, 12, 2, NULL, NULL),
-(20, 12, 13, NULL, NULL),
-(21, 12, 23, NULL, NULL),
-(22, 16, 29, NULL, NULL),
-(23, 16, 23, NULL, NULL),
-(24, 16, 18, NULL, NULL),
-(25, 19, 4, NULL, NULL),
-(26, 19, 3, NULL, NULL),
-(27, 19, 13, NULL, NULL),
-(28, 20, 4, NULL, NULL),
-(29, 20, 29, NULL, NULL),
-(30, 20, 33, NULL, NULL),
-(31, 21, 3, NULL, NULL),
-(32, 21, 33, NULL, NULL),
-(33, 21, 17, NULL, NULL),
-(34, 22, 2, NULL, NULL),
-(35, 22, 23, NULL, NULL),
-(36, 22, 29, NULL, NULL),
-(37, 24, 14, NULL, NULL),
-(38, 24, 3, NULL, NULL),
-(39, 24, 13, NULL, NULL),
-(40, 25, 30, NULL, NULL),
-(41, 25, 15, NULL, NULL),
-(42, 25, 2, NULL, NULL),
-(43, 26, 30, NULL, NULL),
-(44, 26, 33, NULL, NULL),
-(45, 26, 2, NULL, NULL),
-(46, 27, 11, NULL, NULL),
-(47, 27, 30, NULL, NULL),
-(48, 27, 33, NULL, NULL),
-(49, 28, 13, NULL, NULL),
-(50, 28, 2, NULL, NULL),
-(51, 28, 33, NULL, NULL),
-(52, 32, 23, NULL, NULL),
-(53, 32, 4, NULL, NULL),
-(54, 32, 2, NULL, NULL),
-(55, 34, 33, NULL, NULL),
-(56, 34, 3, NULL, NULL),
-(57, 34, 31, NULL, NULL);
+INSERT INTO `component_part_model` (`id`, `component`, `part`) VALUES
+(3, 1, 2),
+(1, 1, 13),
+(2, 1, 31),
+(4, 5, 2),
+(5, 5, 7),
+(6, 5, 13),
+(9, 6, 7),
+(8, 6, 15),
+(7, 6, 30),
+(11, 8, 4),
+(10, 8, 11),
+(12, 8, 23),
+(15, 9, 3),
+(13, 9, 11),
+(14, 9, 29),
+(17, 10, 7),
+(18, 10, 29),
+(16, 10, 33),
+(19, 12, 2),
+(20, 12, 13),
+(21, 12, 23),
+(24, 16, 18),
+(23, 16, 23),
+(22, 16, 29),
+(26, 19, 3),
+(25, 19, 4),
+(27, 19, 13),
+(28, 20, 4),
+(29, 20, 29),
+(30, 20, 33),
+(31, 21, 3),
+(33, 21, 17),
+(32, 21, 33),
+(34, 22, 2),
+(35, 22, 23),
+(36, 22, 29),
+(38, 24, 3),
+(39, 24, 13),
+(37, 24, 14),
+(42, 25, 2),
+(41, 25, 15),
+(40, 25, 30),
+(45, 26, 2),
+(43, 26, 30),
+(44, 26, 33),
+(46, 27, 11),
+(47, 27, 30),
+(48, 27, 33),
+(50, 28, 2),
+(49, 28, 13),
+(51, 28, 33),
+(54, 32, 2),
+(53, 32, 4),
+(52, 32, 23),
+(56, 34, 3),
+(57, 34, 31),
+(55, 34, 33);
 
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `component_system`
+-- Estructura de tabla para la tabla `component_work_order_detail`
 --
 
-CREATE TABLE `component_system` (
+CREATE TABLE `component_work_order_detail` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `component_id` bigint(20) UNSIGNED NOT NULL,
-  `system_id` bigint(20) UNSIGNED NOT NULL,
+  `work_order_detail_id` bigint(20) UNSIGNED NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -724,10 +747,35 @@ INSERT INTO `epps` (`id`, `epp`, `created_at`, `updated_at`) VALUES
 CREATE TABLE `epp_risk` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `epp_id` bigint(20) UNSIGNED NOT NULL,
-  `risk_id` bigint(20) UNSIGNED NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `risk_id` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `epp_risk`
+--
+
+INSERT INTO `epp_risk` (`id`, `epp_id`, `risk_id`) VALUES
+(6, 1, 23),
+(8, 2, 23),
+(7, 3, 23),
+(4, 4, 26),
+(11, 5, 22),
+(17, 6, 21),
+(10, 7, 28),
+(1, 8, 26),
+(13, 9, 27),
+(9, 10, 28),
+(3, 11, 26),
+(12, 12, 22),
+(2, 13, 26),
+(20, 14, 25),
+(21, 15, 22),
+(18, 16, 21),
+(16, 16, 24),
+(19, 17, 29),
+(5, 18, 23),
+(14, 19, 27),
+(15, 20, 24);
 
 -- --------------------------------------------------------
 
@@ -1232,7 +1280,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (57, '2022_06_06_131457_create_component_part_table', 1),
 (58, '2022_06_08_143231_component_part_model', 1),
 (59, '2022_06_08_184844_create_affected_movement_table', 1),
-(60, '2022_06_20_052727_create_permission_tables', 1);
+(60, '2022_06_20_052727_create_permission_tables', 1),
+(61, '2022_07_05_161645_create_component_work_order_detail_table', 2);
 
 -- --------------------------------------------------------
 
@@ -1381,7 +1430,15 @@ INSERT INTO `operator_assigned_stocks` (`id`, `user_id`, `item_id`, `quantity`, 
 (7, 2, 9, '0.00', '0.00', 1, 'ASIGNADO', NULL, NULL),
 (8, 2, 9, '0.00', '0.00', 1, 'ASIGNADO', NULL, NULL),
 (9, 2, 57, '2.00', '502.17', 1, 'ASIGNADO', NULL, NULL),
-(10, 2, 9, '2.00', '362.42', 1, 'ASIGNADO', NULL, NULL);
+(10, 2, 9, '2.00', '362.42', 1, 'ASIGNADO', NULL, NULL),
+(11, 1, 21, '2.00', '800.00', 1, 'ASIGNADO', NULL, NULL),
+(12, 1, 44, '1.00', '954.65', 1, 'ASIGNADO', NULL, NULL),
+(13, 1, 52, '2.00', '216.64', 1, 'ASIGNADO', NULL, NULL),
+(14, 1, 57, '2.00', '420.00', 1, 'ASIGNADO', NULL, NULL),
+(15, 2, 57, '0.00', '0.00', 1, 'ASIGNADO', NULL, NULL),
+(16, 2, 57, '2.00', '502.17', 1, 'ASIGNADO', NULL, NULL),
+(17, 1, 63, '3.00', '610.00', 1, 'ASIGNADO', NULL, NULL),
+(18, 1, 64, '1.00', '785.00', 1, 'ASIGNADO', NULL, NULL);
 
 --
 -- Disparadores `operator_assigned_stocks`
@@ -1415,13 +1472,14 @@ CREATE TABLE `operator_stocks` (
 --
 
 INSERT INTO `operator_stocks` (`id`, `user_id`, `item_id`, `quantity`, `price`, `warehouse_id`, `created_at`, `updated_at`) VALUES
-(2, 1, 21, '0.00', '0.00', 1, NULL, NULL),
-(3, 1, 44, '0.00', '0.00', 1, NULL, NULL),
-(4, 1, 64, '0.00', '0.00', 1, NULL, NULL),
-(5, 1, 52, '0.00', '0.00', 1, NULL, NULL),
-(6, 1, 57, '0.00', '0.00', 1, NULL, NULL),
+(2, 1, 21, '2.00', '1600.00', 1, NULL, NULL),
+(3, 1, 44, '1.00', '954.65', 1, NULL, NULL),
+(4, 1, 64, '1.00', '785.00', 1, NULL, NULL),
+(5, 1, 52, '2.00', '433.28', 1, NULL, NULL),
+(6, 1, 57, '2.00', '840.00', 1, NULL, NULL),
 (7, 2, 9, '2.00', '724.84', 1, NULL, NULL),
-(8, 2, 57, '2.00', '1004.34', 1, NULL, NULL);
+(8, 2, 57, '4.00', '2008.68', 1, NULL, NULL),
+(9, 1, 63, '3.00', '1830.00', 1, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1457,7 +1515,15 @@ INSERT INTO `operator_stock_details` (`id`, `user_id`, `item_id`, `movement`, `q
 (8, 2, 9, 'INGRESO', '1.00', '362.42', 1, 'ANULADO', 411, '2022-07-04 22:13:53', '2022-07-04 23:15:01'),
 (9, 2, 9, 'INGRESO', '1.00', '362.42', 1, 'ANULADO', 411, '2022-07-04 22:13:57', '2022-07-04 23:15:03'),
 (10, 2, 57, 'INGRESO', '2.00', '502.17', 1, 'CONFIRMADO', 374, '2022-07-04 23:15:09', '2022-07-04 23:15:09'),
-(11, 2, 9, 'INGRESO', '2.00', '362.42', 1, 'CONFIRMADO', 411, '2022-07-04 23:15:14', '2022-07-04 23:15:14');
+(11, 2, 9, 'INGRESO', '2.00', '362.42', 1, 'CONFIRMADO', 411, '2022-07-04 23:15:14', '2022-07-04 23:15:14'),
+(12, 1, 21, 'INGRESO', '2.00', '800.00', 1, 'CONFIRMADO', 381, '2022-07-05 18:20:59', '2022-07-05 18:20:59'),
+(13, 1, 44, 'INGRESO', '1.00', '954.65', 1, 'CONFIRMADO', 384, '2022-07-05 18:21:03', '2022-07-05 18:21:03'),
+(14, 1, 52, 'INGRESO', '2.00', '216.64', 1, 'CONFIRMADO', 385, '2022-07-05 18:21:06', '2022-07-05 18:21:06'),
+(15, 1, 57, 'INGRESO', '2.00', '420.00', 1, 'CONFIRMADO', 410, '2022-07-05 18:21:12', '2022-07-05 18:21:12'),
+(16, 2, 57, 'INGRESO', '1.00', '502.17', 1, 'ANULADO', 374, '2022-07-05 19:41:08', '2022-07-05 19:41:15'),
+(17, 2, 57, 'INGRESO', '2.00', '502.17', 1, 'CONFIRMADO', 374, '2022-07-05 19:41:21', '2022-07-05 19:41:21'),
+(18, 1, 63, 'INGRESO', '3.00', '610.00', 1, 'CONFIRMADO', 380, '2022-07-05 19:42:03', '2022-07-05 19:42:03'),
+(19, 1, 64, 'INGRESO', '1.00', '785.00', 1, 'CONFIRMADO', 383, '2022-07-05 19:42:07', '2022-07-05 19:42:07');
 
 --
 -- Disparadores `operator_stock_details`
@@ -1757,15 +1823,15 @@ INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quant
 (347, 48, 24, '2.00', '577.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
 (348, 33, 17, '1.00', '906.47', 'RECHAZADO', 'LNK', '0.00', 'NO ASIGNADO', '2022-06-25 21:51:57', '2022-07-01 18:15:24'),
 (349, 34, 8, '2.00', '563.25', 'RECHAZADO', 'Se rechazó todo.', '0.00', 'NO ASIGNADO', '2022-06-25 22:19:52', '2022-06-29 00:17:01'),
-(374, 34, 57, '4.00', '502.17', 'VALIDADO', 'Se aceptop todo completo', '2.00', 'NO ASIGNADO', '2022-06-29 00:16:11', '2022-07-04 23:15:10'),
+(374, 34, 57, '4.00', '502.17', 'VALIDADO', 'Se aceptop todo completo', '4.00', 'ASIGNADO', '2022-06-29 00:16:11', '2022-07-05 19:41:21'),
 (375, 36, 8, '1.00', '563.25', 'ACEPTADO', '2', '0.00', 'NO ASIGNADO', '2022-06-29 16:40:28', '2022-07-02 18:28:57'),
 (379, 33, 63, '3.00', '600.00', 'ACEPTADO', NULL, '0.00', 'NO ASIGNADO', '2022-07-01 09:28:01', '2022-07-01 09:28:17'),
-(380, 33, 63, '3.00', '610.00', 'VALIDADO', 'NJ', '0.00', 'NO ASIGNADO', '2022-07-01 09:28:01', '2022-07-01 09:34:44'),
-(381, 33, 21, '1.00', '800.00', 'VALIDADO', 'NGG', '-1.00', 'NO ASIGNADO', '2022-07-01 09:28:45', '2022-07-04 23:10:04'),
+(380, 33, 63, '3.00', '610.00', 'VALIDADO', 'NJ', '3.00', 'ASIGNADO', '2022-07-01 09:28:01', '2022-07-05 19:42:04'),
+(381, 33, 21, '1.00', '800.00', 'VALIDADO', 'NGG', '1.00', 'ASIGNADO', '2022-07-01 09:28:45', '2022-07-05 18:20:59'),
 (382, 33, 64, '3.00', '7850.00', 'MODIFICADO', NULL, '0.00', 'NO ASIGNADO', '2022-07-01 09:30:29', '2022-07-01 09:30:29'),
-(383, 33, 64, '1.00', '785.00', 'VALIDADO', 'ÑL', '0.00', 'NO ASIGNADO', '2022-07-01 09:30:29', '2022-07-04 23:10:38'),
-(384, 33, 44, '1.00', '954.65', 'VALIDADO', 'Se aceptó todo.', '0.00', 'NO ASIGNADO', '2022-07-01 09:34:51', '2022-07-04 23:14:07'),
-(385, 33, 52, '2.00', '216.64', 'VALIDADO', 'ÑÑ', '0.00', 'NO ASIGNADO', '2022-07-01 09:34:57', '2022-07-04 23:13:57'),
+(383, 33, 64, '1.00', '785.00', 'VALIDADO', 'ÑL', '1.00', 'ASIGNADO', '2022-07-01 09:30:29', '2022-07-05 19:42:07'),
+(384, 33, 44, '1.00', '954.65', 'VALIDADO', 'Se aceptó todo.', '1.00', 'ASIGNADO', '2022-07-01 09:34:51', '2022-07-05 18:21:03'),
+(385, 33, 52, '2.00', '216.64', 'VALIDADO', 'ÑÑ', '2.00', 'ASIGNADO', '2022-07-01 09:34:57', '2022-07-05 18:21:06'),
 (386, 35, 65, '32.00', '2600.00', 'MODIFICADO', NULL, '0.00', 'NO ASIGNADO', '2022-07-01 09:38:12', '2022-07-01 09:38:12'),
 (387, 35, 65, '2.00', '260.00', 'VALIDADO', '5', '0.00', 'NO ASIGNADO', '2022-07-01 09:38:12', '2022-07-01 21:36:35'),
 (388, 35, 57, '2.00', '502.17', 'VALIDADO', 'AS', '0.00', 'NO ASIGNADO', '2022-07-01 09:42:24', '2022-07-01 09:42:24'),
@@ -1782,7 +1848,7 @@ INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quant
 (401, 37, 52, '3.00', '150.00', 'VALIDADO', 'jj', '0.00', 'NO ASIGNADO', '2022-07-01 22:36:41', '2022-07-01 22:37:46'),
 (408, 39, 24, '2.00', '577.05', 'VALIDADO', 'sas', '0.00', 'NO ASIGNADO', '2022-07-01 23:28:13', '2022-07-01 23:28:13'),
 (409, 39, 57, '3.00', '502.17', 'VALIDADO', 'asas', '0.00', 'NO ASIGNADO', '2022-07-01 23:28:19', '2022-07-01 23:28:19'),
-(410, 33, 57, '2.00', '420.00', 'VALIDADO', 'as', '0.00', 'NO ASIGNADO', '2022-07-01 23:30:57', '2022-07-04 23:14:04'),
+(410, 33, 57, '2.00', '420.00', 'VALIDADO', 'as', '2.00', 'ASIGNADO', '2022-07-01 23:30:57', '2022-07-05 18:21:12'),
 (411, 34, 9, '2.00', '362.42', 'VALIDADO', 'a', '2.00', 'ASIGNADO', '2022-07-01 23:31:24', '2022-07-04 23:15:14'),
 (412, 35, 21, '3.00', '785.44', 'VALIDADO', 'ASA', '0.00', 'NO ASIGNADO', '2022-07-02 18:15:04', '2022-07-02 18:15:04'),
 (413, 37, 70, '6.00', '156.00', 'MODIFICADO', NULL, '0.00', 'NO ASIGNADO', '2022-07-02 18:16:04', '2022-07-02 18:17:29'),
@@ -2000,6 +2066,7 @@ DELIMITER ;
 CREATE TABLE `risks` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `risk` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `abbreviation` varchar(5) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -2008,27 +2075,16 @@ CREATE TABLE `risks` (
 -- Volcado de datos para la tabla `risks`
 --
 
-INSERT INTO `risks` (`id`, `risk`, `created_at`, `updated_at`) VALUES
-(1, 'Provident sint ipsa blanditiis est facilis est dolorem.', '2022-06-20 21:21:49', '2022-06-20 21:21:49'),
-(2, 'Molestias laborum laborum consequatur sed aperiam atque accusantium.', '2022-06-20 21:21:49', '2022-06-20 21:21:49'),
-(3, 'Beatae possimus maxime beatae sed porro ab voluptatem non.', '2022-06-20 21:21:49', '2022-06-20 21:21:49'),
-(4, 'Eos voluptates in in aspernatur ipsam voluptatem.', '2022-06-20 21:21:50', '2022-06-20 21:21:50'),
-(5, 'Veniam at maxime eveniet quia.', '2022-06-20 21:21:50', '2022-06-20 21:21:50'),
-(6, 'Nisi occaecati iste aut molestiae rerum quod occaecati.', '2022-06-20 21:21:50', '2022-06-20 21:21:50'),
-(7, 'Assumenda deleniti et ad minima libero inventore excepturi aut.', '2022-06-20 21:21:50', '2022-06-20 21:21:50'),
-(8, 'Repudiandae sed debitis non.', '2022-06-20 21:21:50', '2022-06-20 21:21:50'),
-(9, 'Ut ut omnis voluptate repellendus.', '2022-06-20 21:21:50', '2022-06-20 21:21:50'),
-(10, 'Qui minus ut quos et asperiores eos.', '2022-06-20 21:21:50', '2022-06-20 21:21:50'),
-(11, 'Reprehenderit laudantium quidem facilis et.', '2022-06-20 21:21:50', '2022-06-20 21:21:50'),
-(12, 'Est et est libero quisquam aut.', '2022-06-20 21:21:50', '2022-06-20 21:21:50'),
-(13, 'Suscipit tempora distinctio aut et labore velit.', '2022-06-20 21:21:50', '2022-06-20 21:21:50'),
-(14, 'Quos sit sed aut rem vero cum natus.', '2022-06-20 21:21:50', '2022-06-20 21:21:50'),
-(15, 'Inventore ex et tempore assumenda dolorem vel eveniet.', '2022-06-20 21:21:50', '2022-06-20 21:21:50'),
-(16, 'Aspernatur ab dolores nihil adipisci ut.', '2022-06-20 21:21:50', '2022-06-20 21:21:50'),
-(17, 'Delectus dolores omnis molestiae corrupti.', '2022-06-20 21:21:50', '2022-06-20 21:21:50'),
-(18, 'Atque sit fugit quo aut voluptates.', '2022-06-20 21:21:50', '2022-06-20 21:21:50'),
-(19, 'Qui corrupti quia pariatur.', '2022-06-20 21:21:51', '2022-06-20 21:21:51'),
-(20, 'Possimus ex aspernatur ex et.', '2022-06-20 21:21:51', '2022-06-20 21:21:51');
+INSERT INTO `risks` (`id`, `risk`, `abbreviation`, `created_at`, `updated_at`) VALUES
+(21, 'MECÁNICO', 'M', '2022-07-05 13:16:21', '2022-07-05 13:16:21'),
+(22, 'FÍSICO', 'F', '2022-07-05 13:16:21', '2022-07-05 13:16:21'),
+(23, 'ELÉCTRICO', 'E', '2022-07-05 13:16:21', '2022-07-05 13:16:21'),
+(24, 'LOCATIVO', 'L', '2022-07-05 13:16:21', '2022-07-05 13:16:21'),
+(25, 'QUÍMICO', 'Q', '2022-07-05 13:16:21', '2022-07-05 13:16:21'),
+(26, 'BIOLÓGICO', 'B', '2022-07-05 13:16:21', '2022-07-05 13:16:21'),
+(27, 'FÍSICO QUÍMICO', 'FQ', '2022-07-05 13:16:21', '2022-07-05 13:16:21'),
+(28, 'ERGONÓMICO', 'EG', '2022-07-05 13:16:21', '2022-07-05 13:16:21'),
+(29, 'PSICO SOCIAL', 'PS', '2022-07-05 13:16:21', '2022-07-05 13:16:21');
 
 -- --------------------------------------------------------
 
@@ -2039,18 +2095,87 @@ INSERT INTO `risks` (`id`, `risk`, `created_at`, `updated_at`) VALUES
 CREATE TABLE `risk_task_order` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `risk_id` bigint(20) UNSIGNED NOT NULL,
-  `task_id` bigint(20) UNSIGNED NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `task_id` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `risk_task_order`
 --
 
-INSERT INTO `risk_task_order` (`id`, `risk_id`, `task_id`, `created_at`, `updated_at`) VALUES
-(1, 16, 18, '2022-07-04 18:25:09', '2022-07-04 18:25:09'),
-(2, 18, 28, '2022-07-04 18:25:09', '2022-07-04 18:25:09');
+INSERT INTO `risk_task_order` (`id`, `risk_id`, `task_id`) VALUES
+(25, 21, 2),
+(73, 21, 14),
+(30, 21, 22),
+(74, 21, 26),
+(14, 21, 32),
+(11, 21, 33),
+(60, 21, 75),
+(62, 21, 77),
+(64, 21, 79),
+(70, 22, 9),
+(34, 22, 21),
+(20, 22, 27),
+(18, 22, 29),
+(8, 22, 31),
+(35, 22, 47),
+(36, 22, 51),
+(37, 22, 52),
+(38, 22, 53),
+(39, 22, 54),
+(40, 22, 55),
+(41, 22, 56),
+(43, 22, 58),
+(44, 22, 59),
+(45, 22, 60),
+(48, 22, 63),
+(49, 22, 64),
+(50, 22, 65),
+(51, 22, 66),
+(52, 22, 67),
+(66, 22, 81),
+(6, 23, 4),
+(72, 23, 16),
+(69, 23, 17),
+(29, 23, 22),
+(5, 23, 24),
+(17, 23, 38),
+(59, 23, 74),
+(61, 23, 76),
+(10, 24, 12),
+(16, 24, 39),
+(26, 25, 5),
+(31, 25, 13),
+(13, 25, 35),
+(57, 25, 72),
+(19, 26, 15),
+(3, 26, 18),
+(4, 26, 37),
+(46, 26, 61),
+(54, 26, 69),
+(65, 26, 80),
+(15, 27, 1),
+(21, 27, 3),
+(71, 27, 6),
+(9, 27, 8),
+(75, 27, 11),
+(23, 27, 23),
+(24, 27, 30),
+(42, 27, 57),
+(55, 27, 70),
+(63, 27, 78),
+(67, 27, 82),
+(68, 27, 83),
+(28, 28, 10),
+(32, 28, 19),
+(7, 28, 20),
+(33, 28, 40),
+(47, 28, 62),
+(56, 28, 71),
+(58, 28, 73),
+(27, 29, 7),
+(22, 29, 34),
+(12, 29, 36),
+(53, 29, 68);
 
 -- --------------------------------------------------------
 
@@ -2145,6 +2270,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
+('K2rhgmzfduBKAQDVCvktNvKKXpDYq2sGg0EjuStZ', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiREZHcU95M3BrZGxtRzdLTklYWXl2N3lqblNsVVpyUHV5dHd4SWp1RyI7czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo0MToiaHR0cDovL3Npc3RlbWEvcGxhbm5lci9hc2lnbmFyLW1hdGVyaWFsZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1657032129),
 ('rNmJoaKiEyUxGQaJ0kVhkMaCWE14fStl8PXW0D6C', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiZERCSFlGZHFId1N4MnpzdGZRbGlVVndpZGhkMncydGhRblJkUUoyRCI7czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo0MToiaHR0cDovL3Npc3RlbWEvcGxhbm5lci9hc2lnbmFyLW1hdGVyaWFsZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjIxOiJwYXNzd29yZF9oYXNoX3NhbmN0dW0iO3M6NjA6IiQyeSQxMCQ5MklYVU5wa2pPMHJPUTVieU1pLlllNG9Lb0VhM1JvOWxsQy8ub2cvYXQyLnVoZVdHL2lnaSI7fQ==', 1656958521);
 
 -- --------------------------------------------------------
@@ -2204,12 +2330,13 @@ CREATE TABLE `stocks` (
 --
 
 INSERT INTO `stocks` (`id`, `item_id`, `quantity`, `price`, `warehouse_id`, `created_at`, `updated_at`) VALUES
-(2, 21, '0.00', '0.00', 1, NULL, NULL),
-(3, 44, '0.00', '0.00', 1, NULL, NULL),
-(4, 64, '0.00', '0.00', 1, NULL, NULL),
-(5, 52, '0.00', '0.00', 1, NULL, NULL),
-(6, 57, '2.00', '1004.34', 1, NULL, NULL),
-(7, 9, '2.00', '724.84', 1, NULL, NULL);
+(2, 21, '2.00', '1600.00', 1, NULL, NULL),
+(3, 44, '1.00', '954.65', 1, NULL, NULL),
+(4, 64, '1.00', '785.00', 1, NULL, NULL),
+(5, 52, '2.00', '433.28', 1, NULL, NULL),
+(6, 57, '7.00', '3350.85', 1, NULL, NULL),
+(7, 9, '1.00', '222.67', 1, NULL, NULL),
+(8, 63, '3.00', '1830.00', 1, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -2223,6 +2350,18 @@ CREATE TABLE `systems` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `systems`
+--
+
+INSERT INTO `systems` (`id`, `system`, `created_at`, `updated_at`) VALUES
+(1, 'HIDRAÚLICO', '2022-07-05 14:20:55', '2022-07-05 14:20:55'),
+(2, 'OLEO HIDRAÚLICO', '2022-07-05 14:20:55', '2022-07-05 14:20:55'),
+(3, 'NUEUMÁTICO', '2022-07-05 14:20:55', '2022-07-05 14:20:55'),
+(4, 'MECÁNICO', '2022-07-05 14:20:55', '2022-07-05 14:20:55'),
+(5, 'ELECTRÓNICO', '2022-07-05 14:20:55', '2022-07-05 14:20:55'),
+(6, 'ELÉCTRICO', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -2244,46 +2383,90 @@ CREATE TABLE `tasks` (
 --
 
 INSERT INTO `tasks` (`id`, `task`, `component_id`, `estimated_time`, `created_at`, `updated_at`) VALUES
-(1, 'Esse reprehenderit commodi pariatur quibusdam vitae enim odio.', 8, '35.00', '2022-06-20 21:22:00', '2022-06-20 21:22:00'),
-(2, 'Minus asperiores perferendis quia sequi autem.', 25, '123.00', '2022-06-20 21:22:00', '2022-06-20 21:22:00'),
-(3, 'Iusto officia tempore id dolore quia.', 14, '71.00', '2022-06-20 21:22:00', '2022-06-20 21:22:00'),
-(4, 'Aut est odio dolorum dolor qui dolorem.', 2, '57.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
-(5, 'Minus fugit voluptate non sit optio placeat.', 18, '113.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
-(6, 'Sit et voluptatum quis ullam rem voluptate aut.', 31, '107.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
-(7, 'Necessitatibus ut esse adipisci.', 9, '100.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
-(8, 'Consequatur non aliquam aspernatur quis.', 3, '164.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
-(9, 'Sed eius dolorem sequi fuga nihil.', 7, '140.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
-(10, 'Nisi vitae dolorum modi molestiae consequatur nisi quis molestiae.', 10, '130.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
-(11, 'Voluptatibus id alias ad rerum sint beatae sit voluptatem.', 9, '109.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
-(12, 'Cumque magnam et et eligendi.', 32, '60.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
-(13, 'Pariatur non qui provident dolores.', 1, '46.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
-(14, 'Velit doloremque saepe ipsum et temporibus vitae omnis.', 22, '46.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
-(15, 'Id possimus et sint blanditiis fugit accusamus ducimus.', 12, '58.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
-(16, 'Tenetur autem recusandae nam dicta alias.', 24, '92.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
-(17, 'Reprehenderit pariatur repellat voluptas et qui quis dolore dignissimos.', 18, '124.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
-(18, 'Amet blanditiis nesciunt veniam consequatur qui harum odio.', 23, '110.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
-(19, 'Placeat ullam quia enim pariatur sint delectus dolor.', 32, '105.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
-(20, 'Aut sit sed natus.', 15, '173.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
-(21, 'Qui et earum voluptatum ratione aut.', 7, '122.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
-(22, 'Officiis quo libero ut sapiente.', 7, '67.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
-(23, 'Libero dolor reiciendis ullam ut enim eos.', 8, '56.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
-(24, 'Atque nulla fugit voluptatem reiciendis recusandae culpa.', 7, '117.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
-(25, 'Molestiae vitae quia iste nemo harum.', 21, '109.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
-(26, 'Voluptas illo quia ullam.', 24, '46.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
-(27, 'Iure et reprehenderit molestiae.', 19, '88.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
-(28, 'Aut totam unde qui voluptatem deserunt quia ipsum.', 15, '112.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
-(29, 'Fugit iure occaecati quas alias itaque consequuntur perspiciatis.', 10, '150.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
-(30, 'Maiores in laborum molestias.', 31, '40.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
-(31, 'Commodi molestias magni fuga aspernatur.', 8, '72.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
-(32, 'Eius quam et esse accusamus accusantium.', 29, '50.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
-(33, 'Doloremque blanditiis amet ullam aut rerum quos et.', 17, '140.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
-(34, 'Laudantium omnis sed laboriosam et ut.', 32, '100.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
-(35, 'Earum dolorum quia sit sit voluptas.', 2, '73.00', '2022-06-20 21:22:03', '2022-06-20 21:22:03'),
-(36, 'Dolores debitis esse quia et dolores modi.', 26, '116.00', '2022-06-20 21:22:03', '2022-06-20 21:22:03'),
-(37, 'Animi est necessitatibus omnis omnis est dolor.', 34, '70.00', '2022-06-20 21:22:03', '2022-06-20 21:22:03'),
-(38, 'Excepturi laborum dolore ea et autem dignissimos.', 30, '121.00', '2022-06-20 21:22:03', '2022-06-20 21:22:03'),
-(39, 'Est minus accusantium deserunt et voluptatem nulla odio.', 23, '124.00', '2022-06-20 21:22:03', '2022-06-20 21:22:03'),
-(40, 'Qui deserunt corporis id ut impedit explicabo nihil quaerat.', 9, '160.00', '2022-06-20 21:22:03', '2022-06-20 21:22:03');
+(1, 'Esse reprehenderit commodi pariatur quibusdam vitae enim odio.', 8, '15.00', '2022-06-20 21:22:00', '2022-06-20 21:22:00'),
+(2, 'Minus asperiores perferendis quia sequi autem.', 25, '15.00', '2022-06-20 21:22:00', '2022-06-20 21:22:00'),
+(3, 'Iusto officia tempore id dolore quia.', 14, '15.00', '2022-06-20 21:22:00', '2022-06-20 21:22:00'),
+(4, 'Aut est odio dolorum dolor qui dolorem.', 2, '15.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
+(5, 'Minus fugit voluptate non sit optio placeat.', 18, '15.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
+(6, 'Sit et voluptatum quis ullam rem voluptate aut.', 31, '15.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
+(7, 'Necessitatibus ut esse adipisci.', 9, '15.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
+(8, 'Consequatur non aliquam aspernatur quis.', 3, '15.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
+(9, 'Sed eius dolorem sequi fuga nihil.', 7, '15.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
+(10, 'Nisi vitae dolorum modi molestiae consequatur nisi quis molestiae.', 10, '15.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
+(11, 'Voluptatibus id alias ad rerum sint beatae sit voluptatem.', 9, '15.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
+(12, 'Cumque magnam et et eligendi.', 32, '15.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
+(13, 'Pariatur non qui provident dolores.', 1, '15.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
+(14, 'Velit doloremque saepe ipsum et temporibus vitae omnis.', 22, '15.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
+(15, 'Id possimus et sint blanditiis fugit accusamus ducimus.', 12, '15.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
+(16, 'Tenetur autem recusandae nam dicta alias.', 24, '15.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
+(17, 'Reprehenderit pariatur repellat voluptas et qui quis dolore dignissimos.', 18, '15.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
+(18, 'Amet blanditiis nesciunt veniam consequatur qui harum odio.', 23, '15.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
+(19, 'Placeat ullam quia enim pariatur sint delectus dolor.', 32, '15.00', '2022-06-20 21:22:01', '2022-06-20 21:22:01'),
+(20, 'Aut sit sed natus.', 15, '15.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
+(21, 'Qui et earum voluptatum ratione aut.', 7, '15.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
+(22, 'Officiis quo libero ut sapiente.', 7, '15.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
+(23, 'Libero dolor reiciendis ullam ut enim eos.', 8, '15.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
+(24, 'Atque nulla fugit voluptatem reiciendis recusandae culpa.', 7, '15.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
+(25, 'Molestiae vitae quia iste nemo harum.', 21, '15.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
+(26, 'Voluptas illo quia ullam.', 24, '15.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
+(27, 'Iure et reprehenderit molestiae.', 19, '15.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
+(28, 'Aut totam unde qui voluptatem deserunt quia ipsum.', 15, '15.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
+(29, 'Fugit iure occaecati quas alias itaque consequuntur perspiciatis.', 10, '15.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
+(30, 'Maiores in laborum molestias.', 31, '15.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
+(31, 'Commodi molestias magni fuga aspernatur.', 8, '15.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
+(32, 'Eius quam et esse accusamus accusantium.', 29, '15.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
+(33, 'Doloremque blanditiis amet ullam aut rerum quos et.', 17, '15.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
+(34, 'Laudantium omnis sed laboriosam et ut.', 32, '15.00', '2022-06-20 21:22:02', '2022-06-20 21:22:02'),
+(35, 'Earum dolorum quia sit sit voluptas.', 2, '15.00', '2022-06-20 21:22:03', '2022-06-20 21:22:03'),
+(36, 'Dolores debitis esse quia et dolores modi.', 26, '15.00', '2022-06-20 21:22:03', '2022-06-20 21:22:03'),
+(37, 'Animi est necessitatibus omnis omnis est dolor.', 34, '15.00', '2022-06-20 21:22:03', '2022-06-20 21:22:03'),
+(38, 'Excepturi laborum dolore ea et autem dignissimos.', 30, '15.00', '2022-06-20 21:22:03', '2022-06-20 21:22:03'),
+(39, 'Est minus accusantium deserunt et voluptatem nulla odio.', 23, '15.00', '2022-06-20 21:22:03', '2022-06-20 21:22:03'),
+(40, 'Qui deserunt corporis id ut impedit explicabo nihil quaerat.', 9, '15.00', '2022-06-20 21:22:03', '2022-06-20 21:22:03'),
+(47, 'Reponer', 1, '30.00', NULL, NULL),
+(51, 'Reponer', 2, '15.00', NULL, NULL),
+(52, 'Reponer', 3, '15.00', NULL, NULL),
+(53, 'Reponer', 4, '15.00', NULL, NULL),
+(54, 'Reponer', 5, '15.00', NULL, NULL),
+(55, 'Reponer', 6, '15.00', NULL, NULL),
+(56, 'Reponer', 7, '15.00', NULL, NULL),
+(57, 'Reponer', 8, '15.00', NULL, NULL),
+(58, 'Reponer', 9, '15.00', NULL, NULL),
+(59, 'Reponer', 10, '15.00', NULL, NULL),
+(60, 'Reponer', 11, '15.00', NULL, NULL),
+(61, 'Reponer', 12, '15.00', NULL, NULL),
+(62, 'Reponer', 13, '15.00', NULL, NULL),
+(63, 'Reponer', 14, '15.00', NULL, NULL),
+(64, 'Reponer', 15, '15.00', NULL, NULL),
+(65, 'Reponer', 16, '15.00', NULL, NULL),
+(66, 'Reponer', 17, '15.00', NULL, NULL),
+(67, 'Reponer', 18, '15.00', NULL, NULL),
+(68, 'Reponer', 19, '15.00', NULL, NULL),
+(69, 'Reponer', 20, '15.00', NULL, NULL),
+(70, 'Reponer', 21, '15.00', NULL, NULL),
+(71, 'Reponer', 22, '15.00', NULL, NULL),
+(72, 'Reponer', 23, '15.00', NULL, NULL),
+(73, 'Reponer', 24, '15.00', NULL, NULL),
+(74, 'Reponer', 25, '15.00', NULL, NULL),
+(75, 'Reponer', 26, '15.00', NULL, NULL),
+(76, 'Reponer', 27, '15.00', NULL, NULL),
+(77, 'Reponer', 28, '15.00', NULL, NULL),
+(78, 'Reponer', 29, '15.00', NULL, NULL),
+(79, 'Reponer', 30, '15.00', NULL, NULL),
+(80, 'Reponer', 31, '15.00', NULL, NULL),
+(81, 'Reponer', 32, '15.00', NULL, NULL),
+(82, 'Reponer', 33, '15.00', NULL, NULL),
+(83, 'Reponer', 34, '15.00', NULL, NULL),
+(84, 'Verfiicar', 4, '15.00', NULL, NULL),
+(85, 'Comprobar', 5, '15.00', NULL, NULL),
+(86, 'Rectificar', 6, '15.00', NULL, NULL),
+(87, 'Mirar', 11, '15.00', NULL, NULL),
+(88, 'Observar', 13, '15.00', NULL, NULL),
+(89, 'Cotejar', 16, '15.00', NULL, NULL),
+(90, 'Kasda', 20, '15.00', NULL, NULL),
+(94, 'aerr', 27, '15.00', NULL, NULL),
+(95, 'ser', 28, '15.00', NULL, NULL),
+(96, 'dad', 33, '15.00', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -2535,9 +2718,8 @@ CREATE TABLE `work_orders` (
   `implement_id` bigint(20) UNSIGNED NOT NULL,
   `user_id` bigint(20) UNSIGNED NOT NULL,
   `location_id` bigint(20) UNSIGNED NOT NULL,
-  `estimated_price` decimal(8,2) NOT NULL DEFAULT 0.00,
   `maintenance` enum('1','2','3') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `state` enum('PENDIENTE','VALIDADO','RECHAZADO') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `state` enum('PENDIENTE','VALIDADO','RECHAZADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
   `is_canceled` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -2553,7 +2735,8 @@ CREATE TABLE `work_order_details` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `work_order_id` bigint(20) UNSIGNED NOT NULL,
   `task_id` bigint(20) UNSIGNED NOT NULL,
-  `observation` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `state` enum('RECOMENDADO','ACEPTADO','NO ACEPTADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'RECOMENDADO',
+  `observation` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -2568,6 +2751,7 @@ CREATE TABLE `work_order_epps` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `work_order_id` bigint(20) UNSIGNED NOT NULL,
   `epp_id` bigint(20) UNSIGNED NOT NULL,
+  `quantity` decimal(8,2) NOT NULL DEFAULT 1.00,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -2665,7 +2849,8 @@ ALTER TABLE `ceco_details`
 ALTER TABLE `components`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `components_item_id_unique` (`item_id`),
-  ADD UNIQUE KEY `components_component_unique` (`component`);
+  ADD UNIQUE KEY `components_component_unique` (`component`),
+  ADD KEY `components_system_id_foreign` (`system_id`);
 
 --
 -- Indices de la tabla `component_implement`
@@ -2700,12 +2885,12 @@ ALTER TABLE `component_part_model`
   ADD KEY `component_part_model_component_part_index` (`component`,`part`);
 
 --
--- Indices de la tabla `component_system`
+-- Indices de la tabla `component_work_order_detail`
 --
-ALTER TABLE `component_system`
+ALTER TABLE `component_work_order_detail`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `component_system_system_id_foreign` (`system_id`),
-  ADD KEY `component_system_component_id_system_id_index` (`component_id`,`system_id`);
+  ADD KEY `component_work_order_detail_component_id_foreign` (`component_id`),
+  ADD KEY `component_work_order_detail_work_order_detail_id_foreign` (`work_order_detail_id`);
 
 --
 -- Indices de la tabla `crops`
@@ -3048,7 +3233,6 @@ ALTER TABLE `systems`
 --
 ALTER TABLE `tasks`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `tasks_task_unique` (`task`),
   ADD KEY `tasks_component_id_foreign` (`component_id`);
 
 --
@@ -3146,7 +3330,7 @@ ALTER TABLE `zones`
 -- AUTO_INCREMENT de la tabla `affected_movement`
 --
 ALTER TABLE `affected_movement`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT de la tabla `brands`
@@ -3203,9 +3387,9 @@ ALTER TABLE `component_part_model`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
--- AUTO_INCREMENT de la tabla `component_system`
+-- AUTO_INCREMENT de la tabla `component_work_order_detail`
 --
-ALTER TABLE `component_system`
+ALTER TABLE `component_work_order_detail`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -3224,7 +3408,7 @@ ALTER TABLE `epps`
 -- AUTO_INCREMENT de la tabla `epp_risk`
 --
 ALTER TABLE `epp_risk`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT de la tabla `epp_work_order`
@@ -3290,7 +3474,7 @@ ALTER TABLE `measurement_units`
 -- AUTO_INCREMENT de la tabla `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
 
 --
 -- AUTO_INCREMENT de la tabla `min_stocks`
@@ -3308,19 +3492,19 @@ ALTER TABLE `min_stock_details`
 -- AUTO_INCREMENT de la tabla `operator_assigned_stocks`
 --
 ALTER TABLE `operator_assigned_stocks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT de la tabla `operator_stocks`
 --
 ALTER TABLE `operator_stocks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `operator_stock_details`
 --
 ALTER TABLE `operator_stock_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT de la tabla `order_dates`
@@ -3386,13 +3570,13 @@ ALTER TABLE `released_stock_details`
 -- AUTO_INCREMENT de la tabla `risks`
 --
 ALTER TABLE `risks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT de la tabla `risk_task_order`
 --
 ALTER TABLE `risk_task_order`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
@@ -3422,19 +3606,19 @@ ALTER TABLE `stockpile_details`
 -- AUTO_INCREMENT de la tabla `stocks`
 --
 ALTER TABLE `stocks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `systems`
 --
 ALTER TABLE `systems`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `tasks`
 --
 ALTER TABLE `tasks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=97;
 
 --
 -- AUTO_INCREMENT de la tabla `tractors`
@@ -3535,7 +3719,8 @@ ALTER TABLE `ceco_details`
 -- Filtros para la tabla `components`
 --
 ALTER TABLE `components`
-  ADD CONSTRAINT `components_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`);
+  ADD CONSTRAINT `components_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
+  ADD CONSTRAINT `components_system_id_foreign` FOREIGN KEY (`system_id`) REFERENCES `systems` (`id`);
 
 --
 -- Filtros para la tabla `component_implement`
@@ -3566,11 +3751,11 @@ ALTER TABLE `component_part_model`
   ADD CONSTRAINT `component_part_model_part_foreign` FOREIGN KEY (`part`) REFERENCES `components` (`id`);
 
 --
--- Filtros para la tabla `component_system`
+-- Filtros para la tabla `component_work_order_detail`
 --
-ALTER TABLE `component_system`
-  ADD CONSTRAINT `component_system_component_id_foreign` FOREIGN KEY (`component_id`) REFERENCES `components` (`id`),
-  ADD CONSTRAINT `component_system_system_id_foreign` FOREIGN KEY (`system_id`) REFERENCES `systems` (`id`);
+ALTER TABLE `component_work_order_detail`
+  ADD CONSTRAINT `component_work_order_detail_component_id_foreign` FOREIGN KEY (`component_id`) REFERENCES `components` (`id`),
+  ADD CONSTRAINT `component_work_order_detail_work_order_detail_id_foreign` FOREIGN KEY (`work_order_detail_id`) REFERENCES `work_order_details` (`id`);
 
 --
 -- Filtros para la tabla `epp_risk`
@@ -3840,7 +4025,7 @@ DELIMITER $$
 --
 CREATE DEFINER=`root`@`localhost` EVENT `liberar_material_event` ON SCHEDULE EVERY 1 MONTH STARTS '2022-05-18 09:00:54' ON COMPLETION NOT PRESERVE DISABLE DO UPDATE operator_assigned_stocks SET state = "LIBERADO", quantity = 0, price = 0 WHERE DATE_ADD(updated_at, INTERVAL 3 MONTH) < CURRENT_TIMESTAMP AND quantity > 0$$
 
-CREATE DEFINER=`root`@`localhost` EVENT `asignar_monto_ceco` ON SCHEDULE EVERY 1 MONTH STARTS '2022-06-01 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO UPDATE ceco_allocation_amounts SET caa.is_allocated = true WHERE date <= CURDATE() AND is_allocated = false$$
+CREATE DEFINER=`root`@`localhost` EVENT `asignar_monto_ceco` ON SCHEDULE EVERY 1 MONTH STARTS '2022-06-01 00:00:00' ON COMPLETION NOT PRESERVE DISABLE DO UPDATE ceco_allocation_amounts SET caa.is_allocated = true WHERE date <= CURDATE() AND is_allocated = false$$
 
 CREATE DEFINER=`root`@`localhost` EVENT `Listar_materiales_pedido` ON SCHEDULE EVERY 1 DAY STARTS '2022-06-27 00:00:00' ON COMPLETION PRESERVE DISABLE DO BEGIN
 /*-------Variables para la fecha para abrir el pedido--------*/
