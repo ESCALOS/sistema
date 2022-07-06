@@ -1,6 +1,0 @@
-/*-----------Vista de componentes del implemento----------*/
-CREATE VIEW componentes_del_implemento AS
-SELECT c.id as component_id,c.item_id as item_id, c.component as item, i.id as implement_id FROM components c INNER JOIN component_implement_model cim ON c.id = cim.component_id INNER JOIN implements i ON i.implement_model_id = cim.implement_model_id INNER JOIN items it ON it.id = c.item_id;
-/*-------------Vista piezas simplificada----------------*/
-create view pieza_simplificada as
-SELECT p.item_id as item_id, p.component as part, c.item_id AS component_id FROM component_part_model cpm INNER JOIN components c ON c.id = cpm.component INNER JOIN components p ON p.id = cpm.part;

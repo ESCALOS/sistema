@@ -1,3 +1,0 @@
-UPDATE implements i SET i.user_id = i.id, i.ceco_id = i.id, i.location_id = round(i.id/2)
-
-UPDATE tractors t SET t.location_id = round(t.id/2)

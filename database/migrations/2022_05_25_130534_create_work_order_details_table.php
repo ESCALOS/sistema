@@ -18,6 +18,8 @@ return new class extends Migration
             $table->foreignId('work_order_id')->constrained();
             $table->foreignId('task_id')->constrained();
             $table->enum('state',['RECOMENDADO','ACEPTADO','NO ACEPTADO']);
+            $table->foreignId('component_implement_id')->nullable()->constrained();
+            $table->foreignId('component_part_id')->nullable()->constrained();
             $table->text('observation');
             $table->timestamps();
         });
