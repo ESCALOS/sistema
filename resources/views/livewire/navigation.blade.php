@@ -23,6 +23,7 @@
 
             @role('supervisor')
             <a href="{{ route('overseer.tractor-scheduling') }}" class="{{ request()->routeIs('overseer.tractor-scheduling') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium" aria-current="page">Programación de Tractores</a>
+            <a href="{{ route('overseer.validate-work-order') }}" class="{{ request()->routeIs('overseer.validate-work-order') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium" aria-current="page">Validar Ordenes de Trabajo</a>
             @endrole
 
             @role('asistente')

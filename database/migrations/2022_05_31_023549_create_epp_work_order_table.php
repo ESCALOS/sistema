@@ -16,9 +16,9 @@ return new class extends Migration
         Schema::create('epp_work_order', function (Blueprint $table) {
             $table->id();
             $table->foreignId('epp_id')->constrained();
-            $table->foreignId('work_order')->constrained();
+            $table->foreignId('work_order_id')->constrained();
             $table->timestamps();
-            $table->index(['epp_id','work_order']);
+            $table->index(['epp_id','work_order_id']);
         });
     }
 
