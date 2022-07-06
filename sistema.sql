@@ -2,8 +2,8 @@
 -- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
--- Servidor: 127.0.0.1
--- Tiempo de generación: 06-07-2022 a las 03:50:04
+-- Servidor: localhost
+-- Tiempo de generación: 06-07-2022 a las 20:14:46
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -154,6 +154,7 @@ DECLARE pieza_final INT DEFAULT 0;
 DECLARE tarea_final INT DEFAULT 0;
 /*----VARIABLES PARA ALMACENAR DATOS DEL COMPONENTE---*/
 DECLARE orden_trabajo INT;
+DECLARE ubicacion INT;
 DECLARE implemento INT;
 DECLARE componente INT;
 DECLARE responsable INT;
@@ -171,8 +172,11 @@ DECLARE tiempo_vida_pieza DECIMAL(8,2);
 DECLARE cantidad_pieza DECIMAL(8,2);
 DECLARE precio_estimado_pieza DECIMAL(8,2);
 DECLARE tarea_pieza INT;
+/*-----ID DEL COMPONENTE POR SU IMPLEMENTO Y LA PIEZA POR SU COMPONENTE PARA LA ORDEN DE TRABAJO----------------*/
+DECLARE implemento_componente INT;
+DECLARE componente_pieza INT;
 /*------CURSOR PARA ITERAR LOS COMPONENTES---------*/
-DECLARE cur_comp CURSOR FOR SELECT i.id, c.id, c.item_id, c.lifespan, i.user_id, it.estimated_price FROM component_implement_model cim INNER JOIN implements i ON i.implement_model_id = cim.implement_model_id INNER JOIN components c ON c.id = cim.component_id INNER JOIN items it ON it.id = c.item_id;
+DECLARE cur_comp CURSOR FOR SELECT i.id, c.id, c.item_id, c.lifespan, i.user_id,u.location_id, it.estimated_price FROM component_implement_model cim INNER JOIN implements i ON i.implement_model_id = cim.implement_model_id INNER JOIN users u ON u.id = i.user_id INNER JOIN components c ON c.id = cim.component_id INNER JOIN items it ON it.id = c.item_id;
 /*--------------------------DECLARAR HANDLER PARA DETENERSE---------------*/
 DECLARE CONTINUE HANDLER FOR NOT FOUND SET componente_final = 1;
 /*-----------------------------------ABRIR CURSOR COMPONENTE---------------*/
@@ -181,32 +185,31 @@ OPEN cur_comp;
     IF componente_final = 1 THEN
     	LEAVE bucle_comp;
     END IF;
-    FETCH cur_comp INTO implemento,componente,item,tiempo_vida,responsable,precio_estimado;
+    FETCH cur_comp INTO implemento,componente,item,tiempo_vida,responsable,ubicacion,precio_estimado;
 /*---------------------OBTENER HORAS DEL COMPONENTE--------------------------*/
-	IF EXISTS(SELECT * FROM component_implement WHERE implement_id = implemento AND component_id = componente AND state = "PENDIENTE") THEN
-    	SELECT hours INTO horas FROM component_implement WHERE implement_id = implemento AND component_id = componente AND state = "PENDIENTE" LIMIT 1;
-    ELSE
-    	SELECT 0 INTO horas;
+	IF NOT EXISTS(SELECT * FROM component_implement WHERE implement_id = implemento AND component_id = componente AND state = "PENDIENTE") THEN
+    	INSERT INTO component_implement(component_id,implement_id) VALUES (componente,implemento);
     END IF;
+    SELECT id,hours INTO implemento_componente,horas FROM component_implement WHERE implement_id = implemento AND component_id = componente AND state = "PENDIENTE" LIMIT 1;
 /*-----------CALCULAR SI NECESITA RECAMBIO DENTRO DE 3 DÍAS--------------------*/
     SELECT ROUND((horas+20)/tiempo_vida) INTO cantidad;
 /*---------------VERIFICAR SI EXISTE LA CABECERA DE LA SOLICITUD-------*/
     IF NOT EXISTS(SELECT * FROM work_orders WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE") THEN
-        INSERT INTO work_orders(implement_id,user_id,maintenance,state,created_at,updated_at) VALUES (implemento,responsable,1,NOW(),NOW());
+        INSERT INTO work_orders(implement_id,user_id,location_id,`date`,maintenance,created_at,updated_at) VALUES (implemento,responsable,ubicacion,DATE_ADD(NOW(),INTERVAL 3 DAY),1,NOW(),NOW());
     END IF;
 /*--------------OBTENIENDO LA CABECERA DE LA SOLICITUD------------------*/
-SELECT id INTO orden_trabajo FROM work_orders WHERE implement_id = implemento AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
+    SELECT id INTO orden_trabajo FROM work_orders WHERE implement_id = implemento AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
 /*----------VERIFICAR SI SE REQUIERE CAMBIAR EL COMPONENTE---------------------*/
     IF(cantidad > 0) THEN
         /*-------------OBTENER LA TAREA DE RECAMBIO DEL COMPONENTE-----*/
-        SELECT id INTO tarea_componente FROM tasks WHERE task = "Reponer" AND component_id = componente;
+        SELECT id INTO tarea_componente FROM tasks WHERE task = "RECAMBIO" AND component_id = componente;
         /*-------------CAMBIAR COMPONENTE-----------------------*/
         INSERT INTO work_order_details(work_order_id,task_id,created_at,updated_at) VALUES (orden_trabajo,tarea_componente,NOW(),NOW());
     ELSE
         /*------------RUTINARIO DEL COMPONENTE------------------*/
         BEGIN
             /*--------CURSOR PARA ITERAR TAREAS POR COMPONENTE----*/
-            DECLARE cur_task CURSOR FOR SELECT id FROM tasks WHERE component_id = componente AND task <> "Reponer";
+            DECLARE cur_task CURSOR FOR SELECT id FROM tasks WHERE component_id = componente AND task <> "RECAMBIO";
             DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
             /*-------ABRIR CURSOR PARA ITERAR TAREAS POR COMPONENTE---*/
             OPEN cur_task;
@@ -216,7 +219,7 @@ SELECT id INTO orden_trabajo FROM work_orders WHERE implement_id = implemento AN
                 END IF;
                 FETCH cur_task INTO tarea_componente;
                 IF NOT EXISTS(SELECT * FROM work_order_details WHERE state = "RECOMENDADO" AND work_order_id = orden_trabajo AND task_id = tarea_componente) THEN
-                    INSERT INTO work_order_details(work_order_id,task_id) VALUES (orden_trabajo,tarea_componente);
+                    INSERT INTO work_order_details(work_order_id,task_id,component_implement_id,created_at,updated_at) VALUES (orden_trabajo,tarea_componente,implemento_componente,NOW(),NOW());
                 END IF;
                 END LOOP bucle_comp_task;
             /*--------RESETEAR CONTADOR DE TAREAS PARA EL SIGUIENTE COMPONENTE----*/
@@ -236,24 +239,23 @@ SELECT id INTO orden_trabajo FROM work_orders WHERE implement_id = implemento AN
                 END IF;
                 FETCH cur_part INTO pieza,tiempo_vida_pieza,item_pieza,precio_estimado_pieza;
                 /*--------------OBTENER LAS HORAS DE LAS PIEZAS-------------------------------*/
-                IF EXISTS(SELECT * FROM component_part cp INNER JOIN component_implement ci ON ci.id = cp.component_implement_id WHERE ci.component_id = componente AND cp.part = pieza AND cp.state = "PENDIENTE") THEN
-    			    SELECT cp.hours INTO horas_pieza FROM component_part cp INNER JOIN component_implement ci ON ci.id = cp.component_implement_id WHERE ci.component_id = componente AND cp.part = pieza AND cp.state = "PENDIENTE" LIMIT 1;
-    		    ELSE
-    			    SELECT 0 INTO horas_pieza;
+                IF NOT EXISTS(SELECT * FROM component_part cp WHERE cp.component_implement_id = implemento_componente AND cp.part = pieza AND cp.state = "PENDIENTE") THEN
+                    INSERT INTO component_part(component_implement_id ,part) VALUES (implemento_componente,pieza);
     		    END IF;
+    			    SELECT cp.id,cp.hours INTO componente_pieza,horas_pieza FROM component_part cp WHERE cp.component_implement_id = implemento_componente AND cp.part = pieza AND cp.state = "PENDIENTE" LIMIT 1;
                 /*-------------CALCULAR SI NECESITA RECAMBIO DENTRO DE 3 DÍAS---------------------*/
                 SELECT ROUND((horas_pieza+20)/tiempo_vida_pieza) INTO cantidad_pieza;
                 /*----------VERIFICAR SI SE REQUIERE CAMBIAR EL COMPONENTE----------------------------*/
                 IF(cantidad_pieza > 0) THEN
                     /*----------OBTENER LA TAREA DE RECAMBIO DE LA PIEZA-------------------------------*/
-                    SELECT id INTO tarea_pieza FROM tasks WHERE task = "Reponer" AND component_id = pieza;
+                    SELECT id INTO tarea_pieza FROM tasks WHERE task = "RECAMBIO" AND component_id = pieza;
                     /*-------------CAMBIAR COMPONENTE--------------------------------------------------*/
                     INSERT INTO work_order_details(work_order_id,task_id,created_at,updated_at) VALUES (orden_trabajo,tarea_componente,NOW(),NOW());
                 ELSE
                     /*------------RUTINARIO DE PIEZAS-----------------------------*/
                     BEGIN
                         /*------------CURSOR PARA ITERAR TAREAS POR PIEZA-----------------*/
-                        DECLARE cur_task CURSOR FOR SELECT id FROM tasks WHERE component_id = pieza AND task <> "Reponer";
+                        DECLARE cur_task CURSOR FOR SELECT id FROM tasks WHERE component_id = pieza AND task <> "RECAMBIO";
                         DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
                         /*----------------ABRIR CURSOR PARA ITERAR TAREAS POR PIEZA----------------------*/
                         OPEN cur_task;
@@ -263,7 +265,7 @@ SELECT id INTO orden_trabajo FROM work_orders WHERE implement_id = implemento AN
                             END IF;
                             FETCH cur_task INTO tarea_pieza;
                             IF NOT EXISTS(SELECT * FROM work_order_details WHERE state = "RECOMENDADO" AND work_order_id = orden_trabajo AND task_id = tarea_pieza) THEN
-                                INSERT INTO work_order_details(work_order_id,task_id) VALUES (orden_trabajo,tarea_pieza);
+                    			INSERT INTO work_order_details(work_order_id,task_id,component_part_id ,created_at,updated_at) VALUES (orden_trabajo,tarea_pieza,componente_pieza,NOW(),NOW());
                             END IF;
                             END LOOP bucle_part_task;
                         CLOSE cur_task;
@@ -279,6 +281,23 @@ SELECT id INTO orden_trabajo FROM work_orders WHERE implement_id = implemento AN
 /*-----------CERRAR CURSOR DE COMPONENTES---------------*/
 CLOSE cur_comp;
 END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `ssasd` (IN `tarea` INT)   BEGIN
+		DECLARE epp_final INT DEFAULT 0;
+        DECLARE equipo_proteccion INT;
+        DECLARE cur_epp CURSOR FOR SELECT er.epp_id FROM risk_task_order rt INNER JOIN epp_risk er ON er.risk_id = rt.risk_id WHERE rt.task_id = tarea GROUP BY er.epp_id;
+        DECLARE CONTINUE HANDLER FOR NOT FOUND SET epp_final = 1;
+        /*-------Abrir cursor para iterar epps--------------------------------------------*/
+        OPEN cur_epp;
+            bucle:LOOP
+                IF epp_final = 1 THEN
+                    LEAVE bucle;
+                END IF;
+                FETCH cur_epp INTO equipo_proteccion;
+                	SELECT equipo_proteccion;
+            END LOOP bucle;
+        CLOSE cur_epp;
+    END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `tarea_reponer_componentes` ()   BEGIN
 DECLARE componente INT;
@@ -651,7 +670,52 @@ CREATE TABLE `component_implement` (
 INSERT INTO `component_implement` (`id`, `component_id`, `implement_id`, `hours`, `state`, `created_at`, `updated_at`) VALUES
 (1, 28, 1, '24.65', 'PENDIENTE', NULL, NULL),
 (2, 8, 1, '24.65', 'PENDIENTE', NULL, NULL),
-(3, 20, 1, '24.65', 'PENDIENTE', NULL, NULL);
+(3, 20, 1, '24.65', 'PENDIENTE', NULL, NULL),
+(4, 28, 2, '0.00', 'PENDIENTE', NULL, NULL),
+(5, 8, 2, '0.00', 'PENDIENTE', NULL, NULL),
+(6, 20, 2, '0.00', 'PENDIENTE', NULL, NULL),
+(7, 28, 3, '0.00', 'PENDIENTE', NULL, NULL),
+(8, 8, 3, '0.00', 'PENDIENTE', NULL, NULL),
+(9, 20, 3, '0.00', 'PENDIENTE', NULL, NULL),
+(10, 28, 4, '0.00', 'PENDIENTE', NULL, NULL),
+(11, 8, 4, '0.00', 'PENDIENTE', NULL, NULL),
+(12, 20, 4, '0.00', 'PENDIENTE', NULL, NULL),
+(13, 20, 5, '0.00', 'PENDIENTE', NULL, NULL),
+(14, 19, 5, '0.00', 'PENDIENTE', NULL, NULL),
+(15, 22, 5, '0.00', 'PENDIENTE', NULL, NULL),
+(16, 20, 6, '0.00', 'PENDIENTE', NULL, NULL),
+(17, 19, 6, '0.00', 'PENDIENTE', NULL, NULL),
+(18, 22, 6, '0.00', 'PENDIENTE', NULL, NULL),
+(19, 20, 7, '0.00', 'PENDIENTE', NULL, NULL),
+(20, 19, 7, '0.00', 'PENDIENTE', NULL, NULL),
+(21, 22, 7, '0.00', 'PENDIENTE', NULL, NULL),
+(22, 20, 8, '0.00', 'PENDIENTE', NULL, NULL),
+(23, 19, 8, '0.00', 'PENDIENTE', NULL, NULL),
+(24, 22, 8, '0.00', 'PENDIENTE', NULL, NULL),
+(25, 10, 9, '0.00', 'PENDIENTE', NULL, NULL),
+(26, 5, 9, '0.00', 'PENDIENTE', NULL, NULL),
+(27, 21, 9, '0.00', 'PENDIENTE', NULL, NULL),
+(28, 10, 10, '0.00', 'PENDIENTE', NULL, NULL),
+(29, 5, 10, '0.00', 'PENDIENTE', NULL, NULL),
+(30, 21, 10, '0.00', 'PENDIENTE', NULL, NULL),
+(31, 10, 11, '0.00', 'PENDIENTE', NULL, NULL),
+(32, 5, 11, '0.00', 'PENDIENTE', NULL, NULL),
+(33, 21, 11, '0.00', 'PENDIENTE', NULL, NULL),
+(34, 10, 12, '0.00', 'PENDIENTE', NULL, NULL),
+(35, 5, 12, '0.00', 'PENDIENTE', NULL, NULL),
+(36, 21, 12, '0.00', 'PENDIENTE', NULL, NULL),
+(37, 28, 13, '0.00', 'PENDIENTE', NULL, NULL),
+(38, 27, 13, '0.00', 'PENDIENTE', NULL, NULL),
+(39, 22, 13, '0.00', 'PENDIENTE', NULL, NULL),
+(40, 28, 14, '0.00', 'PENDIENTE', NULL, NULL),
+(41, 27, 14, '0.00', 'PENDIENTE', NULL, NULL),
+(42, 22, 14, '0.00', 'PENDIENTE', NULL, NULL),
+(43, 28, 15, '0.00', 'PENDIENTE', NULL, NULL),
+(44, 27, 15, '0.00', 'PENDIENTE', NULL, NULL),
+(45, 22, 15, '0.00', 'PENDIENTE', NULL, NULL),
+(46, 28, 16, '0.00', 'PENDIENTE', NULL, NULL),
+(47, 27, 16, '0.00', 'PENDIENTE', NULL, NULL),
+(48, 22, 16, '0.00', 'PENDIENTE', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -919,10 +983,127 @@ INSERT INTO `epp_risk` (`id`, `epp_id`, `risk_id`) VALUES
 CREATE TABLE `epp_work_order` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `epp_id` bigint(20) UNSIGNED NOT NULL,
-  `work_order` bigint(20) UNSIGNED NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `work_order_id` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `epp_work_order`
+--
+
+INSERT INTO `epp_work_order` (`id`, `epp_id`, `work_order_id`) VALUES
+(3, 1, 1),
+(61, 1, 9),
+(72, 1, 10),
+(83, 1, 11),
+(94, 1, 12),
+(4, 2, 1),
+(62, 2, 9),
+(73, 2, 10),
+(84, 2, 11),
+(95, 2, 12),
+(5, 3, 1),
+(63, 3, 9),
+(74, 3, 10),
+(85, 3, 11),
+(96, 3, 12),
+(8, 5, 1),
+(13, 5, 2),
+(18, 5, 3),
+(23, 5, 4),
+(28, 5, 5),
+(35, 5, 6),
+(42, 5, 7),
+(49, 5, 8),
+(56, 5, 9),
+(67, 5, 10),
+(78, 5, 11),
+(89, 5, 12),
+(31, 6, 5),
+(38, 6, 6),
+(45, 6, 7),
+(52, 6, 8),
+(100, 6, 13),
+(104, 6, 14),
+(108, 6, 15),
+(112, 6, 16),
+(54, 7, 9),
+(65, 7, 10),
+(76, 7, 11),
+(87, 7, 12),
+(1, 9, 1),
+(11, 9, 2),
+(16, 9, 3),
+(21, 9, 4),
+(26, 9, 5),
+(33, 9, 6),
+(40, 9, 7),
+(47, 9, 8),
+(59, 9, 9),
+(70, 9, 10),
+(81, 9, 11),
+(92, 9, 12),
+(98, 9, 13),
+(102, 9, 14),
+(106, 9, 15),
+(110, 9, 16),
+(55, 10, 9),
+(66, 10, 10),
+(77, 10, 11),
+(88, 10, 12),
+(9, 12, 1),
+(14, 12, 2),
+(19, 12, 3),
+(24, 12, 4),
+(29, 12, 5),
+(36, 12, 6),
+(43, 12, 7),
+(50, 12, 8),
+(57, 12, 9),
+(68, 12, 10),
+(79, 12, 11),
+(90, 12, 12),
+(7, 14, 1),
+(10, 15, 1),
+(15, 15, 2),
+(20, 15, 3),
+(25, 15, 4),
+(30, 15, 5),
+(37, 15, 6),
+(44, 15, 7),
+(51, 15, 8),
+(58, 15, 9),
+(69, 15, 10),
+(80, 15, 11),
+(91, 15, 12),
+(32, 16, 5),
+(39, 16, 6),
+(46, 16, 7),
+(53, 16, 8),
+(101, 16, 13),
+(105, 16, 14),
+(109, 16, 15),
+(113, 16, 16),
+(6, 18, 1),
+(64, 18, 9),
+(75, 18, 10),
+(86, 18, 11),
+(97, 18, 12),
+(2, 19, 1),
+(12, 19, 2),
+(17, 19, 3),
+(22, 19, 4),
+(27, 19, 5),
+(34, 19, 6),
+(41, 19, 7),
+(48, 19, 8),
+(60, 19, 9),
+(71, 19, 10),
+(82, 19, 11),
+(93, 19, 12),
+(99, 19, 13),
+(103, 19, 14),
+(107, 19, 15),
+(111, 19, 16);
 
 -- --------------------------------------------------------
 
@@ -2248,6 +2429,7 @@ INSERT INTO `risk_task_order` (`id`, `risk_id`, `task_id`) VALUES
 (70, 22, 9),
 (34, 22, 21),
 (20, 22, 27),
+(76, 22, 28),
 (18, 22, 29),
 (8, 22, 31),
 (35, 22, 47),
@@ -2269,8 +2451,8 @@ INSERT INTO `risk_task_order` (`id`, `risk_id`, `task_id`) VALUES
 (6, 23, 4),
 (72, 23, 16),
 (69, 23, 17),
-(29, 23, 22),
 (5, 23, 24),
+(29, 23, 25),
 (17, 23, 38),
 (59, 23, 74),
 (61, 23, 76),
@@ -2298,6 +2480,16 @@ INSERT INTO `risk_task_order` (`id`, `risk_id`, `task_id`) VALUES
 (63, 27, 78),
 (67, 27, 82),
 (68, 27, 83),
+(77, 27, 84),
+(78, 27, 85),
+(79, 27, 86),
+(80, 27, 87),
+(81, 27, 88),
+(82, 27, 89),
+(83, 27, 90),
+(84, 27, 94),
+(85, 27, 95),
+(86, 27, 96),
 (28, 28, 10),
 (32, 28, 19),
 (7, 28, 20),
@@ -2403,9 +2595,9 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('K2rhgmzfduBKAQDVCvktNvKKXpDYq2sGg0EjuStZ', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiREZHcU95M3BrZGxtRzdLTklYWXl2N3lqblNsVVpyUHV5dHd4SWp1RyI7czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo0MToiaHR0cDovL3Npc3RlbWEvcGxhbm5lci9hc2lnbmFyLW1hdGVyaWFsZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1657032129),
-('rNmJoaKiEyUxGQaJ0kVhkMaCWE14fStl8PXW0D6C', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiZERCSFlGZHFId1N4MnpzdGZRbGlVVndpZGhkMncydGhRblJkUUoyRCI7czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo0MToiaHR0cDovL3Npc3RlbWEvcGxhbm5lci9hc2lnbmFyLW1hdGVyaWFsZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjIxOiJwYXNzd29yZF9oYXNoX3NhbmN0dW0iO3M6NjA6IiQyeSQxMCQ5MklYVU5wa2pPMHJPUTVieU1pLlllNG9Lb0VhM1JvOWxsQy8ub2cvYXQyLnVoZVdHL2lnaSI7fQ==', 1656958521),
-('w3yLPnTRbbzmpcB85TSFUvaykjaVBTwDOjtJQzCX', NULL, '192.168.0.7', 'AVG Antivirus', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiWEVjZGhEM2d3cThSNVBMTWYyZ3dtd2JWa2s0aHRsMUtNNXVseW5WYyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MTg6Imh0dHA6Ly8xOTIuMTY4LjAuNyI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1657071719);
+('9mlMWpjr1brHd0LWGUsO8h1ioWUFJF6bmem1C9as', 5, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiZWFxZVkxSGhaV29SVWlmdEtWMkJuSnY2MWdvT3dDbWwyOUFjanp2QSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDI6Imh0dHA6Ly9zaXN0ZW1hL3N1cGVydmlzb3IvT3JkZXItZGUtVHJhYmFqbyI7fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjU7fQ==', 1657131192),
+('OiAcXLNYcnSNHStm0BQZoO1dnfG60Szoxx4gfWYy', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoidHJzYUszOTlKN1E4WEtPdXQ2ZjVHQkdrMWRlWGNmTlEwZGZHb1FnYyI7czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo0MToiaHR0cDovL3Npc3RlbWEvcGxhbm5lci9hc2lnbmFyLW1hdGVyaWFsZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjIxOiJwYXNzd29yZF9oYXNoX3NhbmN0dW0iO3M6NjA6IiQyeSQxMCQ5MklYVU5wa2pPMHJPUTVieU1pLlllNG9Lb0VhM1JvOWxsQy8ub2cvYXQyLnVoZVdHL2lnaSI7fQ==', 1657115244),
+('QOGu7oFJ677CJciShOwC1aqnqFJRQhL5iUmQiei3', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiTkt6SEk2QUFmblhkZmN0VUM4TGRZY0NIN0RPcWlCVE5hZW42QjdLUyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo0MToiaHR0cDovL3Npc3RlbWEvcGxhbm5lci9hc2lnbmFyLW1hdGVyaWFsZXMiO319', 1657130154);
 
 -- --------------------------------------------------------
 
@@ -2796,8 +2988,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `code`, `name`, `lastname`, `location_id`, `email`, `email_verified_at`, `password`, `two_factor_secret`, `two_factor_recovery_codes`, `two_factor_confirmed_at`, `is_admin`, `remember_token`, `current_team_id`, `profile_photo_path`, `created_at`, `updated_at`) VALUES
 (1, '777269', 'Mr. Ford Vandervort', 'Kunze', 1, 'roob.brianne@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'WPn7K7yearpM20WS3s964CPUZ2vtDhTFL8wlqrSDztRxP3X56ohOycrlwG8V', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
-(2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'qjtNQRhjZdmg8HRE0u10LicN4SNnzdAdTBhC3alZ6XObOEqMRnPEt2iaq1kQ', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
-(3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '6DZQ34tOJH78Gt25Ow8HPJTM2wX4MeBQEEzbRfvprUiCQCiFhEKY86Y7k0x0', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '3DKrIkMWt3jIXg69NAE526q76vAEEmns9MsmPACorvjwqMwQYj7Mi6QQoMIu', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
+(3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'zfVIwEpCejmkVSFdjusDtmmcl7LMPINye34cOaBaiHgpDttnygZ1Jxzqh61H', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'M5qsYueT3Y12habBcGR457E7SpDrFbbTACIRyVsTGVQPXG1nODJ4pTGM1373', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '3RGMRmsqNlZDg9LbH3BVRm8BK90WLmKWn2CqB5pLf4TS3cPwT2s0SWL7LRBv', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (6, '502387', 'Bella Block', 'Bashirian', 3, 'sibyl08@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '3NXfsNa9xGchlBQ9iIbNaHjLcFz5unflenQ1Z74g5YCsxiXyXk0bKpoWgElS', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
@@ -2852,12 +3044,35 @@ CREATE TABLE `work_orders` (
   `implement_id` bigint(20) UNSIGNED NOT NULL,
   `user_id` bigint(20) UNSIGNED NOT NULL,
   `location_id` bigint(20) UNSIGNED NOT NULL,
+  `date` date NOT NULL,
   `maintenance` enum('1','2','3') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `state` enum('PENDIENTE','VALIDADO','RECHAZADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
+  `state` enum('PENDIENTE','VALIDADO','CONCLUIDO','RECHAZADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
   `is_canceled` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `work_orders`
+--
+
+INSERT INTO `work_orders` (`id`, `implement_id`, `user_id`, `location_id`, `date`, `maintenance`, `state`, `is_canceled`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 1, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:52', '2022-07-06 14:37:52'),
+(2, 2, 2, 1, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
+(3, 3, 3, 2, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
+(4, 4, 4, 2, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
+(5, 5, 5, 3, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
+(6, 6, 6, 3, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:55', '2022-07-06 14:37:55'),
+(7, 7, 7, 4, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:55', '2022-07-06 14:37:55'),
+(8, 8, 8, 4, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:56', '2022-07-06 14:37:56'),
+(9, 9, 9, 5, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:56', '2022-07-06 14:37:56'),
+(10, 10, 10, 5, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:57', '2022-07-06 14:37:57'),
+(11, 11, 11, 6, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
+(12, 12, 12, 6, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
+(13, 13, 13, 7, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
+(14, 14, 14, 7, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:59', '2022-07-06 14:37:59'),
+(15, 15, 15, 8, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:38:00', '2022-07-06 14:38:00'),
+(16, 16, 16, 8, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:38:00', '2022-07-06 14:38:00');
 
 -- --------------------------------------------------------
 
@@ -2876,6 +3091,74 @@ CREATE TABLE `work_order_details` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `work_order_details`
+--
+
+INSERT INTO `work_order_details` (`id`, `work_order_id`, `task_id`, `state`, `component_implement_id`, `component_part_id`, `observation`, `created_at`, `updated_at`) VALUES
+(1, 1, 95, 'RECOMENDADO', 1, NULL, NULL, '2022-07-06 14:37:52', '2022-07-06 14:37:52'),
+(2, 1, 4, 'RECOMENDADO', NULL, 1, NULL, '2022-07-06 14:37:52', '2022-07-06 14:37:52'),
+(3, 1, 35, 'RECOMENDADO', NULL, 1, NULL, '2022-07-06 14:37:52', '2022-07-06 14:37:52'),
+(4, 1, 1, 'RECOMENDADO', 2, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
+(5, 1, 23, 'RECOMENDADO', 2, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
+(6, 1, 31, 'RECOMENDADO', 2, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
+(7, 1, 90, 'RECOMENDADO', 3, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
+(8, 2, 95, 'RECOMENDADO', 4, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
+(9, 2, 1, 'RECOMENDADO', 5, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
+(10, 2, 23, 'RECOMENDADO', 5, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
+(11, 2, 31, 'RECOMENDADO', 5, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
+(12, 2, 90, 'RECOMENDADO', 6, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
+(13, 3, 95, 'RECOMENDADO', 7, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
+(14, 3, 1, 'RECOMENDADO', 8, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
+(15, 3, 23, 'RECOMENDADO', 8, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
+(16, 3, 31, 'RECOMENDADO', 8, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
+(17, 3, 90, 'RECOMENDADO', 9, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
+(18, 4, 95, 'RECOMENDADO', 10, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
+(19, 4, 1, 'RECOMENDADO', 11, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
+(20, 4, 23, 'RECOMENDADO', 11, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
+(21, 4, 31, 'RECOMENDADO', 11, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
+(22, 4, 90, 'RECOMENDADO', 12, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
+(23, 5, 90, 'RECOMENDADO', 13, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
+(24, 5, 27, 'RECOMENDADO', 14, NULL, NULL, '2022-07-06 14:37:55', '2022-07-06 14:37:55'),
+(25, 5, 14, 'RECOMENDADO', 15, NULL, NULL, '2022-07-06 14:37:55', '2022-07-06 14:37:55'),
+(26, 6, 90, 'RECOMENDADO', 16, NULL, NULL, '2022-07-06 14:37:55', '2022-07-06 14:37:55'),
+(27, 6, 27, 'RECOMENDADO', 17, NULL, NULL, '2022-07-06 14:37:55', '2022-07-06 14:37:55'),
+(28, 6, 14, 'RECOMENDADO', 18, NULL, NULL, '2022-07-06 14:37:55', '2022-07-06 14:37:55'),
+(29, 7, 90, 'RECOMENDADO', 19, NULL, NULL, '2022-07-06 14:37:55', '2022-07-06 14:37:55'),
+(30, 7, 27, 'RECOMENDADO', 20, NULL, NULL, '2022-07-06 14:37:56', '2022-07-06 14:37:56'),
+(31, 7, 14, 'RECOMENDADO', 21, NULL, NULL, '2022-07-06 14:37:56', '2022-07-06 14:37:56'),
+(32, 8, 90, 'RECOMENDADO', 22, NULL, NULL, '2022-07-06 14:37:56', '2022-07-06 14:37:56'),
+(33, 8, 27, 'RECOMENDADO', 23, NULL, NULL, '2022-07-06 14:37:56', '2022-07-06 14:37:56'),
+(34, 8, 14, 'RECOMENDADO', 24, NULL, NULL, '2022-07-06 14:37:56', '2022-07-06 14:37:56'),
+(35, 9, 10, 'RECOMENDADO', 25, NULL, NULL, '2022-07-06 14:37:56', '2022-07-06 14:37:56'),
+(36, 9, 29, 'RECOMENDADO', 25, NULL, NULL, '2022-07-06 14:37:57', '2022-07-06 14:37:57'),
+(37, 9, 85, 'RECOMENDADO', 26, NULL, NULL, '2022-07-06 14:37:57', '2022-07-06 14:37:57'),
+(38, 9, 25, 'RECOMENDADO', 27, NULL, NULL, '2022-07-06 14:37:57', '2022-07-06 14:37:57'),
+(39, 10, 10, 'RECOMENDADO', 28, NULL, NULL, '2022-07-06 14:37:57', '2022-07-06 14:37:57'),
+(40, 10, 29, 'RECOMENDADO', 28, NULL, NULL, '2022-07-06 14:37:57', '2022-07-06 14:37:57'),
+(41, 10, 85, 'RECOMENDADO', 29, NULL, NULL, '2022-07-06 14:37:57', '2022-07-06 14:37:57'),
+(42, 10, 25, 'RECOMENDADO', 30, NULL, NULL, '2022-07-06 14:37:57', '2022-07-06 14:37:57'),
+(43, 11, 10, 'RECOMENDADO', 31, NULL, NULL, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
+(44, 11, 29, 'RECOMENDADO', 31, NULL, NULL, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
+(45, 11, 85, 'RECOMENDADO', 32, NULL, NULL, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
+(46, 11, 25, 'RECOMENDADO', 33, NULL, NULL, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
+(47, 12, 10, 'RECOMENDADO', 34, NULL, NULL, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
+(48, 12, 29, 'RECOMENDADO', 34, NULL, NULL, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
+(49, 12, 85, 'RECOMENDADO', 35, NULL, NULL, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
+(50, 12, 25, 'RECOMENDADO', 36, NULL, NULL, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
+(51, 13, 95, 'RECOMENDADO', 37, NULL, NULL, '2022-07-06 14:37:59', '2022-07-06 14:37:59'),
+(52, 13, 94, 'RECOMENDADO', 38, NULL, NULL, '2022-07-06 14:37:59', '2022-07-06 14:37:59'),
+(53, 13, 14, 'RECOMENDADO', 39, NULL, NULL, '2022-07-06 14:37:59', '2022-07-06 14:37:59'),
+(54, 14, 95, 'RECOMENDADO', 40, NULL, NULL, '2022-07-06 14:37:59', '2022-07-06 14:37:59'),
+(55, 14, 94, 'RECOMENDADO', 41, NULL, NULL, '2022-07-06 14:37:59', '2022-07-06 14:37:59'),
+(56, 14, 14, 'RECOMENDADO', 42, NULL, NULL, '2022-07-06 14:38:00', '2022-07-06 14:38:00'),
+(57, 15, 95, 'RECOMENDADO', 43, NULL, NULL, '2022-07-06 14:38:00', '2022-07-06 14:38:00'),
+(58, 15, 94, 'RECOMENDADO', 44, NULL, NULL, '2022-07-06 14:38:00', '2022-07-06 14:38:00'),
+(59, 15, 14, 'RECOMENDADO', 45, NULL, NULL, '2022-07-06 14:38:00', '2022-07-06 14:38:00'),
+(60, 16, 95, 'RECOMENDADO', 46, NULL, NULL, '2022-07-06 14:38:00', '2022-07-06 14:38:00'),
+(61, 16, 94, 'RECOMENDADO', 47, NULL, NULL, '2022-07-06 14:38:00', '2022-07-06 14:38:00'),
+(62, 16, 14, 'RECOMENDADO', 48, NULL, NULL, '2022-07-06 14:38:01', '2022-07-06 14:38:01');
 
 --
 -- Disparadores `work_order_details`
@@ -2902,8 +3185,8 @@ SELECT task INTO tarea FROM tasks WHERE id = new.task_id;
                     LEAVE bucle;
                 END IF;
                 FETCH cur_epp INTO equipo_proteccion;
-                IF NOT EXISTS(SELECT * FROM work_order_epps WHERE work_order_id = new.work_order_id AND epp_id = equipo_proteccion) THEN
-                    INSERT INTO work_order_epps(work_order_id ,epp_id) VALUES (new.work_order_id,equipo_proteccion);
+                IF NOT EXISTS(SELECT * FROM epp_work_order WHERE work_order_id = new.work_order_id AND epp_id = equipo_proteccion) THEN
+                    INSERT INTO epp_work_order(epp_id , work_order_id) VALUES (equipo_proteccion, new.work_order_id);
                 END IF;
             END LOOP bucle;
         CLOSE cur_epp;
@@ -2923,21 +3206,6 @@ SELECT task INTO tarea FROM tasks WHERE id = new.task_id;
 END
 $$
 DELIMITER ;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `work_order_epps`
---
-
-CREATE TABLE `work_order_epps` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `work_order_id` bigint(20) UNSIGNED NOT NULL,
-  `epp_id` bigint(20) UNSIGNED NOT NULL,
-  `quantity` decimal(8,2) NOT NULL DEFAULT 1.00,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -3102,8 +3370,8 @@ ALTER TABLE `epp_risk`
 --
 ALTER TABLE `epp_work_order`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `epp_work_order_work_order_foreign` (`work_order`),
-  ADD KEY `epp_work_order_epp_id_work_order_index` (`epp_id`,`work_order`);
+  ADD KEY `epp_work_order_work_order_id_foreign` (`work_order_id`) USING BTREE,
+  ADD KEY `epp_work_order_epp_id_work_order_id_index` (`epp_id`,`work_order_id`) USING BTREE;
 
 --
 -- Indices de la tabla `failed_jobs`
@@ -3493,14 +3761,6 @@ ALTER TABLE `work_order_details`
   ADD KEY `work_order_details_component_part_id_foreign` (`component_part_id`);
 
 --
--- Indices de la tabla `work_order_epps`
---
-ALTER TABLE `work_order_epps`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `work_order_epps_work_order_id_foreign` (`work_order_id`),
-  ADD KEY `work_order_epps_epp_id_foreign` (`epp_id`);
-
---
 -- Indices de la tabla `zones`
 --
 ALTER TABLE `zones`
@@ -3551,7 +3811,7 @@ ALTER TABLE `components`
 -- AUTO_INCREMENT de la tabla `component_implement`
 --
 ALTER TABLE `component_implement`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- AUTO_INCREMENT de la tabla `component_implement_model`
@@ -3599,7 +3859,7 @@ ALTER TABLE `epp_risk`
 -- AUTO_INCREMENT de la tabla `epp_work_order`
 --
 ALTER TABLE `epp_work_order`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=114;
 
 --
 -- AUTO_INCREMENT de la tabla `failed_jobs`
@@ -3761,7 +4021,7 @@ ALTER TABLE `risks`
 -- AUTO_INCREMENT de la tabla `risk_task_order`
 --
 ALTER TABLE `risk_task_order`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
@@ -3845,19 +4105,13 @@ ALTER TABLE `warehouses`
 -- AUTO_INCREMENT de la tabla `work_orders`
 --
 ALTER TABLE `work_orders`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT de la tabla `work_order_details`
 --
 ALTER TABLE `work_order_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `work_order_epps`
---
-ALTER TABLE `work_order_epps`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT de la tabla `zones`
@@ -3954,7 +4208,7 @@ ALTER TABLE `epp_risk`
 --
 ALTER TABLE `epp_work_order`
   ADD CONSTRAINT `epp_work_order_epp_id_foreign` FOREIGN KEY (`epp_id`) REFERENCES `epps` (`id`),
-  ADD CONSTRAINT `epp_work_order_work_order_foreign` FOREIGN KEY (`work_order`) REFERENCES `work_orders` (`id`);
+  ADD CONSTRAINT `epp_work_order_work_order_id_foreign` FOREIGN KEY (`work_order_id`) REFERENCES `work_orders` (`id`);
 
 --
 -- Filtros para la tabla `implements`
@@ -4199,13 +4453,6 @@ ALTER TABLE `work_order_details`
   ADD CONSTRAINT `work_order_details_task_id_foreign` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`),
   ADD CONSTRAINT `work_order_details_work_order_id_foreign` FOREIGN KEY (`work_order_id`) REFERENCES `work_orders` (`id`);
 
---
--- Filtros para la tabla `work_order_epps`
---
-ALTER TABLE `work_order_epps`
-  ADD CONSTRAINT `work_order_epps_epp_id_foreign` FOREIGN KEY (`epp_id`) REFERENCES `epps` (`id`),
-  ADD CONSTRAINT `work_order_epps_work_order_id_foreign` FOREIGN KEY (`work_order_id`) REFERENCES `work_orders` (`id`);
-
 DELIMITER $$
 --
 -- Eventos
@@ -4343,6 +4590,7 @@ DECLARE pieza_final INT DEFAULT 0;
 DECLARE tarea_final INT DEFAULT 0;
 /*----VARIABLES PARA ALMACENAR DATOS DEL COMPONENTE---*/
 DECLARE orden_trabajo INT;
+DECLARE ubicacion INT;
 DECLARE implemento INT;
 DECLARE componente INT;
 DECLARE responsable INT;
@@ -4364,7 +4612,7 @@ DECLARE tarea_pieza INT;
 DECLARE implemento_componente INT;
 DECLARE componente_pieza INT;
 /*------CURSOR PARA ITERAR LOS COMPONENTES---------*/
-DECLARE cur_comp CURSOR FOR SELECT i.id, c.id, c.item_id, c.lifespan, i.user_id, it.estimated_price FROM component_implement_model cim INNER JOIN implements i ON i.implement_model_id = cim.implement_model_id INNER JOIN components c ON c.id = cim.component_id INNER JOIN items it ON it.id = c.item_id;
+DECLARE cur_comp CURSOR FOR SELECT i.id, c.id, c.item_id, c.lifespan, i.user_id,u.location_id, it.estimated_price FROM component_implement_model cim INNER JOIN implements i ON i.implement_model_id = cim.implement_model_id INNER JOIN users u ON u.id = i.user_id INNER JOIN components c ON c.id = cim.component_id INNER JOIN items it ON it.id = c.item_id;
 /*--------------------------DECLARAR HANDLER PARA DETENERSE---------------*/
 DECLARE CONTINUE HANDLER FOR NOT FOUND SET componente_final = 1;
 /*-----------------------------------ABRIR CURSOR COMPONENTE---------------*/
@@ -4373,7 +4621,7 @@ OPEN cur_comp;
     IF componente_final = 1 THEN
     	LEAVE bucle_comp;
     END IF;
-    FETCH cur_comp INTO implemento,componente,item,tiempo_vida,responsable,precio_estimado;
+    FETCH cur_comp INTO implemento,componente,item,tiempo_vida,responsable,ubicacion,precio_estimado;
 /*---------------------OBTENER HORAS DEL COMPONENTE--------------------------*/
 	IF NOT EXISTS(SELECT * FROM component_implement WHERE implement_id = implemento AND component_id = componente AND state = "PENDIENTE") THEN
     	INSERT INTO component_implement(component_id,implement_id) VALUES (componente,implemento);
@@ -4383,10 +4631,10 @@ OPEN cur_comp;
     SELECT ROUND((horas+20)/tiempo_vida) INTO cantidad;
 /*---------------VERIFICAR SI EXISTE LA CABECERA DE LA SOLICITUD-------*/
     IF NOT EXISTS(SELECT * FROM work_orders WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE") THEN
-        INSERT INTO work_orders(implement_id,user_id,maintenance,state,created_at,updated_at) VALUES (implemento,responsable,1,NOW(),NOW());
+        INSERT INTO work_orders(implement_id,user_id,location_id,`date`,maintenance,created_at,updated_at) VALUES (implemento,responsable,ubicacion,DATE_ADD(NOW(),INTERVAL 3 DAY),1,NOW(),NOW());
     END IF;
 /*--------------OBTENIENDO LA CABECERA DE LA SOLICITUD------------------*/
-SELECT id INTO orden_trabajo FROM work_orders WHERE implement_id = implemento AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
+    SELECT id INTO orden_trabajo FROM work_orders WHERE implement_id = implemento AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
 /*----------VERIFICAR SI SE REQUIERE CAMBIAR EL COMPONENTE---------------------*/
     IF(cantidad > 0) THEN
         /*-------------OBTENER LA TAREA DE RECAMBIO DEL COMPONENTE-----*/
@@ -4428,7 +4676,7 @@ SELECT id INTO orden_trabajo FROM work_orders WHERE implement_id = implemento AN
                 FETCH cur_part INTO pieza,tiempo_vida_pieza,item_pieza,precio_estimado_pieza;
                 /*--------------OBTENER LAS HORAS DE LAS PIEZAS-------------------------------*/
                 IF NOT EXISTS(SELECT * FROM component_part cp WHERE cp.component_implement_id = implemento_componente AND cp.part = pieza AND cp.state = "PENDIENTE") THEN
-                    INSERT INTO component_part(component_implement_id ,part) VALUES (implemento_componente,pieza);            
+                    INSERT INTO component_part(component_implement_id ,part) VALUES (implemento_componente,pieza);
     		    END IF;
     			    SELECT cp.id,cp.hours INTO componente_pieza,horas_pieza FROM component_part cp WHERE cp.component_implement_id = implemento_componente AND cp.part = pieza AND cp.state = "PENDIENTE" LIMIT 1;
                 /*-------------CALCULAR SI NECESITA RECAMBIO DENTRO DE 3 DÍAS---------------------*/
@@ -4453,7 +4701,6 @@ SELECT id INTO orden_trabajo FROM work_orders WHERE implement_id = implemento AN
                             END IF;
                             FETCH cur_task INTO tarea_pieza;
                             IF NOT EXISTS(SELECT * FROM work_order_details WHERE state = "RECOMENDADO" AND work_order_id = orden_trabajo AND task_id = tarea_pieza) THEN
-                                
                     			INSERT INTO work_order_details(work_order_id,task_id,component_part_id ,created_at,updated_at) VALUES (orden_trabajo,tarea_pieza,componente_pieza,NOW(),NOW());
                             END IF;
                             END LOOP bucle_part_task;
