@@ -21,7 +21,7 @@ class ValidateWorkOrder extends Component
     public $nombre_modelo = "";
     public $numero_implemento = "";
     public $nombre_operador = "";
-    public $id_operador = "";
+    public $id_operador = 0;
 
     public function updatedOpenValidateWorkOrder(){
         if(!$this->open_validate_work_order){
@@ -39,21 +39,32 @@ class ValidateWorkOrder extends Component
 
     public function render()
     {
-        $implement_models = WorkOrder::join('implements',function($join){
+        /*-------------------Fechas de pedido pendientes en validar----*/
+        $fechas = WorkOrderDetail::join('tasks',function($join){
+            $join->on('tasks.id','=','work_order_details.task_id');
+        })->join('work_orders',function($join){
+            $join->on('work_order_details.work_order_id','=','work_orders.id');
+        })->where('tasks.task','=','RECAMBIO')
+            ->where('work_order_details.state','=','RECOMENDADO')
+            ->select('work_orders.date')->get();
+        
+        $implementos_para_reponer_componentes_o_piezas = WorkOrder::join('implements',function($join){
+            $join->on('implements.id','=','work_orders.implement_id');
+        });
+
+        $datos = WorkOrder::join('implements',function($join){
             $join->on('work_orders.implement_id','=','implements.id');
         })->join('implement_models',function($join){
             $join->on('implement_models.id','=','implements.implement_model_id');
-        })->select('implement_models.id','implement_models.implement_model',)
+        });
+
+        $implement_models = $datos->select('implement_models.id','implement_models.implement_model',)
             ->where('work_orders.location_id',Auth::user()->location_id)
             ->groupBy('implement_models.id')
             ->get();
 
         if($this->modelo_implemento > 0){
-            $implements =  WorkOrder::join('implements',function($join){
-                $join->on('work_orders.implement_id','=','implements.id');
-            })->join('implement_models',function($join){
-                $join->on('implement_models.id','=','implements.implement_model_id');
-            })->join('users',function($join){
+            $implements = $datos->join('users',function($join){
                 $join->on('users.id','=','work_orders.user_id');
             })->select('work_orders.id','implement_models.implement_model','implements.implement_number','users.name','users.lastname')
             ->where('work_orders.location_id',Auth::user()->location_id)
@@ -73,6 +84,6 @@ class ValidateWorkOrder extends Component
             $tareas_rechazadas = NULL;
         }
 
-        return view('livewire.validate-work-order',compact('implement_models','implements','tareas','tareas_rechazadas'));
+        return view('livewire.validate-work-order',compact('fechas','implements','tareas','tareas_rechazadas'));
     }
 }

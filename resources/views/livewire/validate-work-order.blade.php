@@ -2,35 +2,21 @@
     <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
         <h1 class="font-bold text-2xl">ÓRDENES DE TRABAJO</h1>
     </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-            <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
-                <x-jet-label>:</x-jet-label>
-                <select class="form-select" style="width: 100%" wire:model='modelo_implemento'>
-                    <option value="0">Seleccione una zona</option>
-                @foreach ($implement_models as $request)
-                    <option value="{{ $request->id }}">{{$request->implement_model }}</option>
-                @endforeach
-                </select>
-            </div>
-        </div>
-        <div>
-            <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
-                <x-jet-label>Modelo del Implemento:</x-jet-label>
-                <select class="form-select" style="width: 100%" wire:model='modelo_implemento'>
-                    <option value="0">Seleccione una zona</option>
-                @foreach ($implement_models as $request)
-                    <option value="{{ $request->id }}">{{$request->implement_model }}</option>
-                @endforeach
-                </select>
-            </div>
+        <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
+            <x-jet-label>Seleccione la fecha:</x-jet-label>
+            <select class="form-select" style="width: 100%" wire:model='modelo_implemento'>
+                <option value="0">Seleccione una opción</option>
+            @foreach ($fechas as $request)
+                <option>{{$request->date }}</option>
+            @endforeach
+            </select>
         </div>
     </div>
-<!-- Listar usuarios que tienen pedidos por validar  -->
+<!-- Listar implementos que tienen componentes o piezas para cambiar  -->
 @isset($implements)
     <div class="grid grid-cols-1 sm:grid-cols-3 mt-4 p-6 gap-4">
         @foreach ($implements as $implement)
-    <!-- Cards de los usuarios con pedidos pendientes a validar  -->
+    <!-- Cards de los implementos que tienen componentes o piezas para cambiar  -->
         <div class="max-w-sm p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
             <div class="flex flex-col items-center text-center">
                 <img class="mb-3 w-24 h-24 rounded-full shadow-lg" src="{{ Auth::user()->profile_photo_url }}" alt="{{ $implement->implement_model_id }}"/>

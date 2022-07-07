@@ -7,6 +7,6 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::get('/Programacion-Tractores',TractorScheduling::class)->name('overseer.tractor-scheduling');
-Route::get('/Order-de-Trabajo',ValidateWorkOrder::class)->name('overseer.validate-work-order');
+Route::get('/Orden-de-Trabajo-Pendientes',ValidateWorkOrder::class)->name('overseer.validate-work-order');
 
 

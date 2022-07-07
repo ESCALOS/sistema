@@ -220,7 +220,7 @@
                                 </td>
                                 <td class="py-3 px-2 text-center">
                                     <div class="flex items-center justify-center">
-                                        <img src="img/{{ $tractorScheduling->shift == 'MAÑANA' ? 'sun' : 'moon' }}.svg"
+                                        <img src="/img/{{ $tractorScheduling->shift == 'MAÑANA' ? 'sun' : 'moon' }}.svg"
                                             alt="shift" width="25">
                                     </div>
                                 </td>

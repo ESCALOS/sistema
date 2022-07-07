@@ -2,8 +2,8 @@
 -- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
--- Servidor: localhost
--- Tiempo de generación: 06-07-2022 a las 20:14:46
+-- Servidor: 127.0.0.1
+-- Tiempo de generación: 07-07-2022 a las 05:50:40
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -204,7 +204,7 @@ OPEN cur_comp;
         /*-------------OBTENER LA TAREA DE RECAMBIO DEL COMPONENTE-----*/
         SELECT id INTO tarea_componente FROM tasks WHERE task = "RECAMBIO" AND component_id = componente;
         /*-------------CAMBIAR COMPONENTE-----------------------*/
-        INSERT INTO work_order_details(work_order_id,task_id,created_at,updated_at) VALUES (orden_trabajo,tarea_componente,NOW(),NOW());
+        INSERT INTO work_order_details(work_order_id,task_id,state,created_at,updated_at) VALUES (orden_trabajo,tarea_componente,'RECOMENDADO',NOW(),NOW());
     ELSE
         /*------------RUTINARIO DEL COMPONENTE------------------*/
         BEGIN
@@ -250,7 +250,7 @@ OPEN cur_comp;
                     /*----------OBTENER LA TAREA DE RECAMBIO DE LA PIEZA-------------------------------*/
                     SELECT id INTO tarea_pieza FROM tasks WHERE task = "RECAMBIO" AND component_id = pieza;
                     /*-------------CAMBIAR COMPONENTE--------------------------------------------------*/
-                    INSERT INTO work_order_details(work_order_id,task_id,created_at,updated_at) VALUES (orden_trabajo,tarea_componente,NOW(),NOW());
+                    INSERT INTO work_order_details(work_order_id,task_id,state,created_at,updated_at) VALUES (orden_trabajo,tarea_componente,'RECOMENDADO',NOW(),NOW());
                 ELSE
                     /*------------RUTINARIO DE PIEZAS-----------------------------*/
                     BEGIN
@@ -668,18 +668,18 @@ CREATE TABLE `component_implement` (
 --
 
 INSERT INTO `component_implement` (`id`, `component_id`, `implement_id`, `hours`, `state`, `created_at`, `updated_at`) VALUES
-(1, 28, 1, '24.65', 'PENDIENTE', NULL, NULL),
-(2, 8, 1, '24.65', 'PENDIENTE', NULL, NULL),
-(3, 20, 1, '24.65', 'PENDIENTE', NULL, NULL),
-(4, 28, 2, '0.00', 'PENDIENTE', NULL, NULL),
-(5, 8, 2, '0.00', 'PENDIENTE', NULL, NULL),
-(6, 20, 2, '0.00', 'PENDIENTE', NULL, NULL),
-(7, 28, 3, '0.00', 'PENDIENTE', NULL, NULL),
-(8, 8, 3, '0.00', 'PENDIENTE', NULL, NULL),
-(9, 20, 3, '0.00', 'PENDIENTE', NULL, NULL),
-(10, 28, 4, '0.00', 'PENDIENTE', NULL, NULL),
-(11, 8, 4, '0.00', 'PENDIENTE', NULL, NULL),
-(12, 20, 4, '0.00', 'PENDIENTE', NULL, NULL),
+(1, 28, 1, '379.95', 'PENDIENTE', NULL, NULL),
+(2, 8, 1, '379.95', 'PENDIENTE', NULL, NULL),
+(3, 20, 1, '379.95', 'PENDIENTE', NULL, NULL),
+(4, 28, 2, '382.50', 'PENDIENTE', NULL, NULL),
+(5, 8, 2, '382.50', 'PENDIENTE', NULL, NULL),
+(6, 20, 2, '382.50', 'PENDIENTE', NULL, NULL),
+(7, 28, 3, '379.10', 'PENDIENTE', NULL, NULL),
+(8, 8, 3, '379.10', 'PENDIENTE', NULL, NULL),
+(9, 20, 3, '379.10', 'PENDIENTE', NULL, NULL),
+(10, 28, 4, '255.00', 'PENDIENTE', NULL, NULL),
+(11, 8, 4, '255.00', 'PENDIENTE', NULL, NULL),
+(12, 20, 4, '255.00', 'PENDIENTE', NULL, NULL),
 (13, 20, 5, '0.00', 'PENDIENTE', NULL, NULL),
 (14, 19, 5, '0.00', 'PENDIENTE', NULL, NULL),
 (15, 22, 5, '0.00', 'PENDIENTE', NULL, NULL),
@@ -768,15 +768,42 @@ CREATE TABLE `component_part` (
 --
 
 INSERT INTO `component_part` (`id`, `component_implement_id`, `part`, `hours`, `state`, `created_at`, `updated_at`) VALUES
-(1, 1, 2, '24.65', 'PENDIENTE', NULL, NULL),
-(2, 1, 13, '24.65', 'PENDIENTE', NULL, NULL),
-(3, 1, 33, '24.65', 'PENDIENTE', NULL, NULL),
-(4, 2, 4, '24.65', 'PENDIENTE', NULL, NULL),
-(5, 2, 11, '24.65', 'PENDIENTE', NULL, NULL),
-(6, 2, 23, '24.65', 'PENDIENTE', NULL, NULL),
-(7, 3, 4, '24.65', 'PENDIENTE', NULL, NULL),
-(8, 3, 29, '24.65', 'PENDIENTE', NULL, NULL),
-(9, 3, 33, '24.65', 'PENDIENTE', NULL, NULL);
+(1, 1, 2, '379.95', 'PENDIENTE', NULL, NULL),
+(2, 1, 13, '379.95', 'PENDIENTE', NULL, NULL),
+(3, 1, 33, '379.95', 'PENDIENTE', NULL, NULL),
+(4, 2, 4, '379.95', 'PENDIENTE', NULL, NULL),
+(5, 2, 11, '379.95', 'PENDIENTE', NULL, NULL),
+(6, 2, 23, '379.95', 'PENDIENTE', NULL, NULL),
+(7, 3, 4, '379.95', 'PENDIENTE', NULL, NULL),
+(8, 3, 29, '379.95', 'PENDIENTE', NULL, NULL),
+(9, 3, 33, '379.95', 'PENDIENTE', NULL, NULL),
+(10, 7, 2, '379.10', 'PENDIENTE', NULL, NULL),
+(11, 7, 13, '379.10', 'PENDIENTE', NULL, NULL),
+(12, 7, 33, '379.10', 'PENDIENTE', NULL, NULL),
+(13, 8, 4, '379.10', 'PENDIENTE', NULL, NULL),
+(14, 8, 11, '379.10', 'PENDIENTE', NULL, NULL),
+(15, 8, 23, '379.10', 'PENDIENTE', NULL, NULL),
+(16, 9, 4, '379.10', 'PENDIENTE', NULL, NULL),
+(17, 9, 29, '379.10', 'PENDIENTE', NULL, NULL),
+(18, 9, 33, '379.10', 'PENDIENTE', NULL, NULL),
+(19, 10, 2, '255.00', 'PENDIENTE', NULL, NULL),
+(20, 10, 13, '255.00', 'PENDIENTE', NULL, NULL),
+(21, 10, 33, '255.00', 'PENDIENTE', NULL, NULL),
+(22, 11, 4, '255.00', 'PENDIENTE', NULL, NULL),
+(23, 11, 11, '255.00', 'PENDIENTE', NULL, NULL),
+(24, 11, 23, '255.00', 'PENDIENTE', NULL, NULL),
+(25, 12, 4, '255.00', 'PENDIENTE', NULL, NULL),
+(26, 12, 29, '255.00', 'PENDIENTE', NULL, NULL),
+(27, 12, 33, '255.00', 'PENDIENTE', NULL, NULL),
+(28, 4, 2, '382.50', 'PENDIENTE', NULL, NULL),
+(29, 4, 13, '382.50', 'PENDIENTE', NULL, NULL),
+(30, 4, 33, '382.50', 'PENDIENTE', NULL, NULL),
+(31, 5, 4, '382.50', 'PENDIENTE', NULL, NULL),
+(32, 5, 11, '382.50', 'PENDIENTE', NULL, NULL),
+(33, 5, 23, '382.50', 'PENDIENTE', NULL, NULL),
+(34, 6, 4, '382.50', 'PENDIENTE', NULL, NULL),
+(35, 6, 29, '382.50', 'PENDIENTE', NULL, NULL),
+(36, 6, 33, '382.50', 'PENDIENTE', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -991,119 +1018,114 @@ CREATE TABLE `epp_work_order` (
 --
 
 INSERT INTO `epp_work_order` (`id`, `epp_id`, `work_order_id`) VALUES
-(3, 1, 1),
-(61, 1, 9),
-(72, 1, 10),
-(83, 1, 11),
-(94, 1, 12),
-(4, 2, 1),
-(62, 2, 9),
-(73, 2, 10),
-(84, 2, 11),
-(95, 2, 12),
-(5, 3, 1),
-(63, 3, 9),
-(74, 3, 10),
-(85, 3, 11),
-(96, 3, 12),
-(8, 5, 1),
-(13, 5, 2),
-(18, 5, 3),
-(23, 5, 4),
-(28, 5, 5),
-(35, 5, 6),
-(42, 5, 7),
-(49, 5, 8),
-(56, 5, 9),
-(67, 5, 10),
-(78, 5, 11),
-(89, 5, 12),
-(31, 6, 5),
-(38, 6, 6),
-(45, 6, 7),
-(52, 6, 8),
-(100, 6, 13),
-(104, 6, 14),
-(108, 6, 15),
-(112, 6, 16),
-(54, 7, 9),
-(65, 7, 10),
-(76, 7, 11),
-(87, 7, 12),
-(1, 9, 1),
-(11, 9, 2),
-(16, 9, 3),
-(21, 9, 4),
-(26, 9, 5),
-(33, 9, 6),
-(40, 9, 7),
-(47, 9, 8),
-(59, 9, 9),
-(70, 9, 10),
-(81, 9, 11),
-(92, 9, 12),
-(98, 9, 13),
-(102, 9, 14),
-(106, 9, 15),
-(110, 9, 16),
-(55, 10, 9),
-(66, 10, 10),
-(77, 10, 11),
-(88, 10, 12),
-(9, 12, 1),
-(14, 12, 2),
-(19, 12, 3),
-(24, 12, 4),
-(29, 12, 5),
-(36, 12, 6),
-(43, 12, 7),
-(50, 12, 8),
-(57, 12, 9),
-(68, 12, 10),
-(79, 12, 11),
-(90, 12, 12),
-(7, 14, 1),
-(10, 15, 1),
-(15, 15, 2),
-(20, 15, 3),
-(25, 15, 4),
-(30, 15, 5),
-(37, 15, 6),
-(44, 15, 7),
-(51, 15, 8),
-(58, 15, 9),
-(69, 15, 10),
-(80, 15, 11),
-(91, 15, 12),
-(32, 16, 5),
-(39, 16, 6),
-(46, 16, 7),
-(53, 16, 8),
-(101, 16, 13),
-(105, 16, 14),
-(109, 16, 15),
-(113, 16, 16),
-(6, 18, 1),
-(64, 18, 9),
-(75, 18, 10),
-(86, 18, 11),
-(97, 18, 12),
-(2, 19, 1),
-(12, 19, 2),
-(17, 19, 3),
-(22, 19, 4),
-(27, 19, 5),
-(34, 19, 6),
-(41, 19, 7),
-(48, 19, 8),
-(60, 19, 9),
-(71, 19, 10),
-(82, 19, 11),
-(93, 19, 12),
-(99, 19, 13),
-(103, 19, 14),
-(107, 19, 15),
-(111, 19, 16);
+(277, 1, 41),
+(288, 1, 42),
+(299, 1, 43),
+(310, 1, 44),
+(278, 2, 41),
+(289, 2, 42),
+(300, 2, 43),
+(311, 2, 44),
+(279, 3, 41),
+(290, 3, 42),
+(301, 3, 43),
+(312, 3, 44),
+(224, 5, 33),
+(229, 5, 34),
+(234, 5, 35),
+(239, 5, 36),
+(244, 5, 37),
+(251, 5, 38),
+(258, 5, 39),
+(265, 5, 40),
+(272, 5, 41),
+(283, 5, 42),
+(294, 5, 43),
+(305, 5, 44),
+(247, 6, 37),
+(254, 6, 38),
+(261, 6, 39),
+(268, 6, 40),
+(316, 6, 45),
+(320, 6, 46),
+(324, 6, 47),
+(328, 6, 48),
+(270, 7, 41),
+(281, 7, 42),
+(292, 7, 43),
+(303, 7, 44),
+(222, 9, 33),
+(227, 9, 34),
+(232, 9, 35),
+(237, 9, 36),
+(242, 9, 37),
+(249, 9, 38),
+(256, 9, 39),
+(263, 9, 40),
+(275, 9, 41),
+(286, 9, 42),
+(297, 9, 43),
+(308, 9, 44),
+(314, 9, 45),
+(318, 9, 46),
+(322, 9, 47),
+(326, 9, 48),
+(271, 10, 41),
+(282, 10, 42),
+(293, 10, 43),
+(304, 10, 44),
+(225, 12, 33),
+(230, 12, 34),
+(235, 12, 35),
+(240, 12, 36),
+(245, 12, 37),
+(252, 12, 38),
+(259, 12, 39),
+(266, 12, 40),
+(273, 12, 41),
+(284, 12, 42),
+(295, 12, 43),
+(306, 12, 44),
+(226, 15, 33),
+(231, 15, 34),
+(236, 15, 35),
+(241, 15, 36),
+(246, 15, 37),
+(253, 15, 38),
+(260, 15, 39),
+(267, 15, 40),
+(274, 15, 41),
+(285, 15, 42),
+(296, 15, 43),
+(307, 15, 44),
+(248, 16, 37),
+(255, 16, 38),
+(262, 16, 39),
+(269, 16, 40),
+(317, 16, 45),
+(321, 16, 46),
+(325, 16, 47),
+(329, 16, 48),
+(280, 18, 41),
+(291, 18, 42),
+(302, 18, 43),
+(313, 18, 44),
+(223, 19, 33),
+(228, 19, 34),
+(233, 19, 35),
+(238, 19, 36),
+(243, 19, 37),
+(250, 19, 38),
+(257, 19, 39),
+(264, 19, 40),
+(276, 19, 41),
+(287, 19, 42),
+(298, 19, 43),
+(309, 19, 44),
+(315, 19, 45),
+(319, 19, 46),
+(323, 19, 47),
+(327, 19, 48);
 
 -- --------------------------------------------------------
 
@@ -1144,10 +1166,10 @@ CREATE TABLE `implements` (
 --
 
 INSERT INTO `implements` (`id`, `implement_model_id`, `implement_number`, `hours`, `user_id`, `location_id`, `ceco_id`, `created_at`, `updated_at`) VALUES
-(1, 1, '5243', '91.60', 1, 1, 1, '2022-06-20 21:21:59', '2022-06-25 17:19:32'),
-(2, 1, '2399', '24.94', 2, 1, 2, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
-(3, 1, '6977', '52.51', 3, 2, 3, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
-(4, 1, '9149', '81.06', 4, 2, 4, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
+(1, 1, '5243', '446.90', 1, 1, 1, '2022-06-20 21:21:59', '2022-07-07 02:36:52'),
+(2, 1, '2399', '407.44', 2, 1, 2, '2022-06-20 21:21:59', '2022-07-07 02:37:04'),
+(3, 1, '6977', '431.61', 3, 2, 3, '2022-06-20 21:21:59', '2022-07-07 02:37:32'),
+(4, 1, '9149', '336.06', 4, 2, 4, '2022-06-20 21:21:59', '2022-07-07 02:37:48'),
 (5, 2, '3513', '43.59', 5, 3, 5, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
 (6, 2, '6295', '21.92', 6, 3, 6, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
 (7, 2, '4375', '91.21', 7, 4, 7, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
@@ -2596,6 +2618,9 @@ CREATE TABLE `sessions` (
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
 ('9mlMWpjr1brHd0LWGUsO8h1ioWUFJF6bmem1C9as', 5, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiZWFxZVkxSGhaV29SVWlmdEtWMkJuSnY2MWdvT3dDbWwyOUFjanp2QSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDI6Imh0dHA6Ly9zaXN0ZW1hL3N1cGVydmlzb3IvT3JkZXItZGUtVHJhYmFqbyI7fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjU7fQ==', 1657131192),
+('gXHKaUyzoS7FwVBar6uCj0wtiOTrvQAVaWACHibM', 5, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.114 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiazJ5c0NrZjFPTXdKM1N4dEJaalVtSHJBeDVseU50SThFWG9Gc1NjUCI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTg6Imh0dHA6Ly9zaXN0ZW1hLnRlc3Qvc3VwZXJ2aXNvci9PcmRlbi1kZS1UcmFiYWpvLVBlbmRpZW50ZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aTo1O30=', 1657162802),
+('kpKvnIMWofIZrNm0Z0jVwO0JtD9d7gv1kdoqR4DK', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.114 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiTzNmTDRxWGkzOXpTaFFkZWFSWWtzblk3eWdReFV1SHAybEZ4NkFHQSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mjk6Imh0dHA6Ly9zaXN0ZW1hLnRlc3QvYXNpc3RlbnRlIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6Mjt9', 1657161726),
+('KVZtcp9ZSaRjdkSejnPMnSD06XvlW7gDpaK1PnPf', NULL, '192.168.0.7', 'AVG Antivirus', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoidkdTSkZ6aWk2UG9LTWtCMGFkMFJYM1NrV2hkNWp5NVQ3a0pPZ0F1MiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MTg6Imh0dHA6Ly8xOTIuMTY4LjAuNyI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1657158303),
 ('OiAcXLNYcnSNHStm0BQZoO1dnfG60Szoxx4gfWYy', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoidHJzYUszOTlKN1E4WEtPdXQ2ZjVHQkdrMWRlWGNmTlEwZGZHb1FnYyI7czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo0MToiaHR0cDovL3Npc3RlbWEvcGxhbm5lci9hc2lnbmFyLW1hdGVyaWFsZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjIxOiJwYXNzd29yZF9oYXNoX3NhbmN0dW0iO3M6NjA6IiQyeSQxMCQ5MklYVU5wa2pPMHJPUTVieU1pLlllNG9Lb0VhM1JvOWxsQy8ub2cvYXQyLnVoZVdHL2lnaSI7fQ==', 1657115244),
 ('QOGu7oFJ677CJciShOwC1aqnqFJRQhL5iUmQiei3', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiTkt6SEk2QUFmblhkZmN0VUM4TGRZY0NIN0RPcWlCVE5hZW42QjdLUyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo0MToiaHR0cDovL3Npc3RlbWEvcGxhbm5lci9hc2lnbmFyLW1hdGVyaWFsZXMiO319', 1657130154);
 
@@ -2815,10 +2840,10 @@ CREATE TABLE `tractors` (
 --
 
 INSERT INTO `tractors` (`id`, `tractor_model_id`, `tractor_number`, `hour_meter`, `location_id`, `created_at`, `updated_at`) VALUES
-(1, 1, '72307', '282.00', 1, '2022-06-20 21:22:03', '2022-06-25 17:19:32'),
-(2, 1, '76737', '450.00', 1, '2022-06-20 21:22:03', '2022-06-24 13:00:49'),
-(3, 1, '65116', '390.00', 2, '2022-06-20 21:22:04', '2022-06-20 21:22:04'),
-(4, 1, '76977', '414.00', 2, '2022-06-20 21:22:04', '2022-06-20 21:22:04'),
+(1, 1, '72307', '700.00', 1, '2022-06-20 21:22:03', '2022-07-07 02:36:52'),
+(2, 1, '76737', '900.00', 1, '2022-06-20 21:22:03', '2022-07-07 02:37:04'),
+(3, 1, '65116', '750.00', 2, '2022-06-20 21:22:04', '2022-07-07 02:37:48'),
+(4, 1, '76977', '800.00', 2, '2022-06-20 21:22:04', '2022-07-07 02:37:32'),
 (5, 2, '72317', '342.00', 3, '2022-06-20 21:22:04', '2022-06-20 21:22:04'),
 (6, 2, '67891', '79.00', 3, '2022-06-20 21:22:04', '2022-06-20 21:22:04'),
 (7, 2, '72448', '452.00', 4, '2022-06-20 21:22:04', '2022-06-20 21:22:04'),
@@ -2886,7 +2911,13 @@ CREATE TABLE `tractor_reports` (
 
 INSERT INTO `tractor_reports` (`id`, `user_id`, `tractor_id`, `labor_id`, `correlative`, `date`, `shift`, `implement_id`, `hour_meter_start`, `hour_meter_end`, `hours`, `observations`, `lote_id`, `is_canceled`, `created_at`, `updated_at`) VALUES
 (1, 1, 2, 1, 'sadada', '2022-06-23', 'MAÑANA', 1, '435.00', '450.00', '15.00', '', 1, 0, '2022-06-24 17:57:46', '2022-06-24 18:00:49'),
-(2, 2, 1, 3, '12553', '2022-06-24', 'NOCHE', 1, '268.00', '282.00', '14.00', '', 1, 0, '2022-06-25 22:07:10', '2022-06-25 22:19:32');
+(2, 2, 1, 3, '12553', '2022-06-24', 'NOCHE', 1, '268.00', '282.00', '14.00', '', 1, 0, '2022-06-25 22:07:10', '2022-06-25 22:19:32'),
+(3, 3, 3, 4, '1365646', '2022-07-06', 'MAÑANA', 3, '390.00', '450.00', '60.00', 'saSDSDA', 3, 0, '2022-07-07 07:36:16', '2022-07-07 07:36:16'),
+(4, 4, 3, 4, '54398363', '2022-07-06', 'MAÑANA', 4, '450.00', '700.00', '250.00', 'WDEQ', 3, 0, '2022-07-07 07:36:36', '2022-07-07 07:36:36'),
+(5, 1, 1, 3, '3265465', '2022-07-06', 'MAÑANA', 1, '282.00', '700.00', '418.00', 'SAD', 1, 0, '2022-07-07 07:36:52', '2022-07-07 07:36:52'),
+(6, 2, 2, 3, '2113', '2022-07-06', 'MAÑANA', 2, '450.00', '900.00', '450.00', 'EQW21', 1, 0, '2022-07-07 07:37:04', '2022-07-07 07:37:04'),
+(7, 3, 4, 2, '213213', '2022-07-06', 'NOCHE', 3, '414.00', '800.00', '386.00', '', 3, 0, '2022-07-07 07:37:32', '2022-07-07 07:37:32'),
+(8, 3, 3, 4, '245456', '2022-07-06', 'NOCHE', 4, '700.00', '750.00', '50.00', 'SDA', 3, 0, '2022-07-07 07:37:48', '2022-07-07 07:37:48');
 
 --
 -- Disparadores `tractor_reports`
@@ -2989,7 +3020,7 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `code`, `name`, `lastname`, `location_id`, `email`, `email_verified_at`, `password`, `two_factor_secret`, `two_factor_recovery_codes`, `two_factor_confirmed_at`, `is_admin`, `remember_token`, `current_team_id`, `profile_photo_path`, `created_at`, `updated_at`) VALUES
 (1, '777269', 'Mr. Ford Vandervort', 'Kunze', 1, 'roob.brianne@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'WPn7K7yearpM20WS3s964CPUZ2vtDhTFL8wlqrSDztRxP3X56ohOycrlwG8V', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
 (2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '3DKrIkMWt3jIXg69NAE526q76vAEEmns9MsmPACorvjwqMwQYj7Mi6QQoMIu', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
-(3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'zfVIwEpCejmkVSFdjusDtmmcl7LMPINye34cOaBaiHgpDttnygZ1Jxzqh61H', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'lhojjEAiJKr92QAxNgJwXhEcm4HSe56ZLSXSJUxVJm5eYOvshi0Eso93MwIZ', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'M5qsYueT3Y12habBcGR457E7SpDrFbbTACIRyVsTGVQPXG1nODJ4pTGM1373', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '3RGMRmsqNlZDg9LbH3BVRm8BK90WLmKWn2CqB5pLf4TS3cPwT2s0SWL7LRBv', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (6, '502387', 'Bella Block', 'Bashirian', 3, 'sibyl08@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '3NXfsNa9xGchlBQ9iIbNaHjLcFz5unflenQ1Z74g5YCsxiXyXk0bKpoWgElS', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
@@ -3057,22 +3088,22 @@ CREATE TABLE `work_orders` (
 --
 
 INSERT INTO `work_orders` (`id`, `implement_id`, `user_id`, `location_id`, `date`, `maintenance`, `state`, `is_canceled`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, 1, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:52', '2022-07-06 14:37:52'),
-(2, 2, 2, 1, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
-(3, 3, 3, 2, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
-(4, 4, 4, 2, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
-(5, 5, 5, 3, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
-(6, 6, 6, 3, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:55', '2022-07-06 14:37:55'),
-(7, 7, 7, 4, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:55', '2022-07-06 14:37:55'),
-(8, 8, 8, 4, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:56', '2022-07-06 14:37:56'),
-(9, 9, 9, 5, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:56', '2022-07-06 14:37:56'),
-(10, 10, 10, 5, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:57', '2022-07-06 14:37:57'),
-(11, 11, 11, 6, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
-(12, 12, 12, 6, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
-(13, 13, 13, 7, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
-(14, 14, 14, 7, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:37:59', '2022-07-06 14:37:59'),
-(15, 15, 15, 8, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:38:00', '2022-07-06 14:38:00'),
-(16, 16, 16, 8, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-06 14:38:00', '2022-07-06 14:38:00');
+(33, 1, 1, 1, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(34, 2, 2, 1, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(35, 3, 3, 2, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(36, 4, 4, 2, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(37, 5, 5, 3, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(38, 6, 6, 3, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(39, 7, 7, 4, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(40, 8, 8, 4, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(41, 9, 9, 5, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(42, 10, 10, 5, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(43, 11, 11, 6, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(44, 12, 12, 6, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(45, 13, 13, 7, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(46, 14, 14, 7, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(47, 15, 15, 8, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(48, 16, 16, 8, '2022-07-09', '1', 'PENDIENTE', 0, '2022-07-07 03:01:31', '2022-07-07 03:01:31');
 
 -- --------------------------------------------------------
 
@@ -3084,7 +3115,8 @@ CREATE TABLE `work_order_details` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `work_order_id` bigint(20) UNSIGNED NOT NULL,
   `task_id` bigint(20) UNSIGNED NOT NULL,
-  `state` enum('RECOMENDADO','ACEPTADO','NO ACEPTADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'RECOMENDADO',
+  `state` enum('RECOMENDADO','ACEPTADO','NO ACEPTADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ACEPTADO',
+  `is_checked` tinyint(1) NOT NULL DEFAULT 0,
   `component_implement_id` bigint(20) UNSIGNED DEFAULT NULL,
   `component_part_id` bigint(20) UNSIGNED DEFAULT NULL,
   `observation` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -3096,69 +3128,121 @@ CREATE TABLE `work_order_details` (
 -- Volcado de datos para la tabla `work_order_details`
 --
 
-INSERT INTO `work_order_details` (`id`, `work_order_id`, `task_id`, `state`, `component_implement_id`, `component_part_id`, `observation`, `created_at`, `updated_at`) VALUES
-(1, 1, 95, 'RECOMENDADO', 1, NULL, NULL, '2022-07-06 14:37:52', '2022-07-06 14:37:52'),
-(2, 1, 4, 'RECOMENDADO', NULL, 1, NULL, '2022-07-06 14:37:52', '2022-07-06 14:37:52'),
-(3, 1, 35, 'RECOMENDADO', NULL, 1, NULL, '2022-07-06 14:37:52', '2022-07-06 14:37:52'),
-(4, 1, 1, 'RECOMENDADO', 2, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
-(5, 1, 23, 'RECOMENDADO', 2, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
-(6, 1, 31, 'RECOMENDADO', 2, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
-(7, 1, 90, 'RECOMENDADO', 3, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
-(8, 2, 95, 'RECOMENDADO', 4, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
-(9, 2, 1, 'RECOMENDADO', 5, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
-(10, 2, 23, 'RECOMENDADO', 5, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
-(11, 2, 31, 'RECOMENDADO', 5, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
-(12, 2, 90, 'RECOMENDADO', 6, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
-(13, 3, 95, 'RECOMENDADO', 7, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
-(14, 3, 1, 'RECOMENDADO', 8, NULL, NULL, '2022-07-06 14:37:53', '2022-07-06 14:37:53'),
-(15, 3, 23, 'RECOMENDADO', 8, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
-(16, 3, 31, 'RECOMENDADO', 8, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
-(17, 3, 90, 'RECOMENDADO', 9, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
-(18, 4, 95, 'RECOMENDADO', 10, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
-(19, 4, 1, 'RECOMENDADO', 11, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
-(20, 4, 23, 'RECOMENDADO', 11, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
-(21, 4, 31, 'RECOMENDADO', 11, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
-(22, 4, 90, 'RECOMENDADO', 12, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
-(23, 5, 90, 'RECOMENDADO', 13, NULL, NULL, '2022-07-06 14:37:54', '2022-07-06 14:37:54'),
-(24, 5, 27, 'RECOMENDADO', 14, NULL, NULL, '2022-07-06 14:37:55', '2022-07-06 14:37:55'),
-(25, 5, 14, 'RECOMENDADO', 15, NULL, NULL, '2022-07-06 14:37:55', '2022-07-06 14:37:55'),
-(26, 6, 90, 'RECOMENDADO', 16, NULL, NULL, '2022-07-06 14:37:55', '2022-07-06 14:37:55'),
-(27, 6, 27, 'RECOMENDADO', 17, NULL, NULL, '2022-07-06 14:37:55', '2022-07-06 14:37:55'),
-(28, 6, 14, 'RECOMENDADO', 18, NULL, NULL, '2022-07-06 14:37:55', '2022-07-06 14:37:55'),
-(29, 7, 90, 'RECOMENDADO', 19, NULL, NULL, '2022-07-06 14:37:55', '2022-07-06 14:37:55'),
-(30, 7, 27, 'RECOMENDADO', 20, NULL, NULL, '2022-07-06 14:37:56', '2022-07-06 14:37:56'),
-(31, 7, 14, 'RECOMENDADO', 21, NULL, NULL, '2022-07-06 14:37:56', '2022-07-06 14:37:56'),
-(32, 8, 90, 'RECOMENDADO', 22, NULL, NULL, '2022-07-06 14:37:56', '2022-07-06 14:37:56'),
-(33, 8, 27, 'RECOMENDADO', 23, NULL, NULL, '2022-07-06 14:37:56', '2022-07-06 14:37:56'),
-(34, 8, 14, 'RECOMENDADO', 24, NULL, NULL, '2022-07-06 14:37:56', '2022-07-06 14:37:56'),
-(35, 9, 10, 'RECOMENDADO', 25, NULL, NULL, '2022-07-06 14:37:56', '2022-07-06 14:37:56'),
-(36, 9, 29, 'RECOMENDADO', 25, NULL, NULL, '2022-07-06 14:37:57', '2022-07-06 14:37:57'),
-(37, 9, 85, 'RECOMENDADO', 26, NULL, NULL, '2022-07-06 14:37:57', '2022-07-06 14:37:57'),
-(38, 9, 25, 'RECOMENDADO', 27, NULL, NULL, '2022-07-06 14:37:57', '2022-07-06 14:37:57'),
-(39, 10, 10, 'RECOMENDADO', 28, NULL, NULL, '2022-07-06 14:37:57', '2022-07-06 14:37:57'),
-(40, 10, 29, 'RECOMENDADO', 28, NULL, NULL, '2022-07-06 14:37:57', '2022-07-06 14:37:57'),
-(41, 10, 85, 'RECOMENDADO', 29, NULL, NULL, '2022-07-06 14:37:57', '2022-07-06 14:37:57'),
-(42, 10, 25, 'RECOMENDADO', 30, NULL, NULL, '2022-07-06 14:37:57', '2022-07-06 14:37:57'),
-(43, 11, 10, 'RECOMENDADO', 31, NULL, NULL, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
-(44, 11, 29, 'RECOMENDADO', 31, NULL, NULL, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
-(45, 11, 85, 'RECOMENDADO', 32, NULL, NULL, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
-(46, 11, 25, 'RECOMENDADO', 33, NULL, NULL, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
-(47, 12, 10, 'RECOMENDADO', 34, NULL, NULL, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
-(48, 12, 29, 'RECOMENDADO', 34, NULL, NULL, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
-(49, 12, 85, 'RECOMENDADO', 35, NULL, NULL, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
-(50, 12, 25, 'RECOMENDADO', 36, NULL, NULL, '2022-07-06 14:37:58', '2022-07-06 14:37:58'),
-(51, 13, 95, 'RECOMENDADO', 37, NULL, NULL, '2022-07-06 14:37:59', '2022-07-06 14:37:59'),
-(52, 13, 94, 'RECOMENDADO', 38, NULL, NULL, '2022-07-06 14:37:59', '2022-07-06 14:37:59'),
-(53, 13, 14, 'RECOMENDADO', 39, NULL, NULL, '2022-07-06 14:37:59', '2022-07-06 14:37:59'),
-(54, 14, 95, 'RECOMENDADO', 40, NULL, NULL, '2022-07-06 14:37:59', '2022-07-06 14:37:59'),
-(55, 14, 94, 'RECOMENDADO', 41, NULL, NULL, '2022-07-06 14:37:59', '2022-07-06 14:37:59'),
-(56, 14, 14, 'RECOMENDADO', 42, NULL, NULL, '2022-07-06 14:38:00', '2022-07-06 14:38:00'),
-(57, 15, 95, 'RECOMENDADO', 43, NULL, NULL, '2022-07-06 14:38:00', '2022-07-06 14:38:00'),
-(58, 15, 94, 'RECOMENDADO', 44, NULL, NULL, '2022-07-06 14:38:00', '2022-07-06 14:38:00'),
-(59, 15, 14, 'RECOMENDADO', 45, NULL, NULL, '2022-07-06 14:38:00', '2022-07-06 14:38:00'),
-(60, 16, 95, 'RECOMENDADO', 46, NULL, NULL, '2022-07-06 14:38:00', '2022-07-06 14:38:00'),
-(61, 16, 94, 'RECOMENDADO', 47, NULL, NULL, '2022-07-06 14:38:00', '2022-07-06 14:38:00'),
-(62, 16, 14, 'RECOMENDADO', 48, NULL, NULL, '2022-07-06 14:38:01', '2022-07-06 14:38:01');
+INSERT INTO `work_order_details` (`id`, `work_order_id`, `task_id`, `state`, `is_checked`, `component_implement_id`, `component_part_id`, `observation`, `created_at`, `updated_at`) VALUES
+(127, 33, 95, 'ACEPTADO', 0, 1, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(128, 33, 95, 'ACEPTADO', 0, 1, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(129, 33, 95, 'RECOMENDADO', 0, NULL, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(130, 33, 95, 'RECOMENDADO', 0, NULL, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(131, 33, 95, 'RECOMENDADO', 0, NULL, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(132, 33, 95, 'RECOMENDADO', 0, NULL, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(133, 33, 1, 'ACEPTADO', 0, 2, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(134, 33, 23, 'ACEPTADO', 0, 2, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(135, 33, 31, 'ACEPTADO', 0, 2, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(136, 33, 31, 'ACEPTADO', 0, 2, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(137, 33, 90, 'ACEPTADO', 0, 3, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(138, 33, 90, 'ACEPTADO', 0, 3, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(139, 34, 95, 'ACEPTADO', 0, 4, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(140, 34, 95, 'ACEPTADO', 0, 4, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(141, 34, 1, 'ACEPTADO', 0, 5, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(142, 34, 23, 'ACEPTADO', 0, 5, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(143, 34, 31, 'ACEPTADO', 0, 5, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(144, 34, 31, 'ACEPTADO', 0, 5, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(145, 34, 90, 'ACEPTADO', 0, 6, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(146, 34, 90, 'ACEPTADO', 0, 6, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(147, 35, 95, 'ACEPTADO', 0, 7, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(148, 35, 95, 'ACEPTADO', 0, 7, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(149, 35, 1, 'ACEPTADO', 0, 8, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(150, 35, 23, 'ACEPTADO', 0, 8, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(151, 35, 31, 'ACEPTADO', 0, 8, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(152, 35, 31, 'ACEPTADO', 0, 8, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(153, 35, 90, 'ACEPTADO', 0, 9, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(154, 35, 90, 'ACEPTADO', 0, 9, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(155, 36, 95, 'ACEPTADO', 0, 10, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(156, 36, 95, 'ACEPTADO', 0, 10, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(157, 36, 1, 'ACEPTADO', 0, 11, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(158, 36, 23, 'ACEPTADO', 0, 11, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(159, 36, 31, 'ACEPTADO', 0, 11, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(160, 36, 31, 'ACEPTADO', 0, 11, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(161, 36, 90, 'ACEPTADO', 0, 12, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(162, 36, 90, 'ACEPTADO', 0, 12, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(163, 37, 90, 'ACEPTADO', 0, 13, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(164, 37, 90, 'ACEPTADO', 0, 13, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(165, 37, 27, 'ACEPTADO', 0, 14, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(166, 37, 27, 'ACEPTADO', 0, 14, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(167, 37, 14, 'ACEPTADO', 0, 15, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(168, 37, 14, 'ACEPTADO', 0, 15, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(169, 38, 90, 'ACEPTADO', 0, 16, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(170, 38, 90, 'ACEPTADO', 0, 16, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(171, 38, 27, 'ACEPTADO', 0, 17, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(172, 38, 27, 'ACEPTADO', 0, 17, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(173, 38, 14, 'ACEPTADO', 0, 18, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(174, 38, 14, 'ACEPTADO', 0, 18, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(175, 39, 90, 'ACEPTADO', 0, 19, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(176, 39, 90, 'ACEPTADO', 0, 19, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(177, 39, 27, 'ACEPTADO', 0, 20, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(178, 39, 27, 'ACEPTADO', 0, 20, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(179, 39, 14, 'ACEPTADO', 0, 21, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(180, 39, 14, 'ACEPTADO', 0, 21, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(181, 40, 90, 'ACEPTADO', 0, 22, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(182, 40, 90, 'ACEPTADO', 0, 22, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(183, 40, 27, 'ACEPTADO', 0, 23, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(184, 40, 27, 'ACEPTADO', 0, 23, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(185, 40, 14, 'ACEPTADO', 0, 24, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(186, 40, 14, 'ACEPTADO', 0, 24, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(187, 41, 10, 'ACEPTADO', 0, 25, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(188, 41, 29, 'ACEPTADO', 0, 25, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(189, 41, 29, 'ACEPTADO', 0, 25, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(190, 41, 85, 'ACEPTADO', 0, 26, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(191, 41, 85, 'ACEPTADO', 0, 26, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(192, 41, 25, 'ACEPTADO', 0, 27, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(193, 41, 25, 'ACEPTADO', 0, 27, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(194, 42, 10, 'ACEPTADO', 0, 28, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(195, 42, 29, 'ACEPTADO', 0, 28, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(196, 42, 29, 'ACEPTADO', 0, 28, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(197, 42, 85, 'ACEPTADO', 0, 29, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(198, 42, 85, 'ACEPTADO', 0, 29, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(199, 42, 25, 'ACEPTADO', 0, 30, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(200, 42, 25, 'ACEPTADO', 0, 30, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(201, 43, 10, 'ACEPTADO', 0, 31, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(202, 43, 29, 'ACEPTADO', 0, 31, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(203, 43, 29, 'ACEPTADO', 0, 31, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(204, 43, 85, 'ACEPTADO', 0, 32, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(205, 43, 85, 'ACEPTADO', 0, 32, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(206, 43, 25, 'ACEPTADO', 0, 33, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(207, 43, 25, 'ACEPTADO', 0, 33, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(208, 44, 10, 'ACEPTADO', 0, 34, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(209, 44, 29, 'ACEPTADO', 0, 34, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(210, 44, 29, 'ACEPTADO', 0, 34, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(211, 44, 85, 'ACEPTADO', 0, 35, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(212, 44, 85, 'ACEPTADO', 0, 35, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(213, 44, 25, 'ACEPTADO', 0, 36, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(214, 44, 25, 'ACEPTADO', 0, 36, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(215, 45, 95, 'ACEPTADO', 0, 37, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(216, 45, 95, 'ACEPTADO', 0, 37, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(217, 45, 94, 'ACEPTADO', 0, 38, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(218, 45, 94, 'ACEPTADO', 0, 38, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(219, 45, 14, 'ACEPTADO', 0, 39, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(220, 45, 14, 'ACEPTADO', 0, 39, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(221, 46, 95, 'ACEPTADO', 0, 40, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(222, 46, 95, 'ACEPTADO', 0, 40, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(223, 46, 94, 'ACEPTADO', 0, 41, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(224, 46, 94, 'ACEPTADO', 0, 41, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(225, 46, 14, 'ACEPTADO', 0, 42, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(226, 46, 14, 'ACEPTADO', 0, 42, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(227, 47, 95, 'ACEPTADO', 0, 43, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(228, 47, 95, 'ACEPTADO', 0, 43, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(229, 47, 94, 'ACEPTADO', 0, 44, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(230, 47, 94, 'ACEPTADO', 0, 44, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(231, 47, 14, 'ACEPTADO', 0, 45, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(232, 47, 14, 'ACEPTADO', 0, 45, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(233, 48, 95, 'ACEPTADO', 0, 46, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(234, 48, 95, 'ACEPTADO', 0, 46, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(235, 48, 94, 'ACEPTADO', 0, 47, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(236, 48, 94, 'ACEPTADO', 0, 47, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(237, 48, 14, 'ACEPTADO', 0, 48, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(238, 48, 14, 'ACEPTADO', 0, 48, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(239, 48, 14, 'ACEPTADO', 0, 48, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31'),
+(240, 48, 14, 'ACEPTADO', 0, 48, NULL, NULL, '2022-07-07 03:01:31', '2022-07-07 03:01:31');
 
 --
 -- Disparadores `work_order_details`
@@ -3823,7 +3907,7 @@ ALTER TABLE `component_implement_model`
 -- AUTO_INCREMENT de la tabla `component_part`
 --
 ALTER TABLE `component_part`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT de la tabla `component_part_model`
@@ -3859,7 +3943,7 @@ ALTER TABLE `epp_risk`
 -- AUTO_INCREMENT de la tabla `epp_work_order`
 --
 ALTER TABLE `epp_work_order`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=114;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=330;
 
 --
 -- AUTO_INCREMENT de la tabla `failed_jobs`
@@ -4081,7 +4165,7 @@ ALTER TABLE `tractor_models`
 -- AUTO_INCREMENT de la tabla `tractor_reports`
 --
 ALTER TABLE `tractor_reports`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `tractor_schedulings`
@@ -4105,13 +4189,13 @@ ALTER TABLE `warehouses`
 -- AUTO_INCREMENT de la tabla `work_orders`
 --
 ALTER TABLE `work_orders`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- AUTO_INCREMENT de la tabla `work_order_details`
 --
 ALTER TABLE `work_order_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=241;
 
 --
 -- AUTO_INCREMENT de la tabla `zones`
