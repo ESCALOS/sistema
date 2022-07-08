@@ -20,6 +20,8 @@ class ValidateWorkOrder extends Component
     public $nombre_implemento = "";
     public $nombre_operador = "";
 
+    protected $listeners = ['validarRecambio','rechazarRecambio'];
+
     public function updatedOpenValidateWorkOrder(){
         if(!$this->open_validate_work_order){
             $this->reset('orden_trabajo');
@@ -39,68 +41,83 @@ class ValidateWorkOrder extends Component
         $this->open_validate_work_order = true;
     }
 
+    public function validarRecambio(){
+        WorkOrderDetail::where('work_order_id',$this->orden_trabajo)
+                        ->where('state','RECOMENDADO')
+                        ->update(['state' => 'ACEPTADO']);
+
+        $work_order = WorkOrder::find($this->orden_trabajo);
+        $work_order->state = "PENDIENTE";
+        $work_order->save();
+
+        $this->render();
+        $this->open_validate_work_order = false;
+    }
+
+    public function rechazarRecambio(){
+        WorkOrderDetail::where('work_order_id',$this->orden_trabajo)
+                        ->where('state','RECOMENDADO')
+                        ->update(['state' => 'NO ACEPTADO']);
+
+        $work_order = WorkOrder::find($this->orden_trabajo);
+        $work_order->state = "PENDIENTE";
+        $work_order->save();
+
+        $this->render();
+        $this->open_validate_work_order = false;
+    }
+
     public function render()
     {
-        /*--------------------Datos generales de los implementos para recambio------------------------------*/
-        $data = WorkOrder::join('work_order_details',function($join){
-            $join->on('work_order_details.work_order_id','=','work_orders.id');
-        })->join('implements',function($join){
-            $join->on('implements.id','=','work_orders.implement_id');
-        })->join('implement_models',function($join){
-            $join->on('implement_models.id','implements.implement_model_id');
-        })->where('work_order_details.state','RECOMENDADO');
-
+        /*-------------------DECLARAR VARIABLES------------------------*/
+        $implementos_para_recambio = NULL;
+        $componentes = NULL;
+        $piezas = NULL;
+        $tareas = NULL;
         /*-------------------Fechas de pedido pendientes en validar----*/
-        $fechas = WorkOrder::join('work_order_details',function($join){
-            $join->on('work_order_details.work_order_id','=','work_orders.id');
-        })->join('implements',function($join){
-            $join->on('implements.id','=','work_orders.implement_id');
-        })->join('implement_models',function($join){
-            $join->on('implement_models.id','implements.implement_model_id');
-        })->where('work_order_details.state','RECOMENDADO')
-            ->select('work_orders.date')
-            ->groupBy('work_orders.date')
-            ->get();
+        $fechas = WorkOrder::where('state','NO VALIDADO')
+                            ->where('location_id',Auth::user()->location_id)
+                            ->select('work_orders.date')
+                            ->groupBy('work_orders.date')
+                            ->get();
 
         if($this->dia != ""){
-            $implementos_para_recambio = $data = WorkOrder::join('work_order_details',function($join){
-                $join->on('work_order_details.work_order_id','=','work_orders.id');
-            })->join('implements',function($join){
+            $implementos_para_recambio = WorkOrder::join('implements',function($join){
                 $join->on('implements.id','=','work_orders.implement_id');
             })->join('implement_models',function($join){
                 $join->on('implement_models.id','implements.implement_model_id');
-            })->where('work_order_details.state','RECOMENDADO')
-                ->select('implements.*','work_orders.id as work_order')
-                ->groupBy('work_orders.id')
+            })->where('work_orders.state','NO VALIDADO')
+                ->where('date',$this->dia)
+                ->select('implements.*','work_orders.id as work_order','implement_models.implement_model')
                 ->get();
+            if($this->orden_trabajo > 0){
 
-            $materiales = WorkOrderDetail::where('work_order_details.work_order_id',$this->orden_trabajo)
-                                            ->where('state','RECOMENDADO');
+                $componentes = WorkOrderDetail::join('component_implement',function($join){
+                    $join->on('component_implement.id','=','work_order_details.component_implement_id');
+                })->join('components',function($join){
+                    $join->on('components.id','=','component_implement.component_id');
+                })->where('work_order_details.work_order_id',$this->orden_trabajo)
+                    ->where('work_order_details.state','RECOMENDADO')
+                    ->whereNotNull('work_order_details.component_implement_id')
+                    ->select('work_order_details.task_id','component_implement.component_id as componente_id','components.component as componente')
+                    ->get();
 
-            $componentes = WorkOrderDetail::join('component_implement',function($join){
-                $join->on('component_implement.id','=','work_order_details.component_implement_id');
-            })->where('work_order_details.work_order_id',$this->orden_trabajo)
-                ->where('work_order_details.state','RECOMENDADO')
-                ->whereNotNull('work_order_details.component_implement_id')
-                ->select('work_order_details.task_id','component_implement.component_id as componente')
-                ->get();
-
-            $piezas = WorkOrderDetail::join('component_part',function($join){
-                $join->on('component_part.id','=','work_order_details.component_part_id');
-            })->join('components',function($join){
-                $join->on('components.id','=','component_part.part');
-            })->where('work_order_details.work_order_id',$this->orden_trabajo)
-                ->where('work_order_details.state','RECOMENDADO')
-                ->whereNotNull('work_order_details.component_part_id')
-                ->select('work_order_details.task_id','component_part.part as pieza_id','components.component as pieza')
-                ->get();
-
-        }else{
-            $implementos_para_recambio = NULL;
-            $componentes = NULL;
-            $piezas = NULL;
+                $piezas = WorkOrderDetail::join('component_part',function($join){
+                    $join->on('component_part.id','=','work_order_details.component_part_id');
+                })->join('components as p',function($join){
+                    $join->on('p.id','=','component_part.part');
+                })->join('component_implement',function($join){
+                    $join->on('component_implement.id','=','component_part.component_implement_id');
+                })->join('components as c',function($join){
+                    $join->on('c.id','=','component_implement.component_id');
+                })->where('work_order_details.work_order_id',$this->orden_trabajo)
+                    ->where('work_order_details.state','RECOMENDADO')
+                    ->whereNotNull('work_order_details.component_part_id')
+                    ->select('work_order_details.task_id','component_part.part as pieza_id','p.component as pieza','c.component as componente')
+                    ->get();
+            }
         }
 
-        return view('livewire.validate-work-order',compact('fechas','implementos_para_recambio','componentes','piezas'));
+        return view('livewire.validate-work-order',compact('fechas','implementos_para_recambio','componentes','piezas','tareas'));
     }
 }

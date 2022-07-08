@@ -32,6 +32,7 @@
 
             @role('operador')
             <a href="{{ route('operator.request-materials') }}" class="{{ request()->routeIs('operator.request-materials') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium">Solicitar Materiales</a>
+            <a href="{{ route('operator.pending-maintenance-list') }}" class="{{ request()->routeIs('operator.pending-maintenance-list') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium">Mantenimientos Pendientes</a>
             @endrole
 
             @role('planner')

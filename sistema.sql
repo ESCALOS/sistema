@@ -2,8 +2,8 @@
 -- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
--- Servidor: 127.0.0.1
--- Tiempo de generación: 08-07-2022 a las 10:20:06
+-- Servidor: localhost
+-- Tiempo de generación: 08-07-2022 a las 21:22:31
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -149,6 +149,7 @@ END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_mantenimientos_programados` ()   BEGIN
 /*-----------VARIABLES PARA DETENER CICLOS--------------*/
+DECLARE material_final INT DEFAULT 0;
 DECLARE implemento_final INT DEFAULT 0;
 DECLARE componente_final INT DEFAULT 0;
 DECLARE pieza_final INT DEFAULT 0;
@@ -170,11 +171,13 @@ DECLARE componente INT;
 DECLARE horas_componente DECIMAL(8,2);
 DECLARE tiempo_vida_componente DECIMAL(8,2);
 DECLARE cantidad_componente INT;
+DECLARE item_componente INT;
 /*-------------VARIABLES PARA ALMCENAR DATOS DE LA PIEZA--------------*/
 DECLARE pieza INT;
 DECLARE horas_pieza DECIMAL(8,2);
 DECLARE tiempo_vida_pieza DECIMAL(8,2);
 DECLARE cantidad_pieza INT;
+DECLARE item_pieza INT;
 /*-------------CURSOR PARA ITERAR LOS IMPLEMENTO------*/
 DECLARE cursor_implementos CURSOR FOR SELECT id,implement_model_id,user_id,location_id FROM implements;
 DECLARE CONTINUE HANDLER FOR NOT FOUND SET implemento_final = 1;
@@ -210,7 +213,7 @@ OPEN cursor_implementos;
                         /*---------------OBTENER HORAS DEL COMPONENTE--------------------------*/
                         SELECT id,hours INTO componente_del_implemento,horas_componente FROM component_implement WHERE component_id = componente AND implement_id = implemento AND state = "PENDIENTE";
                         /*---------------OBTENER EL TIEMPO DE VIDA DEL COMPONENTE------------------------*/
-                        SELECT lifespan INTO tiempo_vida_componente FROM components WHERE id = componente;
+                        SELECT lifespan,item_id INTO tiempo_vida_componente,item_componente FROM components WHERE id = componente;
                         /*---------------CALCULAR SI NECESITA RECAMBIO DENTRO DE 3 DIAS-----------------------------------*/
                         SELECT FLOOR((horas_componente+24)/tiempo_vida_componente) INTO cantidad_componente;
                         /*---------------TAREA DE RECAMBIO SI LO NECESITA-------------------------------*/
@@ -221,6 +224,12 @@ OPEN cursor_implementos;
                             IF NOT EXISTS(SELECT * FROM work_order_details WHERE work_order_id = orden_trabajo AND task_id = tarea AND state = "RECOMENDADO" AND component_implement_id = componente_del_implemento) THEN
                                 INSERT INTO work_order_details (work_order_id,task_id,state,component_implement_id ) VALUES (orden_trabajo,tarea,"RECOMENDADO",componente_del_implemento);
                             END IF;
+                            /*------------MARCAR COMO NO VALIDADO HASTA QUE EL SUPERVISOR LO APRUEBE O LO RECHACE-------------*/
+                            IF NOT EXISTS(SELECT * FROM work_orders WHERE id = orden_trabajo AND state = "NO VALIDADO") THEN
+                                UPDATE work_orders SET state = "NO VALIDADO" WHERE id = orden_trabajo;
+                            END IF;
+                            /*------------PONER EL MATERIAL REQUERIDO----------------------------------------*/
+                            INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_componente);
                         /*----------------RUTINARIO SI NO NECESITA RECAMBIO----------------------------*/
                         ELSE
                             /*------------CURSOR PARA CREAR EL RUTINARIO POR CADA COMPONENTE----------------*/
@@ -238,6 +247,22 @@ OPEN cursor_implementos;
                                         /*-------------INSERTAR RUTINARIO DE TAREAS EN EL DETALLE DE LA ORDEN DE TRABAJO-----------------------*/
                                         IF NOT EXISTS(SELECT * FROM work_order_details WHERE work_order_id = orden_trabajo AND task_id = tarea AND state = "ACEPTADO" AND component_implement_id = componente_del_implemento) THEN
                                             INSERT INTO work_order_details (work_order_id,task_id,component_implement_id ) VALUES (orden_trabajo,tarea,componente_del_implemento);
+                                        END IF;
+                                        IF EXISTS(SELECT * FROM task_required_materials WHERE task_id = tarea) THEN
+                                            BEGIN
+                                                DECLARE cursor_materiales CURSOR FOR SELECT item_id FROM task_required_materials WHERE task_id = tarea;
+                                                DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
+                                                OPEN cursor_materiales;
+                                                    bucle_materiales:LOOP
+                                                        IF material_final = 1 THEN
+                                                            LEAVE bucle_materiales;
+                                                        END IF;
+                                                        FETCH cursor_materiales INTO item_componente;
+                                                        INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_componente);
+                                                    END LOOP bucle_materiales;
+                                                CLOSE cursor_materiales;
+                                                SELECT 0 INTO material_final;
+                                            END;
                                         END IF;
                                     END LOOP bucle_componente_tareas;
                                 CLOSE cursor_componente_tareas;
@@ -265,7 +290,7 @@ OPEN cursor_implementos;
                                         /*---------------OBTENER HORAS DE LA PIEZA--------------------------*/
                                         SELECT id,hours INTO pieza_del_componente,horas_pieza FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE";
                                         /*---------------OBTENER EL TIEMPO DE VIDA DE LA PIEZA------------------------*/
-                                        SELECT lifespan INTO tiempo_vida_pieza FROM components WHERE id = pieza;
+                                        SELECT lifespan,item_id INTO tiempo_vida_pieza,item_pieza FROM components WHERE id = pieza;
                                         /*---------------CALCULAR SI NECESITA RECAMBIO DENTRO DE 3 DIAS-----------------------------------*/
                                         SELECT FLOOR((horas_pieza+24)/tiempo_vida_pieza) INTO cantidad_pieza;
                                         /*---------------TAREA DE RECAMBIO SI LO NECESITA-------------------------------*/
@@ -276,6 +301,12 @@ OPEN cursor_implementos;
                                             IF NOT EXISTS(SELECT * FROM work_order_details WHERE work_order_id = orden_trabajo AND task_id = tarea AND state = "RECOMENDADO" AND component_part_id = pieza_del_componente) THEN
                                                 INSERT INTO work_order_details (work_order_id,task_id,state,component_part_id) VALUES (orden_trabajo,tarea,"RECOMENDADO",pieza_del_componente);
                                             END IF;
+                                            /*-----------MARCAR COMO NO VALIDADO HASTA QUE EL SUPERVISOR LO APRUEBE O LO RECHACE-----------------*/
+                                            IF NOT EXISTS(SELECT * FROM work_orders WHERE id = orden_trabajo AND state = "NO VALIDADO") THEN
+                                                UPDATE work_orders SET state = "NO VALIDADO" WHERE id = orden_trabajo;
+                                            END IF;
+                                            /*------------PONER EL MATERIAL REQUERIDO----------------------------------------*/
+                                            INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_pieza);
                                         /*--------------RUTINARIO SI NO NECESITA RECAMBIO---------------------------------*/
                                         ELSE
                                         /*--------------CURSOR PARA CREAR EL RUTINARIO DE CADA COMPONENTE-----------------*/
@@ -293,6 +324,22 @@ OPEN cursor_implementos;
                                                         /*-------------INSERTAR RUTINARIO DE TAREAS EN EL DETALLE DE LA ORDEN DE TRABAJO-----------------------*/
                                                         IF NOT EXISTS(SELECT * FROM work_order_details WHERE work_order_id = orden_trabajo AND task_id = tarea AND state = "ACEPTADO" AND component_part_id  = pieza_del_componente) THEN
                                                             INSERT INTO work_order_details (work_order_id,task_id,component_part_id) VALUES (orden_trabajo,tarea,pieza_del_componente);
+                                                        END IF;
+                                                        IF EXISTS(SELECT * FROM task_required_materials WHERE task_id = tarea) THEN
+                                                            BEGIN
+                                                                DECLARE cursor_materiales CURSOR FOR SELECT item_id FROM task_required_materials WHERE task_id = tarea;
+                                                                DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
+                                                                OPEN cursor_materiales;
+                                                                    bucle_materiales:LOOP
+                                                                        IF material_final = 1 THEN
+                                                                            LEAVE bucle_materiales;
+                                                                        END IF;
+                                                                        FETCH cursor_materiales INTO item_pieza;
+                                                                        INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_pieza);
+                                                                    END LOOP bucle_materiales;
+                                                                CLOSE cursor_materiales;
+                                                                SELECT 0 INTO material_final;
+                                                            END;
                                                         END IF;
                                                     END LOOP bucle_pieza_tareas;
                                                 CLOSE cursor_pieza_tareas;
@@ -1208,228 +1255,228 @@ CREATE TABLE `epp_work_order` (
 --
 
 INSERT INTO `epp_work_order` (`id`, `epp_id`, `work_order_id`) VALUES
-(1551, 1, 169),
-(1568, 1, 170),
-(1585, 1, 171),
-(1602, 1, 172),
-(1619, 1, 173),
-(1633, 1, 174),
-(1647, 1, 175),
-(1661, 1, 176),
-(1670, 1, 177),
-(1684, 1, 178),
-(1698, 1, 179),
-(1712, 1, 180),
-(1552, 2, 169),
-(1569, 2, 170),
-(1586, 2, 171),
-(1603, 2, 172),
-(1620, 2, 173),
-(1634, 2, 174),
-(1648, 2, 175),
-(1662, 2, 176),
-(1671, 2, 177),
-(1685, 2, 178),
-(1699, 2, 179),
-(1713, 2, 180),
-(1553, 3, 169),
-(1570, 3, 170),
-(1587, 3, 171),
-(1604, 3, 172),
-(1621, 3, 173),
-(1635, 3, 174),
-(1649, 3, 175),
-(1663, 3, 176),
-(1672, 3, 177),
-(1686, 3, 178),
-(1700, 3, 179),
-(1714, 3, 180),
-(1537, 4, 168),
-(1556, 4, 169),
-(1573, 4, 170),
-(1590, 4, 171),
-(1607, 4, 172),
-(1677, 4, 177),
-(1691, 4, 178),
-(1705, 4, 179),
-(1719, 4, 180),
-(1504, 5, 165),
-(1514, 5, 166),
-(1524, 5, 167),
-(1534, 5, 168),
-(1548, 5, 169),
-(1565, 5, 170),
-(1582, 5, 171),
-(1599, 5, 172),
-(1614, 5, 173),
-(1628, 5, 174),
-(1642, 5, 175),
-(1656, 5, 176),
-(1510, 6, 165),
-(1520, 6, 166),
-(1530, 6, 167),
-(1543, 6, 168),
-(1546, 6, 169),
-(1563, 6, 170),
-(1580, 6, 171),
-(1597, 6, 172),
-(1617, 6, 173),
-(1631, 6, 174),
-(1645, 6, 175),
-(1659, 6, 176),
-(1675, 6, 177),
-(1689, 6, 178),
-(1703, 6, 179),
-(1717, 6, 180),
-(1507, 7, 165),
-(1517, 7, 166),
-(1527, 7, 167),
-(1612, 7, 173),
-(1626, 7, 174),
-(1640, 7, 175),
-(1654, 7, 176),
-(1538, 8, 168),
-(1557, 8, 169),
-(1574, 8, 170),
-(1591, 8, 171),
-(1608, 8, 172),
-(1678, 8, 177),
-(1692, 8, 178),
-(1706, 8, 179),
-(1720, 8, 180),
-(1502, 9, 165),
-(1512, 9, 166),
-(1522, 9, 167),
-(1532, 9, 168),
-(1544, 9, 169),
-(1561, 9, 170),
-(1578, 9, 171),
-(1595, 9, 172),
-(1623, 9, 173),
-(1637, 9, 174),
-(1651, 9, 175),
-(1665, 9, 176),
-(1668, 9, 177),
-(1682, 9, 178),
-(1696, 9, 179),
-(1710, 9, 180),
-(1508, 10, 165),
-(1518, 10, 166),
-(1528, 10, 167),
-(1613, 10, 173),
-(1627, 10, 174),
-(1641, 10, 175),
-(1655, 10, 176),
-(1539, 11, 168),
-(1558, 11, 169),
-(1575, 11, 170),
-(1592, 11, 171),
-(1609, 11, 172),
-(1679, 11, 177),
-(1693, 11, 178),
-(1707, 11, 179),
-(1721, 11, 180),
-(1505, 12, 165),
-(1515, 12, 166),
-(1525, 12, 167),
-(1535, 12, 168),
-(1549, 12, 169),
-(1566, 12, 170),
-(1583, 12, 171),
-(1600, 12, 172),
-(1615, 12, 173),
-(1629, 12, 174),
-(1643, 12, 175),
-(1657, 12, 176),
-(1540, 13, 168),
-(1559, 13, 169),
-(1576, 13, 170),
-(1593, 13, 171),
-(1610, 13, 172),
-(1680, 13, 177),
-(1694, 13, 178),
-(1708, 13, 179),
-(1722, 13, 180),
-(1509, 14, 165),
-(1519, 14, 166),
-(1529, 14, 167),
-(1555, 14, 169),
-(1572, 14, 170),
-(1589, 14, 171),
-(1606, 14, 172),
-(1625, 14, 173),
-(1639, 14, 174),
-(1653, 14, 175),
-(1667, 14, 176),
-(1674, 14, 177),
-(1688, 14, 178),
-(1702, 14, 179),
-(1716, 14, 180),
-(1506, 15, 165),
-(1516, 15, 166),
-(1526, 15, 167),
-(1536, 15, 168),
-(1550, 15, 169),
-(1567, 15, 170),
-(1584, 15, 171),
-(1601, 15, 172),
-(1616, 15, 173),
-(1630, 15, 174),
-(1644, 15, 175),
-(1658, 15, 176),
-(1511, 16, 165),
-(1521, 16, 166),
-(1531, 16, 167),
-(1541, 16, 168),
-(1547, 16, 169),
-(1564, 16, 170),
-(1581, 16, 171),
-(1598, 16, 172),
-(1618, 16, 173),
-(1632, 16, 174),
-(1646, 16, 175),
-(1660, 16, 176),
-(1676, 16, 177),
-(1690, 16, 178),
-(1704, 16, 179),
-(1718, 16, 180),
-(1554, 18, 169),
-(1571, 18, 170),
-(1588, 18, 171),
-(1605, 18, 172),
-(1622, 18, 173),
-(1636, 18, 174),
-(1650, 18, 175),
-(1664, 18, 176),
-(1673, 18, 177),
-(1687, 18, 178),
-(1701, 18, 179),
-(1715, 18, 180),
-(1503, 19, 165),
-(1513, 19, 166),
-(1523, 19, 167),
-(1533, 19, 168),
-(1545, 19, 169),
-(1562, 19, 170),
-(1579, 19, 171),
-(1596, 19, 172),
-(1624, 19, 173),
-(1638, 19, 174),
-(1652, 19, 175),
-(1666, 19, 176),
-(1669, 19, 177),
-(1683, 19, 178),
-(1697, 19, 179),
-(1711, 19, 180),
-(1542, 20, 168),
-(1560, 20, 169),
-(1577, 20, 170),
-(1594, 20, 171),
-(1611, 20, 172),
-(1681, 20, 177),
-(1695, 20, 178),
-(1709, 20, 179),
-(1723, 20, 180);
+(272, 1, 21),
+(289, 1, 22),
+(306, 1, 23),
+(323, 1, 24),
+(340, 1, 25),
+(354, 1, 26),
+(368, 1, 27),
+(382, 1, 28),
+(391, 1, 29),
+(405, 1, 30),
+(419, 1, 31),
+(433, 1, 32),
+(273, 2, 21),
+(290, 2, 22),
+(307, 2, 23),
+(324, 2, 24),
+(341, 2, 25),
+(355, 2, 26),
+(369, 2, 27),
+(383, 2, 28),
+(392, 2, 29),
+(406, 2, 30),
+(420, 2, 31),
+(434, 2, 32),
+(274, 3, 21),
+(291, 3, 22),
+(308, 3, 23),
+(325, 3, 24),
+(342, 3, 25),
+(356, 3, 26),
+(370, 3, 27),
+(384, 3, 28),
+(393, 3, 29),
+(407, 3, 30),
+(421, 3, 31),
+(435, 3, 32),
+(258, 4, 20),
+(277, 4, 21),
+(294, 4, 22),
+(311, 4, 23),
+(328, 4, 24),
+(398, 4, 29),
+(412, 4, 30),
+(426, 4, 31),
+(440, 4, 32),
+(225, 5, 17),
+(235, 5, 18),
+(245, 5, 19),
+(255, 5, 20),
+(269, 5, 21),
+(286, 5, 22),
+(303, 5, 23),
+(320, 5, 24),
+(335, 5, 25),
+(349, 5, 26),
+(363, 5, 27),
+(377, 5, 28),
+(231, 6, 17),
+(241, 6, 18),
+(251, 6, 19),
+(264, 6, 20),
+(267, 6, 21),
+(284, 6, 22),
+(301, 6, 23),
+(318, 6, 24),
+(338, 6, 25),
+(352, 6, 26),
+(366, 6, 27),
+(380, 6, 28),
+(396, 6, 29),
+(410, 6, 30),
+(424, 6, 31),
+(438, 6, 32),
+(228, 7, 17),
+(238, 7, 18),
+(248, 7, 19),
+(333, 7, 25),
+(347, 7, 26),
+(361, 7, 27),
+(375, 7, 28),
+(259, 8, 20),
+(278, 8, 21),
+(295, 8, 22),
+(312, 8, 23),
+(329, 8, 24),
+(399, 8, 29),
+(413, 8, 30),
+(427, 8, 31),
+(441, 8, 32),
+(223, 9, 17),
+(233, 9, 18),
+(243, 9, 19),
+(253, 9, 20),
+(265, 9, 21),
+(282, 9, 22),
+(299, 9, 23),
+(316, 9, 24),
+(344, 9, 25),
+(358, 9, 26),
+(372, 9, 27),
+(386, 9, 28),
+(389, 9, 29),
+(403, 9, 30),
+(417, 9, 31),
+(431, 9, 32),
+(229, 10, 17),
+(239, 10, 18),
+(249, 10, 19),
+(334, 10, 25),
+(348, 10, 26),
+(362, 10, 27),
+(376, 10, 28),
+(260, 11, 20),
+(279, 11, 21),
+(296, 11, 22),
+(313, 11, 23),
+(330, 11, 24),
+(400, 11, 29),
+(414, 11, 30),
+(428, 11, 31),
+(442, 11, 32),
+(226, 12, 17),
+(236, 12, 18),
+(246, 12, 19),
+(256, 12, 20),
+(270, 12, 21),
+(287, 12, 22),
+(304, 12, 23),
+(321, 12, 24),
+(336, 12, 25),
+(350, 12, 26),
+(364, 12, 27),
+(378, 12, 28),
+(261, 13, 20),
+(280, 13, 21),
+(297, 13, 22),
+(314, 13, 23),
+(331, 13, 24),
+(401, 13, 29),
+(415, 13, 30),
+(429, 13, 31),
+(443, 13, 32),
+(230, 14, 17),
+(240, 14, 18),
+(250, 14, 19),
+(276, 14, 21),
+(293, 14, 22),
+(310, 14, 23),
+(327, 14, 24),
+(346, 14, 25),
+(360, 14, 26),
+(374, 14, 27),
+(388, 14, 28),
+(395, 14, 29),
+(409, 14, 30),
+(423, 14, 31),
+(437, 14, 32),
+(227, 15, 17),
+(237, 15, 18),
+(247, 15, 19),
+(257, 15, 20),
+(271, 15, 21),
+(288, 15, 22),
+(305, 15, 23),
+(322, 15, 24),
+(337, 15, 25),
+(351, 15, 26),
+(365, 15, 27),
+(379, 15, 28),
+(232, 16, 17),
+(242, 16, 18),
+(252, 16, 19),
+(262, 16, 20),
+(268, 16, 21),
+(285, 16, 22),
+(302, 16, 23),
+(319, 16, 24),
+(339, 16, 25),
+(353, 16, 26),
+(367, 16, 27),
+(381, 16, 28),
+(397, 16, 29),
+(411, 16, 30),
+(425, 16, 31),
+(439, 16, 32),
+(275, 18, 21),
+(292, 18, 22),
+(309, 18, 23),
+(326, 18, 24),
+(343, 18, 25),
+(357, 18, 26),
+(371, 18, 27),
+(385, 18, 28),
+(394, 18, 29),
+(408, 18, 30),
+(422, 18, 31),
+(436, 18, 32),
+(224, 19, 17),
+(234, 19, 18),
+(244, 19, 19),
+(254, 19, 20),
+(266, 19, 21),
+(283, 19, 22),
+(300, 19, 23),
+(317, 19, 24),
+(345, 19, 25),
+(359, 19, 26),
+(373, 19, 27),
+(387, 19, 28),
+(390, 19, 29),
+(404, 19, 30),
+(418, 19, 31),
+(432, 19, 32),
+(263, 20, 20),
+(281, 20, 21),
+(298, 20, 22),
+(315, 20, 23),
+(332, 20, 24),
+(402, 20, 29),
+(416, 20, 30),
+(430, 20, 31),
+(444, 20, 32);
 
 -- --------------------------------------------------------
 
@@ -1691,6 +1738,19 @@ INSERT INTO `labors` (`id`, `labor`, `created_at`, `updated_at`) VALUES
 (4, 'gvsjig', '2022-06-20 21:22:03', '2022-06-20 21:22:03'),
 (5, 'mjnonx', '2022-06-20 21:22:03', '2022-06-20 21:22:03'),
 (6, 'lnmizx', '2022-06-20 21:22:03', '2022-06-20 21:22:03');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `lista_mantenimiento`
+-- (Véase abajo para la vista actual)
+--
+CREATE TABLE `lista_mantenimiento` (
+`work_order_id` bigint(20) unsigned
+,`task` varchar(255)
+,`componente` varchar(255)
+,`pieza` varchar(255)
+);
 
 -- --------------------------------------------------------
 
@@ -2921,10 +2981,8 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('bV0LgDYOhBVT9cjLu9RiFK6oGuvGtrs8UlDIChx5', NULL, '192.168.0.7', 'AVG Antivirus', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoidDIxbVhxWjNSUVQ0RXRicnhQY01jc0k2VjZtc0pzdHBCaWVCSlVjbSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MTg6Imh0dHA6Ly8xOTIuMTY4LjAuNyI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1657244852),
-('MbpkdcKiYenmpViVoJ1dzD9D43ixoO0ir0M6dzdb', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.114 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiVUlYSm9ieUpXR2RKbnJCZU1aaHJPV3lJNjNRQ3piODc1UFhseUNmbyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czo1ODoiaHR0cDovL3Npc3RlbWEudGVzdC9zdXBlcnZpc29yL09yZGVuLWRlLVRyYWJham8tUGVuZGllbnRlcyI7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjI1OiJodHRwOi8vc2lzdGVtYS50ZXN0L2xvZ2luIjt9fQ==', 1657257677),
-('MXeRJQEg08WV41gwqIX1eGbMMqwzJXI3LGJd1xMV', 5, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.114 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoia3NVYXJqQ09EUkpGcURaaGg1bnRuZWJ0S3JCbVV1SlNaaDdKSWVseCI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjU4OiJodHRwOi8vc2lzdGVtYS50ZXN0L3N1cGVydmlzb3IvT3JkZW4tZGUtVHJhYmFqby1QZW5kaWVudGVzIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NTt9', 1657249297),
-('yqKz13ki2ETKwRmGA6d1eG9JuoLfjBnsPyCB3nsk', 5, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.114 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiSEFaT3JYWDNTdWc1aktmODFwd1hacFliSXR4TklBVnFFNUl0NTZmeCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTg6Imh0dHA6Ly9zaXN0ZW1hLnRlc3Qvc3VwZXJ2aXNvci9PcmRlbi1kZS1UcmFiYWpvLVBlbmRpZW50ZXMiO31zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aTo1O30=', 1657268379);
+('Ap3rZUCbnDmQ0qkAzyRTM983bCqv3yDdhjDTK5GW', 3, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiZ01vVGwwb052SlpNY0gwcVZMNmw4dHBwMkdBSHY5SkdhVlQ3TFBVRiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDk6Imh0dHA6Ly9zaXN0ZW1hL29wZXJhdG9yL01hbnRlbmltaWVudG9zLVBlbmRpZW50ZXMiO31zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aTozO30=', 1657308125),
+('jSti0w3Ki5xnrG0fe8BljSSIbUQaTzWEcQ9moZEF', 5, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiUGxIRnhGeVYycjZRWG9jdnpjTFNIejkyOWJKNTNseWpOWWU5YTBpaiI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjQ5OiJodHRwOi8vc2lzdGVtYS9vcGVyYXRvci9NYW50ZW5pbWllbnRvcy1QZW5kaWVudGVzIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NTt9', 1657308027);
 
 -- --------------------------------------------------------
 
@@ -3120,6 +3178,41 @@ INSERT INTO `tasks` (`id`, `task`, `component_id`, `estimated_time`, `created_at
 (94, 'aerr', 27, '15.00', NULL, NULL),
 (95, 'ser', 28, '15.00', NULL, NULL),
 (96, 'dad', 33, '15.00', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `task_required_materials`
+--
+
+CREATE TABLE `task_required_materials` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `task_id` bigint(20) UNSIGNED NOT NULL,
+  `item_id` bigint(20) UNSIGNED NOT NULL,
+  `quantity` decimal(8,2) NOT NULL DEFAULT 1.00
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `task_required_materials`
+--
+
+INSERT INTO `task_required_materials` (`id`, `task_id`, `item_id`, `quantity`) VALUES
+(1, 95, 1, '1.00'),
+(2, 95, 5, '1.00'),
+(3, 95, 7, '1.00'),
+(4, 23, 6, '1.00'),
+(5, 23, 8, '1.00'),
+(6, 31, 11, '1.00'),
+(7, 31, 12, '1.00'),
+(8, 1, 22, '1.00'),
+(9, 1, 16, '1.00'),
+(10, 1, 12, '1.00'),
+(11, 90, 28, '1.00'),
+(12, 90, 30, '1.00'),
+(13, 84, 31, '1.00'),
+(14, 84, 41, '1.00'),
+(15, 84, 49, '1.00'),
+(16, 84, 50, '1.00');
 
 -- --------------------------------------------------------
 
@@ -3323,8 +3416,8 @@ INSERT INTO `users` (`id`, `code`, `name`, `lastname`, `location_id`, `email`, `
 (1, '777269', 'Mr. Ford Vandervort', 'Kunze', 1, 'roob.brianne@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'WPn7K7yearpM20WS3s964CPUZ2vtDhTFL8wlqrSDztRxP3X56ohOycrlwG8V', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
 (2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '3DKrIkMWt3jIXg69NAE526q76vAEEmns9MsmPACorvjwqMwQYj7Mi6QQoMIu', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
 (3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'lhojjEAiJKr92QAxNgJwXhEcm4HSe56ZLSXSJUxVJm5eYOvshi0Eso93MwIZ', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'M5qsYueT3Y12habBcGR457E7SpDrFbbTACIRyVsTGVQPXG1nODJ4pTGM1373', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '3RGMRmsqNlZDg9LbH3BVRm8BK90WLmKWn2CqB5pLf4TS3cPwT2s0SWL7LRBv', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'W4E2Tb3Qn0kiEFSjJR6ZHDyC2rtoHLtLiCO9Xr7yXUthV6OR7MqppsSPeeCP', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'Oez5hWgGNfZkraPBczri2IXpecESS65AmoH6uU7tmL7WOMMKK7xlv2aZ3Ga9', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (6, '502387', 'Bella Block', 'Bashirian', 3, 'sibyl08@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '3NXfsNa9xGchlBQ9iIbNaHjLcFz5unflenQ1Z74g5YCsxiXyXk0bKpoWgElS', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (7, '981787', 'Jaylon Prosacco', 'Langosh', 4, 'pleuschke@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'rc7GJRvdk8Hja3W1jLepIOIhBPkUfcaM2TtoYLw1sJTXXmjxVBy2kQtGm8t1', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
 (8, '588440', 'Irving Strosin', 'Langosh', 4, 'mercedes57@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'Xz2S4RCr9v6EVwxQhozRejcp04TFyIs2GCHh2Tfl34GSok2M0yzbvy4gDfuv', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
@@ -3379,7 +3472,7 @@ CREATE TABLE `work_orders` (
   `location_id` bigint(20) UNSIGNED NOT NULL,
   `date` date NOT NULL,
   `maintenance` enum('1','2','3') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `state` enum('PENDIENTE','VALIDADO','CONCLUIDO','RECHAZADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
+  `state` enum('PENDIENTE','NO VALIDADO','CONCLUIDO','VALIDADO','RECHAZADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
   `is_canceled` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -3390,22 +3483,22 @@ CREATE TABLE `work_orders` (
 --
 
 INSERT INTO `work_orders` (`id`, `implement_id`, `user_id`, `location_id`, `date`, `maintenance`, `state`, `is_canceled`, `created_at`, `updated_at`) VALUES
-(165, 1, 1, 1, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 07:43:53', '2022-07-08 07:43:53'),
-(166, 2, 2, 1, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 07:43:53', '2022-07-08 07:43:53'),
-(167, 3, 3, 2, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 07:43:53', '2022-07-08 07:43:53'),
-(168, 4, 4, 2, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 07:43:54', '2022-07-08 07:43:54'),
-(169, 5, 5, 3, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 07:43:54', '2022-07-08 07:43:54'),
-(170, 6, 6, 3, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 07:43:54', '2022-07-08 07:43:54'),
-(171, 7, 7, 4, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 07:43:54', '2022-07-08 07:43:54'),
-(172, 8, 8, 4, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 07:43:54', '2022-07-08 07:43:54'),
-(173, 9, 9, 5, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 07:43:54', '2022-07-08 07:43:54'),
-(174, 10, 10, 5, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 07:43:54', '2022-07-08 07:43:54'),
-(175, 11, 11, 6, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 07:43:54', '2022-07-08 07:43:54'),
-(176, 12, 12, 6, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 07:43:54', '2022-07-08 07:43:54'),
-(177, 13, 13, 7, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 07:43:55', '2022-07-08 07:43:55'),
-(178, 14, 14, 7, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 07:43:55', '2022-07-08 07:43:55'),
-(179, 15, 15, 8, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 07:43:55', '2022-07-08 07:43:55'),
-(180, 16, 16, 8, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 07:43:55', '2022-07-08 07:43:55');
+(17, 1, 1, 1, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 19:01:58', '2022-07-09 00:07:29'),
+(18, 2, 2, 1, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 19:02:04', '2022-07-09 00:07:21'),
+(19, 3, 3, 2, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 19:02:10', '2022-07-09 00:07:25'),
+(20, 4, 4, 2, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 19:02:17', '2022-07-09 00:07:33'),
+(21, 5, 5, 3, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 19:02:24', '2022-07-08 19:02:24'),
+(22, 6, 6, 3, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 19:02:27', '2022-07-08 19:02:27'),
+(23, 7, 7, 4, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 19:02:30', '2022-07-08 19:02:30'),
+(24, 8, 8, 4, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 19:02:33', '2022-07-08 19:02:33'),
+(25, 9, 9, 5, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 19:02:36', '2022-07-08 19:02:36'),
+(26, 10, 10, 5, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 19:02:38', '2022-07-08 19:02:38'),
+(27, 11, 11, 6, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 19:02:40', '2022-07-08 19:02:40'),
+(28, 12, 12, 6, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 19:02:41', '2022-07-08 19:02:41'),
+(29, 13, 13, 7, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 19:02:42', '2022-07-08 19:02:42'),
+(30, 14, 14, 7, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 19:02:44', '2022-07-08 19:02:44'),
+(31, 15, 15, 8, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 19:02:46', '2022-07-08 19:02:46'),
+(32, 16, 16, 8, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-08 19:02:48', '2022-07-08 19:02:48');
 
 -- --------------------------------------------------------
 
@@ -3431,259 +3524,259 @@ CREATE TABLE `work_order_details` (
 --
 
 INSERT INTO `work_order_details` (`id`, `work_order_id`, `task_id`, `state`, `is_checked`, `component_implement_id`, `component_part_id`, `observation`, `created_at`, `updated_at`) VALUES
-(1455, 165, 95, 'ACEPTADO', 0, 1, NULL, NULL, NULL, NULL),
-(1456, 165, 51, 'RECOMENDADO', 0, NULL, 1, NULL, NULL, NULL),
-(1457, 165, 62, 'RECOMENDADO', 0, NULL, 2, NULL, NULL, NULL),
-(1458, 165, 82, 'RECOMENDADO', 0, NULL, 3, NULL, NULL, NULL),
-(1459, 165, 1, 'ACEPTADO', 0, 2, NULL, NULL, NULL, NULL),
-(1460, 165, 23, 'ACEPTADO', 0, 2, NULL, NULL, NULL, NULL),
-(1461, 165, 31, 'ACEPTADO', 0, 2, NULL, NULL, NULL, NULL),
-(1462, 165, 84, 'ACEPTADO', 0, NULL, 4, NULL, NULL, NULL),
-(1463, 165, 60, 'RECOMENDADO', 0, NULL, 5, NULL, NULL, NULL),
-(1464, 165, 72, 'RECOMENDADO', 0, NULL, 6, NULL, NULL, NULL),
-(1465, 165, 90, 'ACEPTADO', 0, 3, NULL, NULL, NULL, NULL),
-(1466, 165, 84, 'ACEPTADO', 0, NULL, 7, NULL, NULL, NULL),
-(1467, 165, 32, 'ACEPTADO', 0, NULL, 8, NULL, NULL, NULL),
-(1468, 165, 82, 'RECOMENDADO', 0, NULL, 9, NULL, NULL, NULL),
-(1469, 166, 95, 'ACEPTADO', 0, 4, NULL, NULL, NULL, NULL),
-(1470, 166, 51, 'RECOMENDADO', 0, NULL, 28, NULL, NULL, NULL),
-(1471, 166, 62, 'RECOMENDADO', 0, NULL, 29, NULL, NULL, NULL),
-(1472, 166, 82, 'RECOMENDADO', 0, NULL, 30, NULL, NULL, NULL),
-(1473, 166, 1, 'ACEPTADO', 0, 5, NULL, NULL, NULL, NULL),
-(1474, 166, 23, 'ACEPTADO', 0, 5, NULL, NULL, NULL, NULL),
-(1475, 166, 31, 'ACEPTADO', 0, 5, NULL, NULL, NULL, NULL),
-(1476, 166, 84, 'ACEPTADO', 0, NULL, 31, NULL, NULL, NULL),
-(1477, 166, 60, 'RECOMENDADO', 0, NULL, 32, NULL, NULL, NULL),
-(1478, 166, 72, 'RECOMENDADO', 0, NULL, 33, NULL, NULL, NULL),
-(1479, 166, 90, 'ACEPTADO', 0, 6, NULL, NULL, NULL, NULL),
-(1480, 166, 84, 'ACEPTADO', 0, NULL, 34, NULL, NULL, NULL),
-(1481, 166, 32, 'ACEPTADO', 0, NULL, 35, NULL, NULL, NULL),
-(1482, 166, 82, 'RECOMENDADO', 0, NULL, 36, NULL, NULL, NULL),
-(1483, 167, 95, 'ACEPTADO', 0, 7, NULL, NULL, NULL, NULL),
-(1484, 167, 51, 'RECOMENDADO', 0, NULL, 10, NULL, NULL, NULL),
-(1485, 167, 62, 'RECOMENDADO', 0, NULL, 11, NULL, NULL, NULL),
-(1486, 167, 82, 'RECOMENDADO', 0, NULL, 12, NULL, NULL, NULL),
-(1487, 167, 1, 'ACEPTADO', 0, 8, NULL, NULL, NULL, NULL),
-(1488, 167, 23, 'ACEPTADO', 0, 8, NULL, NULL, NULL, NULL),
-(1489, 167, 31, 'ACEPTADO', 0, 8, NULL, NULL, NULL, NULL),
-(1490, 167, 84, 'ACEPTADO', 0, NULL, 13, NULL, NULL, NULL),
-(1491, 167, 60, 'RECOMENDADO', 0, NULL, 14, NULL, NULL, NULL),
-(1492, 167, 72, 'RECOMENDADO', 0, NULL, 15, NULL, NULL, NULL),
-(1493, 167, 90, 'ACEPTADO', 0, 9, NULL, NULL, NULL, NULL),
-(1494, 167, 84, 'ACEPTADO', 0, NULL, 16, NULL, NULL, NULL),
-(1495, 167, 32, 'ACEPTADO', 0, NULL, 17, NULL, NULL, NULL),
-(1496, 167, 82, 'RECOMENDADO', 0, NULL, 18, NULL, NULL, NULL),
-(1497, 168, 95, 'ACEPTADO', 0, 10, NULL, NULL, NULL, NULL),
-(1498, 168, 51, 'RECOMENDADO', 0, NULL, 19, NULL, NULL, NULL),
-(1499, 168, 88, 'ACEPTADO', 0, NULL, 20, NULL, NULL, NULL),
-(1500, 168, 82, 'RECOMENDADO', 0, NULL, 21, NULL, NULL, NULL),
-(1501, 168, 1, 'ACEPTADO', 0, 11, NULL, NULL, NULL, NULL),
-(1502, 168, 23, 'ACEPTADO', 0, 11, NULL, NULL, NULL, NULL),
-(1503, 168, 31, 'ACEPTADO', 0, 11, NULL, NULL, NULL, NULL),
-(1504, 168, 84, 'ACEPTADO', 0, NULL, 22, NULL, NULL, NULL),
-(1505, 168, 60, 'RECOMENDADO', 0, NULL, 23, NULL, NULL, NULL),
-(1506, 168, 18, 'ACEPTADO', 0, NULL, 24, NULL, NULL, NULL),
-(1507, 168, 39, 'ACEPTADO', 0, NULL, 24, NULL, NULL, NULL),
-(1508, 168, 90, 'ACEPTADO', 0, 12, NULL, NULL, NULL, NULL),
-(1509, 168, 84, 'ACEPTADO', 0, NULL, 25, NULL, NULL, NULL),
-(1510, 168, 32, 'ACEPTADO', 0, NULL, 26, NULL, NULL, NULL),
-(1511, 168, 82, 'RECOMENDADO', 0, NULL, 27, NULL, NULL, NULL),
-(1512, 169, 90, 'ACEPTADO', 0, 13, NULL, NULL, NULL, NULL),
-(1513, 169, 84, 'ACEPTADO', 0, NULL, 37, NULL, NULL, NULL),
-(1514, 169, 32, 'ACEPTADO', 0, NULL, 38, NULL, NULL, NULL),
-(1515, 169, 96, 'ACEPTADO', 0, NULL, 39, NULL, NULL, NULL),
-(1516, 169, 27, 'ACEPTADO', 0, 14, NULL, NULL, NULL, NULL),
-(1517, 169, 8, 'ACEPTADO', 0, NULL, 40, NULL, NULL, NULL),
-(1518, 169, 84, 'ACEPTADO', 0, NULL, 41, NULL, NULL, NULL),
-(1519, 169, 88, 'ACEPTADO', 0, NULL, 42, NULL, NULL, NULL),
-(1520, 169, 14, 'ACEPTADO', 0, 15, NULL, NULL, NULL, NULL),
-(1521, 169, 4, 'ACEPTADO', 0, NULL, 43, NULL, NULL, NULL),
-(1522, 169, 35, 'ACEPTADO', 0, NULL, 43, NULL, NULL, NULL),
-(1523, 169, 18, 'ACEPTADO', 0, NULL, 44, NULL, NULL, NULL),
-(1524, 169, 39, 'ACEPTADO', 0, NULL, 44, NULL, NULL, NULL),
-(1525, 169, 32, 'ACEPTADO', 0, NULL, 45, NULL, NULL, NULL),
-(1526, 170, 90, 'ACEPTADO', 0, 16, NULL, NULL, NULL, NULL),
-(1527, 170, 84, 'ACEPTADO', 0, NULL, 46, NULL, NULL, NULL),
-(1528, 170, 32, 'ACEPTADO', 0, NULL, 47, NULL, NULL, NULL),
-(1529, 170, 96, 'ACEPTADO', 0, NULL, 48, NULL, NULL, NULL),
-(1530, 170, 27, 'ACEPTADO', 0, 17, NULL, NULL, NULL, NULL),
-(1531, 170, 8, 'ACEPTADO', 0, NULL, 49, NULL, NULL, NULL),
-(1532, 170, 84, 'ACEPTADO', 0, NULL, 50, NULL, NULL, NULL),
-(1533, 170, 88, 'ACEPTADO', 0, NULL, 51, NULL, NULL, NULL),
-(1534, 170, 14, 'ACEPTADO', 0, 18, NULL, NULL, NULL, NULL),
-(1535, 170, 4, 'ACEPTADO', 0, NULL, 52, NULL, NULL, NULL),
-(1536, 170, 35, 'ACEPTADO', 0, NULL, 52, NULL, NULL, NULL),
-(1537, 170, 18, 'ACEPTADO', 0, NULL, 53, NULL, NULL, NULL),
-(1538, 170, 39, 'ACEPTADO', 0, NULL, 53, NULL, NULL, NULL),
-(1539, 170, 32, 'ACEPTADO', 0, NULL, 54, NULL, NULL, NULL),
-(1540, 171, 90, 'ACEPTADO', 0, 19, NULL, NULL, NULL, NULL),
-(1541, 171, 84, 'ACEPTADO', 0, NULL, 55, NULL, NULL, NULL),
-(1542, 171, 32, 'ACEPTADO', 0, NULL, 56, NULL, NULL, NULL),
-(1543, 171, 96, 'ACEPTADO', 0, NULL, 57, NULL, NULL, NULL),
-(1544, 171, 27, 'ACEPTADO', 0, 20, NULL, NULL, NULL, NULL),
-(1545, 171, 8, 'ACEPTADO', 0, NULL, 58, NULL, NULL, NULL),
-(1546, 171, 84, 'ACEPTADO', 0, NULL, 59, NULL, NULL, NULL),
-(1547, 171, 88, 'ACEPTADO', 0, NULL, 60, NULL, NULL, NULL),
-(1548, 171, 14, 'ACEPTADO', 0, 21, NULL, NULL, NULL, NULL),
-(1549, 171, 4, 'ACEPTADO', 0, NULL, 61, NULL, NULL, NULL),
-(1550, 171, 35, 'ACEPTADO', 0, NULL, 61, NULL, NULL, NULL),
-(1551, 171, 18, 'ACEPTADO', 0, NULL, 62, NULL, NULL, NULL),
-(1552, 171, 39, 'ACEPTADO', 0, NULL, 62, NULL, NULL, NULL),
-(1553, 171, 32, 'ACEPTADO', 0, NULL, 63, NULL, NULL, NULL),
-(1554, 172, 90, 'ACEPTADO', 0, 22, NULL, NULL, NULL, NULL),
-(1555, 172, 84, 'ACEPTADO', 0, NULL, 64, NULL, NULL, NULL),
-(1556, 172, 32, 'ACEPTADO', 0, NULL, 65, NULL, NULL, NULL),
-(1557, 172, 96, 'ACEPTADO', 0, NULL, 66, NULL, NULL, NULL),
-(1558, 172, 27, 'ACEPTADO', 0, 23, NULL, NULL, NULL, NULL),
-(1559, 172, 8, 'ACEPTADO', 0, NULL, 67, NULL, NULL, NULL),
-(1560, 172, 84, 'ACEPTADO', 0, NULL, 68, NULL, NULL, NULL),
-(1561, 172, 88, 'ACEPTADO', 0, NULL, 69, NULL, NULL, NULL),
-(1562, 172, 14, 'ACEPTADO', 0, 24, NULL, NULL, NULL, NULL),
-(1563, 172, 4, 'ACEPTADO', 0, NULL, 70, NULL, NULL, NULL),
-(1564, 172, 35, 'ACEPTADO', 0, NULL, 70, NULL, NULL, NULL),
-(1565, 172, 18, 'ACEPTADO', 0, NULL, 71, NULL, NULL, NULL),
-(1566, 172, 39, 'ACEPTADO', 0, NULL, 71, NULL, NULL, NULL),
-(1567, 172, 32, 'ACEPTADO', 0, NULL, 72, NULL, NULL, NULL),
-(1568, 173, 10, 'ACEPTADO', 0, 25, NULL, NULL, NULL, NULL),
-(1569, 173, 29, 'ACEPTADO', 0, 25, NULL, NULL, NULL, NULL),
-(1570, 173, 9, 'ACEPTADO', 0, NULL, 73, NULL, NULL, NULL),
-(1571, 173, 21, 'ACEPTADO', 0, NULL, 73, NULL, NULL, NULL),
-(1572, 173, 22, 'ACEPTADO', 0, NULL, 73, NULL, NULL, NULL),
-(1573, 173, 24, 'ACEPTADO', 0, NULL, 73, NULL, NULL, NULL),
-(1574, 173, 32, 'ACEPTADO', 0, NULL, 74, NULL, NULL, NULL),
-(1575, 173, 96, 'ACEPTADO', 0, NULL, 75, NULL, NULL, NULL),
-(1576, 173, 85, 'ACEPTADO', 0, 26, NULL, NULL, NULL, NULL),
-(1577, 173, 4, 'ACEPTADO', 0, NULL, 76, NULL, NULL, NULL),
-(1578, 173, 35, 'ACEPTADO', 0, NULL, 76, NULL, NULL, NULL),
-(1579, 173, 9, 'ACEPTADO', 0, NULL, 77, NULL, NULL, NULL),
-(1580, 173, 21, 'ACEPTADO', 0, NULL, 77, NULL, NULL, NULL),
-(1581, 173, 22, 'ACEPTADO', 0, NULL, 77, NULL, NULL, NULL),
-(1582, 173, 24, 'ACEPTADO', 0, NULL, 77, NULL, NULL, NULL),
-(1583, 173, 88, 'ACEPTADO', 0, NULL, 78, NULL, NULL, NULL),
-(1584, 173, 25, 'ACEPTADO', 0, 27, NULL, NULL, NULL, NULL),
-(1585, 173, 8, 'ACEPTADO', 0, NULL, 79, NULL, NULL, NULL),
-(1586, 173, 33, 'ACEPTADO', 0, NULL, 80, NULL, NULL, NULL),
-(1587, 173, 96, 'ACEPTADO', 0, NULL, 81, NULL, NULL, NULL),
-(1588, 174, 10, 'ACEPTADO', 0, 28, NULL, NULL, NULL, NULL),
-(1589, 174, 29, 'ACEPTADO', 0, 28, NULL, NULL, NULL, NULL),
-(1590, 174, 9, 'ACEPTADO', 0, NULL, 82, NULL, NULL, NULL),
-(1591, 174, 21, 'ACEPTADO', 0, NULL, 82, NULL, NULL, NULL),
-(1592, 174, 22, 'ACEPTADO', 0, NULL, 82, NULL, NULL, NULL),
-(1593, 174, 24, 'ACEPTADO', 0, NULL, 82, NULL, NULL, NULL),
-(1594, 174, 32, 'ACEPTADO', 0, NULL, 83, NULL, NULL, NULL),
-(1595, 174, 96, 'ACEPTADO', 0, NULL, 84, NULL, NULL, NULL),
-(1596, 174, 85, 'ACEPTADO', 0, 29, NULL, NULL, NULL, NULL),
-(1597, 174, 4, 'ACEPTADO', 0, NULL, 85, NULL, NULL, NULL),
-(1598, 174, 35, 'ACEPTADO', 0, NULL, 85, NULL, NULL, NULL),
-(1599, 174, 9, 'ACEPTADO', 0, NULL, 86, NULL, NULL, NULL),
-(1600, 174, 21, 'ACEPTADO', 0, NULL, 86, NULL, NULL, NULL),
-(1601, 174, 22, 'ACEPTADO', 0, NULL, 86, NULL, NULL, NULL),
-(1602, 174, 24, 'ACEPTADO', 0, NULL, 86, NULL, NULL, NULL),
-(1603, 174, 88, 'ACEPTADO', 0, NULL, 87, NULL, NULL, NULL),
-(1604, 174, 25, 'ACEPTADO', 0, 30, NULL, NULL, NULL, NULL),
-(1605, 174, 8, 'ACEPTADO', 0, NULL, 88, NULL, NULL, NULL),
-(1606, 174, 33, 'ACEPTADO', 0, NULL, 89, NULL, NULL, NULL),
-(1607, 174, 96, 'ACEPTADO', 0, NULL, 90, NULL, NULL, NULL),
-(1608, 175, 10, 'ACEPTADO', 0, 31, NULL, NULL, NULL, NULL),
-(1609, 175, 29, 'ACEPTADO', 0, 31, NULL, NULL, NULL, NULL),
-(1610, 175, 9, 'ACEPTADO', 0, NULL, 91, NULL, NULL, NULL),
-(1611, 175, 21, 'ACEPTADO', 0, NULL, 91, NULL, NULL, NULL),
-(1612, 175, 22, 'ACEPTADO', 0, NULL, 91, NULL, NULL, NULL),
-(1613, 175, 24, 'ACEPTADO', 0, NULL, 91, NULL, NULL, NULL),
-(1614, 175, 32, 'ACEPTADO', 0, NULL, 92, NULL, NULL, NULL),
-(1615, 175, 96, 'ACEPTADO', 0, NULL, 93, NULL, NULL, NULL),
-(1616, 175, 85, 'ACEPTADO', 0, 32, NULL, NULL, NULL, NULL),
-(1617, 175, 4, 'ACEPTADO', 0, NULL, 94, NULL, NULL, NULL),
-(1618, 175, 35, 'ACEPTADO', 0, NULL, 94, NULL, NULL, NULL),
-(1619, 175, 9, 'ACEPTADO', 0, NULL, 95, NULL, NULL, NULL),
-(1620, 175, 21, 'ACEPTADO', 0, NULL, 95, NULL, NULL, NULL),
-(1621, 175, 22, 'ACEPTADO', 0, NULL, 95, NULL, NULL, NULL),
-(1622, 175, 24, 'ACEPTADO', 0, NULL, 95, NULL, NULL, NULL),
-(1623, 175, 88, 'ACEPTADO', 0, NULL, 96, NULL, NULL, NULL),
-(1624, 175, 25, 'ACEPTADO', 0, 33, NULL, NULL, NULL, NULL),
-(1625, 175, 8, 'ACEPTADO', 0, NULL, 97, NULL, NULL, NULL),
-(1626, 175, 33, 'ACEPTADO', 0, NULL, 98, NULL, NULL, NULL),
-(1627, 175, 96, 'ACEPTADO', 0, NULL, 99, NULL, NULL, NULL),
-(1628, 176, 10, 'ACEPTADO', 0, 34, NULL, NULL, NULL, NULL),
-(1629, 176, 29, 'ACEPTADO', 0, 34, NULL, NULL, NULL, NULL),
-(1630, 176, 9, 'ACEPTADO', 0, NULL, 100, NULL, NULL, NULL),
-(1631, 176, 21, 'ACEPTADO', 0, NULL, 100, NULL, NULL, NULL),
-(1632, 176, 22, 'ACEPTADO', 0, NULL, 100, NULL, NULL, NULL),
-(1633, 176, 24, 'ACEPTADO', 0, NULL, 100, NULL, NULL, NULL),
-(1634, 176, 32, 'ACEPTADO', 0, NULL, 101, NULL, NULL, NULL),
-(1635, 176, 96, 'ACEPTADO', 0, NULL, 102, NULL, NULL, NULL),
-(1636, 176, 85, 'ACEPTADO', 0, 35, NULL, NULL, NULL, NULL),
-(1637, 176, 4, 'ACEPTADO', 0, NULL, 103, NULL, NULL, NULL),
-(1638, 176, 35, 'ACEPTADO', 0, NULL, 103, NULL, NULL, NULL),
-(1639, 176, 9, 'ACEPTADO', 0, NULL, 104, NULL, NULL, NULL),
-(1640, 176, 21, 'ACEPTADO', 0, NULL, 104, NULL, NULL, NULL),
-(1641, 176, 22, 'ACEPTADO', 0, NULL, 104, NULL, NULL, NULL),
-(1642, 176, 24, 'ACEPTADO', 0, NULL, 104, NULL, NULL, NULL),
-(1643, 176, 88, 'ACEPTADO', 0, NULL, 105, NULL, NULL, NULL),
-(1644, 176, 25, 'ACEPTADO', 0, 36, NULL, NULL, NULL, NULL),
-(1645, 176, 8, 'ACEPTADO', 0, NULL, 106, NULL, NULL, NULL),
-(1646, 176, 33, 'ACEPTADO', 0, NULL, 107, NULL, NULL, NULL),
-(1647, 176, 96, 'ACEPTADO', 0, NULL, 108, NULL, NULL, NULL),
-(1648, 177, 95, 'ACEPTADO', 0, 37, NULL, NULL, NULL, NULL),
-(1649, 177, 4, 'ACEPTADO', 0, NULL, 109, NULL, NULL, NULL),
-(1650, 177, 35, 'ACEPTADO', 0, NULL, 109, NULL, NULL, NULL),
-(1651, 177, 88, 'ACEPTADO', 0, NULL, 110, NULL, NULL, NULL),
-(1652, 177, 96, 'ACEPTADO', 0, NULL, 111, NULL, NULL, NULL),
-(1653, 177, 94, 'ACEPTADO', 0, 38, NULL, NULL, NULL, NULL),
-(1654, 177, 87, 'ACEPTADO', 0, NULL, 112, NULL, NULL, NULL),
-(1655, 177, 38, 'ACEPTADO', 0, NULL, 113, NULL, NULL, NULL),
-(1656, 177, 96, 'ACEPTADO', 0, NULL, 114, NULL, NULL, NULL),
-(1657, 177, 14, 'ACEPTADO', 0, 39, NULL, NULL, NULL, NULL),
-(1658, 177, 4, 'ACEPTADO', 0, NULL, 115, NULL, NULL, NULL),
-(1659, 177, 35, 'ACEPTADO', 0, NULL, 115, NULL, NULL, NULL),
-(1660, 177, 18, 'ACEPTADO', 0, NULL, 116, NULL, NULL, NULL),
-(1661, 177, 39, 'ACEPTADO', 0, NULL, 116, NULL, NULL, NULL),
-(1662, 177, 32, 'ACEPTADO', 0, NULL, 117, NULL, NULL, NULL),
-(1663, 178, 95, 'ACEPTADO', 0, 40, NULL, NULL, NULL, NULL),
-(1664, 178, 4, 'ACEPTADO', 0, NULL, 118, NULL, NULL, NULL),
-(1665, 178, 35, 'ACEPTADO', 0, NULL, 118, NULL, NULL, NULL),
-(1666, 178, 88, 'ACEPTADO', 0, NULL, 119, NULL, NULL, NULL),
-(1667, 178, 96, 'ACEPTADO', 0, NULL, 120, NULL, NULL, NULL),
-(1668, 178, 94, 'ACEPTADO', 0, 41, NULL, NULL, NULL, NULL),
-(1669, 178, 87, 'ACEPTADO', 0, NULL, 121, NULL, NULL, NULL),
-(1670, 178, 38, 'ACEPTADO', 0, NULL, 122, NULL, NULL, NULL),
-(1671, 178, 96, 'ACEPTADO', 0, NULL, 123, NULL, NULL, NULL),
-(1672, 178, 14, 'ACEPTADO', 0, 42, NULL, NULL, NULL, NULL),
-(1673, 178, 4, 'ACEPTADO', 0, NULL, 124, NULL, NULL, NULL),
-(1674, 178, 35, 'ACEPTADO', 0, NULL, 124, NULL, NULL, NULL),
-(1675, 178, 18, 'ACEPTADO', 0, NULL, 125, NULL, NULL, NULL),
-(1676, 178, 39, 'ACEPTADO', 0, NULL, 125, NULL, NULL, NULL),
-(1677, 178, 32, 'ACEPTADO', 0, NULL, 126, NULL, NULL, NULL),
-(1678, 179, 95, 'ACEPTADO', 0, 43, NULL, NULL, NULL, NULL),
-(1679, 179, 4, 'ACEPTADO', 0, NULL, 127, NULL, NULL, NULL),
-(1680, 179, 35, 'ACEPTADO', 0, NULL, 127, NULL, NULL, NULL),
-(1681, 179, 88, 'ACEPTADO', 0, NULL, 128, NULL, NULL, NULL),
-(1682, 179, 96, 'ACEPTADO', 0, NULL, 129, NULL, NULL, NULL),
-(1683, 179, 94, 'ACEPTADO', 0, 44, NULL, NULL, NULL, NULL),
-(1684, 179, 87, 'ACEPTADO', 0, NULL, 130, NULL, NULL, NULL),
-(1685, 179, 38, 'ACEPTADO', 0, NULL, 131, NULL, NULL, NULL),
-(1686, 179, 96, 'ACEPTADO', 0, NULL, 132, NULL, NULL, NULL),
-(1687, 179, 14, 'ACEPTADO', 0, 45, NULL, NULL, NULL, NULL),
-(1688, 179, 4, 'ACEPTADO', 0, NULL, 133, NULL, NULL, NULL),
-(1689, 179, 35, 'ACEPTADO', 0, NULL, 133, NULL, NULL, NULL),
-(1690, 179, 18, 'ACEPTADO', 0, NULL, 134, NULL, NULL, NULL),
-(1691, 179, 39, 'ACEPTADO', 0, NULL, 134, NULL, NULL, NULL),
-(1692, 179, 32, 'ACEPTADO', 0, NULL, 135, NULL, NULL, NULL),
-(1693, 180, 95, 'ACEPTADO', 0, 46, NULL, NULL, NULL, NULL),
-(1694, 180, 4, 'ACEPTADO', 0, NULL, 136, NULL, NULL, NULL),
-(1695, 180, 35, 'ACEPTADO', 0, NULL, 136, NULL, NULL, NULL),
-(1696, 180, 88, 'ACEPTADO', 0, NULL, 137, NULL, NULL, NULL),
-(1697, 180, 96, 'ACEPTADO', 0, NULL, 138, NULL, NULL, NULL),
-(1698, 180, 94, 'ACEPTADO', 0, 47, NULL, NULL, NULL, NULL),
-(1699, 180, 87, 'ACEPTADO', 0, NULL, 139, NULL, NULL, NULL),
-(1700, 180, 38, 'ACEPTADO', 0, NULL, 140, NULL, NULL, NULL),
-(1701, 180, 96, 'ACEPTADO', 0, NULL, 141, NULL, NULL, NULL),
-(1702, 180, 14, 'ACEPTADO', 0, 48, NULL, NULL, NULL, NULL),
-(1703, 180, 4, 'ACEPTADO', 0, NULL, 142, NULL, NULL, NULL),
-(1704, 180, 35, 'ACEPTADO', 0, NULL, 142, NULL, NULL, NULL),
-(1705, 180, 18, 'ACEPTADO', 0, NULL, 143, NULL, NULL, NULL),
-(1706, 180, 39, 'ACEPTADO', 0, NULL, 143, NULL, NULL, NULL),
-(1707, 180, 32, 'ACEPTADO', 0, NULL, 144, NULL, NULL, NULL);
+(254, 17, 95, 'ACEPTADO', 0, 1, NULL, NULL, NULL, NULL),
+(255, 17, 51, 'NO ACEPTADO', 0, NULL, 1, NULL, NULL, '2022-07-09 00:07:29'),
+(256, 17, 62, 'NO ACEPTADO', 0, NULL, 2, NULL, NULL, '2022-07-09 00:07:29'),
+(257, 17, 82, 'NO ACEPTADO', 0, NULL, 3, NULL, NULL, '2022-07-09 00:07:29'),
+(258, 17, 1, 'ACEPTADO', 0, 2, NULL, NULL, NULL, NULL),
+(259, 17, 23, 'ACEPTADO', 0, 2, NULL, NULL, NULL, NULL),
+(260, 17, 31, 'ACEPTADO', 0, 2, NULL, NULL, NULL, NULL),
+(261, 17, 84, 'ACEPTADO', 0, NULL, 4, NULL, NULL, NULL),
+(262, 17, 60, 'NO ACEPTADO', 0, NULL, 5, NULL, NULL, '2022-07-09 00:07:29'),
+(263, 17, 72, 'NO ACEPTADO', 0, NULL, 6, NULL, NULL, '2022-07-09 00:07:29'),
+(264, 17, 90, 'ACEPTADO', 0, 3, NULL, NULL, NULL, NULL),
+(265, 17, 84, 'ACEPTADO', 0, NULL, 7, NULL, NULL, NULL),
+(266, 17, 32, 'ACEPTADO', 0, NULL, 8, NULL, NULL, NULL),
+(267, 17, 82, 'NO ACEPTADO', 0, NULL, 9, NULL, NULL, '2022-07-09 00:07:29'),
+(268, 18, 95, 'ACEPTADO', 0, 4, NULL, NULL, NULL, NULL),
+(269, 18, 51, 'ACEPTADO', 0, NULL, 28, NULL, NULL, '2022-07-09 00:07:21'),
+(270, 18, 62, 'ACEPTADO', 0, NULL, 29, NULL, NULL, '2022-07-09 00:07:21'),
+(271, 18, 82, 'ACEPTADO', 0, NULL, 30, NULL, NULL, '2022-07-09 00:07:21'),
+(272, 18, 1, 'ACEPTADO', 0, 5, NULL, NULL, NULL, NULL),
+(273, 18, 23, 'ACEPTADO', 0, 5, NULL, NULL, NULL, NULL),
+(274, 18, 31, 'ACEPTADO', 0, 5, NULL, NULL, NULL, NULL),
+(275, 18, 84, 'ACEPTADO', 0, NULL, 31, NULL, NULL, NULL),
+(276, 18, 60, 'ACEPTADO', 0, NULL, 32, NULL, NULL, '2022-07-09 00:07:21'),
+(277, 18, 72, 'ACEPTADO', 0, NULL, 33, NULL, NULL, '2022-07-09 00:07:21'),
+(278, 18, 90, 'ACEPTADO', 0, 6, NULL, NULL, NULL, NULL),
+(279, 18, 84, 'ACEPTADO', 0, NULL, 34, NULL, NULL, NULL),
+(280, 18, 32, 'ACEPTADO', 0, NULL, 35, NULL, NULL, NULL),
+(281, 18, 82, 'ACEPTADO', 0, NULL, 36, NULL, NULL, '2022-07-09 00:07:21'),
+(282, 19, 95, 'ACEPTADO', 0, 7, NULL, NULL, NULL, NULL),
+(283, 19, 51, 'ACEPTADO', 0, NULL, 10, NULL, NULL, '2022-07-09 00:07:25'),
+(284, 19, 62, 'ACEPTADO', 0, NULL, 11, NULL, NULL, '2022-07-09 00:07:25'),
+(285, 19, 82, 'ACEPTADO', 0, NULL, 12, NULL, NULL, '2022-07-09 00:07:25'),
+(286, 19, 1, 'ACEPTADO', 0, 8, NULL, NULL, NULL, NULL),
+(287, 19, 23, 'ACEPTADO', 0, 8, NULL, NULL, NULL, NULL),
+(288, 19, 31, 'ACEPTADO', 0, 8, NULL, NULL, NULL, NULL),
+(289, 19, 84, 'ACEPTADO', 0, NULL, 13, NULL, NULL, NULL),
+(290, 19, 60, 'ACEPTADO', 0, NULL, 14, NULL, NULL, '2022-07-09 00:07:25'),
+(291, 19, 72, 'ACEPTADO', 0, NULL, 15, NULL, NULL, '2022-07-09 00:07:25'),
+(292, 19, 90, 'ACEPTADO', 0, 9, NULL, NULL, NULL, NULL),
+(293, 19, 84, 'ACEPTADO', 0, NULL, 16, NULL, NULL, NULL),
+(294, 19, 32, 'ACEPTADO', 0, NULL, 17, NULL, NULL, NULL),
+(295, 19, 82, 'ACEPTADO', 0, NULL, 18, NULL, NULL, '2022-07-09 00:07:25'),
+(296, 20, 95, 'ACEPTADO', 0, 10, NULL, NULL, NULL, NULL),
+(297, 20, 51, 'ACEPTADO', 0, NULL, 19, NULL, NULL, '2022-07-09 00:07:33'),
+(298, 20, 88, 'ACEPTADO', 0, NULL, 20, NULL, NULL, NULL),
+(299, 20, 82, 'ACEPTADO', 0, NULL, 21, NULL, NULL, '2022-07-09 00:07:33'),
+(300, 20, 1, 'ACEPTADO', 0, 11, NULL, NULL, NULL, NULL),
+(301, 20, 23, 'ACEPTADO', 0, 11, NULL, NULL, NULL, NULL),
+(302, 20, 31, 'ACEPTADO', 0, 11, NULL, NULL, NULL, NULL),
+(303, 20, 84, 'ACEPTADO', 0, NULL, 22, NULL, NULL, NULL),
+(304, 20, 60, 'ACEPTADO', 0, NULL, 23, NULL, NULL, '2022-07-09 00:07:33'),
+(305, 20, 18, 'ACEPTADO', 0, NULL, 24, NULL, NULL, NULL),
+(306, 20, 39, 'ACEPTADO', 0, NULL, 24, NULL, NULL, NULL),
+(307, 20, 90, 'ACEPTADO', 0, 12, NULL, NULL, NULL, NULL),
+(308, 20, 84, 'ACEPTADO', 0, NULL, 25, NULL, NULL, NULL),
+(309, 20, 32, 'ACEPTADO', 0, NULL, 26, NULL, NULL, NULL),
+(310, 20, 82, 'ACEPTADO', 0, NULL, 27, NULL, NULL, '2022-07-09 00:07:33'),
+(311, 21, 90, 'ACEPTADO', 0, 13, NULL, NULL, NULL, NULL),
+(312, 21, 84, 'ACEPTADO', 0, NULL, 37, NULL, NULL, NULL),
+(313, 21, 32, 'ACEPTADO', 0, NULL, 38, NULL, NULL, NULL),
+(314, 21, 96, 'ACEPTADO', 0, NULL, 39, NULL, NULL, NULL),
+(315, 21, 27, 'ACEPTADO', 0, 14, NULL, NULL, NULL, NULL),
+(316, 21, 8, 'ACEPTADO', 0, NULL, 40, NULL, NULL, NULL),
+(317, 21, 84, 'ACEPTADO', 0, NULL, 41, NULL, NULL, NULL),
+(318, 21, 88, 'ACEPTADO', 0, NULL, 42, NULL, NULL, NULL),
+(319, 21, 14, 'ACEPTADO', 0, 15, NULL, NULL, NULL, NULL),
+(320, 21, 4, 'ACEPTADO', 0, NULL, 43, NULL, NULL, NULL),
+(321, 21, 35, 'ACEPTADO', 0, NULL, 43, NULL, NULL, NULL),
+(322, 21, 18, 'ACEPTADO', 0, NULL, 44, NULL, NULL, NULL),
+(323, 21, 39, 'ACEPTADO', 0, NULL, 44, NULL, NULL, NULL),
+(324, 21, 32, 'ACEPTADO', 0, NULL, 45, NULL, NULL, NULL),
+(325, 22, 90, 'ACEPTADO', 0, 16, NULL, NULL, NULL, NULL),
+(326, 22, 84, 'ACEPTADO', 0, NULL, 46, NULL, NULL, NULL),
+(327, 22, 32, 'ACEPTADO', 0, NULL, 47, NULL, NULL, NULL),
+(328, 22, 96, 'ACEPTADO', 0, NULL, 48, NULL, NULL, NULL),
+(329, 22, 27, 'ACEPTADO', 0, 17, NULL, NULL, NULL, NULL),
+(330, 22, 8, 'ACEPTADO', 0, NULL, 49, NULL, NULL, NULL),
+(331, 22, 84, 'ACEPTADO', 0, NULL, 50, NULL, NULL, NULL),
+(332, 22, 88, 'ACEPTADO', 0, NULL, 51, NULL, NULL, NULL),
+(333, 22, 14, 'ACEPTADO', 0, 18, NULL, NULL, NULL, NULL),
+(334, 22, 4, 'ACEPTADO', 0, NULL, 52, NULL, NULL, NULL),
+(335, 22, 35, 'ACEPTADO', 0, NULL, 52, NULL, NULL, NULL),
+(336, 22, 18, 'ACEPTADO', 0, NULL, 53, NULL, NULL, NULL),
+(337, 22, 39, 'ACEPTADO', 0, NULL, 53, NULL, NULL, NULL),
+(338, 22, 32, 'ACEPTADO', 0, NULL, 54, NULL, NULL, NULL),
+(339, 23, 90, 'ACEPTADO', 0, 19, NULL, NULL, NULL, NULL),
+(340, 23, 84, 'ACEPTADO', 0, NULL, 55, NULL, NULL, NULL),
+(341, 23, 32, 'ACEPTADO', 0, NULL, 56, NULL, NULL, NULL),
+(342, 23, 96, 'ACEPTADO', 0, NULL, 57, NULL, NULL, NULL),
+(343, 23, 27, 'ACEPTADO', 0, 20, NULL, NULL, NULL, NULL),
+(344, 23, 8, 'ACEPTADO', 0, NULL, 58, NULL, NULL, NULL),
+(345, 23, 84, 'ACEPTADO', 0, NULL, 59, NULL, NULL, NULL),
+(346, 23, 88, 'ACEPTADO', 0, NULL, 60, NULL, NULL, NULL),
+(347, 23, 14, 'ACEPTADO', 0, 21, NULL, NULL, NULL, NULL),
+(348, 23, 4, 'ACEPTADO', 0, NULL, 61, NULL, NULL, NULL),
+(349, 23, 35, 'ACEPTADO', 0, NULL, 61, NULL, NULL, NULL),
+(350, 23, 18, 'ACEPTADO', 0, NULL, 62, NULL, NULL, NULL),
+(351, 23, 39, 'ACEPTADO', 0, NULL, 62, NULL, NULL, NULL),
+(352, 23, 32, 'ACEPTADO', 0, NULL, 63, NULL, NULL, NULL),
+(353, 24, 90, 'ACEPTADO', 0, 22, NULL, NULL, NULL, NULL),
+(354, 24, 84, 'ACEPTADO', 0, NULL, 64, NULL, NULL, NULL),
+(355, 24, 32, 'ACEPTADO', 0, NULL, 65, NULL, NULL, NULL),
+(356, 24, 96, 'ACEPTADO', 0, NULL, 66, NULL, NULL, NULL),
+(357, 24, 27, 'ACEPTADO', 0, 23, NULL, NULL, NULL, NULL),
+(358, 24, 8, 'ACEPTADO', 0, NULL, 67, NULL, NULL, NULL),
+(359, 24, 84, 'ACEPTADO', 0, NULL, 68, NULL, NULL, NULL),
+(360, 24, 88, 'ACEPTADO', 0, NULL, 69, NULL, NULL, NULL),
+(361, 24, 14, 'ACEPTADO', 0, 24, NULL, NULL, NULL, NULL),
+(362, 24, 4, 'ACEPTADO', 0, NULL, 70, NULL, NULL, NULL),
+(363, 24, 35, 'ACEPTADO', 0, NULL, 70, NULL, NULL, NULL),
+(364, 24, 18, 'ACEPTADO', 0, NULL, 71, NULL, NULL, NULL),
+(365, 24, 39, 'ACEPTADO', 0, NULL, 71, NULL, NULL, NULL),
+(366, 24, 32, 'ACEPTADO', 0, NULL, 72, NULL, NULL, NULL),
+(367, 25, 10, 'ACEPTADO', 0, 25, NULL, NULL, NULL, NULL),
+(368, 25, 29, 'ACEPTADO', 0, 25, NULL, NULL, NULL, NULL),
+(369, 25, 9, 'ACEPTADO', 0, NULL, 73, NULL, NULL, NULL),
+(370, 25, 21, 'ACEPTADO', 0, NULL, 73, NULL, NULL, NULL),
+(371, 25, 22, 'ACEPTADO', 0, NULL, 73, NULL, NULL, NULL),
+(372, 25, 24, 'ACEPTADO', 0, NULL, 73, NULL, NULL, NULL),
+(373, 25, 32, 'ACEPTADO', 0, NULL, 74, NULL, NULL, NULL),
+(374, 25, 96, 'ACEPTADO', 0, NULL, 75, NULL, NULL, NULL),
+(375, 25, 85, 'ACEPTADO', 0, 26, NULL, NULL, NULL, NULL),
+(376, 25, 4, 'ACEPTADO', 0, NULL, 76, NULL, NULL, NULL),
+(377, 25, 35, 'ACEPTADO', 0, NULL, 76, NULL, NULL, NULL),
+(378, 25, 9, 'ACEPTADO', 0, NULL, 77, NULL, NULL, NULL),
+(379, 25, 21, 'ACEPTADO', 0, NULL, 77, NULL, NULL, NULL),
+(380, 25, 22, 'ACEPTADO', 0, NULL, 77, NULL, NULL, NULL),
+(381, 25, 24, 'ACEPTADO', 0, NULL, 77, NULL, NULL, NULL),
+(382, 25, 88, 'ACEPTADO', 0, NULL, 78, NULL, NULL, NULL),
+(383, 25, 25, 'ACEPTADO', 0, 27, NULL, NULL, NULL, NULL),
+(384, 25, 8, 'ACEPTADO', 0, NULL, 79, NULL, NULL, NULL),
+(385, 25, 33, 'ACEPTADO', 0, NULL, 80, NULL, NULL, NULL),
+(386, 25, 96, 'ACEPTADO', 0, NULL, 81, NULL, NULL, NULL),
+(387, 26, 10, 'ACEPTADO', 0, 28, NULL, NULL, NULL, NULL),
+(388, 26, 29, 'ACEPTADO', 0, 28, NULL, NULL, NULL, NULL),
+(389, 26, 9, 'ACEPTADO', 0, NULL, 82, NULL, NULL, NULL),
+(390, 26, 21, 'ACEPTADO', 0, NULL, 82, NULL, NULL, NULL),
+(391, 26, 22, 'ACEPTADO', 0, NULL, 82, NULL, NULL, NULL),
+(392, 26, 24, 'ACEPTADO', 0, NULL, 82, NULL, NULL, NULL),
+(393, 26, 32, 'ACEPTADO', 0, NULL, 83, NULL, NULL, NULL),
+(394, 26, 96, 'ACEPTADO', 0, NULL, 84, NULL, NULL, NULL),
+(395, 26, 85, 'ACEPTADO', 0, 29, NULL, NULL, NULL, NULL),
+(396, 26, 4, 'ACEPTADO', 0, NULL, 85, NULL, NULL, NULL),
+(397, 26, 35, 'ACEPTADO', 0, NULL, 85, NULL, NULL, NULL),
+(398, 26, 9, 'ACEPTADO', 0, NULL, 86, NULL, NULL, NULL),
+(399, 26, 21, 'ACEPTADO', 0, NULL, 86, NULL, NULL, NULL),
+(400, 26, 22, 'ACEPTADO', 0, NULL, 86, NULL, NULL, NULL),
+(401, 26, 24, 'ACEPTADO', 0, NULL, 86, NULL, NULL, NULL),
+(402, 26, 88, 'ACEPTADO', 0, NULL, 87, NULL, NULL, NULL),
+(403, 26, 25, 'ACEPTADO', 0, 30, NULL, NULL, NULL, NULL),
+(404, 26, 8, 'ACEPTADO', 0, NULL, 88, NULL, NULL, NULL),
+(405, 26, 33, 'ACEPTADO', 0, NULL, 89, NULL, NULL, NULL),
+(406, 26, 96, 'ACEPTADO', 0, NULL, 90, NULL, NULL, NULL),
+(407, 27, 10, 'ACEPTADO', 0, 31, NULL, NULL, NULL, NULL),
+(408, 27, 29, 'ACEPTADO', 0, 31, NULL, NULL, NULL, NULL),
+(409, 27, 9, 'ACEPTADO', 0, NULL, 91, NULL, NULL, NULL),
+(410, 27, 21, 'ACEPTADO', 0, NULL, 91, NULL, NULL, NULL),
+(411, 27, 22, 'ACEPTADO', 0, NULL, 91, NULL, NULL, NULL),
+(412, 27, 24, 'ACEPTADO', 0, NULL, 91, NULL, NULL, NULL),
+(413, 27, 32, 'ACEPTADO', 0, NULL, 92, NULL, NULL, NULL),
+(414, 27, 96, 'ACEPTADO', 0, NULL, 93, NULL, NULL, NULL),
+(415, 27, 85, 'ACEPTADO', 0, 32, NULL, NULL, NULL, NULL),
+(416, 27, 4, 'ACEPTADO', 0, NULL, 94, NULL, NULL, NULL),
+(417, 27, 35, 'ACEPTADO', 0, NULL, 94, NULL, NULL, NULL),
+(418, 27, 9, 'ACEPTADO', 0, NULL, 95, NULL, NULL, NULL),
+(419, 27, 21, 'ACEPTADO', 0, NULL, 95, NULL, NULL, NULL),
+(420, 27, 22, 'ACEPTADO', 0, NULL, 95, NULL, NULL, NULL),
+(421, 27, 24, 'ACEPTADO', 0, NULL, 95, NULL, NULL, NULL),
+(422, 27, 88, 'ACEPTADO', 0, NULL, 96, NULL, NULL, NULL),
+(423, 27, 25, 'ACEPTADO', 0, 33, NULL, NULL, NULL, NULL),
+(424, 27, 8, 'ACEPTADO', 0, NULL, 97, NULL, NULL, NULL),
+(425, 27, 33, 'ACEPTADO', 0, NULL, 98, NULL, NULL, NULL),
+(426, 27, 96, 'ACEPTADO', 0, NULL, 99, NULL, NULL, NULL),
+(427, 28, 10, 'ACEPTADO', 0, 34, NULL, NULL, NULL, NULL),
+(428, 28, 29, 'ACEPTADO', 0, 34, NULL, NULL, NULL, NULL),
+(429, 28, 9, 'ACEPTADO', 0, NULL, 100, NULL, NULL, NULL),
+(430, 28, 21, 'ACEPTADO', 0, NULL, 100, NULL, NULL, NULL),
+(431, 28, 22, 'ACEPTADO', 0, NULL, 100, NULL, NULL, NULL),
+(432, 28, 24, 'ACEPTADO', 0, NULL, 100, NULL, NULL, NULL),
+(433, 28, 32, 'ACEPTADO', 0, NULL, 101, NULL, NULL, NULL),
+(434, 28, 96, 'ACEPTADO', 0, NULL, 102, NULL, NULL, NULL),
+(435, 28, 85, 'ACEPTADO', 0, 35, NULL, NULL, NULL, NULL),
+(436, 28, 4, 'ACEPTADO', 0, NULL, 103, NULL, NULL, NULL),
+(437, 28, 35, 'ACEPTADO', 0, NULL, 103, NULL, NULL, NULL),
+(438, 28, 9, 'ACEPTADO', 0, NULL, 104, NULL, NULL, NULL),
+(439, 28, 21, 'ACEPTADO', 0, NULL, 104, NULL, NULL, NULL),
+(440, 28, 22, 'ACEPTADO', 0, NULL, 104, NULL, NULL, NULL),
+(441, 28, 24, 'ACEPTADO', 0, NULL, 104, NULL, NULL, NULL),
+(442, 28, 88, 'ACEPTADO', 0, NULL, 105, NULL, NULL, NULL),
+(443, 28, 25, 'ACEPTADO', 0, 36, NULL, NULL, NULL, NULL),
+(444, 28, 8, 'ACEPTADO', 0, NULL, 106, NULL, NULL, NULL),
+(445, 28, 33, 'ACEPTADO', 0, NULL, 107, NULL, NULL, NULL),
+(446, 28, 96, 'ACEPTADO', 0, NULL, 108, NULL, NULL, NULL),
+(447, 29, 95, 'ACEPTADO', 0, 37, NULL, NULL, NULL, NULL),
+(448, 29, 4, 'ACEPTADO', 0, NULL, 109, NULL, NULL, NULL),
+(449, 29, 35, 'ACEPTADO', 0, NULL, 109, NULL, NULL, NULL),
+(450, 29, 88, 'ACEPTADO', 0, NULL, 110, NULL, NULL, NULL),
+(451, 29, 96, 'ACEPTADO', 0, NULL, 111, NULL, NULL, NULL),
+(452, 29, 94, 'ACEPTADO', 0, 38, NULL, NULL, NULL, NULL),
+(453, 29, 87, 'ACEPTADO', 0, NULL, 112, NULL, NULL, NULL),
+(454, 29, 38, 'ACEPTADO', 0, NULL, 113, NULL, NULL, NULL),
+(455, 29, 96, 'ACEPTADO', 0, NULL, 114, NULL, NULL, NULL),
+(456, 29, 14, 'ACEPTADO', 0, 39, NULL, NULL, NULL, NULL),
+(457, 29, 4, 'ACEPTADO', 0, NULL, 115, NULL, NULL, NULL),
+(458, 29, 35, 'ACEPTADO', 0, NULL, 115, NULL, NULL, NULL),
+(459, 29, 18, 'ACEPTADO', 0, NULL, 116, NULL, NULL, NULL),
+(460, 29, 39, 'ACEPTADO', 0, NULL, 116, NULL, NULL, NULL),
+(461, 29, 32, 'ACEPTADO', 0, NULL, 117, NULL, NULL, NULL),
+(462, 30, 95, 'ACEPTADO', 0, 40, NULL, NULL, NULL, NULL),
+(463, 30, 4, 'ACEPTADO', 0, NULL, 118, NULL, NULL, NULL),
+(464, 30, 35, 'ACEPTADO', 0, NULL, 118, NULL, NULL, NULL),
+(465, 30, 88, 'ACEPTADO', 0, NULL, 119, NULL, NULL, NULL),
+(466, 30, 96, 'ACEPTADO', 0, NULL, 120, NULL, NULL, NULL),
+(467, 30, 94, 'ACEPTADO', 0, 41, NULL, NULL, NULL, NULL),
+(468, 30, 87, 'ACEPTADO', 0, NULL, 121, NULL, NULL, NULL),
+(469, 30, 38, 'ACEPTADO', 0, NULL, 122, NULL, NULL, NULL),
+(470, 30, 96, 'ACEPTADO', 0, NULL, 123, NULL, NULL, NULL),
+(471, 30, 14, 'ACEPTADO', 0, 42, NULL, NULL, NULL, NULL),
+(472, 30, 4, 'ACEPTADO', 0, NULL, 124, NULL, NULL, NULL),
+(473, 30, 35, 'ACEPTADO', 0, NULL, 124, NULL, NULL, NULL),
+(474, 30, 18, 'ACEPTADO', 0, NULL, 125, NULL, NULL, NULL),
+(475, 30, 39, 'ACEPTADO', 0, NULL, 125, NULL, NULL, NULL),
+(476, 30, 32, 'ACEPTADO', 0, NULL, 126, NULL, NULL, NULL),
+(477, 31, 95, 'ACEPTADO', 0, 43, NULL, NULL, NULL, NULL),
+(478, 31, 4, 'ACEPTADO', 0, NULL, 127, NULL, NULL, NULL),
+(479, 31, 35, 'ACEPTADO', 0, NULL, 127, NULL, NULL, NULL),
+(480, 31, 88, 'ACEPTADO', 0, NULL, 128, NULL, NULL, NULL),
+(481, 31, 96, 'ACEPTADO', 0, NULL, 129, NULL, NULL, NULL),
+(482, 31, 94, 'ACEPTADO', 0, 44, NULL, NULL, NULL, NULL),
+(483, 31, 87, 'ACEPTADO', 0, NULL, 130, NULL, NULL, NULL),
+(484, 31, 38, 'ACEPTADO', 0, NULL, 131, NULL, NULL, NULL),
+(485, 31, 96, 'ACEPTADO', 0, NULL, 132, NULL, NULL, NULL),
+(486, 31, 14, 'ACEPTADO', 0, 45, NULL, NULL, NULL, NULL),
+(487, 31, 4, 'ACEPTADO', 0, NULL, 133, NULL, NULL, NULL),
+(488, 31, 35, 'ACEPTADO', 0, NULL, 133, NULL, NULL, NULL),
+(489, 31, 18, 'ACEPTADO', 0, NULL, 134, NULL, NULL, NULL),
+(490, 31, 39, 'ACEPTADO', 0, NULL, 134, NULL, NULL, NULL),
+(491, 31, 32, 'ACEPTADO', 0, NULL, 135, NULL, NULL, NULL),
+(492, 32, 95, 'ACEPTADO', 0, 46, NULL, NULL, NULL, NULL),
+(493, 32, 4, 'ACEPTADO', 0, NULL, 136, NULL, NULL, NULL),
+(494, 32, 35, 'ACEPTADO', 0, NULL, 136, NULL, NULL, NULL),
+(495, 32, 88, 'ACEPTADO', 0, NULL, 137, NULL, NULL, NULL),
+(496, 32, 96, 'ACEPTADO', 0, NULL, 138, NULL, NULL, NULL),
+(497, 32, 94, 'ACEPTADO', 0, 47, NULL, NULL, NULL, NULL),
+(498, 32, 87, 'ACEPTADO', 0, NULL, 139, NULL, NULL, NULL),
+(499, 32, 38, 'ACEPTADO', 0, NULL, 140, NULL, NULL, NULL),
+(500, 32, 96, 'ACEPTADO', 0, NULL, 141, NULL, NULL, NULL),
+(501, 32, 14, 'ACEPTADO', 0, 48, NULL, NULL, NULL, NULL),
+(502, 32, 4, 'ACEPTADO', 0, NULL, 142, NULL, NULL, NULL),
+(503, 32, 35, 'ACEPTADO', 0, NULL, 142, NULL, NULL, NULL),
+(504, 32, 18, 'ACEPTADO', 0, NULL, 143, NULL, NULL, NULL),
+(505, 32, 39, 'ACEPTADO', 0, NULL, 143, NULL, NULL, NULL),
+(506, 32, 32, 'ACEPTADO', 0, NULL, 144, NULL, NULL, NULL);
 
 --
 -- Disparadores `work_order_details`
@@ -3735,6 +3828,456 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `work_order_required_materials`
+--
+
+CREATE TABLE `work_order_required_materials` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `work_order_id` bigint(20) UNSIGNED NOT NULL,
+  `item_id` bigint(20) UNSIGNED NOT NULL,
+  `quantity` decimal(8,2) NOT NULL DEFAULT 1.00,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `work_order_required_materials`
+--
+
+INSERT INTO `work_order_required_materials` (`id`, `work_order_id`, `item_id`, `quantity`, `created_at`, `updated_at`) VALUES
+(218, 17, 1, '1.00', '2022-07-08 19:01:58', '2022-07-08 19:01:58'),
+(219, 17, 5, '1.00', '2022-07-08 19:01:58', '2022-07-08 19:01:58'),
+(220, 17, 7, '1.00', '2022-07-08 19:01:58', '2022-07-08 19:01:58'),
+(221, 17, 7, '1.00', '2022-07-08 19:01:58', '2022-07-08 19:01:58'),
+(222, 17, 1, '1.00', '2022-07-08 19:01:58', '2022-07-08 19:01:58'),
+(223, 17, 5, '1.00', '2022-07-08 19:01:58', '2022-07-08 19:01:58'),
+(224, 17, 7, '1.00', '2022-07-08 19:01:59', '2022-07-08 19:01:59'),
+(225, 17, 7, '1.00', '2022-07-08 19:01:59', '2022-07-08 19:01:59'),
+(226, 17, 3, '1.00', '2022-07-08 19:01:59', '2022-07-08 19:01:59'),
+(227, 17, 24, '1.00', '2022-07-08 19:01:59', '2022-07-08 19:01:59'),
+(228, 17, 57, '1.00', '2022-07-08 19:01:59', '2022-07-08 19:01:59'),
+(229, 17, 57, '1.00', '2022-07-08 19:01:59', '2022-07-08 19:01:59'),
+(230, 17, 22, '1.00', '2022-07-08 19:01:59', '2022-07-08 19:01:59'),
+(231, 17, 16, '1.00', '2022-07-08 19:02:00', '2022-07-08 19:02:00'),
+(232, 17, 12, '1.00', '2022-07-08 19:02:00', '2022-07-08 19:02:00'),
+(233, 17, 12, '1.00', '2022-07-08 19:02:00', '2022-07-08 19:02:00'),
+(234, 17, 6, '1.00', '2022-07-08 19:02:00', '2022-07-08 19:02:00'),
+(235, 17, 8, '1.00', '2022-07-08 19:02:00', '2022-07-08 19:02:00'),
+(236, 17, 8, '1.00', '2022-07-08 19:02:00', '2022-07-08 19:02:00'),
+(237, 17, 11, '1.00', '2022-07-08 19:02:00', '2022-07-08 19:02:00'),
+(238, 17, 12, '1.00', '2022-07-08 19:02:00', '2022-07-08 19:02:00'),
+(239, 17, 12, '1.00', '2022-07-08 19:02:00', '2022-07-08 19:02:00'),
+(240, 17, 11, '1.00', '2022-07-08 19:02:00', '2022-07-08 19:02:00'),
+(241, 17, 12, '1.00', '2022-07-08 19:02:00', '2022-07-08 19:02:00'),
+(242, 17, 12, '1.00', '2022-07-08 19:02:00', '2022-07-08 19:02:00'),
+(243, 17, 31, '1.00', '2022-07-08 19:02:00', '2022-07-08 19:02:00'),
+(244, 17, 41, '1.00', '2022-07-08 19:02:01', '2022-07-08 19:02:01'),
+(245, 17, 49, '1.00', '2022-07-08 19:02:01', '2022-07-08 19:02:01'),
+(246, 17, 50, '1.00', '2022-07-08 19:02:01', '2022-07-08 19:02:01'),
+(247, 17, 50, '1.00', '2022-07-08 19:02:01', '2022-07-08 19:02:01'),
+(248, 17, 31, '1.00', '2022-07-08 19:02:01', '2022-07-08 19:02:01'),
+(249, 17, 41, '1.00', '2022-07-08 19:02:01', '2022-07-08 19:02:01'),
+(250, 17, 49, '1.00', '2022-07-08 19:02:01', '2022-07-08 19:02:01'),
+(251, 17, 50, '1.00', '2022-07-08 19:02:01', '2022-07-08 19:02:01'),
+(252, 17, 50, '1.00', '2022-07-08 19:02:01', '2022-07-08 19:02:01'),
+(253, 17, 21, '1.00', '2022-07-08 19:02:01', '2022-07-08 19:02:01'),
+(254, 17, 44, '1.00', '2022-07-08 19:02:01', '2022-07-08 19:02:01'),
+(255, 17, 44, '1.00', '2022-07-08 19:02:01', '2022-07-08 19:02:01'),
+(256, 17, 28, '1.00', '2022-07-08 19:02:01', '2022-07-08 19:02:01'),
+(257, 17, 30, '1.00', '2022-07-08 19:02:01', '2022-07-08 19:02:01'),
+(258, 17, 30, '1.00', '2022-07-08 19:02:02', '2022-07-08 19:02:02'),
+(259, 17, 28, '1.00', '2022-07-08 19:02:02', '2022-07-08 19:02:02'),
+(260, 17, 30, '1.00', '2022-07-08 19:02:02', '2022-07-08 19:02:02'),
+(261, 17, 30, '1.00', '2022-07-08 19:02:02', '2022-07-08 19:02:02'),
+(262, 17, 31, '1.00', '2022-07-08 19:02:02', '2022-07-08 19:02:02'),
+(263, 17, 41, '1.00', '2022-07-08 19:02:02', '2022-07-08 19:02:02'),
+(264, 17, 49, '1.00', '2022-07-08 19:02:02', '2022-07-08 19:02:02'),
+(265, 17, 50, '1.00', '2022-07-08 19:02:02', '2022-07-08 19:02:02'),
+(266, 17, 50, '1.00', '2022-07-08 19:02:02', '2022-07-08 19:02:02'),
+(267, 17, 31, '1.00', '2022-07-08 19:02:02', '2022-07-08 19:02:02'),
+(268, 17, 41, '1.00', '2022-07-08 19:02:02', '2022-07-08 19:02:02'),
+(269, 17, 49, '1.00', '2022-07-08 19:02:02', '2022-07-08 19:02:02'),
+(270, 17, 50, '1.00', '2022-07-08 19:02:02', '2022-07-08 19:02:02'),
+(271, 17, 50, '1.00', '2022-07-08 19:02:02', '2022-07-08 19:02:02'),
+(272, 17, 57, '1.00', '2022-07-08 19:02:03', '2022-07-08 19:02:03'),
+(273, 17, 57, '1.00', '2022-07-08 19:02:03', '2022-07-08 19:02:03'),
+(274, 17, 28, '1.00', '2022-07-08 19:02:03', '2022-07-08 19:02:03'),
+(275, 17, 30, '1.00', '2022-07-08 19:02:03', '2022-07-08 19:02:03'),
+(276, 17, 30, '1.00', '2022-07-08 19:02:03', '2022-07-08 19:02:03'),
+(277, 17, 28, '1.00', '2022-07-08 19:02:03', '2022-07-08 19:02:03'),
+(278, 17, 30, '1.00', '2022-07-08 19:02:03', '2022-07-08 19:02:03'),
+(279, 17, 30, '1.00', '2022-07-08 19:02:03', '2022-07-08 19:02:03'),
+(280, 17, 31, '1.00', '2022-07-08 19:02:03', '2022-07-08 19:02:03'),
+(281, 17, 41, '1.00', '2022-07-08 19:02:03', '2022-07-08 19:02:03'),
+(282, 17, 49, '1.00', '2022-07-08 19:02:03', '2022-07-08 19:02:03'),
+(283, 17, 50, '1.00', '2022-07-08 19:02:03', '2022-07-08 19:02:03'),
+(284, 17, 50, '1.00', '2022-07-08 19:02:03', '2022-07-08 19:02:03'),
+(285, 17, 31, '1.00', '2022-07-08 19:02:03', '2022-07-08 19:02:03'),
+(286, 17, 41, '1.00', '2022-07-08 19:02:03', '2022-07-08 19:02:03'),
+(287, 17, 49, '1.00', '2022-07-08 19:02:04', '2022-07-08 19:02:04'),
+(288, 17, 50, '1.00', '2022-07-08 19:02:04', '2022-07-08 19:02:04'),
+(289, 17, 50, '1.00', '2022-07-08 19:02:04', '2022-07-08 19:02:04'),
+(290, 17, 57, '1.00', '2022-07-08 19:02:04', '2022-07-08 19:02:04'),
+(291, 17, 57, '1.00', '2022-07-08 19:02:04', '2022-07-08 19:02:04'),
+(292, 18, 1, '1.00', '2022-07-08 19:02:04', '2022-07-08 19:02:04'),
+(293, 18, 5, '1.00', '2022-07-08 19:02:04', '2022-07-08 19:02:04'),
+(294, 18, 7, '1.00', '2022-07-08 19:02:04', '2022-07-08 19:02:04'),
+(295, 18, 7, '1.00', '2022-07-08 19:02:04', '2022-07-08 19:02:04'),
+(296, 18, 1, '1.00', '2022-07-08 19:02:04', '2022-07-08 19:02:04'),
+(297, 18, 5, '1.00', '2022-07-08 19:02:04', '2022-07-08 19:02:04'),
+(298, 18, 7, '1.00', '2022-07-08 19:02:04', '2022-07-08 19:02:04'),
+(299, 18, 7, '1.00', '2022-07-08 19:02:04', '2022-07-08 19:02:04'),
+(300, 18, 3, '1.00', '2022-07-08 19:02:05', '2022-07-08 19:02:05'),
+(301, 18, 24, '1.00', '2022-07-08 19:02:05', '2022-07-08 19:02:05'),
+(302, 18, 57, '1.00', '2022-07-08 19:02:05', '2022-07-08 19:02:05'),
+(303, 18, 57, '1.00', '2022-07-08 19:02:05', '2022-07-08 19:02:05'),
+(304, 18, 22, '1.00', '2022-07-08 19:02:05', '2022-07-08 19:02:05'),
+(305, 18, 16, '1.00', '2022-07-08 19:02:05', '2022-07-08 19:02:05'),
+(306, 18, 12, '1.00', '2022-07-08 19:02:05', '2022-07-08 19:02:05'),
+(307, 18, 12, '1.00', '2022-07-08 19:02:05', '2022-07-08 19:02:05'),
+(308, 18, 6, '1.00', '2022-07-08 19:02:06', '2022-07-08 19:02:06'),
+(309, 18, 8, '1.00', '2022-07-08 19:02:06', '2022-07-08 19:02:06'),
+(310, 18, 8, '1.00', '2022-07-08 19:02:06', '2022-07-08 19:02:06'),
+(311, 18, 11, '1.00', '2022-07-08 19:02:06', '2022-07-08 19:02:06'),
+(312, 18, 12, '1.00', '2022-07-08 19:02:06', '2022-07-08 19:02:06'),
+(313, 18, 12, '1.00', '2022-07-08 19:02:06', '2022-07-08 19:02:06'),
+(314, 18, 11, '1.00', '2022-07-08 19:02:06', '2022-07-08 19:02:06'),
+(315, 18, 12, '1.00', '2022-07-08 19:02:06', '2022-07-08 19:02:06'),
+(316, 18, 12, '1.00', '2022-07-08 19:02:06', '2022-07-08 19:02:06'),
+(317, 18, 31, '1.00', '2022-07-08 19:02:06', '2022-07-08 19:02:06'),
+(318, 18, 41, '1.00', '2022-07-08 19:02:07', '2022-07-08 19:02:07'),
+(319, 18, 49, '1.00', '2022-07-08 19:02:07', '2022-07-08 19:02:07'),
+(320, 18, 50, '1.00', '2022-07-08 19:02:07', '2022-07-08 19:02:07'),
+(321, 18, 50, '1.00', '2022-07-08 19:02:07', '2022-07-08 19:02:07'),
+(322, 18, 31, '1.00', '2022-07-08 19:02:07', '2022-07-08 19:02:07'),
+(323, 18, 41, '1.00', '2022-07-08 19:02:07', '2022-07-08 19:02:07'),
+(324, 18, 49, '1.00', '2022-07-08 19:02:07', '2022-07-08 19:02:07'),
+(325, 18, 50, '1.00', '2022-07-08 19:02:07', '2022-07-08 19:02:07'),
+(326, 18, 50, '1.00', '2022-07-08 19:02:07', '2022-07-08 19:02:07'),
+(327, 18, 21, '1.00', '2022-07-08 19:02:07', '2022-07-08 19:02:07'),
+(328, 18, 44, '1.00', '2022-07-08 19:02:07', '2022-07-08 19:02:07'),
+(329, 18, 44, '1.00', '2022-07-08 19:02:07', '2022-07-08 19:02:07'),
+(330, 18, 28, '1.00', '2022-07-08 19:02:08', '2022-07-08 19:02:08'),
+(331, 18, 30, '1.00', '2022-07-08 19:02:08', '2022-07-08 19:02:08'),
+(332, 18, 30, '1.00', '2022-07-08 19:02:08', '2022-07-08 19:02:08'),
+(333, 18, 28, '1.00', '2022-07-08 19:02:08', '2022-07-08 19:02:08'),
+(334, 18, 30, '1.00', '2022-07-08 19:02:08', '2022-07-08 19:02:08'),
+(335, 18, 30, '1.00', '2022-07-08 19:02:08', '2022-07-08 19:02:08'),
+(336, 18, 31, '1.00', '2022-07-08 19:02:08', '2022-07-08 19:02:08'),
+(337, 18, 41, '1.00', '2022-07-08 19:02:08', '2022-07-08 19:02:08'),
+(338, 18, 49, '1.00', '2022-07-08 19:02:08', '2022-07-08 19:02:08'),
+(339, 18, 50, '1.00', '2022-07-08 19:02:08', '2022-07-08 19:02:08'),
+(340, 18, 50, '1.00', '2022-07-08 19:02:08', '2022-07-08 19:02:08'),
+(341, 18, 31, '1.00', '2022-07-08 19:02:08', '2022-07-08 19:02:08'),
+(342, 18, 41, '1.00', '2022-07-08 19:02:08', '2022-07-08 19:02:08'),
+(343, 18, 49, '1.00', '2022-07-08 19:02:08', '2022-07-08 19:02:08'),
+(344, 18, 50, '1.00', '2022-07-08 19:02:09', '2022-07-08 19:02:09'),
+(345, 18, 50, '1.00', '2022-07-08 19:02:09', '2022-07-08 19:02:09'),
+(346, 18, 57, '1.00', '2022-07-08 19:02:09', '2022-07-08 19:02:09'),
+(347, 18, 57, '1.00', '2022-07-08 19:02:09', '2022-07-08 19:02:09'),
+(348, 18, 28, '1.00', '2022-07-08 19:02:09', '2022-07-08 19:02:09'),
+(349, 18, 30, '1.00', '2022-07-08 19:02:09', '2022-07-08 19:02:09'),
+(350, 18, 30, '1.00', '2022-07-08 19:02:09', '2022-07-08 19:02:09'),
+(351, 18, 28, '1.00', '2022-07-08 19:02:09', '2022-07-08 19:02:09'),
+(352, 18, 30, '1.00', '2022-07-08 19:02:09', '2022-07-08 19:02:09'),
+(353, 18, 30, '1.00', '2022-07-08 19:02:09', '2022-07-08 19:02:09'),
+(354, 18, 31, '1.00', '2022-07-08 19:02:09', '2022-07-08 19:02:09'),
+(355, 18, 41, '1.00', '2022-07-08 19:02:09', '2022-07-08 19:02:09'),
+(356, 18, 49, '1.00', '2022-07-08 19:02:09', '2022-07-08 19:02:09'),
+(357, 18, 50, '1.00', '2022-07-08 19:02:10', '2022-07-08 19:02:10'),
+(358, 18, 50, '1.00', '2022-07-08 19:02:10', '2022-07-08 19:02:10'),
+(359, 18, 31, '1.00', '2022-07-08 19:02:10', '2022-07-08 19:02:10'),
+(360, 18, 41, '1.00', '2022-07-08 19:02:10', '2022-07-08 19:02:10'),
+(361, 18, 49, '1.00', '2022-07-08 19:02:10', '2022-07-08 19:02:10'),
+(362, 18, 50, '1.00', '2022-07-08 19:02:10', '2022-07-08 19:02:10'),
+(363, 18, 50, '1.00', '2022-07-08 19:02:10', '2022-07-08 19:02:10'),
+(364, 18, 57, '1.00', '2022-07-08 19:02:10', '2022-07-08 19:02:10'),
+(365, 18, 57, '1.00', '2022-07-08 19:02:10', '2022-07-08 19:02:10'),
+(366, 19, 1, '1.00', '2022-07-08 19:02:10', '2022-07-08 19:02:10'),
+(367, 19, 5, '1.00', '2022-07-08 19:02:11', '2022-07-08 19:02:11'),
+(368, 19, 7, '1.00', '2022-07-08 19:02:11', '2022-07-08 19:02:11'),
+(369, 19, 7, '1.00', '2022-07-08 19:02:11', '2022-07-08 19:02:11'),
+(370, 19, 1, '1.00', '2022-07-08 19:02:11', '2022-07-08 19:02:11'),
+(371, 19, 5, '1.00', '2022-07-08 19:02:11', '2022-07-08 19:02:11'),
+(372, 19, 7, '1.00', '2022-07-08 19:02:11', '2022-07-08 19:02:11'),
+(373, 19, 7, '1.00', '2022-07-08 19:02:11', '2022-07-08 19:02:11'),
+(374, 19, 3, '1.00', '2022-07-08 19:02:11', '2022-07-08 19:02:11'),
+(375, 19, 24, '1.00', '2022-07-08 19:02:11', '2022-07-08 19:02:11'),
+(376, 19, 57, '1.00', '2022-07-08 19:02:11', '2022-07-08 19:02:11'),
+(377, 19, 57, '1.00', '2022-07-08 19:02:12', '2022-07-08 19:02:12'),
+(378, 19, 22, '1.00', '2022-07-08 19:02:12', '2022-07-08 19:02:12'),
+(379, 19, 16, '1.00', '2022-07-08 19:02:12', '2022-07-08 19:02:12'),
+(380, 19, 12, '1.00', '2022-07-08 19:02:12', '2022-07-08 19:02:12'),
+(381, 19, 12, '1.00', '2022-07-08 19:02:12', '2022-07-08 19:02:12'),
+(382, 19, 6, '1.00', '2022-07-08 19:02:12', '2022-07-08 19:02:12'),
+(383, 19, 8, '1.00', '2022-07-08 19:02:12', '2022-07-08 19:02:12'),
+(384, 19, 8, '1.00', '2022-07-08 19:02:12', '2022-07-08 19:02:12'),
+(385, 19, 11, '1.00', '2022-07-08 19:02:13', '2022-07-08 19:02:13'),
+(386, 19, 12, '1.00', '2022-07-08 19:02:13', '2022-07-08 19:02:13'),
+(387, 19, 12, '1.00', '2022-07-08 19:02:13', '2022-07-08 19:02:13'),
+(388, 19, 11, '1.00', '2022-07-08 19:02:13', '2022-07-08 19:02:13'),
+(389, 19, 12, '1.00', '2022-07-08 19:02:13', '2022-07-08 19:02:13'),
+(390, 19, 12, '1.00', '2022-07-08 19:02:13', '2022-07-08 19:02:13'),
+(391, 19, 31, '1.00', '2022-07-08 19:02:13', '2022-07-08 19:02:13'),
+(392, 19, 41, '1.00', '2022-07-08 19:02:13', '2022-07-08 19:02:13'),
+(393, 19, 49, '1.00', '2022-07-08 19:02:13', '2022-07-08 19:02:13'),
+(394, 19, 50, '1.00', '2022-07-08 19:02:14', '2022-07-08 19:02:14'),
+(395, 19, 50, '1.00', '2022-07-08 19:02:14', '2022-07-08 19:02:14'),
+(396, 19, 31, '1.00', '2022-07-08 19:02:14', '2022-07-08 19:02:14'),
+(397, 19, 41, '1.00', '2022-07-08 19:02:14', '2022-07-08 19:02:14'),
+(398, 19, 49, '1.00', '2022-07-08 19:02:14', '2022-07-08 19:02:14'),
+(399, 19, 50, '1.00', '2022-07-08 19:02:14', '2022-07-08 19:02:14'),
+(400, 19, 50, '1.00', '2022-07-08 19:02:14', '2022-07-08 19:02:14'),
+(401, 19, 21, '1.00', '2022-07-08 19:02:14', '2022-07-08 19:02:14'),
+(402, 19, 44, '1.00', '2022-07-08 19:02:14', '2022-07-08 19:02:14'),
+(403, 19, 44, '1.00', '2022-07-08 19:02:14', '2022-07-08 19:02:14'),
+(404, 19, 28, '1.00', '2022-07-08 19:02:15', '2022-07-08 19:02:15'),
+(405, 19, 30, '1.00', '2022-07-08 19:02:15', '2022-07-08 19:02:15'),
+(406, 19, 30, '1.00', '2022-07-08 19:02:15', '2022-07-08 19:02:15'),
+(407, 19, 28, '1.00', '2022-07-08 19:02:15', '2022-07-08 19:02:15'),
+(408, 19, 30, '1.00', '2022-07-08 19:02:15', '2022-07-08 19:02:15'),
+(409, 19, 30, '1.00', '2022-07-08 19:02:15', '2022-07-08 19:02:15'),
+(410, 19, 31, '1.00', '2022-07-08 19:02:15', '2022-07-08 19:02:15'),
+(411, 19, 41, '1.00', '2022-07-08 19:02:15', '2022-07-08 19:02:15'),
+(412, 19, 49, '1.00', '2022-07-08 19:02:15', '2022-07-08 19:02:15'),
+(413, 19, 50, '1.00', '2022-07-08 19:02:16', '2022-07-08 19:02:16'),
+(414, 19, 50, '1.00', '2022-07-08 19:02:16', '2022-07-08 19:02:16'),
+(415, 19, 31, '1.00', '2022-07-08 19:02:16', '2022-07-08 19:02:16'),
+(416, 19, 41, '1.00', '2022-07-08 19:02:16', '2022-07-08 19:02:16'),
+(417, 19, 49, '1.00', '2022-07-08 19:02:16', '2022-07-08 19:02:16'),
+(418, 19, 50, '1.00', '2022-07-08 19:02:16', '2022-07-08 19:02:16'),
+(419, 19, 50, '1.00', '2022-07-08 19:02:16', '2022-07-08 19:02:16'),
+(420, 19, 57, '1.00', '2022-07-08 19:02:16', '2022-07-08 19:02:16'),
+(421, 19, 57, '1.00', '2022-07-08 19:02:16', '2022-07-08 19:02:16'),
+(422, 19, 28, '1.00', '2022-07-08 19:02:16', '2022-07-08 19:02:16'),
+(423, 19, 30, '1.00', '2022-07-08 19:02:16', '2022-07-08 19:02:16'),
+(424, 19, 30, '1.00', '2022-07-08 19:02:16', '2022-07-08 19:02:16'),
+(425, 19, 28, '1.00', '2022-07-08 19:02:16', '2022-07-08 19:02:16'),
+(426, 19, 30, '1.00', '2022-07-08 19:02:17', '2022-07-08 19:02:17'),
+(427, 19, 30, '1.00', '2022-07-08 19:02:17', '2022-07-08 19:02:17'),
+(428, 19, 31, '1.00', '2022-07-08 19:02:17', '2022-07-08 19:02:17'),
+(429, 19, 41, '1.00', '2022-07-08 19:02:17', '2022-07-08 19:02:17'),
+(430, 19, 49, '1.00', '2022-07-08 19:02:17', '2022-07-08 19:02:17'),
+(431, 19, 50, '1.00', '2022-07-08 19:02:17', '2022-07-08 19:02:17'),
+(432, 19, 50, '1.00', '2022-07-08 19:02:17', '2022-07-08 19:02:17'),
+(433, 19, 31, '1.00', '2022-07-08 19:02:17', '2022-07-08 19:02:17'),
+(434, 19, 41, '1.00', '2022-07-08 19:02:17', '2022-07-08 19:02:17'),
+(435, 19, 49, '1.00', '2022-07-08 19:02:17', '2022-07-08 19:02:17'),
+(436, 19, 50, '1.00', '2022-07-08 19:02:17', '2022-07-08 19:02:17'),
+(437, 19, 50, '1.00', '2022-07-08 19:02:17', '2022-07-08 19:02:17'),
+(438, 19, 57, '1.00', '2022-07-08 19:02:17', '2022-07-08 19:02:17'),
+(439, 19, 57, '1.00', '2022-07-08 19:02:17', '2022-07-08 19:02:17'),
+(440, 20, 1, '1.00', '2022-07-08 19:02:17', '2022-07-08 19:02:17'),
+(441, 20, 5, '1.00', '2022-07-08 19:02:18', '2022-07-08 19:02:18'),
+(442, 20, 7, '1.00', '2022-07-08 19:02:18', '2022-07-08 19:02:18'),
+(443, 20, 7, '1.00', '2022-07-08 19:02:18', '2022-07-08 19:02:18'),
+(444, 20, 1, '1.00', '2022-07-08 19:02:18', '2022-07-08 19:02:18'),
+(445, 20, 5, '1.00', '2022-07-08 19:02:18', '2022-07-08 19:02:18'),
+(446, 20, 7, '1.00', '2022-07-08 19:02:18', '2022-07-08 19:02:18'),
+(447, 20, 7, '1.00', '2022-07-08 19:02:18', '2022-07-08 19:02:18'),
+(448, 20, 3, '1.00', '2022-07-08 19:02:18', '2022-07-08 19:02:18'),
+(449, 20, 57, '1.00', '2022-07-08 19:02:18', '2022-07-08 19:02:18'),
+(450, 20, 57, '1.00', '2022-07-08 19:02:18', '2022-07-08 19:02:18'),
+(451, 20, 22, '1.00', '2022-07-08 19:02:18', '2022-07-08 19:02:18'),
+(452, 20, 16, '1.00', '2022-07-08 19:02:18', '2022-07-08 19:02:18'),
+(453, 20, 12, '1.00', '2022-07-08 19:02:19', '2022-07-08 19:02:19'),
+(454, 20, 12, '1.00', '2022-07-08 19:02:19', '2022-07-08 19:02:19'),
+(455, 20, 6, '1.00', '2022-07-08 19:02:19', '2022-07-08 19:02:19'),
+(456, 20, 8, '1.00', '2022-07-08 19:02:19', '2022-07-08 19:02:19'),
+(457, 20, 8, '1.00', '2022-07-08 19:02:19', '2022-07-08 19:02:19'),
+(458, 20, 11, '1.00', '2022-07-08 19:02:19', '2022-07-08 19:02:19'),
+(459, 20, 12, '1.00', '2022-07-08 19:02:19', '2022-07-08 19:02:19'),
+(460, 20, 12, '1.00', '2022-07-08 19:02:19', '2022-07-08 19:02:19'),
+(461, 20, 11, '1.00', '2022-07-08 19:02:19', '2022-07-08 19:02:19'),
+(462, 20, 12, '1.00', '2022-07-08 19:02:20', '2022-07-08 19:02:20'),
+(463, 20, 12, '1.00', '2022-07-08 19:02:20', '2022-07-08 19:02:20'),
+(464, 20, 31, '1.00', '2022-07-08 19:02:20', '2022-07-08 19:02:20'),
+(465, 20, 41, '1.00', '2022-07-08 19:02:20', '2022-07-08 19:02:20'),
+(466, 20, 49, '1.00', '2022-07-08 19:02:20', '2022-07-08 19:02:20'),
+(467, 20, 50, '1.00', '2022-07-08 19:02:20', '2022-07-08 19:02:20'),
+(468, 20, 50, '1.00', '2022-07-08 19:02:20', '2022-07-08 19:02:20'),
+(469, 20, 31, '1.00', '2022-07-08 19:02:20', '2022-07-08 19:02:20'),
+(470, 20, 41, '1.00', '2022-07-08 19:02:20', '2022-07-08 19:02:20'),
+(471, 20, 49, '1.00', '2022-07-08 19:02:20', '2022-07-08 19:02:20'),
+(472, 20, 50, '1.00', '2022-07-08 19:02:20', '2022-07-08 19:02:20'),
+(473, 20, 50, '1.00', '2022-07-08 19:02:20', '2022-07-08 19:02:20'),
+(474, 20, 21, '1.00', '2022-07-08 19:02:21', '2022-07-08 19:02:21'),
+(475, 20, 28, '1.00', '2022-07-08 19:02:21', '2022-07-08 19:02:21'),
+(476, 20, 30, '1.00', '2022-07-08 19:02:21', '2022-07-08 19:02:21'),
+(477, 20, 30, '1.00', '2022-07-08 19:02:21', '2022-07-08 19:02:21'),
+(478, 20, 28, '1.00', '2022-07-08 19:02:21', '2022-07-08 19:02:21'),
+(479, 20, 30, '1.00', '2022-07-08 19:02:21', '2022-07-08 19:02:21'),
+(480, 20, 30, '1.00', '2022-07-08 19:02:21', '2022-07-08 19:02:21'),
+(481, 20, 31, '1.00', '2022-07-08 19:02:21', '2022-07-08 19:02:21'),
+(482, 20, 41, '1.00', '2022-07-08 19:02:21', '2022-07-08 19:02:21'),
+(483, 20, 49, '1.00', '2022-07-08 19:02:21', '2022-07-08 19:02:21'),
+(484, 20, 50, '1.00', '2022-07-08 19:02:22', '2022-07-08 19:02:22'),
+(485, 20, 50, '1.00', '2022-07-08 19:02:22', '2022-07-08 19:02:22'),
+(486, 20, 31, '1.00', '2022-07-08 19:02:22', '2022-07-08 19:02:22'),
+(487, 20, 41, '1.00', '2022-07-08 19:02:22', '2022-07-08 19:02:22'),
+(488, 20, 49, '1.00', '2022-07-08 19:02:22', '2022-07-08 19:02:22'),
+(489, 20, 50, '1.00', '2022-07-08 19:02:22', '2022-07-08 19:02:22'),
+(490, 20, 50, '1.00', '2022-07-08 19:02:22', '2022-07-08 19:02:22'),
+(491, 20, 57, '1.00', '2022-07-08 19:02:22', '2022-07-08 19:02:22'),
+(492, 20, 57, '1.00', '2022-07-08 19:02:22', '2022-07-08 19:02:22'),
+(493, 20, 28, '1.00', '2022-07-08 19:02:22', '2022-07-08 19:02:22'),
+(494, 20, 30, '1.00', '2022-07-08 19:02:22', '2022-07-08 19:02:22'),
+(495, 20, 30, '1.00', '2022-07-08 19:02:23', '2022-07-08 19:02:23'),
+(496, 20, 28, '1.00', '2022-07-08 19:02:23', '2022-07-08 19:02:23'),
+(497, 20, 30, '1.00', '2022-07-08 19:02:23', '2022-07-08 19:02:23'),
+(498, 20, 30, '1.00', '2022-07-08 19:02:23', '2022-07-08 19:02:23'),
+(499, 20, 31, '1.00', '2022-07-08 19:02:23', '2022-07-08 19:02:23'),
+(500, 20, 41, '1.00', '2022-07-08 19:02:23', '2022-07-08 19:02:23'),
+(501, 20, 49, '1.00', '2022-07-08 19:02:23', '2022-07-08 19:02:23'),
+(502, 20, 50, '1.00', '2022-07-08 19:02:23', '2022-07-08 19:02:23'),
+(503, 20, 50, '1.00', '2022-07-08 19:02:23', '2022-07-08 19:02:23'),
+(504, 20, 31, '1.00', '2022-07-08 19:02:23', '2022-07-08 19:02:23'),
+(505, 20, 41, '1.00', '2022-07-08 19:02:23', '2022-07-08 19:02:23'),
+(506, 20, 49, '1.00', '2022-07-08 19:02:23', '2022-07-08 19:02:23'),
+(507, 20, 50, '1.00', '2022-07-08 19:02:23', '2022-07-08 19:02:23'),
+(508, 20, 50, '1.00', '2022-07-08 19:02:23', '2022-07-08 19:02:23'),
+(509, 20, 57, '1.00', '2022-07-08 19:02:23', '2022-07-08 19:02:23'),
+(510, 20, 57, '1.00', '2022-07-08 19:02:23', '2022-07-08 19:02:23'),
+(511, 21, 28, '1.00', '2022-07-08 19:02:24', '2022-07-08 19:02:24'),
+(512, 21, 30, '1.00', '2022-07-08 19:02:24', '2022-07-08 19:02:24'),
+(513, 21, 30, '1.00', '2022-07-08 19:02:24', '2022-07-08 19:02:24'),
+(514, 21, 28, '1.00', '2022-07-08 19:02:24', '2022-07-08 19:02:24'),
+(515, 21, 30, '1.00', '2022-07-08 19:02:24', '2022-07-08 19:02:24'),
+(516, 21, 30, '1.00', '2022-07-08 19:02:24', '2022-07-08 19:02:24'),
+(517, 21, 31, '1.00', '2022-07-08 19:02:24', '2022-07-08 19:02:24'),
+(518, 21, 41, '1.00', '2022-07-08 19:02:24', '2022-07-08 19:02:24'),
+(519, 21, 49, '1.00', '2022-07-08 19:02:24', '2022-07-08 19:02:24'),
+(520, 21, 50, '1.00', '2022-07-08 19:02:24', '2022-07-08 19:02:24'),
+(521, 21, 50, '1.00', '2022-07-08 19:02:24', '2022-07-08 19:02:24'),
+(522, 21, 31, '1.00', '2022-07-08 19:02:24', '2022-07-08 19:02:24'),
+(523, 21, 41, '1.00', '2022-07-08 19:02:25', '2022-07-08 19:02:25'),
+(524, 21, 49, '1.00', '2022-07-08 19:02:25', '2022-07-08 19:02:25'),
+(525, 21, 50, '1.00', '2022-07-08 19:02:25', '2022-07-08 19:02:25'),
+(526, 21, 50, '1.00', '2022-07-08 19:02:25', '2022-07-08 19:02:25'),
+(527, 21, 31, '1.00', '2022-07-08 19:02:25', '2022-07-08 19:02:25'),
+(528, 21, 41, '1.00', '2022-07-08 19:02:25', '2022-07-08 19:02:25'),
+(529, 21, 49, '1.00', '2022-07-08 19:02:26', '2022-07-08 19:02:26'),
+(530, 21, 50, '1.00', '2022-07-08 19:02:26', '2022-07-08 19:02:26'),
+(531, 21, 50, '1.00', '2022-07-08 19:02:26', '2022-07-08 19:02:26'),
+(532, 21, 31, '1.00', '2022-07-08 19:02:26', '2022-07-08 19:02:26'),
+(533, 21, 41, '1.00', '2022-07-08 19:02:26', '2022-07-08 19:02:26'),
+(534, 21, 49, '1.00', '2022-07-08 19:02:26', '2022-07-08 19:02:26'),
+(535, 21, 50, '1.00', '2022-07-08 19:02:26', '2022-07-08 19:02:26'),
+(536, 21, 50, '1.00', '2022-07-08 19:02:26', '2022-07-08 19:02:26'),
+(537, 22, 28, '1.00', '2022-07-08 19:02:27', '2022-07-08 19:02:27'),
+(538, 22, 30, '1.00', '2022-07-08 19:02:27', '2022-07-08 19:02:27'),
+(539, 22, 30, '1.00', '2022-07-08 19:02:27', '2022-07-08 19:02:27'),
+(540, 22, 28, '1.00', '2022-07-08 19:02:27', '2022-07-08 19:02:27'),
+(541, 22, 30, '1.00', '2022-07-08 19:02:27', '2022-07-08 19:02:27'),
+(542, 22, 30, '1.00', '2022-07-08 19:02:27', '2022-07-08 19:02:27'),
+(543, 22, 31, '1.00', '2022-07-08 19:02:27', '2022-07-08 19:02:27'),
+(544, 22, 41, '1.00', '2022-07-08 19:02:28', '2022-07-08 19:02:28'),
+(545, 22, 49, '1.00', '2022-07-08 19:02:28', '2022-07-08 19:02:28'),
+(546, 22, 50, '1.00', '2022-07-08 19:02:28', '2022-07-08 19:02:28'),
+(547, 22, 50, '1.00', '2022-07-08 19:02:28', '2022-07-08 19:02:28'),
+(548, 22, 31, '1.00', '2022-07-08 19:02:28', '2022-07-08 19:02:28'),
+(549, 22, 41, '1.00', '2022-07-08 19:02:28', '2022-07-08 19:02:28'),
+(550, 22, 49, '1.00', '2022-07-08 19:02:28', '2022-07-08 19:02:28'),
+(551, 22, 50, '1.00', '2022-07-08 19:02:28', '2022-07-08 19:02:28'),
+(552, 22, 50, '1.00', '2022-07-08 19:02:28', '2022-07-08 19:02:28'),
+(553, 22, 31, '1.00', '2022-07-08 19:02:29', '2022-07-08 19:02:29'),
+(554, 22, 41, '1.00', '2022-07-08 19:02:29', '2022-07-08 19:02:29'),
+(555, 22, 49, '1.00', '2022-07-08 19:02:29', '2022-07-08 19:02:29'),
+(556, 22, 50, '1.00', '2022-07-08 19:02:29', '2022-07-08 19:02:29'),
+(557, 22, 50, '1.00', '2022-07-08 19:02:29', '2022-07-08 19:02:29'),
+(558, 22, 31, '1.00', '2022-07-08 19:02:29', '2022-07-08 19:02:29'),
+(559, 22, 41, '1.00', '2022-07-08 19:02:30', '2022-07-08 19:02:30'),
+(560, 22, 49, '1.00', '2022-07-08 19:02:30', '2022-07-08 19:02:30'),
+(561, 22, 50, '1.00', '2022-07-08 19:02:30', '2022-07-08 19:02:30'),
+(562, 22, 50, '1.00', '2022-07-08 19:02:30', '2022-07-08 19:02:30'),
+(563, 23, 28, '1.00', '2022-07-08 19:02:30', '2022-07-08 19:02:30'),
+(564, 23, 30, '1.00', '2022-07-08 19:02:30', '2022-07-08 19:02:30'),
+(565, 23, 30, '1.00', '2022-07-08 19:02:30', '2022-07-08 19:02:30'),
+(566, 23, 28, '1.00', '2022-07-08 19:02:31', '2022-07-08 19:02:31'),
+(567, 23, 30, '1.00', '2022-07-08 19:02:31', '2022-07-08 19:02:31'),
+(568, 23, 30, '1.00', '2022-07-08 19:02:31', '2022-07-08 19:02:31'),
+(569, 23, 31, '1.00', '2022-07-08 19:02:31', '2022-07-08 19:02:31'),
+(570, 23, 41, '1.00', '2022-07-08 19:02:31', '2022-07-08 19:02:31'),
+(571, 23, 49, '1.00', '2022-07-08 19:02:31', '2022-07-08 19:02:31'),
+(572, 23, 50, '1.00', '2022-07-08 19:02:31', '2022-07-08 19:02:31'),
+(573, 23, 50, '1.00', '2022-07-08 19:02:31', '2022-07-08 19:02:31'),
+(574, 23, 31, '1.00', '2022-07-08 19:02:31', '2022-07-08 19:02:31'),
+(575, 23, 41, '1.00', '2022-07-08 19:02:31', '2022-07-08 19:02:31'),
+(576, 23, 49, '1.00', '2022-07-08 19:02:31', '2022-07-08 19:02:31'),
+(577, 23, 50, '1.00', '2022-07-08 19:02:31', '2022-07-08 19:02:31'),
+(578, 23, 50, '1.00', '2022-07-08 19:02:32', '2022-07-08 19:02:32'),
+(579, 23, 31, '1.00', '2022-07-08 19:02:32', '2022-07-08 19:02:32'),
+(580, 23, 41, '1.00', '2022-07-08 19:02:32', '2022-07-08 19:02:32'),
+(581, 23, 49, '1.00', '2022-07-08 19:02:32', '2022-07-08 19:02:32'),
+(582, 23, 50, '1.00', '2022-07-08 19:02:32', '2022-07-08 19:02:32'),
+(583, 23, 50, '1.00', '2022-07-08 19:02:32', '2022-07-08 19:02:32'),
+(584, 23, 31, '1.00', '2022-07-08 19:02:32', '2022-07-08 19:02:32'),
+(585, 23, 41, '1.00', '2022-07-08 19:02:32', '2022-07-08 19:02:32'),
+(586, 23, 49, '1.00', '2022-07-08 19:02:33', '2022-07-08 19:02:33'),
+(587, 23, 50, '1.00', '2022-07-08 19:02:33', '2022-07-08 19:02:33'),
+(588, 23, 50, '1.00', '2022-07-08 19:02:33', '2022-07-08 19:02:33'),
+(589, 24, 28, '1.00', '2022-07-08 19:02:34', '2022-07-08 19:02:34'),
+(590, 24, 30, '1.00', '2022-07-08 19:02:34', '2022-07-08 19:02:34'),
+(591, 24, 30, '1.00', '2022-07-08 19:02:34', '2022-07-08 19:02:34'),
+(592, 24, 28, '1.00', '2022-07-08 19:02:34', '2022-07-08 19:02:34'),
+(593, 24, 30, '1.00', '2022-07-08 19:02:34', '2022-07-08 19:02:34'),
+(594, 24, 30, '1.00', '2022-07-08 19:02:34', '2022-07-08 19:02:34'),
+(595, 24, 31, '1.00', '2022-07-08 19:02:34', '2022-07-08 19:02:34'),
+(596, 24, 41, '1.00', '2022-07-08 19:02:34', '2022-07-08 19:02:34'),
+(597, 24, 49, '1.00', '2022-07-08 19:02:34', '2022-07-08 19:02:34'),
+(598, 24, 50, '1.00', '2022-07-08 19:02:34', '2022-07-08 19:02:34'),
+(599, 24, 50, '1.00', '2022-07-08 19:02:34', '2022-07-08 19:02:34'),
+(600, 24, 31, '1.00', '2022-07-08 19:02:34', '2022-07-08 19:02:34'),
+(601, 24, 41, '1.00', '2022-07-08 19:02:34', '2022-07-08 19:02:34'),
+(602, 24, 49, '1.00', '2022-07-08 19:02:34', '2022-07-08 19:02:34'),
+(603, 24, 50, '1.00', '2022-07-08 19:02:35', '2022-07-08 19:02:35'),
+(604, 24, 50, '1.00', '2022-07-08 19:02:35', '2022-07-08 19:02:35'),
+(605, 24, 31, '1.00', '2022-07-08 19:02:35', '2022-07-08 19:02:35'),
+(606, 24, 41, '1.00', '2022-07-08 19:02:35', '2022-07-08 19:02:35'),
+(607, 24, 49, '1.00', '2022-07-08 19:02:35', '2022-07-08 19:02:35'),
+(608, 24, 50, '1.00', '2022-07-08 19:02:35', '2022-07-08 19:02:35'),
+(609, 24, 50, '1.00', '2022-07-08 19:02:35', '2022-07-08 19:02:35'),
+(610, 24, 31, '1.00', '2022-07-08 19:02:35', '2022-07-08 19:02:35'),
+(611, 24, 41, '1.00', '2022-07-08 19:02:35', '2022-07-08 19:02:35'),
+(612, 24, 49, '1.00', '2022-07-08 19:02:35', '2022-07-08 19:02:35'),
+(613, 24, 50, '1.00', '2022-07-08 19:02:36', '2022-07-08 19:02:36'),
+(614, 24, 50, '1.00', '2022-07-08 19:02:36', '2022-07-08 19:02:36'),
+(615, 29, 1, '1.00', '2022-07-08 19:02:42', '2022-07-08 19:02:42'),
+(616, 29, 5, '1.00', '2022-07-08 19:02:43', '2022-07-08 19:02:43'),
+(617, 29, 7, '1.00', '2022-07-08 19:02:43', '2022-07-08 19:02:43'),
+(618, 29, 7, '1.00', '2022-07-08 19:02:43', '2022-07-08 19:02:43'),
+(619, 29, 1, '1.00', '2022-07-08 19:02:43', '2022-07-08 19:02:43'),
+(620, 29, 5, '1.00', '2022-07-08 19:02:43', '2022-07-08 19:02:43'),
+(621, 29, 7, '1.00', '2022-07-08 19:02:43', '2022-07-08 19:02:43'),
+(622, 29, 7, '1.00', '2022-07-08 19:02:43', '2022-07-08 19:02:43'),
+(623, 30, 1, '1.00', '2022-07-08 19:02:45', '2022-07-08 19:02:45'),
+(624, 30, 5, '1.00', '2022-07-08 19:02:45', '2022-07-08 19:02:45'),
+(625, 30, 7, '1.00', '2022-07-08 19:02:45', '2022-07-08 19:02:45'),
+(626, 30, 7, '1.00', '2022-07-08 19:02:45', '2022-07-08 19:02:45'),
+(627, 30, 1, '1.00', '2022-07-08 19:02:45', '2022-07-08 19:02:45'),
+(628, 30, 5, '1.00', '2022-07-08 19:02:45', '2022-07-08 19:02:45'),
+(629, 30, 7, '1.00', '2022-07-08 19:02:45', '2022-07-08 19:02:45'),
+(630, 30, 7, '1.00', '2022-07-08 19:02:45', '2022-07-08 19:02:45'),
+(631, 31, 1, '1.00', '2022-07-08 19:02:46', '2022-07-08 19:02:46'),
+(632, 31, 5, '1.00', '2022-07-08 19:02:46', '2022-07-08 19:02:46'),
+(633, 31, 7, '1.00', '2022-07-08 19:02:46', '2022-07-08 19:02:46'),
+(634, 31, 7, '1.00', '2022-07-08 19:02:47', '2022-07-08 19:02:47'),
+(635, 31, 1, '1.00', '2022-07-08 19:02:47', '2022-07-08 19:02:47'),
+(636, 31, 5, '1.00', '2022-07-08 19:02:47', '2022-07-08 19:02:47'),
+(637, 31, 7, '1.00', '2022-07-08 19:02:47', '2022-07-08 19:02:47'),
+(638, 31, 7, '1.00', '2022-07-08 19:02:47', '2022-07-08 19:02:47'),
+(639, 32, 1, '1.00', '2022-07-08 19:02:48', '2022-07-08 19:02:48'),
+(640, 32, 5, '1.00', '2022-07-08 19:02:48', '2022-07-08 19:02:48'),
+(641, 32, 7, '1.00', '2022-07-08 19:02:48', '2022-07-08 19:02:48'),
+(642, 32, 7, '1.00', '2022-07-08 19:02:48', '2022-07-08 19:02:48'),
+(643, 32, 1, '1.00', '2022-07-08 19:02:49', '2022-07-08 19:02:49'),
+(644, 32, 5, '1.00', '2022-07-08 19:02:49', '2022-07-08 19:02:49'),
+(645, 32, 7, '1.00', '2022-07-08 19:02:49', '2022-07-08 19:02:49'),
+(646, 32, 7, '1.00', '2022-07-08 19:02:49', '2022-07-08 19:02:49');
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `zones`
 --
 
@@ -3762,6 +4305,15 @@ INSERT INTO `zones` (`id`, `code`, `zone`, `created_at`, `updated_at`) VALUES
 DROP TABLE IF EXISTS `componentes_del_implemento`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `componentes_del_implemento`  AS SELECT `c`.`id` AS `component_id`, `c`.`item_id` AS `item_id`, `c`.`component` AS `item`, `i`.`id` AS `implement_id` FROM (((`components` `c` join `component_implement_model` `cim` on(`c`.`id` = `cim`.`component_id`)) join `implements` `i` on(`i`.`implement_model_id` = `cim`.`implement_model_id`)) join `items` `it` on(`it`.`id` = `c`.`item_id`))  ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura para la vista `lista_mantenimiento`
+--
+DROP TABLE IF EXISTS `lista_mantenimiento`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_mantenimiento`  AS SELECT `wod`.`work_order_id` AS `work_order_id`, `t`.`task` AS `task`, ifnull((select `c`.`component` from (`component_implement` `ci` join `components` `c` on(`c`.`id` = `ci`.`component_id`)) where `ci`.`id` = `wod`.`component_implement_id`),(select `c`.`component` from ((`component_part` `cp` join `component_implement` `ci` on(`ci`.`id` = `cp`.`component_implement_id`)) join `components` `c` on(`c`.`id` = `cp`.`part`)) where `cp`.`id` = `wod`.`component_part_id`)) AS `componente`, ifnull((select `p`.`component` from (`component_part` `cp` join `components` `p` on(`p`.`id` = `cp`.`part`)) where `cp`.`id` = `wod`.`component_part_id`),'GENERAL') AS `pieza` FROM (`work_order_details` `wod` join `tasks` `t` on(`wod`.`task_id` = `t`.`id`))  ;
 
 -- --------------------------------------------------------
 
@@ -4212,6 +4764,14 @@ ALTER TABLE `tasks`
   ADD KEY `tasks_component_id_foreign` (`component_id`);
 
 --
+-- Indices de la tabla `task_required_materials`
+--
+ALTER TABLE `task_required_materials`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `task_required_materials_task_id_foreign` (`task_id`),
+  ADD KEY `task_required_materials_item_id_foreign` (`item_id`);
+
+--
 -- Indices de la tabla `tractors`
 --
 ALTER TABLE `tractors`
@@ -4284,6 +4844,14 @@ ALTER TABLE `work_order_details`
   ADD KEY `work_order_details_task_id_foreign` (`task_id`),
   ADD KEY `work_order_details_component_implement_id_foreign` (`component_implement_id`),
   ADD KEY `work_order_details_component_part_id_foreign` (`component_part_id`);
+
+--
+-- Indices de la tabla `work_order_required_materials`
+--
+ALTER TABLE `work_order_required_materials`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `work_order_required_materials_work_order_id_foreign` (`work_order_id`),
+  ADD KEY `work_order_required_materials_item_id_foreign` (`item_id`);
 
 --
 -- Indices de la tabla `zones`
@@ -4384,7 +4952,7 @@ ALTER TABLE `epp_risk`
 -- AUTO_INCREMENT de la tabla `epp_work_order`
 --
 ALTER TABLE `epp_work_order`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1724;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=445;
 
 --
 -- AUTO_INCREMENT de la tabla `failed_jobs`
@@ -4591,6 +5159,12 @@ ALTER TABLE `tasks`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=97;
 
 --
+-- AUTO_INCREMENT de la tabla `task_required_materials`
+--
+ALTER TABLE `task_required_materials`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+--
 -- AUTO_INCREMENT de la tabla `tractors`
 --
 ALTER TABLE `tractors`
@@ -4630,13 +5204,19 @@ ALTER TABLE `warehouses`
 -- AUTO_INCREMENT de la tabla `work_orders`
 --
 ALTER TABLE `work_orders`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=181;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT de la tabla `work_order_details`
 --
 ALTER TABLE `work_order_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1708;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=507;
+
+--
+-- AUTO_INCREMENT de la tabla `work_order_required_materials`
+--
+ALTER TABLE `work_order_required_materials`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=647;
 
 --
 -- AUTO_INCREMENT de la tabla `zones`
@@ -4929,6 +5509,13 @@ ALTER TABLE `tasks`
   ADD CONSTRAINT `tasks_component_id_foreign` FOREIGN KEY (`component_id`) REFERENCES `components` (`id`);
 
 --
+-- Filtros para la tabla `task_required_materials`
+--
+ALTER TABLE `task_required_materials`
+  ADD CONSTRAINT `task_required_materials_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
+  ADD CONSTRAINT `task_required_materials_task_id_foreign` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`);
+
+--
 -- Filtros para la tabla `tractors`
 --
 ALTER TABLE `tractors`
@@ -4977,6 +5564,13 @@ ALTER TABLE `work_order_details`
   ADD CONSTRAINT `work_order_details_component_part_id_foreign` FOREIGN KEY (`component_part_id`) REFERENCES `component_part` (`id`),
   ADD CONSTRAINT `work_order_details_task_id_foreign` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`),
   ADD CONSTRAINT `work_order_details_work_order_id_foreign` FOREIGN KEY (`work_order_id`) REFERENCES `work_orders` (`id`);
+
+--
+-- Filtros para la tabla `work_order_required_materials`
+--
+ALTER TABLE `work_order_required_materials`
+  ADD CONSTRAINT `work_order_required_materials_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
+  ADD CONSTRAINT `work_order_required_materials_work_order_id_foreign` FOREIGN KEY (`work_order_id`) REFERENCES `work_orders` (`id`);
 
 DELIMITER $$
 --
@@ -5110,6 +5704,7 @@ END$$
 
 CREATE DEFINER=`root`@`localhost` EVENT `Listar_mantenimientos_programados` ON SCHEDULE EVERY 1 DAY STARTS '2022-07-05 00:21:00' ON COMPLETION NOT PRESERVE DISABLE DO BEGIN
 /*-----------VARIABLES PARA DETENER CICLOS--------------*/
+DECLARE material_final INT DEFAULT 0;
 DECLARE implemento_final INT DEFAULT 0;
 DECLARE componente_final INT DEFAULT 0;
 DECLARE pieza_final INT DEFAULT 0;
@@ -5131,11 +5726,13 @@ DECLARE componente INT;
 DECLARE horas_componente DECIMAL(8,2);
 DECLARE tiempo_vida_componente DECIMAL(8,2);
 DECLARE cantidad_componente INT;
+DECLARE item_componente INT;
 /*-------------VARIABLES PARA ALMCENAR DATOS DE LA PIEZA--------------*/
 DECLARE pieza INT;
 DECLARE horas_pieza DECIMAL(8,2);
 DECLARE tiempo_vida_pieza DECIMAL(8,2);
 DECLARE cantidad_pieza INT;
+DECLARE item_pieza INT;
 /*-------------CURSOR PARA ITERAR LOS IMPLEMENTO------*/
 DECLARE cursor_implementos CURSOR FOR SELECT id,implement_model_id,user_id,location_id FROM implements;
 DECLARE CONTINUE HANDLER FOR NOT FOUND SET implemento_final = 1;
@@ -5171,7 +5768,7 @@ OPEN cursor_implementos;
                         /*---------------OBTENER HORAS DEL COMPONENTE--------------------------*/
                         SELECT id,hours INTO componente_del_implemento,horas_componente FROM component_implement WHERE component_id = componente AND implement_id = implemento AND state = "PENDIENTE";
                         /*---------------OBTENER EL TIEMPO DE VIDA DEL COMPONENTE------------------------*/
-                        SELECT lifespan INTO tiempo_vida_componente FROM components WHERE id = componente;
+                        SELECT lifespan,item_id INTO tiempo_vida_componente,item_componente FROM components WHERE id = componente;
                         /*---------------CALCULAR SI NECESITA RECAMBIO DENTRO DE 3 DIAS-----------------------------------*/
                         SELECT FLOOR((horas_componente+24)/tiempo_vida_componente) INTO cantidad_componente;
                         /*---------------TAREA DE RECAMBIO SI LO NECESITA-------------------------------*/
@@ -5182,6 +5779,12 @@ OPEN cursor_implementos;
                             IF NOT EXISTS(SELECT * FROM work_order_details WHERE work_order_id = orden_trabajo AND task_id = tarea AND state = "RECOMENDADO" AND component_implement_id = componente_del_implemento) THEN
                                 INSERT INTO work_order_details (work_order_id,task_id,state,component_implement_id ) VALUES (orden_trabajo,tarea,"RECOMENDADO",componente_del_implemento);
                             END IF;
+                            /*------------MARCAR COMO NO VALIDADO HASTA QUE EL SUPERVISOR LO APRUEBE O LO RECHACE-------------*/
+                            IF NOT EXISTS(SELECT * FROM work_orders WHERE id = orden_trabajo AND state = "NO VALIDADO") THEN
+                                UPDATE work_orders SET state = "NO VALIDADO" WHERE id = orden_trabajo;
+                            END IF;
+                            /*------------PONER EL MATERIAL REQUERIDO----------------------------------------*/
+                            INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_componente);
                         /*----------------RUTINARIO SI NO NECESITA RECAMBIO----------------------------*/
                         ELSE
                             /*------------CURSOR PARA CREAR EL RUTINARIO POR CADA COMPONENTE----------------*/
@@ -5199,6 +5802,22 @@ OPEN cursor_implementos;
                                         /*-------------INSERTAR RUTINARIO DE TAREAS EN EL DETALLE DE LA ORDEN DE TRABAJO-----------------------*/
                                         IF NOT EXISTS(SELECT * FROM work_order_details WHERE work_order_id = orden_trabajo AND task_id = tarea AND state = "ACEPTADO" AND component_implement_id = componente_del_implemento) THEN
                                             INSERT INTO work_order_details (work_order_id,task_id,component_implement_id ) VALUES (orden_trabajo,tarea,componente_del_implemento);
+                                        END IF;
+                                        IF EXISTS(SELECT * FROM task_required_materials WHERE task_id = tarea) THEN
+                                            BEGIN
+                                                DECLARE cursor_materiales CURSOR FOR SELECT item_id FROM task_required_materials WHERE task_id = tarea;
+                                                DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
+                                                OPEN cursor_materiales;
+                                                    bucle_materiales:LOOP
+                                                        IF material_final = 1 THEN
+                                                            LEAVE bucle_materiales;
+                                                        END IF;
+                                                        FETCH cursor_materiales INTO item_componente;
+                                                        INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_componente);
+                                                    END LOOP bucle_materiales;
+                                                CLOSE cursor_materiales;
+                                                SELECT 0 INTO material_final;
+                                            END;
                                         END IF;
                                     END LOOP bucle_componente_tareas;
                                 CLOSE cursor_componente_tareas;
@@ -5226,7 +5845,7 @@ OPEN cursor_implementos;
                                         /*---------------OBTENER HORAS DE LA PIEZA--------------------------*/
                                         SELECT id,hours INTO pieza_del_componente,horas_pieza FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE";
                                         /*---------------OBTENER EL TIEMPO DE VIDA DE LA PIEZA------------------------*/
-                                        SELECT lifespan INTO tiempo_vida_pieza FROM components WHERE id = pieza;
+                                        SELECT lifespan,item_id INTO tiempo_vida_pieza,item_pieza FROM components WHERE id = pieza;
                                         /*---------------CALCULAR SI NECESITA RECAMBIO DENTRO DE 3 DIAS-----------------------------------*/
                                         SELECT FLOOR((horas_pieza+24)/tiempo_vida_pieza) INTO cantidad_pieza;
                                         /*---------------TAREA DE RECAMBIO SI LO NECESITA-------------------------------*/
@@ -5237,6 +5856,12 @@ OPEN cursor_implementos;
                                             IF NOT EXISTS(SELECT * FROM work_order_details WHERE work_order_id = orden_trabajo AND task_id = tarea AND state = "RECOMENDADO" AND component_part_id = pieza_del_componente) THEN
                                                 INSERT INTO work_order_details (work_order_id,task_id,state,component_part_id) VALUES (orden_trabajo,tarea,"RECOMENDADO",pieza_del_componente);
                                             END IF;
+                                            /*-----------MARCAR COMO NO VALIDADO HASTA QUE EL SUPERVISOR LO APRUEBE O LO RECHACE-----------------*/
+                                            IF NOT EXISTS(SELECT * FROM work_orders WHERE id = orden_trabajo AND state = "NO VALIDADO") THEN
+                                                UPDATE work_orders SET state = "NO VALIDADO" WHERE id = orden_trabajo;
+                                            END IF;
+                                            /*------------PONER EL MATERIAL REQUERIDO----------------------------------------*/
+                                            INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_pieza);
                                         /*--------------RUTINARIO SI NO NECESITA RECAMBIO---------------------------------*/
                                         ELSE
                                         /*--------------CURSOR PARA CREAR EL RUTINARIO DE CADA COMPONENTE-----------------*/
@@ -5254,6 +5879,22 @@ OPEN cursor_implementos;
                                                         /*-------------INSERTAR RUTINARIO DE TAREAS EN EL DETALLE DE LA ORDEN DE TRABAJO-----------------------*/
                                                         IF NOT EXISTS(SELECT * FROM work_order_details WHERE work_order_id = orden_trabajo AND task_id = tarea AND state = "ACEPTADO" AND component_part_id  = pieza_del_componente) THEN
                                                             INSERT INTO work_order_details (work_order_id,task_id,component_part_id) VALUES (orden_trabajo,tarea,pieza_del_componente);
+                                                        END IF;
+                                                        IF EXISTS(SELECT * FROM task_required_materials WHERE task_id = tarea) THEN
+                                                            BEGIN
+                                                                DECLARE cursor_materiales CURSOR FOR SELECT item_id FROM task_required_materials WHERE task_id = tarea;
+                                                                DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
+                                                                OPEN cursor_materiales;
+                                                                    bucle_materiales:LOOP
+                                                                        IF material_final = 1 THEN
+                                                                            LEAVE bucle_materiales;
+                                                                        END IF;
+                                                                        FETCH cursor_materiales INTO item_pieza;
+                                                                        INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_pieza);
+                                                                    END LOOP bucle_materiales;
+                                                                CLOSE cursor_materiales;
+                                                                SELECT 0 INTO material_final;
+                                                            END;
                                                         END IF;
                                                     END LOOP bucle_pieza_tareas;
                                                 CLOSE cursor_pieza_tareas;

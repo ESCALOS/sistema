@@ -1,5 +1,6 @@
 BEGIN
 /*-----------VARIABLES PARA DETENER CICLOS--------------*/
+DECLARE material_final INT DEFAULT 0;
 DECLARE implemento_final INT DEFAULT 0;
 DECLARE componente_final INT DEFAULT 0;
 DECLARE pieza_final INT DEFAULT 0;
@@ -21,11 +22,13 @@ DECLARE componente INT;
 DECLARE horas_componente DECIMAL(8,2);
 DECLARE tiempo_vida_componente DECIMAL(8,2);
 DECLARE cantidad_componente INT;
+DECLARE item_componente INT;
 /*-------------VARIABLES PARA ALMCENAR DATOS DE LA PIEZA--------------*/
 DECLARE pieza INT;
 DECLARE horas_pieza DECIMAL(8,2);
 DECLARE tiempo_vida_pieza DECIMAL(8,2);
 DECLARE cantidad_pieza INT;
+DECLARE item_pieza INT;
 /*-------------CURSOR PARA ITERAR LOS IMPLEMENTO------*/
 DECLARE cursor_implementos CURSOR FOR SELECT id,implement_model_id,user_id,location_id FROM implements;
 DECLARE CONTINUE HANDLER FOR NOT FOUND SET implemento_final = 1;
@@ -61,7 +64,7 @@ OPEN cursor_implementos;
                         /*---------------OBTENER HORAS DEL COMPONENTE--------------------------*/
                         SELECT id,hours INTO componente_del_implemento,horas_componente FROM component_implement WHERE component_id = componente AND implement_id = implemento AND state = "PENDIENTE";
                         /*---------------OBTENER EL TIEMPO DE VIDA DEL COMPONENTE------------------------*/
-                        SELECT lifespan INTO tiempo_vida_componente FROM components WHERE id = componente;
+                        SELECT lifespan,item_id INTO tiempo_vida_componente,item_componente FROM components WHERE id = componente;
                         /*---------------CALCULAR SI NECESITA RECAMBIO DENTRO DE 3 DIAS-----------------------------------*/
                         SELECT FLOOR((horas_componente+24)/tiempo_vida_componente) INTO cantidad_componente;
                         /*---------------TAREA DE RECAMBIO SI LO NECESITA-------------------------------*/
@@ -72,6 +75,12 @@ OPEN cursor_implementos;
                             IF NOT EXISTS(SELECT * FROM work_order_details WHERE work_order_id = orden_trabajo AND task_id = tarea AND state = "RECOMENDADO" AND component_implement_id = componente_del_implemento) THEN
                                 INSERT INTO work_order_details (work_order_id,task_id,state,component_implement_id ) VALUES (orden_trabajo,tarea,"RECOMENDADO",componente_del_implemento);
                             END IF;
+                            /*------------MARCAR COMO NO VALIDADO HASTA QUE EL SUPERVISOR LO APRUEBE O LO RECHACE-------------*/
+                            IF NOT EXISTS(SELECT * FROM work_orders WHERE id = orden_trabajo AND state = "NO VALIDADO") THEN
+                                UPDATE work_orders SET state = "NO VALIDADO" WHERE id = orden_trabajo;
+                            END IF;
+                            /*------------PONER EL MATERIAL REQUERIDO----------------------------------------*/
+                            INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_componente);
                         /*----------------RUTINARIO SI NO NECESITA RECAMBIO----------------------------*/
                         ELSE
                             /*------------CURSOR PARA CREAR EL RUTINARIO POR CADA COMPONENTE----------------*/
@@ -89,6 +98,22 @@ OPEN cursor_implementos;
                                         /*-------------INSERTAR RUTINARIO DE TAREAS EN EL DETALLE DE LA ORDEN DE TRABAJO-----------------------*/
                                         IF NOT EXISTS(SELECT * FROM work_order_details WHERE work_order_id = orden_trabajo AND task_id = tarea AND state = "ACEPTADO" AND component_implement_id = componente_del_implemento) THEN
                                             INSERT INTO work_order_details (work_order_id,task_id,component_implement_id ) VALUES (orden_trabajo,tarea,componente_del_implemento);
+                                        END IF;
+                                        IF EXISTS(SELECT * FROM task_required_materials WHERE task_id = tarea) THEN
+                                            BEGIN
+                                                DECLARE cursor_materiales CURSOR FOR SELECT item_id FROM task_required_materials WHERE task_id = tarea;
+                                                DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
+                                                OPEN cursor_materiales;
+                                                    bucle_materiales:LOOP
+                                                        IF material_final = 1 THEN
+                                                            LEAVE bucle_materiales;
+                                                        END IF;
+                                                        FETCH cursor_materiales INTO item_componente;
+                                                        INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_componente);
+                                                    END LOOP bucle_materiales;
+                                                CLOSE cursor_materiales;
+                                                SELECT 0 INTO material_final;
+                                            END;
                                         END IF;
                                     END LOOP bucle_componente_tareas;
                                 CLOSE cursor_componente_tareas;
@@ -116,7 +141,7 @@ OPEN cursor_implementos;
                                         /*---------------OBTENER HORAS DE LA PIEZA--------------------------*/
                                         SELECT id,hours INTO pieza_del_componente,horas_pieza FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE";
                                         /*---------------OBTENER EL TIEMPO DE VIDA DE LA PIEZA------------------------*/
-                                        SELECT lifespan INTO tiempo_vida_pieza FROM components WHERE id = pieza;
+                                        SELECT lifespan,item_id INTO tiempo_vida_pieza,item_pieza FROM components WHERE id = pieza;
                                         /*---------------CALCULAR SI NECESITA RECAMBIO DENTRO DE 3 DIAS-----------------------------------*/
                                         SELECT FLOOR((horas_pieza+24)/tiempo_vida_pieza) INTO cantidad_pieza;
                                         /*---------------TAREA DE RECAMBIO SI LO NECESITA-------------------------------*/
@@ -127,6 +152,12 @@ OPEN cursor_implementos;
                                             IF NOT EXISTS(SELECT * FROM work_order_details WHERE work_order_id = orden_trabajo AND task_id = tarea AND state = "RECOMENDADO" AND component_part_id = pieza_del_componente) THEN
                                                 INSERT INTO work_order_details (work_order_id,task_id,state,component_part_id) VALUES (orden_trabajo,tarea,"RECOMENDADO",pieza_del_componente);
                                             END IF;
+                                            /*-----------MARCAR COMO NO VALIDADO HASTA QUE EL SUPERVISOR LO APRUEBE O LO RECHACE-----------------*/
+                                            IF NOT EXISTS(SELECT * FROM work_orders WHERE id = orden_trabajo AND state = "NO VALIDADO") THEN
+                                                UPDATE work_orders SET state = "NO VALIDADO" WHERE id = orden_trabajo;
+                                            END IF;
+                                            /*------------PONER EL MATERIAL REQUERIDO----------------------------------------*/
+                                            INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_pieza);
                                         /*--------------RUTINARIO SI NO NECESITA RECAMBIO---------------------------------*/
                                         ELSE
                                         /*--------------CURSOR PARA CREAR EL RUTINARIO DE CADA COMPONENTE-----------------*/
@@ -144,6 +175,22 @@ OPEN cursor_implementos;
                                                         /*-------------INSERTAR RUTINARIO DE TAREAS EN EL DETALLE DE LA ORDEN DE TRABAJO-----------------------*/
                                                         IF NOT EXISTS(SELECT * FROM work_order_details WHERE work_order_id = orden_trabajo AND task_id = tarea AND state = "ACEPTADO" AND component_part_id  = pieza_del_componente) THEN
                                                             INSERT INTO work_order_details (work_order_id,task_id,component_part_id) VALUES (orden_trabajo,tarea,pieza_del_componente);
+                                                        END IF;
+                                                        IF EXISTS(SELECT * FROM task_required_materials WHERE task_id = tarea) THEN
+                                                            BEGIN
+                                                                DECLARE cursor_materiales CURSOR FOR SELECT item_id FROM task_required_materials WHERE task_id = tarea;
+                                                                DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
+                                                                OPEN cursor_materiales;
+                                                                    bucle_materiales:LOOP
+                                                                        IF material_final = 1 THEN
+                                                                            LEAVE bucle_materiales;
+                                                                        END IF;
+                                                                        FETCH cursor_materiales INTO item_pieza;
+                                                                        INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_pieza);
+                                                                    END LOOP bucle_materiales;
+                                                                CLOSE cursor_materiales;
+                                                                SELECT 0 INTO material_final;
+                                                            END;
                                                         END IF;
                                                     END LOOP bucle_pieza_tareas;
                                                 CLOSE cursor_pieza_tareas;

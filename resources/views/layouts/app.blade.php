@@ -229,6 +229,58 @@
             });
 /*------------------------------------------------------------------------------------------*/
         @endif
+        @if(Route::is('overseer.validate-work-order'))
+/*--------------ALERTA PARA VALIDAR EL RECAMBIO DE MATERIALES---------------------------*/
+        Livewire.on('confirmarValidarRecambio', implemento =>{
+                Swal.fire({
+                    title: 'Validar el recambio de ' + implemento+'?',
+                    text: "Esta acción es irreversible",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, validar!',
+                    cancelButtonText: 'No, cancelar!',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+
+                            Livewire.emit('validarRecambio');
+
+                            Swal.fire(
+                                'Se validó el recambio del implemento!',
+                                'Recambio validado',
+                                'success'
+                            )
+                        }
+                    })
+            });
+/*------------------------------------------------------------------------------------------*/
+/*--------------ALERTA PARA RECHAZAR EL RECAMBIO DE MATERIALES---------------------------*/
+        Livewire.on('confirmarRechazarRecambio', implemento =>{
+                Swal.fire({
+                    title: 'Rechazar el recambio de ' + implemento+'?',
+                    text: "Esta acción es irreversible",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, rechazar!',
+                    cancelButtonText: 'No, cancelar!',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+
+                            Livewire.emit('rechazarRecambio');
+
+                            Swal.fire(
+                                'Se rechazó el recambio del implemento!',
+                                'Recambio rechazado',
+                                'success'
+                            )
+                        }
+                    })
+            });
+/*------------------------------------------------------------------------------------------*/
+        @endif
         </script>
     </body>
 </html>
