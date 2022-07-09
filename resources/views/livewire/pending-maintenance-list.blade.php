@@ -39,7 +39,7 @@
             <div class=" rounded-md bg-yellow-200 shadow-md py-4">
                 <h1 class="text-lg font-bold">Materiales Requeridos</h1>
             </div>
-            <div style="height:240px;overflow:auto">
+            <div style="height:200px;overflow:auto">
                 <table class="min-w-max w-full">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -51,6 +51,9 @@
                             </th>
                             <th class="py-3 text-center">
                                 <span>Almacen</span>
+                            </th>
+                            <th class="py-3 text-center">
+                                <span>Restante</span>
                             </th>
                         </tr>
                     </thead>
@@ -73,6 +76,11 @@
                                         <span class="font-medium">{{$request->quantity}} </span>
                                     </div>
                                 </td>
+                                <td class="py-3 px-6 text-center">
+                                    <div>
+                                        <span class="font-medium">{{$request->quantity - $request->quantity}} </span>
+                                    </div>
+                                </td>
                             </tr>
                         @endforeach
                         @endisset
@@ -82,7 +90,7 @@
             <div class=" rounded-md bg-green-200 shadow-md py-4">
                 <h1 class="text-lg font-bold">Tareas</h1>
             </div>
-            <div style="height:240px;overflow:auto">
+            <div style="height:200px;overflow:auto">
                 <table class="min-w-max w-full">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">

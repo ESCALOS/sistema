@@ -4,7 +4,6 @@ namespace App\Http\Livewire;
 
 use App\Models\Implement;
 use App\Models\WorkOrder;
-use App\Models\WorkOrderDetail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -53,7 +52,6 @@ class PendingMaintenanceList extends Component
                 ->where('date',$this->dia)
                 ->select('implements.*','work_orders.id as work_order','implement_models.implement_model')
                 ->get();
-
 
             if($this->orden_trabajo > 0){
                 $materiales = DB::table('work_order_required_materials as w')->join('items',function($join){

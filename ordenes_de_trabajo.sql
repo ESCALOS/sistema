@@ -65,6 +65,9 @@ OPEN cursor_implementos;
                         SELECT id,hours INTO componente_del_implemento,horas_componente FROM component_implement WHERE component_id = componente AND implement_id = implemento AND state = "PENDIENTE";
                         /*---------------OBTENER EL TIEMPO DE VIDA DEL COMPONENTE------------------------*/
                         SELECT lifespan,item_id INTO tiempo_vida_componente,item_componente FROM components WHERE id = componente;
+                        IF horas_componente >= tiempo_vida_componente THEN
+                            SELECT tiempo_vida_componente INTO horas_componente;
+                        END IF;
                         /*---------------CALCULAR SI NECESITA RECAMBIO DENTRO DE 3 DIAS-----------------------------------*/
                         SELECT FLOOR((horas_componente+24)/tiempo_vida_componente) INTO cantidad_componente;
                         /*---------------TAREA DE RECAMBIO SI LO NECESITA-------------------------------*/
@@ -151,6 +154,9 @@ OPEN cursor_implementos;
                                         SELECT id,hours INTO pieza_del_componente,horas_pieza FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE";
                                         /*---------------OBTENER EL TIEMPO DE VIDA DE LA PIEZA------------------------*/
                                         SELECT lifespan,item_id INTO tiempo_vida_pieza,item_pieza FROM components WHERE id = pieza;
+                                        IF horas_pieza >= tiempo_vida_pieza THEN
+                                            SELECT tiempo_vida_pieza INTO horas_pieza;
+                                        END IF;
                                         /*---------------CALCULAR SI NECESITA RECAMBIO DENTRO DE 3 DIAS-----------------------------------*/
                                         SELECT FLOOR((horas_pieza+24)/tiempo_vida_pieza) INTO cantidad_pieza;
                                         /*---------------TAREA DE RECAMBIO SI LO NECESITA-------------------------------*/
