@@ -144,7 +144,8 @@ class AssignMaterialsOperator extends Component
                 'movement' => 'INGRESO',
                 'quantity' => $this->detalle_pedido_cantidad,
                 'price' => $detalle_pedido->estimated_price,
-                'warehouse_id' => $operador_data->location_id,
+                'warehouse_id' => $operador_data->location->warehouse->id,
+                'ceco_id' => $detalle_pedido->implement->ceco_id,
                 'state' => "CONFIRMADO",
                 'order_request_detail_id' => $this->id_detalle_pedido,
             ]);
@@ -153,6 +154,9 @@ class AssignMaterialsOperator extends Component
             if($detalle_pedido->assigned_quantity == $detalle_pedido->quantity){
                 $detalle_pedido->assigned_state = 'ASIGNADO';
             }
+
+
+
             $detalle_pedido->save();
             /*---------Alertar de operación exitosa----------------*/
             $this->emit('alert');

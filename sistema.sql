@@ -2,8 +2,8 @@
 -- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
--- Servidor: 127.0.0.1
--- Tiempo de generación: 09-07-2022 a las 08:12:13
+-- Servidor: localhost
+-- Tiempo de generación: 09-07-2022 a las 21:21:47
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -25,115 +25,6 @@ DELIMITER $$
 --
 -- Procedimientos
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `aa` ()   BEGIN
-/*-------Variables para la fecha para abrir el pedido--------*/
-DECLARE fecha_solicitud INT;
-DECLARE fecha_abrir_solicitud DATE;
-/*-------Obtener la fecha para abrir el pedido-------*/
-SELECT id,open_request INTO fecha_solicitud, fecha_abrir_solicitud FROM order_dates r WHERE r.state = "PENDIENTE" ORDER BY open_request ASC LIMIT 1;
-IF(fecha_abrir_solicitud <= NOW()) THEN
-BEGIN
-/*--------variables para detener el ciclo-----------*/
-DECLARE componente_final INT DEFAULT 0;
-DECLARE pieza_final  INT DEFAULT 0;
-/*-------------------------------------------------*/
-/*---------variables para almacenar variables del componente----------*/
-DECLARE pedido INT;  #order_request_id
-DECLARE implemento INT;
-DECLARE componente INT;
-DECLARE responsable INT;
-DECLARE item INT;
-DECLARE tiempo_vida DECIMAL(8,2);
-DECLARE horas DECIMAL(8,2);
-DECLARE cantidad DECIMAL(8,2);
-DECLARE precio_estimado DECIMAL(8,2);
-/*------------------------------------------------------------------------*/
-/*--------------variables para la pieza------------------------------------*/
-DECLARE pieza INT;
-DECLARE item_pieza INT;
-DECLARE horas_pieza DECIMAL(8,2);
-DECLARE tiempo_vida_pieza DECIMAL(8,2);
-DECLARE cantidad_pieza DECIMAL(8,2);
-DECLARE precio_estimado_pieza DECIMAL(8,2);
-/*------------------------------------------------------------------------------*/
-/*---------Declarando cursores para iterar por cada componente y pieza-----------*/
-DECLARE cur_comp CURSOR FOR SELECT i.id, c.id, c.item_id, c.lifespan, i.user_id, it.estimated_price FROM component_implement_model cim INNER JOIN implements i ON i.implement_model_id = cim.implement_model_id INNER JOIN components c ON c.id = cim.component_id INNER JOIN items it ON it.id = c.item_id;
-DECLARE CONTINUE HANDLER FOR NOT FOUND SET componente_final = 1;
-/*-----------------------------------------------------------------------------------*/
-OPEN cur_comp;
-	bucle:LOOP
-    IF componente_final = 1 THEN
-    	LEAVE bucle;
-    END IF;
-    FETCH cur_comp INTO implemento,componente,item,tiempo_vida,responsable,precio_estimado;
-    /*--------------Obtener horas del componente-----------------------------------*/
-    IF EXISTS(SELECT * FROM component_implement WHERE implement_id = implemento AND component_id = componente AND state = "PENDIENTE") THEN
-    	SELECT hours INTO horas FROM component_implement WHERE implement_id = implemento AND component_id = componente AND state = "PENDIENTE" LIMIT 1;
-    ELSE
-    	SELECT 0 INTO horas;
-    END IF;
-    /*-----------------------------------------------------------*/
-    /*-------Calcular la cantidad del pedido-------------------*/
-    SELECT ROUND((336+horas)/tiempo_vida) INTO cantidad;
-    /*-----------Verificar si se requiere el componente----------*/
-    IF(cantidad > 0) THEN
-    /*------------Verificar si existe la cabecera de la solicitud------*/
-    	IF NOT EXISTS(SELECT * FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE") THEN
-        	INSERT INTO order_requests(user_id,implement_id,order_date_id) VALUES (responsable,implemento,fecha_solicitud);
-        END IF;
-    /*-----------Obteniendo la cabecera de la solicitud-------------------------*/
-        SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
-    /*------Creando la solicitud del componente--------*/
-    	INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price) VALUES (pedido,item,cantidad,precio_estimado);
-    END IF;
-    BEGIN
-    /*-------Declarando cursor para piezas---------------------*/
-    	DECLARE cur_part CURSOR FOR SELECT cpm.part,c.lifespan,c.item_id,it.estimated_price FROM component_part_model cpm INNER JOIN components c ON c.id = cpm.part INNER JOIN items it ON it.id = c.item_id WHERE cpm.component = componente;
-        DECLARE CONTINUE HANDLER FOR NOT FOUND SET pieza_final = 1;
-    /*--------------------------------------------------*/
-    	OPEN cur_part;
-        	bucle2:LOOP
-            IF pieza_final = 1 THEN
-            	LEAVE bucle2;
-            END IF;
-            FETCH cur_part INTO pieza,tiempo_vida_pieza,item_pieza,precio_estimado_pieza;
-            /*--------------Obtener horas de la pieza-------------------------------*/
-            IF EXISTS(SELECT * FROM component_part cp INNER JOIN component_implement ci ON ci.id = cp.component_implement_id WHERE ci.component_id = componente AND cp.part = pieza AND cp.state = "PENDIENTE") THEN
-    			SELECT cp.hours INTO horas_pieza FROM component_part cp INNER JOIN component_implement ci ON ci.id = cp.component_implement_id WHERE ci.component_id = componente AND cp.part = pieza AND cp.state = "PENDIENTE" LIMIT 1;
-    		ELSE
-    			SELECT 0 INTO horas_pieza;
-    		END IF;
-            /*------------------------------------------------------------*/
-            /*-------------Calcular la cantidad del pedido---------------------*/
-            SELECT ROUND((336+horas_pieza)/tiempo_vida_pieza) INTO cantidad_pieza;
-            /*----------Verificar si se requiere la pieza----------------------------*/
-            IF(cantidad_pieza > 0) THEN
-            /*----------Verificar si existe la cabecera de la solicitud-------------------------------*/
-            IF NOT EXISTS(SELECT * FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE") THEN
-        		INSERT INTO order_requests(user_id,implement_id,order_date_id) VALUES (responsable,implemento,fecha_solicitud);
-        	END IF;
-            /*-------------Obteniendo la cabecera de la solicitud--------------------------------------------------*/
-            SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
-            /*-------------Creando la solicitud de la pieza---------------------------------------------*/
-            IF EXISTS(SELECT * FROM order_request_details r WHERE r.order_request_id = pedido AND r.item_id = item_pieza) THEN
-            	UPDATE order_request_details r SET r.quantity = r.quantity + cantidad_pieza WHERE r.order_request_id = pedido AND r.item_id = item_pieza;
-            ELSE
-            	INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price) VALUES (pedido,item_pieza,cantidad_pieza,precio_estimado_pieza);
-            END IF;
-
-            END IF;
-            END LOOP bucle2;
-            SELECT 0 INTO pieza_final;
-        CLOSE cur_part;
-    /*----------------------*/
-    END;
-    END LOOP bucle;
-CLOSE cur_comp;
-UPDATE order_dates SET state = "ABIERTO" WHERE id = fecha_solicitud;
-END;
-END IF;
-END$$
-
 CREATE DEFINER=`root`@`localhost` PROCEDURE `cerrarPedido` ()   BEGIN
 /*---Variables para la fecha para cerrar el pedido----------*/
 DECLARE fecha_solicitud INT;
@@ -214,6 +105,9 @@ OPEN cursor_implementos;
                         SELECT id,hours INTO componente_del_implemento,horas_componente FROM component_implement WHERE component_id = componente AND implement_id = implemento AND state = "PENDIENTE";
                         /*---------------OBTENER EL TIEMPO DE VIDA DEL COMPONENTE------------------------*/
                         SELECT lifespan,item_id INTO tiempo_vida_componente,item_componente FROM components WHERE id = componente;
+                        IF horas_componente >= tiempo_vida_componente THEN
+                            SELECT tiempo_vida_componente INTO horas_componente;
+                        END IF;
                         /*---------------CALCULAR SI NECESITA RECAMBIO DENTRO DE 3 DIAS-----------------------------------*/
                         SELECT FLOOR((horas_componente+24)/tiempo_vida_componente) INTO cantidad_componente;
                         /*---------------TAREA DE RECAMBIO SI LO NECESITA-------------------------------*/
@@ -300,6 +194,9 @@ OPEN cursor_implementos;
                                         SELECT id,hours INTO pieza_del_componente,horas_pieza FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE";
                                         /*---------------OBTENER EL TIEMPO DE VIDA DE LA PIEZA------------------------*/
                                         SELECT lifespan,item_id INTO tiempo_vida_pieza,item_pieza FROM components WHERE id = pieza;
+                                        IF horas_pieza >= tiempo_vida_pieza THEN
+                                            SELECT tiempo_vida_pieza INTO horas_pieza;
+                                        END IF;
                                         /*---------------CALCULAR SI NECESITA RECAMBIO DENTRO DE 3 DIAS-----------------------------------*/
                                         SELECT FLOOR((horas_pieza+24)/tiempo_vida_pieza) INTO cantidad_pieza;
                                         /*---------------TAREA DE RECAMBIO SI LO NECESITA-------------------------------*/
@@ -381,39 +278,282 @@ OPEN cursor_implementos;
 CLOSE cursor_implementos;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `ssasd` (IN `tarea` INT)   BEGIN
-		DECLARE epp_final INT DEFAULT 0;
-        DECLARE equipo_proteccion INT;
-        DECLARE cur_epp CURSOR FOR SELECT er.epp_id FROM risk_task_order rt INNER JOIN epp_risk er ON er.risk_id = rt.risk_id WHERE rt.task_id = tarea GROUP BY er.epp_id;
-        DECLARE CONTINUE HANDLER FOR NOT FOUND SET epp_final = 1;
-        /*-------Abrir cursor para iterar epps--------------------------------------------*/
-        OPEN cur_epp;
-            bucle:LOOP
-                IF epp_final = 1 THEN
-                    LEAVE bucle;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_materiales_pedido` ()   BEGIN
+    /*-------Variables para la fecha para abrir el pedido--------*/
+    DECLARE fecha_solicitud INT;
+    DECLARE fecha_abrir_solicitud DATE;
+    /*-------Obtener la fecha para abrir el pedido-------*/
+    SELECT id,open_request INTO fecha_solicitud, fecha_abrir_solicitud FROM order_dates r WHERE r.state = "PENDIENTE" ORDER BY open_request ASC LIMIT 1;
+    IF(fecha_abrir_solicitud <= NOW()) THEN
+        BEGIN
+        /*-----------VARIABLES PARA DETENER CICLOS--------------*/
+        DECLARE implemento_final INT DEFAULT 0;
+        DECLARE componente_final INT DEFAULT 0;
+        DECLARE pieza_final INT DEFAULT 0;
+        /*--------------VARIABLES CABECERA SOLICITUD DE PEDIDO-------------------*/
+        DECLARE implemento INT;
+        DECLARE responsable INT;
+        /*--------------VARIABLES PARA EL DETALLE DE ORDEN DE TRABAJO---------*/
+        DECLARE solicitud_pedido INT;
+        DECLARE componente_del_implemento INT;
+        DECLARE pieza_del_componente INT;
+        /*--------------VARIABLE PARA ALMACENAR EL MODELO DEL IMPLEMENTO------------------------*/
+        DECLARE modelo_del_implemento INT;
+        /*--------------VARIABLES PARA ALMACENAR DATOS DEL COMPONENTE---------*/
+        DECLARE componente INT;
+        DECLARE horas_componente DECIMAL(8,2);
+        DECLARE tiempo_vida_componente DECIMAL(8,2);
+        DECLARE cantidad_componente INT;
+        DECLARE item_componente INT;
+        DECLARE precio_componente DECIMAL(8,2);
+        /*-------------VARIABLES PARA ALMCENAR DATOS DE LA PIEZA--------------*/
+        DECLARE pieza INT;
+        DECLARE horas_pieza DECIMAL(8,2);
+        DECLARE tiempo_vida_pieza DECIMAL(8,2);
+        DECLARE cantidad_pieza INT;
+        DECLARE item_pieza INT;
+        DECLARE precio_pieza DECIMAL(8,2);
+        /*-------------CURSOR PARA ITERAR LOS IMPLEMENTO------*/
+        DECLARE cursor_implementos CURSOR FOR SELECT id,implement_model_id,user_id FROM implements;
+        DECLARE CONTINUE HANDLER FOR NOT FOUND SET implemento_final = 1;
+        /*-------------ABRIR CURSOR DE IMPLEMENTOS------------*/
+        OPEN cursor_implementos;
+            bucle_implementos:LOOP
+                IF implemento_final = 1 THEN
+                    LEAVE bucle_implementos;
                 END IF;
-                FETCH cur_epp INTO equipo_proteccion;
-                	SELECT equipo_proteccion;
-            END LOOP bucle;
-        CLOSE cur_epp;
-    END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `tarea_reponer_componentes` ()   BEGIN
-DECLARE componente INT;
-DECLARE componente_final INT DEFAULT 0;
-DECLARE cur_componente CURSOR FOR SELECT id FROM components;
-DECLARE CONTINUE HANDLER FOR NOT FOUND SET componente_final = 1;
-OPEN cur_componente;
-	bucle:LOOP
-    IF componente_final = 1 THEN
-    	LEAVE bucle;
-  	END IF;
-    FETCH cur_componente INTO componente;
-    IF NOT EXISTS(SELECT * FROM tasks WHERE component_id = componente AND task = "Reponer") THEN
-    INSERT INTO tasks (task,component_id,estimated_time) VALUES ('Reponer',componente,15);
+            /*-----------------------------------OBTENER EL ID Y EL MODELO DEL IMPLEMENTO ---------------------------*/
+                FETCH cursor_implementos INTO implemento,modelo_del_implemento,responsable;
+            /*-----------CREAR LA CABECERA DE LA SOLICITUD DE PEDIDO SI NO EXISTE EN LA FECHA ASIGNADA---------------*/
+                IF NOT EXISTS(SELECT * FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" AND order_date_id = fecha_solicitud) THEN
+                    INSERT INTO order_requests(user_id,implement_id,order_date_id) VALUES (responsable,implemento,fecha_solicitud);
+                /*-----------OBTENER ID DE LA CABECERA DE LA SOLICITUD DE PEDIDO-------------------*/
+                    SELECT id INTO solicitud_pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" AND order_date_id = fecha_solicitud;
+            /*--------CURSOR PARA ITERAR CADA COMPONENTE DEL IMPLEMENTO-------*/
+                    BEGIN
+                        DECLARE cursor_componentes CURSOR FOR SELECT cim.component_id,i.estimated_price FROM component_implement_model cim INNER JOIN components c ON c.id = cim.component_id INNER JOIN items i ON i.id = c.item_id WHERE cim.implement_model_id = modelo_del_implemento;
+                        DECLARE CONTINUE HANDLER FOR NOT FOUND SET componente_final = 1;
+                        /*------------ABRIR CURSOR COMPONENTES---------------*/
+                        OPEN cursor_componentes;
+                            bucle_componentes:LOOP
+                                IF componente_final = 1 THEN
+                                    LEAVE bucle_componentes;
+                                END IF;
+                                /*--------------------OBTENER EL COMPONENTE DEL IMPLEMENTO-------------------------*/
+                                FETCH cursor_componentes INTO componente,precio_componente;
+                                /*----------------COMPROBAR SI EXISTE EL COMPONENTE CON SU IMPLEMENTO EN LA TABLA component_implement-------------*/
+                                IF NOT EXISTS(SELECT * FROM component_implement WHERE component_id = componente AND implement_id = implemento AND state = "PENDIENTE") THEN
+                                    INSERT INTO component_implement (component_id,implement_id) VALUES (componente,implemento);
+                                END IF;
+                                /*---------------OBTENER HORAS DEL COMPONENTE--------------------------*/
+                                SELECT id,hours INTO componente_del_implemento,horas_componente FROM component_implement WHERE component_id = componente AND implement_id = implemento AND state = "PENDIENTE";
+                                /*---------------OBTENER EL TIEMPO DE VIDA DEL COMPONENTE------------------------*/
+                                SELECT lifespan,item_id INTO tiempo_vida_componente,item_componente FROM components WHERE id = componente;
+                                IF horas_componente >= tiempo_vida_componente THEN
+                                    SELECT tiempo_vida_componente INTO horas_componente;
+                                END IF;
+                                /*---------------CALCULAR CUANTOS RECAMBIOS NECESITARÁ EN 2 MESES-----------------------------------*/
+                                SELECT FLOOR((horas_componente+336)/tiempo_vida_componente) INTO cantidad_componente;
+                                /*---------------PEDIR LOS MATERIALES NECESARIOS PARA LOS DOS MESES-------------------------------*/
+                                IF(cantidad_componente > 0) THEN
+                                    /*-----------PEDIR MATERIAL---------------------*/
+                                    IF NOT EXISTS(SELECT * FROM order_request_details WHERE order_request_id = solicitud_pedido AND item_id = item_componente AND state = "PENDIENTE") THEN
+                                        INSERT INTO order_request_details (order_request_id,item_id,quantity,estimated_price) VALUES (solicitud_pedido,item_componente,cantidad_componente,precio_componente);
+                                    ELSE
+                                        UPDATE order_request_details SET quantity = quantity + cantidad_componente WHERE order_request_id = solicitud_pedido AND item_id = item_componente AND state = "PENDIENTE";
+                                    END IF;
+                                END IF;
+                                    /*-------------CURSOR PARA ITERAR POR CADA PIEZA DEL COMPONENTE-----------------------*/
+                                BEGIN
+                                    DECLARE cursor_piezas CURSOR FOR SELECT cpm.part,i.estimated_price FROM component_part_model cpm INNER JOIN components c ON c.id = cpm.part INNER JOIN items i ON i.id = c.item_id WHERE cpm.component = componente;
+                                    DECLARE CONTINUE HANDLER FOR NOT FOUND SET pieza_final = 1;
+                                    /*---------ABRIR CURSOR DE LAS PIEZAS DEL COMPONENTE--------------------*/
+                                    OPEN cursor_piezas;
+                                        bucle_piezas:LOOP
+                                            IF pieza_final = 1 THEN
+                                                LEAVE bucle_piezas;
+                                            END IF;
+                                                /*----OBTENER PIEZAS DEL COMPONENTE----------------------------*/
+                                            FETCH cursor_piezas INTO pieza,precio_pieza;
+                                                /*----------------COMPROBAR SI EXISTE LA PIEZA CON SU COMPONENTE CON SU IMPLEMENTO EN LA TABLA component_parts-------------*/
+                                            IF NOT EXISTS(SELECT * FROM component_part WHERE component_implement_id  = componente_del_implemento AND part = pieza AND state = "PENDIENTE") THEN
+                                                INSERT INTO component_part (component_implement_id,part) VALUES (componente_del_implemento,pieza);
+                                            END IF;
+                                            /*---------------OBTENER HORAS DE LA PIEZA--------------------------*/
+                                            SELECT id,hours INTO pieza_del_componente,horas_pieza FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE";
+                                            /*---------------OBTENER EL TIEMPO DE VIDA DE LA PIEZA------------------------*/
+                                            SELECT lifespan,item_id INTO tiempo_vida_pieza,item_pieza FROM components WHERE id = pieza;
+                                            IF(horas_pieza >= tiempo_vida_pieza)THEN
+                                                SELECT tiempo_vida_pieza INTO horas_pieza;
+                                            END IF;
+                                            /*---------------CALCULAR CANTIDAD DE RECAMBIOS DENTRO DE 2 MESES-----------------------------------*/
+                                            SELECT FLOOR((horas_pieza+336)/tiempo_vida_pieza) INTO cantidad_pieza;
+                                            /*---------------PEDIR LOS MATERIALES NECESARIOS PARA LOS DOS MESES-------------------------------*/
+                                            IF(cantidad_pieza > 0) THEN
+                                                /*-----------PEDIR MATERIAL---------------------*/
+                                                IF NOT EXISTS(SELECT * FROM order_request_details WHERE order_request_id = solicitud_pedido AND item_id = item_pieza AND state = "PENDIENTE") THEN
+                                                    INSERT INTO order_request_details (order_request_id,item_id,quantity,estimated_price) VALUES (solicitud_pedido,item_pieza,(cantidad_pieza-cantidad_componente),precio_pieza);
+                                                ELSE
+                                                    UPDATE order_request_details SET quantity = (quantity + cantidad_pieza - cantidad_componente) WHERE order_request_id = solicitud_pedido AND item_id = item_pieza AND state = "PENDIENTE";
+                                                END IF;
+                                            END IF;
+                                        END LOOP bucle_piezas;
+                                    CLOSE cursor_piezas;
+                                    /*--------------------PONER PIEZA FINAL A 0-------------------*/
+                                    SELECT 0 INTO pieza_final;
+                                END;
+                            END LOOP bucle_componentes;
+                        CLOSE cursor_componentes;
+                        /*--------------------PONER COMPONENTE FINAL A 0-------------------*/
+                        SELECT 0 INTO componente_final;
+                    END;
+                END IF;
+            END LOOP bucle_implementos;
+        CLOSE cursor_implementos;
+        /*----------ABRIR FECHA DE PEDIDO-------------------*/
+        UPDATE order_dates SET state = "ABIERTO" WHERE id = fecha_solicitud;
+        END;
     END IF;
-    END LOOP bucle;
-CLOSE cur_componente;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_prereserva` ()   BEGIN
+    /*-------Variables para la fecha para abrir el pedido--------*/
+    DECLARE fecha_solicitud INT;
+    DECLARE fecha_abrir_solicitud DATE;
+    /*-------Obtener la fecha para abrir el pedido-------*/
+    SELECT id,open_pre_stockpile INTO fecha_solicitud, fecha_abrir_solicitud FROM pre_stockpile_dates r WHERE r.state = "PENDIENTE" ORDER BY open_pre_stockpile ASC LIMIT 1;
+    IF(fecha_abrir_solicitud <= NOW()) THEN
+        BEGIN
+        /*-----------VARIABLES PARA DETENER CICLOS--------------*/
+        DECLARE implemento_final INT DEFAULT 0;
+        DECLARE componente_final INT DEFAULT 0;
+        DECLARE pieza_final INT DEFAULT 0;
+        /*--------------VARIABLES CABECERA SOLICITUD DE PEDIDO-------------------*/
+        DECLARE implemento INT;
+        DECLARE responsable INT;
+        DECLARE ceco INT;
+        DECLARE almacen INT;
+        /*--------------VARIABLES PARA EL DETALLE DE ORDEN DE TRABAJO---------*/
+        DECLARE solicitud_pedido INT;
+        DECLARE componente_del_implemento INT;
+        DECLARE pieza_del_componente INT;
+        /*--------------VARIABLE PARA ALMACENAR EL MODELO DEL IMPLEMENTO------------------------*/
+        DECLARE modelo_del_implemento INT;
+        /*--------------VARIABLES PARA ALMACENAR DATOS DEL COMPONENTE---------*/
+        DECLARE componente INT;
+        DECLARE horas_componente DECIMAL(8,2);
+        DECLARE tiempo_vida_componente DECIMAL(8,2);
+        DECLARE cantidad_componente INT;
+        DECLARE item_componente INT;
+        DECLARE precio_componente DECIMAL(8,2);
+        /*-------------VARIABLES PARA ALMCENAR DATOS DE LA PIEZA--------------*/
+        DECLARE pieza INT;
+        DECLARE horas_pieza DECIMAL(8,2);
+        DECLARE tiempo_vida_pieza DECIMAL(8,2);
+        DECLARE cantidad_pieza INT;
+        DECLARE item_pieza INT;
+        DECLARE precio_pieza DECIMAL(8,2);
+        /*-------------CURSOR PARA ITERAR LOS IMPLEMENTO------*/
+        DECLARE cursor_implementos CURSOR FOR SELECT id,implement_model_id,user_id,ceco_id,w.id FROM implements i INNER JOIN warehouses w ON w.location_id = i.location_id;
+        DECLARE CONTINUE HANDLER FOR NOT FOUND SET implemento_final = 1;
+        /*-------------ABRIR CURSOR DE IMPLEMENTOS------------*/
+        OPEN cursor_implementos;
+            bucle_implementos:LOOP
+                IF implemento_final = 1 THEN
+                    LEAVE bucle_implementos;
+                END IF;
+            /*-----------------------------------OBTENER EL ID Y EL MODELO DEL IMPLEMENTO ---------------------------*/
+                FETCH cursor_implementos INTO implemento,modelo_del_implemento,responsable,ceco,almacen;
+            /*-----------CREAR LA CABECERA DE LA SOLICITUD DE PEDIDO SI NO EXISTE EN LA FECHA ASIGNADA---------------*/
+                IF NOT EXISTS(SELECT * FROM pre_stockpiles WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" AND pre_stockpile_date_id = fecha_solicitud) THEN
+                    INSERT INTO pre_stockpiles(user_id,implement_id,ceco_id,pre_stockpile_date_id) VALUES (responsable,implemento,ceco,fecha_solicitud);
+                /*-----------OBTENER ID DE LA CABECERA DE LA SOLICITUD DE PEDIDO-------------------*/
+                    SELECT id INTO solicitud_pedido FROM pre_stockpiles WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" AND pre_stockpile_date_id = fecha_solicitud;
+            /*--------CURSOR PARA ITERAR CADA COMPONENTE DEL IMPLEMENTO-------*/
+                    BEGIN
+                        DECLARE cursor_componentes CURSOR FOR SELECT cim.component_id,i.estimated_price FROM component_implement_model cim INNER JOIN components c ON c.id = cim.component_id INNER JOIN items i ON i.id = c.item_id WHERE cim.implement_model_id = modelo_del_implemento;
+                        DECLARE CONTINUE HANDLER FOR NOT FOUND SET componente_final = 1;
+                        /*------------ABRIR CURSOR COMPONENTES---------------*/
+                        OPEN cursor_componentes;
+                            bucle_componentes:LOOP
+                                IF componente_final = 1 THEN
+                                    LEAVE bucle_componentes;
+                                END IF;
+                                /*--------------------OBTENER EL COMPONENTE DEL IMPLEMENTO-------------------------*/
+                                FETCH cursor_componentes INTO componente,precio_componente;
+                                /*----------------COMPROBAR SI EXISTE EL COMPONENTE CON SU IMPLEMENTO EN LA TABLA component_implement-------------*/
+                                IF NOT EXISTS(SELECT * FROM component_implement WHERE component_id = componente AND implement_id = implemento AND state = "PENDIENTE") THEN
+                                    INSERT INTO component_implement (component_id,implement_id) VALUES (componente,implemento);
+                                END IF;
+                                /*---------------OBTENER HORAS DEL COMPONENTE--------------------------*/
+                                SELECT id,hours INTO componente_del_implemento,horas_componente FROM component_implement WHERE component_id = componente AND implement_id = implemento AND state = "PENDIENTE";
+                                /*---------------OBTENER EL TIEMPO DE VIDA DEL COMPONENTE------------------------*/
+                                SELECT lifespan,item_id INTO tiempo_vida_componente,item_componente FROM components WHERE id = componente;
+                                IF horas_componente >= tiempo_vida_componente THEN
+                                    SELECT tiempo_vida_componente INTO horas_componente;
+                                END IF;
+                                /*---------------CALCULAR CUANTOS RECAMBIOS NECESITARÁ EN 2 MESES-----------------------------------*/
+                                SELECT FLOOR((horas_componente+168)/tiempo_vida_componente) INTO cantidad_componente;
+                                /*---------------PEDIR LOS MATERIALES NECESARIOS PARA LOS DOS MESES-------------------------------*/
+                                IF(cantidad_componente > 0) THEN
+                                    /*-----------PEDIR MATERIAL---------------------*/
+                                    IF NOT EXISTS(SELECT * FROM pre_stockpile_details WHERE pre_stockpile_id = solicitud_pedido AND item_id = item_componente AND state = "PENDIENTE") THEN
+                                        INSERT INTO pre_stockpile_details (pre_stockpile_id,item_id,quantity,remaining_quantity,price,warehouse_id) VALUES (solicitud_pedido,item_componente,cantidad_componente,cantidad_componente,precio_componente,almacen);
+                                    ELSE
+                                        UPDATE pre_stockpile_details SET quantity = quantity + cantidad_componente, remaining_quantity = remaining_quantity + cantidad_componente WHERE pre_stockpile_id = solicitud_pedido AND item_id = item_componente AND state = "PENDIENTE";
+                                    END IF;
+                                END IF;
+                                    /*-------------CURSOR PARA ITERAR POR CADA PIEZA DEL COMPONENTE-----------------------*/
+                                BEGIN
+                                    DECLARE cursor_piezas CURSOR FOR SELECT cpm.part,i.estimated_price FROM component_part_model cpm INNER JOIN components c ON c.id = cpm.part INNER JOIN items i ON i.id = c.item_id WHERE cpm.component = componente;
+                                    DECLARE CONTINUE HANDLER FOR NOT FOUND SET pieza_final = 1;
+                                    /*---------ABRIR CURSOR DE LAS PIEZAS DEL COMPONENTE--------------------*/
+                                    OPEN cursor_piezas;
+                                        bucle_piezas:LOOP
+                                            IF pieza_final = 1 THEN
+                                                LEAVE bucle_piezas;
+                                            END IF;
+                                                /*----OBTENER PIEZAS DEL COMPONENTE----------------------------*/
+                                            FETCH cursor_piezas INTO pieza,precio_pieza;
+                                                /*----------------COMPROBAR SI EXISTE LA PIEZA CON SU COMPONENTE CON SU IMPLEMENTO EN LA TABLA component_parts-------------*/
+                                            IF NOT EXISTS(SELECT * FROM component_part WHERE component_implement_id  = componente_del_implemento AND part = pieza AND state = "PENDIENTE") THEN
+                                                INSERT INTO component_part (component_implement_id,part) VALUES (componente_del_implemento,pieza);
+                                            END IF;
+                                            /*---------------OBTENER HORAS DE LA PIEZA--------------------------*/
+                                            SELECT id,hours INTO pieza_del_componente,horas_pieza FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE";
+                                            /*---------------OBTENER EL TIEMPO DE VIDA DE LA PIEZA------------------------*/
+                                            SELECT lifespan,item_id INTO tiempo_vida_pieza,item_pieza FROM components WHERE id = pieza;
+                                            IF(horas_pieza >= tiempo_vida_pieza)THEN
+                                                SELECT tiempo_vida_pieza INTO horas_pieza;
+                                            END IF;
+                                            /*---------------CALCULAR CANTIDAD DE RECAMBIOS DENTRO DE 2 MESES-----------------------------------*/
+                                            SELECT FLOOR((horas_pieza+168)/tiempo_vida_pieza) INTO cantidad_pieza;
+                                            /*---------------PEDIR LOS MATERIALES NECESARIOS PARA LOS DOS MESES-------------------------------*/
+                                            IF(cantidad_pieza > 0) THEN
+                                                /*-----------PEDIR MATERIAL---------------------*/
+                                                IF NOT EXISTS(SELECT * FROM pre_stockpile_details WHERE pre_stockpile_id = solicitud_pedido AND item_id = item_pieza AND state = "PENDIENTE") THEN
+                                                    INSERT INTO pre_stockpile_details (pre_stockpile_id,item_id,quantity,remaining_quantity,price,warehouse_id) VALUES (solicitud_pedido,item_pieza,cantidad_pieza,cantidad_pieza,precio_pieza,almacen);
+                                                ELSE
+                                                    UPDATE pre_stockpile_details SET quantity = (quantity + cantidad_pieza - cantidad_componente), remaining_quantity = (remaining_quantity + cantidad_pieza - cantidad_componente) WHERE pre_stockpile_id = solicitud_pedido AND item_id = item_pieza AND state = "PENDIENTE";
+                                                END IF;
+                                            END IF;
+                                        END LOOP bucle_piezas;
+                                    CLOSE cursor_piezas;
+                                    /*--------------------PONER PIEZA FINAL A 0-------------------*/
+                                    SELECT 0 INTO pieza_final;
+                                END;
+                            END LOOP bucle_componentes;
+                        CLOSE cursor_componentes;
+                        /*--------------------PONER COMPONENTE FINAL A 0-------------------*/
+                        SELECT 0 INTO componente_final;
+                    END;
+                END IF;
+            END LOOP bucle_implementos;
+        CLOSE cursor_implementos;
+        /*----------ABRIR FECHA DE PEDIDO-------------------*/
+        UPDATE order_dates SET state = "ABIERTO" WHERE id = fecha_solicitud;
+        END;
+    END IF;
 END$$
 
 DELIMITER ;
@@ -431,30 +571,6 @@ CREATE TABLE `affected_movement` (
   `operator_assigned_stock_id` bigint(20) UNSIGNED DEFAULT NULL,
   `stock_id` bigint(20) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Volcado de datos para la tabla `affected_movement`
---
-
-INSERT INTO `affected_movement` (`id`, `operator_stock_id`, `operator_stock_detail_id`, `operator_assigned_stock_id`, `stock_id`) VALUES
-(1, 2, 2, 1, 2),
-(2, 2, 3, 2, 2),
-(3, 3, 4, 3, 3),
-(4, 4, 5, 4, 4),
-(5, 5, 6, 5, 5),
-(6, 6, 7, 6, 6),
-(7, 7, 8, 7, 7),
-(8, 7, 9, 8, 7),
-(9, 8, 10, 9, 7),
-(10, 8, 11, 10, 7),
-(11, 8, 12, 11, 7),
-(12, 8, 13, 12, 7),
-(13, 8, 14, 13, 7),
-(14, 8, 15, 14, 7),
-(15, 8, 16, 15, 7),
-(16, 8, 17, 16, 7),
-(17, 9, 18, 17, 8),
-(18, 9, 19, 18, 8);
 
 -- --------------------------------------------------------
 
@@ -508,7 +624,8 @@ INSERT INTO `brands` (`id`, `brand`, `created_at`, `updated_at`) VALUES
 (40, 'banpresto', '2022-06-30 22:22:14', '2022-06-30 22:22:14'),
 (41, 'figma', '2022-07-01 09:30:18', '2022-07-01 09:30:18'),
 (42, 'pop up', '2022-07-01 09:37:51', '2022-07-01 09:37:51'),
-(43, 'crossfire', '2022-07-01 20:48:48', '2022-07-01 20:48:48');
+(43, 'crossfire', '2022-07-01 20:48:48', '2022-07-01 20:48:48'),
+(44, 'taito', '2022-07-09 23:15:43', '2022-07-09 23:15:43');
 
 -- --------------------------------------------------------
 
@@ -522,6 +639,7 @@ CREATE TABLE `cecos` (
   `description` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `location_id` bigint(20) UNSIGNED NOT NULL,
   `amount` decimal(8,2) NOT NULL,
+  `warehouse_amount` decimal(8,2) NOT NULL DEFAULT 0.00,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -530,23 +648,23 @@ CREATE TABLE `cecos` (
 -- Volcado de datos para la tabla `cecos`
 --
 
-INSERT INTO `cecos` (`id`, `code`, `description`, `location_id`, `amount`, `created_at`, `updated_at`) VALUES
-(1, '584070', 'magni', 1, '0.00', '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
-(2, '297800', 'distinctio', 1, '0.00', '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
-(3, '421733', 'maxime', 2, '0.00', '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(4, '771845', 'quasi', 2, '0.00', '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(5, '057182', 'inventore', 3, '0.00', '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(6, '797793', 'neque', 3, '0.00', '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(7, '931896', 'exercitationem', 4, '0.00', '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
-(8, '647952', 'recusandae', 4, '0.00', '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
-(9, '182653', 'quam', 5, '0.00', '2022-06-20 21:21:40', '2022-06-20 21:21:40'),
-(10, '983918', 'voluptas', 5, '0.00', '2022-06-20 21:21:40', '2022-06-20 21:21:40'),
-(11, '690932', 'id', 6, '0.00', '2022-06-20 21:21:40', '2022-06-20 21:21:40'),
-(12, '066884', 'ut', 6, '0.00', '2022-06-20 21:21:40', '2022-06-20 21:21:40'),
-(13, '952893', 'quae', 7, '0.00', '2022-06-20 21:21:40', '2022-06-20 21:21:40'),
-(14, '579950', 'consequatur', 7, '0.00', '2022-06-20 21:21:41', '2022-06-20 21:21:41'),
-(15, '790388', 'modi', 8, '0.00', '2022-06-20 21:21:41', '2022-06-20 21:21:41'),
-(16, '236075', 'corrupti', 8, '0.00', '2022-06-20 21:21:41', '2022-06-20 21:21:41');
+INSERT INTO `cecos` (`id`, `code`, `description`, `location_id`, `amount`, `warehouse_amount`, `created_at`, `updated_at`) VALUES
+(1, '584070', 'magni', 1, '0.00', '0.00', '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
+(2, '297800', 'distinctio', 1, '0.00', '0.00', '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
+(3, '421733', 'maxime', 2, '0.00', '0.00', '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(4, '771845', 'quasi', 2, '0.00', '0.00', '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(5, '057182', 'inventore', 3, '0.00', '0.00', '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(6, '797793', 'neque', 3, '0.00', '0.00', '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(7, '931896', 'exercitationem', 4, '0.00', '0.00', '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
+(8, '647952', 'recusandae', 4, '0.00', '0.00', '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
+(9, '182653', 'quam', 5, '0.00', '0.00', '2022-06-20 21:21:40', '2022-06-20 21:21:40'),
+(10, '983918', 'voluptas', 5, '0.00', '0.00', '2022-06-20 21:21:40', '2022-06-20 21:21:40'),
+(11, '690932', 'id', 6, '0.00', '0.00', '2022-06-20 21:21:40', '2022-06-20 21:21:40'),
+(12, '066884', 'ut', 6, '0.00', '0.00', '2022-06-20 21:21:40', '2022-06-20 21:21:40'),
+(13, '952893', 'quae', 7, '0.00', '0.00', '2022-06-20 21:21:40', '2022-06-20 21:21:40'),
+(14, '579950', 'consequatur', 7, '0.00', '0.00', '2022-06-20 21:21:41', '2022-06-20 21:21:41'),
+(15, '790388', 'modi', 8, '0.00', '0.00', '2022-06-20 21:21:41', '2022-06-20 21:21:41'),
+(16, '236075', 'corrupti', 8, '0.00', '0.00', '2022-06-20 21:21:41', '2022-06-20 21:21:41');
 
 -- --------------------------------------------------------
 
@@ -758,6 +876,7 @@ CREATE TABLE `component_implement` (
   `implement_id` bigint(20) UNSIGNED NOT NULL,
   `hours` decimal(8,2) NOT NULL DEFAULT 0.00,
   `state` enum('PENDIENTE','ORDENADO','CONCLUIDO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
+  `work_order_id` bigint(20) UNSIGNED DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -766,103 +885,55 @@ CREATE TABLE `component_implement` (
 -- Volcado de datos para la tabla `component_implement`
 --
 
-INSERT INTO `component_implement` (`id`, `component_id`, `implement_id`, `hours`, `state`, `created_at`, `updated_at`) VALUES
-(1, 28, 1, '379.95', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(2, 8, 1, '379.95', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(3, 20, 1, '379.95', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(4, 28, 2, '382.50', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(5, 8, 2, '382.50', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(6, 20, 2, '382.50', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(7, 28, 3, '379.10', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(8, 8, 3, '379.10', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(9, 20, 3, '379.10', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(10, 28, 4, '255.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(11, 8, 4, '255.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(12, 20, 4, '255.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(13, 20, 5, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(14, 19, 5, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(15, 22, 5, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(16, 20, 6, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(17, 19, 6, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(18, 22, 6, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(19, 20, 7, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(20, 19, 7, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(21, 22, 7, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(22, 20, 8, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(23, 19, 8, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(24, 22, 8, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(25, 10, 9, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(26, 5, 9, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(27, 21, 9, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(28, 10, 10, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(29, 5, 10, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(30, 21, 10, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(31, 10, 11, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(32, 5, 11, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(33, 21, 11, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(34, 10, 12, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(35, 5, 12, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(36, 21, 12, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(37, 28, 13, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(38, 27, 13, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(39, 22, 13, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(40, 28, 14, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(41, 27, 14, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(42, 22, 14, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(43, 28, 15, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(44, 27, 15, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(45, 22, 15, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(46, 28, 16, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(47, 27, 16, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(48, 22, 16, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(49, 1, 1, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(50, 2, 1, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(51, 3, 1, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(52, 1, 2, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(53, 2, 2, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(54, 3, 2, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(55, 1, 3, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(56, 2, 3, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(57, 3, 3, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(58, 1, 4, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(59, 2, 4, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(60, 3, 4, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(61, 4, 5, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(62, 5, 5, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(63, 6, 5, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(64, 4, 6, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(65, 5, 6, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(66, 6, 6, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(67, 4, 7, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(68, 5, 7, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(69, 6, 7, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(70, 4, 8, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(71, 5, 8, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(72, 6, 8, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(73, 7, 9, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(74, 8, 9, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(75, 9, 9, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(76, 7, 10, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(77, 8, 10, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(78, 9, 10, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(79, 7, 11, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(80, 8, 11, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(81, 9, 11, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(82, 7, 12, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(83, 8, 12, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(84, 9, 12, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(85, 10, 13, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(86, 11, 13, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(87, 12, 13, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(88, 10, 14, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(89, 11, 14, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(90, 12, 14, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(91, 10, 15, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(92, 11, 15, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(93, 12, 15, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(94, 10, 16, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(95, 11, 16, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56'),
-(96, 12, 16, '0.00', 'PENDIENTE', '2022-07-08 06:59:56', '2022-07-08 06:59:56');
+INSERT INTO `component_implement` (`id`, `component_id`, `implement_id`, `hours`, `state`, `work_order_id`, `created_at`, `updated_at`) VALUES
+(97, 28, 3, '807.50', 'PENDIENTE', NULL, '2022-07-09 15:03:09', '2022-07-09 15:03:09'),
+(98, 8, 3, '807.50', 'PENDIENTE', NULL, '2022-07-09 15:03:09', '2022-07-09 15:03:09'),
+(99, 20, 3, '807.50', 'PENDIENTE', NULL, '2022-07-09 15:03:09', '2022-07-09 15:03:09'),
+(100, 28, 4, '467.50', 'PENDIENTE', NULL, '2022-07-09 15:04:02', '2022-07-09 15:04:53'),
+(101, 8, 4, '467.50', 'PENDIENTE', NULL, '2022-07-09 15:04:02', '2022-07-09 15:04:53'),
+(102, 20, 4, '467.50', 'PENDIENTE', NULL, '2022-07-09 15:04:02', '2022-07-09 15:04:53'),
+(103, 28, 1, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:05:56', '2022-07-09 15:05:56'),
+(104, 8, 1, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:07', '2022-07-09 15:42:07'),
+(105, 20, 1, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:08', '2022-07-09 15:42:08'),
+(106, 28, 2, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:08', '2022-07-09 15:42:08'),
+(107, 8, 2, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
+(108, 20, 2, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
+(109, 20, 5, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
+(110, 19, 5, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
+(111, 22, 5, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(112, 20, 6, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(113, 19, 6, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(114, 22, 6, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:14', '2022-07-09 15:42:14'),
+(115, 20, 7, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:14', '2022-07-09 15:42:14'),
+(116, 19, 7, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(117, 22, 7, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(118, 20, 8, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(119, 19, 8, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:16', '2022-07-09 15:42:16'),
+(120, 22, 8, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:16', '2022-07-09 15:42:16'),
+(121, 10, 9, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(122, 5, 9, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(123, 21, 9, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(124, 10, 10, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(125, 5, 10, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(126, 21, 10, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(127, 10, 11, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:19', '2022-07-09 15:42:19'),
+(128, 5, 11, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:19', '2022-07-09 15:42:19'),
+(129, 21, 11, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:20', '2022-07-09 15:42:20'),
+(130, 10, 12, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:20', '2022-07-09 15:42:20'),
+(131, 5, 12, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:21', '2022-07-09 15:42:21'),
+(132, 21, 12, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:21', '2022-07-09 15:42:21'),
+(133, 28, 13, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:22', '2022-07-09 15:42:22'),
+(134, 27, 13, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:22', '2022-07-09 15:42:22'),
+(135, 22, 13, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:23', '2022-07-09 15:42:23'),
+(136, 28, 14, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:24', '2022-07-09 15:42:24'),
+(137, 27, 14, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:24', '2022-07-09 15:42:24'),
+(138, 22, 14, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:25', '2022-07-09 15:42:25'),
+(139, 28, 15, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:25', '2022-07-09 15:42:25'),
+(140, 27, 15, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(141, 22, 15, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(142, 28, 16, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:27', '2022-07-09 15:42:27'),
+(143, 27, 16, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:27', '2022-07-09 15:42:27'),
+(144, 22, 16, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:28', '2022-07-09 15:42:28');
 
 -- --------------------------------------------------------
 
@@ -915,150 +986,150 @@ CREATE TABLE `component_part` (
 --
 
 INSERT INTO `component_part` (`id`, `component_implement_id`, `part`, `hours`, `state`, `created_at`, `updated_at`) VALUES
-(1, 1, 2, '379.95', 'PENDIENTE', NULL, NULL),
-(2, 1, 13, '379.95', 'PENDIENTE', NULL, NULL),
-(3, 1, 33, '379.95', 'PENDIENTE', NULL, NULL),
-(4, 2, 4, '379.95', 'PENDIENTE', NULL, NULL),
-(5, 2, 11, '379.95', 'PENDIENTE', NULL, NULL),
-(6, 2, 23, '379.95', 'PENDIENTE', NULL, NULL),
-(7, 3, 4, '379.95', 'PENDIENTE', NULL, NULL),
-(8, 3, 29, '379.95', 'PENDIENTE', NULL, NULL),
-(9, 3, 33, '379.95', 'PENDIENTE', NULL, NULL),
-(10, 7, 2, '379.10', 'PENDIENTE', NULL, NULL),
-(11, 7, 13, '379.10', 'PENDIENTE', NULL, NULL),
-(12, 7, 33, '379.10', 'PENDIENTE', NULL, NULL),
-(13, 8, 4, '379.10', 'PENDIENTE', NULL, NULL),
-(14, 8, 11, '379.10', 'PENDIENTE', NULL, NULL),
-(15, 8, 23, '379.10', 'PENDIENTE', NULL, NULL),
-(16, 9, 4, '379.10', 'PENDIENTE', NULL, NULL),
-(17, 9, 29, '379.10', 'PENDIENTE', NULL, NULL),
-(18, 9, 33, '379.10', 'PENDIENTE', NULL, NULL),
-(19, 10, 2, '255.00', 'PENDIENTE', NULL, NULL),
-(20, 10, 13, '255.00', 'PENDIENTE', NULL, NULL),
-(21, 10, 33, '255.00', 'PENDIENTE', NULL, NULL),
-(22, 11, 4, '255.00', 'PENDIENTE', NULL, NULL),
-(23, 11, 11, '255.00', 'PENDIENTE', NULL, NULL),
-(24, 11, 23, '255.00', 'PENDIENTE', NULL, NULL),
-(25, 12, 4, '255.00', 'PENDIENTE', NULL, NULL),
-(26, 12, 29, '255.00', 'PENDIENTE', NULL, NULL),
-(27, 12, 33, '255.00', 'PENDIENTE', NULL, NULL),
-(28, 4, 2, '382.50', 'PENDIENTE', NULL, NULL),
-(29, 4, 13, '382.50', 'PENDIENTE', NULL, NULL),
-(30, 4, 33, '382.50', 'PENDIENTE', NULL, NULL),
-(31, 5, 4, '382.50', 'PENDIENTE', NULL, NULL),
-(32, 5, 11, '382.50', 'PENDIENTE', NULL, NULL),
-(33, 5, 23, '382.50', 'PENDIENTE', NULL, NULL),
-(34, 6, 4, '382.50', 'PENDIENTE', NULL, NULL),
-(35, 6, 29, '382.50', 'PENDIENTE', NULL, NULL),
-(36, 6, 33, '382.50', 'PENDIENTE', NULL, NULL),
-(37, 13, 4, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(38, 13, 29, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(39, 13, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(40, 14, 3, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(41, 14, 4, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(42, 14, 13, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(43, 15, 2, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(44, 15, 23, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(45, 15, 29, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(46, 16, 4, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(47, 16, 29, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(48, 16, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(49, 17, 3, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(50, 17, 4, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(51, 17, 13, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(52, 18, 2, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(53, 18, 23, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(54, 18, 29, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(55, 19, 4, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(56, 19, 29, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(57, 19, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(58, 20, 3, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(59, 20, 4, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(60, 20, 13, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(61, 21, 2, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(62, 21, 23, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(63, 21, 29, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(64, 22, 4, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(65, 22, 29, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(66, 22, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(67, 23, 3, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(68, 23, 4, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(69, 23, 13, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(70, 24, 2, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(71, 24, 23, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(72, 24, 29, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(73, 25, 7, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(74, 25, 29, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(75, 25, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(76, 26, 2, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(77, 26, 7, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(78, 26, 13, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(79, 27, 3, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(80, 27, 17, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(81, 27, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(82, 28, 7, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(83, 28, 29, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(84, 28, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(85, 29, 2, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(86, 29, 7, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(87, 29, 13, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(88, 30, 3, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(89, 30, 17, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(90, 30, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(91, 31, 7, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(92, 31, 29, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(93, 31, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(94, 32, 2, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(95, 32, 7, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(96, 32, 13, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(97, 33, 3, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(98, 33, 17, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(99, 33, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(100, 34, 7, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(101, 34, 29, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(102, 34, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:38', '2022-07-08 07:24:38'),
-(103, 35, 2, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(104, 35, 7, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(105, 35, 13, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(106, 36, 3, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(107, 36, 17, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(108, 36, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(109, 37, 2, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(110, 37, 13, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(111, 37, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(112, 38, 11, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(113, 38, 30, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(114, 38, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(115, 39, 2, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(116, 39, 23, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(117, 39, 29, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(118, 40, 2, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(119, 40, 13, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(120, 40, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(121, 41, 11, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(122, 41, 30, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(123, 41, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(124, 42, 2, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(125, 42, 23, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(126, 42, 29, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(127, 43, 2, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(128, 43, 13, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(129, 43, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(130, 44, 11, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(131, 44, 30, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(132, 44, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(133, 45, 2, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(134, 45, 23, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(135, 45, 29, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(136, 46, 2, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(137, 46, 13, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(138, 46, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(139, 47, 11, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(140, 47, 30, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(141, 47, 33, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(142, 48, 2, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(143, 48, 23, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39'),
-(144, 48, 29, '0.00', 'PENDIENTE', '2022-07-08 07:24:39', '2022-07-08 07:24:39');
+(145, 97, 2, '807.50', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-09 15:03:09'),
+(146, 97, 13, '807.50', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-09 15:03:09'),
+(147, 97, 33, '807.50', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-09 15:03:09'),
+(148, 98, 4, '807.50', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-09 15:03:09'),
+(149, 98, 11, '807.50', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-09 15:03:09'),
+(150, 98, 23, '807.50', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-09 15:03:09'),
+(151, 99, 4, '807.50', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-09 15:03:09'),
+(152, 99, 29, '807.50', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-09 15:03:09'),
+(153, 99, 33, '807.50', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-09 15:03:09'),
+(154, 100, 2, '467.50', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-09 15:04:53'),
+(155, 100, 13, '467.50', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-09 15:04:53'),
+(156, 100, 33, '467.50', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-09 15:04:53'),
+(157, 101, 4, '467.50', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-09 15:04:53'),
+(158, 101, 11, '467.50', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-09 15:04:53'),
+(159, 101, 23, '467.50', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-09 15:04:53'),
+(160, 102, 4, '467.50', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-09 15:04:53'),
+(161, 102, 29, '467.50', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-09 15:04:53'),
+(162, 102, 33, '467.50', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-09 15:04:53'),
+(163, 103, 2, '0.00', 'PENDIENTE', '2022-07-09 15:05:56', '2022-07-09 15:05:56'),
+(164, 103, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:07', '2022-07-09 15:42:07'),
+(165, 103, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:07', '2022-07-09 15:42:07'),
+(166, 104, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:07', '2022-07-09 15:42:07'),
+(167, 104, 11, '0.00', 'PENDIENTE', '2022-07-09 15:42:07', '2022-07-09 15:42:07'),
+(168, 104, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-09 15:42:08'),
+(169, 105, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-09 15:42:08'),
+(170, 105, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-09 15:42:08'),
+(171, 105, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-09 15:42:08'),
+(172, 106, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-09 15:42:08'),
+(173, 106, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
+(174, 106, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
+(175, 107, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
+(176, 107, 11, '0.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
+(177, 107, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
+(178, 108, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
+(179, 108, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
+(180, 108, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
+(181, 109, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
+(182, 109, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
+(183, 109, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
+(184, 110, 3, '0.00', 'PENDIENTE', '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
+(185, 110, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
+(186, 110, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
+(187, 111, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(188, 111, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(189, 111, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(190, 112, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(191, 112, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(192, 112, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(193, 113, 3, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(194, 113, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(195, 113, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(196, 114, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:14', '2022-07-09 15:42:14'),
+(197, 114, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:14', '2022-07-09 15:42:14'),
+(198, 114, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:14', '2022-07-09 15:42:14'),
+(199, 115, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:14', '2022-07-09 15:42:14'),
+(200, 115, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:14', '2022-07-09 15:42:14'),
+(201, 115, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:14', '2022-07-09 15:42:14'),
+(202, 116, 3, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(203, 116, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(204, 116, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(205, 117, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(206, 117, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(207, 117, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(208, 118, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(209, 118, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(210, 118, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(211, 119, 3, '0.00', 'PENDIENTE', '2022-07-09 15:42:16', '2022-07-09 15:42:16'),
+(212, 119, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:16', '2022-07-09 15:42:16'),
+(213, 119, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:16', '2022-07-09 15:42:16'),
+(214, 120, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:16', '2022-07-09 15:42:16'),
+(215, 120, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:16', '2022-07-09 15:42:16'),
+(216, 120, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:16', '2022-07-09 15:42:16'),
+(217, 121, 7, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(218, 121, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(219, 121, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(220, 122, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(221, 122, 7, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(222, 122, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(223, 123, 3, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(224, 123, 17, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(225, 123, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(226, 124, 7, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(227, 124, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(228, 124, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(229, 125, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(230, 125, 7, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(231, 125, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(232, 126, 3, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(233, 126, 17, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(234, 126, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(235, 127, 7, '0.00', 'PENDIENTE', '2022-07-09 15:42:19', '2022-07-09 15:42:19'),
+(236, 127, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:19', '2022-07-09 15:42:19'),
+(237, 127, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:19', '2022-07-09 15:42:19'),
+(238, 128, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:19', '2022-07-09 15:42:19'),
+(239, 128, 7, '0.00', 'PENDIENTE', '2022-07-09 15:42:19', '2022-07-09 15:42:19'),
+(240, 128, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:19', '2022-07-09 15:42:19'),
+(241, 129, 3, '0.00', 'PENDIENTE', '2022-07-09 15:42:20', '2022-07-09 15:42:20'),
+(242, 129, 17, '0.00', 'PENDIENTE', '2022-07-09 15:42:20', '2022-07-09 15:42:20'),
+(243, 129, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:20', '2022-07-09 15:42:20'),
+(244, 130, 7, '0.00', 'PENDIENTE', '2022-07-09 15:42:20', '2022-07-09 15:42:20'),
+(245, 130, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:20', '2022-07-09 15:42:20'),
+(246, 130, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:20', '2022-07-09 15:42:20'),
+(247, 131, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:21', '2022-07-09 15:42:21'),
+(248, 131, 7, '0.00', 'PENDIENTE', '2022-07-09 15:42:21', '2022-07-09 15:42:21'),
+(249, 131, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:21', '2022-07-09 15:42:21'),
+(250, 132, 3, '0.00', 'PENDIENTE', '2022-07-09 15:42:21', '2022-07-09 15:42:21'),
+(251, 132, 17, '0.00', 'PENDIENTE', '2022-07-09 15:42:21', '2022-07-09 15:42:21'),
+(252, 132, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:22', '2022-07-09 15:42:22'),
+(253, 133, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:22', '2022-07-09 15:42:22'),
+(254, 133, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:22', '2022-07-09 15:42:22'),
+(255, 133, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:22', '2022-07-09 15:42:22'),
+(256, 134, 11, '0.00', 'PENDIENTE', '2022-07-09 15:42:22', '2022-07-09 15:42:22'),
+(257, 134, 30, '0.00', 'PENDIENTE', '2022-07-09 15:42:22', '2022-07-09 15:42:22'),
+(258, 134, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:23', '2022-07-09 15:42:23'),
+(259, 135, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:23', '2022-07-09 15:42:23'),
+(260, 135, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:23', '2022-07-09 15:42:23'),
+(261, 135, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:23', '2022-07-09 15:42:23'),
+(262, 136, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:24', '2022-07-09 15:42:24'),
+(263, 136, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:24', '2022-07-09 15:42:24'),
+(264, 136, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:24', '2022-07-09 15:42:24'),
+(265, 137, 11, '0.00', 'PENDIENTE', '2022-07-09 15:42:24', '2022-07-09 15:42:24'),
+(266, 137, 30, '0.00', 'PENDIENTE', '2022-07-09 15:42:24', '2022-07-09 15:42:24'),
+(267, 137, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:24', '2022-07-09 15:42:24'),
+(268, 138, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:25', '2022-07-09 15:42:25'),
+(269, 138, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:25', '2022-07-09 15:42:25'),
+(270, 138, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:25', '2022-07-09 15:42:25'),
+(271, 139, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:25', '2022-07-09 15:42:25'),
+(272, 139, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(273, 139, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(274, 140, 11, '0.00', 'PENDIENTE', '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(275, 140, 30, '0.00', 'PENDIENTE', '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(276, 140, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(277, 141, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(278, 141, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(279, 141, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:27', '2022-07-09 15:42:27'),
+(280, 142, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:27', '2022-07-09 15:42:27'),
+(281, 142, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:27', '2022-07-09 15:42:27'),
+(282, 142, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:27', '2022-07-09 15:42:27'),
+(283, 143, 11, '0.00', 'PENDIENTE', '2022-07-09 15:42:27', '2022-07-09 15:42:27'),
+(284, 143, 30, '0.00', 'PENDIENTE', '2022-07-09 15:42:28', '2022-07-09 15:42:28'),
+(285, 143, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:28', '2022-07-09 15:42:28'),
+(286, 144, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:28', '2022-07-09 15:42:28'),
+(287, 144, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:28', '2022-07-09 15:42:28'),
+(288, 144, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:29', '2022-07-09 15:42:29');
 
 -- --------------------------------------------------------
 
@@ -1268,234 +1339,6 @@ CREATE TABLE `epp_work_order` (
   `work_order_id` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Volcado de datos para la tabla `epp_work_order`
---
-
-INSERT INTO `epp_work_order` (`id`, `epp_id`, `work_order_id`) VALUES
-(938, 1, 69),
-(955, 1, 70),
-(972, 1, 71),
-(989, 1, 72),
-(1006, 1, 73),
-(1020, 1, 74),
-(1034, 1, 75),
-(1048, 1, 76),
-(1057, 1, 77),
-(1071, 1, 78),
-(1085, 1, 79),
-(1099, 1, 80),
-(939, 2, 69),
-(956, 2, 70),
-(973, 2, 71),
-(990, 2, 72),
-(1007, 2, 73),
-(1021, 2, 74),
-(1035, 2, 75),
-(1049, 2, 76),
-(1058, 2, 77),
-(1072, 2, 78),
-(1086, 2, 79),
-(1100, 2, 80),
-(940, 3, 69),
-(957, 3, 70),
-(974, 3, 71),
-(991, 3, 72),
-(1008, 3, 73),
-(1022, 3, 74),
-(1036, 3, 75),
-(1050, 3, 76),
-(1059, 3, 77),
-(1073, 3, 78),
-(1087, 3, 79),
-(1101, 3, 80),
-(924, 4, 68),
-(943, 4, 69),
-(960, 4, 70),
-(977, 4, 71),
-(994, 4, 72),
-(1064, 4, 77),
-(1078, 4, 78),
-(1092, 4, 79),
-(1106, 4, 80),
-(891, 5, 65),
-(901, 5, 66),
-(911, 5, 67),
-(921, 5, 68),
-(935, 5, 69),
-(952, 5, 70),
-(969, 5, 71),
-(986, 5, 72),
-(1001, 5, 73),
-(1015, 5, 74),
-(1029, 5, 75),
-(1043, 5, 76),
-(897, 6, 65),
-(907, 6, 66),
-(917, 6, 67),
-(930, 6, 68),
-(933, 6, 69),
-(950, 6, 70),
-(967, 6, 71),
-(984, 6, 72),
-(1004, 6, 73),
-(1018, 6, 74),
-(1032, 6, 75),
-(1046, 6, 76),
-(1062, 6, 77),
-(1076, 6, 78),
-(1090, 6, 79),
-(1104, 6, 80),
-(894, 7, 65),
-(904, 7, 66),
-(914, 7, 67),
-(999, 7, 73),
-(1013, 7, 74),
-(1027, 7, 75),
-(1041, 7, 76),
-(925, 8, 68),
-(944, 8, 69),
-(961, 8, 70),
-(978, 8, 71),
-(995, 8, 72),
-(1065, 8, 77),
-(1079, 8, 78),
-(1093, 8, 79),
-(1107, 8, 80),
-(889, 9, 65),
-(899, 9, 66),
-(909, 9, 67),
-(919, 9, 68),
-(931, 9, 69),
-(948, 9, 70),
-(965, 9, 71),
-(982, 9, 72),
-(1010, 9, 73),
-(1024, 9, 74),
-(1038, 9, 75),
-(1052, 9, 76),
-(1055, 9, 77),
-(1069, 9, 78),
-(1083, 9, 79),
-(1097, 9, 80),
-(895, 10, 65),
-(905, 10, 66),
-(915, 10, 67),
-(1000, 10, 73),
-(1014, 10, 74),
-(1028, 10, 75),
-(1042, 10, 76),
-(926, 11, 68),
-(945, 11, 69),
-(962, 11, 70),
-(979, 11, 71),
-(996, 11, 72),
-(1066, 11, 77),
-(1080, 11, 78),
-(1094, 11, 79),
-(1108, 11, 80),
-(892, 12, 65),
-(902, 12, 66),
-(912, 12, 67),
-(922, 12, 68),
-(936, 12, 69),
-(953, 12, 70),
-(970, 12, 71),
-(987, 12, 72),
-(1002, 12, 73),
-(1016, 12, 74),
-(1030, 12, 75),
-(1044, 12, 76),
-(927, 13, 68),
-(946, 13, 69),
-(963, 13, 70),
-(980, 13, 71),
-(997, 13, 72),
-(1067, 13, 77),
-(1081, 13, 78),
-(1095, 13, 79),
-(1109, 13, 80),
-(896, 14, 65),
-(906, 14, 66),
-(916, 14, 67),
-(942, 14, 69),
-(959, 14, 70),
-(976, 14, 71),
-(993, 14, 72),
-(1012, 14, 73),
-(1026, 14, 74),
-(1040, 14, 75),
-(1054, 14, 76),
-(1061, 14, 77),
-(1075, 14, 78),
-(1089, 14, 79),
-(1103, 14, 80),
-(893, 15, 65),
-(903, 15, 66),
-(913, 15, 67),
-(923, 15, 68),
-(937, 15, 69),
-(954, 15, 70),
-(971, 15, 71),
-(988, 15, 72),
-(1003, 15, 73),
-(1017, 15, 74),
-(1031, 15, 75),
-(1045, 15, 76),
-(898, 16, 65),
-(908, 16, 66),
-(918, 16, 67),
-(928, 16, 68),
-(934, 16, 69),
-(951, 16, 70),
-(968, 16, 71),
-(985, 16, 72),
-(1005, 16, 73),
-(1019, 16, 74),
-(1033, 16, 75),
-(1047, 16, 76),
-(1063, 16, 77),
-(1077, 16, 78),
-(1091, 16, 79),
-(1105, 16, 80),
-(941, 18, 69),
-(958, 18, 70),
-(975, 18, 71),
-(992, 18, 72),
-(1009, 18, 73),
-(1023, 18, 74),
-(1037, 18, 75),
-(1051, 18, 76),
-(1060, 18, 77),
-(1074, 18, 78),
-(1088, 18, 79),
-(1102, 18, 80),
-(890, 19, 65),
-(900, 19, 66),
-(910, 19, 67),
-(920, 19, 68),
-(932, 19, 69),
-(949, 19, 70),
-(966, 19, 71),
-(983, 19, 72),
-(1011, 19, 73),
-(1025, 19, 74),
-(1039, 19, 75),
-(1053, 19, 76),
-(1056, 19, 77),
-(1070, 19, 78),
-(1084, 19, 79),
-(1098, 19, 80),
-(929, 20, 68),
-(947, 20, 69),
-(964, 20, 70),
-(981, 20, 71),
-(998, 20, 72),
-(1068, 20, 77),
-(1082, 20, 78),
-(1096, 20, 79),
-(1110, 20, 80);
-
 -- --------------------------------------------------------
 
 --
@@ -1537,8 +1380,8 @@ CREATE TABLE `implements` (
 INSERT INTO `implements` (`id`, `implement_model_id`, `implement_number`, `hours`, `user_id`, `location_id`, `ceco_id`, `created_at`, `updated_at`) VALUES
 (1, 1, '5243', '446.90', 1, 1, 1, '2022-06-20 21:21:59', '2022-07-07 02:36:52'),
 (2, 1, '2399', '407.44', 2, 1, 2, '2022-06-20 21:21:59', '2022-07-07 02:37:04'),
-(3, 1, '6977', '431.61', 3, 2, 3, '2022-06-20 21:21:59', '2022-07-07 02:37:32'),
-(4, 1, '9149', '336.06', 4, 2, 4, '2022-06-20 21:21:59', '2022-07-07 02:37:48'),
+(3, 1, '6977', '1239.11', 3, 2, 3, '2022-06-20 21:21:59', '2022-07-09 15:03:09'),
+(4, 1, '9149', '803.56', 4, 2, 4, '2022-06-20 21:21:59', '2022-07-09 15:04:53'),
 (5, 2, '3513', '43.59', 5, 3, 5, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
 (6, 2, '6295', '21.92', 6, 3, 6, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
 (7, 2, '4375', '91.21', 7, 4, 7, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
@@ -1718,7 +1561,8 @@ INSERT INTO `items` (`id`, `sku`, `item`, `brand_id`, `measurement_unit_id`, `es
 (67, '4588856', 'siesta', 42, 1, '150.00', 'FUNGIBLE', 1, '2022-07-01 21:14:02', '2022-07-01 21:14:02'),
 (68, '458225', 'kurumi tokisaki', 41, 1, '36.00', 'FUNGIBLE', 1, '2022-07-01 21:41:08', '2022-07-01 21:41:08'),
 (69, '522544', 'neptunia', 40, 4, '452.00', 'FUNGIBLE', 1, '2022-07-01 22:36:30', '2022-07-01 22:36:30'),
-(70, '4588563', 'mayuri', 43, 5, '156.00', 'FUNGIBLE', 1, '2022-07-02 18:16:04', '2022-07-02 18:16:04');
+(70, '4588563', 'mayuri', 43, 5, '156.00', 'FUNGIBLE', 1, '2022-07-02 18:16:04', '2022-07-02 18:16:04'),
+(71, '632114', 'rem', 44, 2, '500.00', 'FUNGIBLE', 1, '2022-07-09 23:15:58', '2022-07-09 23:15:58');
 
 --
 -- Disparadores `items`
@@ -2129,34 +1973,11 @@ CREATE TABLE `operator_assigned_stocks` (
   `quantity` decimal(8,2) NOT NULL,
   `price` decimal(8,2) NOT NULL,
   `warehouse_id` bigint(20) UNSIGNED NOT NULL,
-  `state` enum('ASIGNADO','LIBERADO') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ceco_id` bigint(20) UNSIGNED NOT NULL,
+  `state` enum('ASIGNADO','LIBERADO','ANULADO') COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Volcado de datos para la tabla `operator_assigned_stocks`
---
-
-INSERT INTO `operator_assigned_stocks` (`id`, `user_id`, `item_id`, `quantity`, `price`, `warehouse_id`, `state`, `created_at`, `updated_at`) VALUES
-(1, 1, 21, '0.00', '0.00', 1, 'ASIGNADO', NULL, NULL),
-(2, 1, 21, '0.00', '0.00', 1, 'ASIGNADO', NULL, NULL),
-(3, 1, 44, '0.00', '0.00', 1, 'ASIGNADO', NULL, NULL),
-(4, 1, 64, '0.00', '0.00', 1, 'ASIGNADO', NULL, NULL),
-(5, 1, 52, '0.00', '0.00', 1, 'ASIGNADO', NULL, NULL),
-(6, 1, 57, '0.00', '0.00', 1, 'ASIGNADO', NULL, NULL),
-(7, 2, 9, '0.00', '0.00', 1, 'ASIGNADO', NULL, NULL),
-(8, 2, 9, '0.00', '0.00', 1, 'ASIGNADO', NULL, NULL),
-(9, 2, 57, '2.00', '502.17', 1, 'ASIGNADO', NULL, NULL),
-(10, 2, 9, '2.00', '362.42', 1, 'ASIGNADO', NULL, NULL),
-(11, 1, 21, '2.00', '800.00', 1, 'ASIGNADO', NULL, NULL),
-(12, 1, 44, '1.00', '954.65', 1, 'ASIGNADO', NULL, NULL),
-(13, 1, 52, '2.00', '216.64', 1, 'ASIGNADO', NULL, NULL),
-(14, 1, 57, '2.00', '420.00', 1, 'ASIGNADO', NULL, NULL),
-(15, 2, 57, '0.00', '0.00', 1, 'ASIGNADO', NULL, NULL),
-(16, 2, 57, '2.00', '502.17', 1, 'ASIGNADO', NULL, NULL),
-(17, 1, 63, '3.00', '610.00', 1, 'ASIGNADO', NULL, NULL),
-(18, 1, 64, '1.00', '785.00', 1, 'ASIGNADO', NULL, NULL);
 
 --
 -- Disparadores `operator_assigned_stocks`
@@ -2181,23 +2002,10 @@ CREATE TABLE `operator_stocks` (
   `quantity` decimal(8,2) NOT NULL,
   `price` decimal(8,2) NOT NULL,
   `warehouse_id` bigint(20) UNSIGNED NOT NULL,
+  `ceco_id` bigint(20) UNSIGNED NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Volcado de datos para la tabla `operator_stocks`
---
-
-INSERT INTO `operator_stocks` (`id`, `user_id`, `item_id`, `quantity`, `price`, `warehouse_id`, `created_at`, `updated_at`) VALUES
-(2, 1, 21, '2.00', '1600.00', 1, NULL, NULL),
-(3, 1, 44, '1.00', '954.65', 1, NULL, NULL),
-(4, 1, 64, '1.00', '785.00', 1, NULL, NULL),
-(5, 1, 52, '2.00', '433.28', 1, NULL, NULL),
-(6, 1, 57, '2.00', '840.00', 1, NULL, NULL),
-(7, 2, 9, '2.00', '724.84', 1, NULL, NULL),
-(8, 2, 57, '4.00', '2008.68', 1, NULL, NULL),
-(9, 1, 63, '3.00', '1830.00', 1, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -2213,35 +2021,12 @@ CREATE TABLE `operator_stock_details` (
   `quantity` decimal(8,2) NOT NULL,
   `price` decimal(8,2) NOT NULL,
   `warehouse_id` bigint(20) UNSIGNED NOT NULL,
+  `ceco_id` bigint(20) UNSIGNED NOT NULL,
   `state` enum('CONFIRMADO','ANULADO','LIBERADO') COLLATE utf8mb4_unicode_ci NOT NULL,
   `order_request_detail_id` bigint(20) UNSIGNED NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Volcado de datos para la tabla `operator_stock_details`
---
-
-INSERT INTO `operator_stock_details` (`id`, `user_id`, `item_id`, `movement`, `quantity`, `price`, `warehouse_id`, `state`, `order_request_detail_id`, `created_at`, `updated_at`) VALUES
-(2, 1, 21, 'INGRESO', '1.00', '800.00', 1, 'ANULADO', 381, '2022-07-04 20:05:25', '2022-07-04 23:09:59'),
-(3, 1, 21, 'INGRESO', '1.00', '800.00', 1, 'ANULADO', 381, '2022-07-04 20:05:37', '2022-07-04 20:05:37'),
-(4, 1, 44, 'INGRESO', '1.00', '954.65', 1, 'ANULADO', 384, '2022-07-04 21:10:09', '2022-07-04 23:14:07'),
-(5, 1, 64, 'INGRESO', '1.00', '785.00', 1, 'ANULADO', 383, '2022-07-04 21:22:38', '2022-07-04 23:10:38'),
-(6, 1, 52, 'INGRESO', '2.00', '216.64', 1, 'ANULADO', 385, '2022-07-04 21:32:52', '2022-07-04 23:13:57'),
-(7, 1, 57, 'INGRESO', '1.00', '420.00', 1, 'ANULADO', 410, '2022-07-04 21:39:09', '2022-07-04 23:14:04'),
-(8, 2, 9, 'INGRESO', '1.00', '362.42', 1, 'ANULADO', 411, '2022-07-04 22:13:53', '2022-07-04 23:15:01'),
-(9, 2, 9, 'INGRESO', '1.00', '362.42', 1, 'ANULADO', 411, '2022-07-04 22:13:57', '2022-07-04 23:15:03'),
-(10, 2, 57, 'INGRESO', '2.00', '502.17', 1, 'CONFIRMADO', 374, '2022-07-04 23:15:09', '2022-07-04 23:15:09'),
-(11, 2, 9, 'INGRESO', '2.00', '362.42', 1, 'CONFIRMADO', 411, '2022-07-04 23:15:14', '2022-07-04 23:15:14'),
-(12, 1, 21, 'INGRESO', '2.00', '800.00', 1, 'CONFIRMADO', 381, '2022-07-05 18:20:59', '2022-07-05 18:20:59'),
-(13, 1, 44, 'INGRESO', '1.00', '954.65', 1, 'CONFIRMADO', 384, '2022-07-05 18:21:03', '2022-07-05 18:21:03'),
-(14, 1, 52, 'INGRESO', '2.00', '216.64', 1, 'CONFIRMADO', 385, '2022-07-05 18:21:06', '2022-07-05 18:21:06'),
-(15, 1, 57, 'INGRESO', '2.00', '420.00', 1, 'CONFIRMADO', 410, '2022-07-05 18:21:12', '2022-07-05 18:21:12'),
-(16, 2, 57, 'INGRESO', '1.00', '502.17', 1, 'ANULADO', 374, '2022-07-05 19:41:08', '2022-07-05 19:41:15'),
-(17, 2, 57, 'INGRESO', '2.00', '502.17', 1, 'CONFIRMADO', 374, '2022-07-05 19:41:21', '2022-07-05 19:41:21'),
-(18, 1, 63, 'INGRESO', '3.00', '610.00', 1, 'CONFIRMADO', 380, '2022-07-05 19:42:03', '2022-07-05 19:42:03'),
-(19, 1, 64, 'INGRESO', '1.00', '785.00', 1, 'CONFIRMADO', 383, '2022-07-05 19:42:07', '2022-07-05 19:42:07');
 
 --
 -- Disparadores `operator_stock_details`
@@ -2258,9 +2043,11 @@ IF new.movement = "INGRESO" THEN
 /*-----Anular en operator_stocks--------*/
 UPDATE operator_stocks SET quantity = quantity - old.quantity, price = price - (new.price*new.quantity) WHERE id = op_stock;
 /*----Anular en operator_assigned_stocks--*/
-UPDATE operator_assigned_stocks SET quantity = quantity - old.quantity, price = price - (old.price*old.quantity) WHERE id = op_assigned;
+UPDATE operator_assigned_stocks SET quantity = quantity - old.quantity, price = price - (old.price*old.quantity), state = "ANULADO" WHERE id = op_assigned;
 /*-------Anular en stock general--------*/
 UPDATE stocks SET quantity = quantity - old.quantity, price = price - (old.price*old.quantity) WHERE id = stock;
+/*------Anular aumento de la cantidad de almacen en el ceco--------------*/
+UPDATE cecos c SET c.warehouse_amount = c.warehouse_amount - (new.quantity*new.price) WHERE c.id = new.ceco_id;
 ELSE
 /*----------ANULAR SALIDA-------*/
 /*---------Anular en op_stock---------*/
@@ -2269,6 +2056,8 @@ UPDATE operator_stocks SET quantity = quantity + old.quantity, price = price + (
 UPDATE operator_assigned_stocks SET quantity = quantity + old.quantity, price = price + (old.price*old.quantity) WHERE id = op_assigned;
 /*-------Anular en stock general--------*/
 UPDATE stocks SET quantity = quantity + old.quantity, price = price + (old.price*old.quantity) WHERE id = stock;
+/*---------Anular disminuir MONTO EN EL ALMACEN Y MONTO DEL CECO--------------------------*/
+UPDATE cecos c SET c.warehouse_amount = c.warehouse_amount + (new.quantity*new.price), c.amount = c.amount + (new.quantity*new.price) WHERE c.id = new.ceco_id;
 END IF;
 END
 $$
@@ -2290,7 +2079,7 @@ UPDATE operator_stocks
 SET quantity = quantity+new.quantity, price = price+(new.price*new.quantity) WHERE user_id = new.user_id AND item_id = new.item_id AND warehouse_id = new.warehouse_id;
 SELECT id INTO op_stock FROM operator_stocks ORDER BY updated_at DESC LIMIT 1;
 ELSE
-INSERT INTO operator_stocks(user_id, item_id, quantity, price, warehouse_id) VALUES (new.user_id, new.item_id, new.quantity, (new.price*new.quantity), new.warehouse_id);
+INSERT INTO operator_stocks(user_id, item_id, quantity, price, warehouse_id,ceco_id) VALUES (new.user_id, new.item_id, new.quantity, (new.price*new.quantity), new.warehouse_id,new.ceco_id);
 SELECT MAX(id) INTO op_stock FROM operator_stocks;
 END IF;
 /*--Insertar material al acumulado general del almacen--*/
@@ -2302,8 +2091,10 @@ INSERT INTO stocks (item_id, quantity, price, warehouse_id) VALUES (new.item_id,
 SELECT MAX(id) INTO stock_general FROM stocks;
 END IF;
 /*-------Material asignado al operador por fecha para descontar--------*/
-INSERT INTO operator_assigned_stocks(user_id, item_id, quantity, price, warehouse_id) VALUES (new.user_id, new.item_id, new.quantity, new.price, new.warehouse_id);
+INSERT INTO operator_assigned_stocks(user_id, item_id, quantity, price, warehouse_id,ceco_id) VALUES (new.user_id, new.item_id, new.quantity, new.price, new.warehouse_id,new.ceco_id);
 SELECT MAX(id) INTO op_assigned FROM operator_assigned_stocks;
+/*-------Aumentar monto del almacen del respectivo ceco----------------*/
+UPDATE cecos c SET c.warehouse_amount = c.warehouse_amount + (new.quantity*new.price) WHERE c.id = new.ceco_id;
 ELSEIF new.movement = "SALIDA" THEN
 /*-------SALIDA DEL MATERIAL-----------*/
 /*-----Acumulado del operador-----*/
@@ -2328,6 +2119,8 @@ SELECT id INTO stock_general FROM stocks ORDER BY updated_at DESC LIMIT 1;
 ELSE
 SELECT id INTO op_assigned FROM operator_assigned_stocks WHERE state = "LIBERADO" ORDER BY updated_at DESC LIMIT 1;
 END IF;
+/*---------DISMINUR MONTO EN EL ALMACEN Y MONTO DEL CECO--------------------------*/
+UPDATE cecos c SET c.warehouse_amount = c.warehouse_amount - (new.quantity*new.price), c.amount = c.amount - (new.quantity*new.price) WHERE c.id = new.ceco_id;
 /*----------END SALIDA----------*/
 END IF;
 INSERT INTO affected_movement (operator_stock_id, operator_stock_detail_id, operator_assigned_stock_id, stock_id) VALUES (op_stock, new.id, op_assigned, stock_general);
@@ -2357,7 +2150,7 @@ CREATE TABLE `order_dates` (
 --
 
 INSERT INTO `order_dates` (`id`, `open_request`, `close_request`, `order_date`, `arrival_date`, `state`, `created_at`, `updated_at`) VALUES
-(1, '2022-04-25', '2022-04-28', '2022-05-02', '2022-07-01', 'CERRADO', '2022-06-20 22:22:55', '2022-06-20 22:22:55'),
+(1, '2022-04-25', '2022-04-28', '2022-05-02', '2022-07-01', 'ABIERTO', '2022-06-20 22:22:55', '2022-06-20 22:22:55'),
 (2, '2022-06-27', '2022-06-30', '2022-07-04', '2022-09-01', 'PENDIENTE', '2022-06-20 22:22:55', '2022-06-20 22:22:55'),
 (3, '2022-08-29', '2022-09-01', '2022-09-05', '2022-11-01', 'PENDIENTE', '2022-06-20 22:22:55', '2022-06-20 22:22:55'),
 (4, '2022-10-31', '2022-11-03', '2022-11-07', '2023-01-01', 'PENDIENTE', '2022-06-20 22:22:56', '2022-06-20 22:22:56');
@@ -2385,22 +2178,22 @@ CREATE TABLE `order_requests` (
 --
 
 INSERT INTO `order_requests` (`id`, `user_id`, `implement_id`, `state`, `validate_by`, `is_canceled`, `order_date_id`, `created_at`, `updated_at`) VALUES
-(33, 1, 1, 'VALIDADO', 4, 0, 1, NULL, '2022-07-02 08:15:48'),
-(34, 2, 2, 'VALIDADO', 4, 0, 1, NULL, '2022-07-02 18:14:12'),
-(35, 3, 3, 'VALIDADO', 4, 0, 1, NULL, '2022-07-02 18:15:15'),
-(36, 4, 4, 'VALIDADO', 4, 0, 1, NULL, '2022-07-02 18:29:30'),
-(37, 5, 5, 'VALIDADO', 4, 0, 1, NULL, '2022-07-02 18:17:35'),
-(38, 6, 6, 'VALIDADO', 4, 0, 1, NULL, '2022-07-02 18:17:47'),
-(39, 7, 7, 'CERRADO', NULL, 0, 1, NULL, '2022-07-01 23:28:24'),
-(40, 8, 8, 'RECHAZADO', NULL, 0, 1, NULL, '2022-07-02 18:26:30'),
-(41, 9, 9, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
-(42, 10, 10, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
-(43, 11, 11, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
-(44, 12, 12, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
-(45, 13, 13, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
-(46, 14, 14, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
-(47, 15, 15, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
-(48, 16, 16, 'PENDIENTE', NULL, 0, 1, NULL, NULL);
+(2, 1, 1, 'CERRADO', NULL, 0, 1, NULL, '2022-07-09 23:09:49'),
+(3, 2, 2, 'CERRADO', NULL, 0, 1, NULL, '2022-07-09 23:10:42'),
+(4, 3, 3, 'CERRADO', NULL, 0, 1, NULL, '2022-07-09 23:11:43'),
+(5, 4, 4, 'CERRADO', NULL, 0, 1, NULL, '2022-07-09 23:12:16'),
+(6, 5, 5, 'CERRADO', NULL, 0, 1, NULL, '2022-07-09 23:07:36'),
+(7, 6, 6, 'CERRADO', NULL, 0, 1, NULL, '2022-07-09 23:14:03'),
+(8, 7, 7, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
+(9, 8, 8, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
+(10, 9, 9, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
+(11, 10, 10, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
+(12, 11, 11, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
+(13, 12, 12, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
+(14, 13, 13, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
+(15, 14, 14, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
+(16, 15, 15, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
+(17, 16, 16, 'PENDIENTE', NULL, 0, 1, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -2427,156 +2220,73 @@ CREATE TABLE `order_request_details` (
 --
 
 INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quantity`, `estimated_price`, `state`, `observation`, `assigned_quantity`, `assigned_state`, `created_at`, `updated_at`) VALUES
-(236, 33, 9, '2.00', '362.42', 'RECHAZADO', 'as', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 18:15:49'),
-(237, 33, 21, '1.00', '785.44', 'ACEPTADO', 'NGG', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 09:28:45'),
-(238, 33, 44, '1.00', '954.65', 'ACEPTADO', 'Se aceptó todo.', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 09:34:51'),
-(239, 33, 52, '2.00', '216.64', 'ACEPTADO', 'ÑÑ', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 09:34:57'),
-(240, 33, 57, '2.00', '502.17', 'ACEPTADO', 'as', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 23:30:57'),
-(241, 33, 3, '0.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-06-25 21:51:40'),
-(242, 33, 24, '0.00', '577.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-06-25 21:51:34'),
-(243, 34, 9, '2.00', '362.42', 'ACEPTADO', 'a', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 23:31:24'),
-(244, 34, 21, '0.00', '785.44', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-06-25 23:14:12'),
-(245, 34, 44, '0.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-06-25 23:14:39'),
-(246, 34, 52, '0.00', '216.64', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-06-25 23:14:34'),
-(247, 34, 57, '4.00', '502.17', 'ACEPTADO', 'Se aceptop todo completo', '0.00', 'NO ASIGNADO', NULL, '2022-06-29 00:16:11'),
-(248, 34, 3, '0.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-06-25 23:14:29'),
-(249, 34, 24, '0.00', '577.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-06-25 23:14:25'),
-(250, 35, 9, '2.00', '362.42', 'RECHAZADO', 'AA', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 09:43:02'),
-(251, 35, 21, '3.00', '785.44', 'ACEPTADO', 'ASA', '0.00', 'NO ASIGNADO', NULL, '2022-07-02 18:15:04'),
-(252, 35, 44, '0.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-06-25 23:17:29'),
-(253, 35, 52, '0.00', '216.64', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-06-25 23:17:25'),
-(254, 35, 57, '4.00', '502.17', 'MODIFICADO', 'AS', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 09:42:24'),
-(255, 35, 3, '0.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-06-25 23:17:17'),
-(256, 35, 24, '0.00', '577.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-06-25 23:17:21'),
-(257, 36, 9, '1.00', '362.42', 'ACEPTADO', '.', '0.00', 'NO ASIGNADO', NULL, '2022-07-02 18:29:23'),
-(258, 36, 21, '0.00', '785.44', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-06-29 16:39:58'),
-(259, 36, 44, '1.00', '954.65', 'ACEPTADO', '5', '0.00', 'NO ASIGNADO', NULL, '2022-07-02 18:29:13'),
-(260, 36, 52, '0.00', '216.64', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-06-29 16:40:09'),
-(261, 36, 57, '4.00', '502.17', 'ACEPTADO', '.', '0.00', 'NO ASIGNADO', NULL, '2022-07-02 18:29:05'),
-(262, 36, 3, '0.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-06-29 16:39:48'),
-(263, 36, 24, '0.00', '577.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-06-29 16:39:52'),
-(264, 37, 4, '0.00', '459.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-07-01 22:23:22'),
-(265, 37, 9, '1.00', '362.42', 'RECHAZADO', 'j', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 22:39:00'),
-(266, 37, 24, '2.00', '577.05', 'MODIFICADO', 'jk', '0.00', 'NO ASIGNADO', NULL, '2022-07-02 18:17:05'),
-(267, 37, 52, '3.00', '216.64', 'ACEPTADO', 'jj', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 22:36:41'),
-(268, 37, 57, '0.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-07-01 22:23:16'),
-(269, 37, 3, '0.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-07-01 22:23:13'),
-(270, 37, 44, '0.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-07-01 22:23:10'),
-(271, 38, 4, '0.00', '459.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-07-01 21:04:03'),
-(272, 38, 9, '2.00', '362.42', 'ACEPTADO', 'da', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 22:06:18'),
-(273, 38, 24, '0.00', '577.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-07-01 21:04:06'),
-(274, 38, 52, '3.00', '216.64', 'MODIFICADO', 'da', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 22:05:55'),
-(275, 38, 57, '2.00', '502.17', 'MODIFICADO', 'sad', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 22:07:00'),
-(276, 38, 3, '0.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-07-01 21:04:10'),
-(277, 38, 44, '1.00', '954.65', 'ACEPTADO', 'da', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 22:06:08'),
-(278, 39, 4, '0.00', '459.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-07-01 20:45:50'),
-(279, 39, 9, '0.00', '362.42', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-07-01 20:45:47'),
-(280, 39, 24, '2.00', '577.05', 'ACEPTADO', 'sas', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 23:28:13'),
-(281, 39, 52, '0.00', '216.64', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-07-01 20:45:39'),
-(282, 39, 57, '4.00', '502.17', 'MODIFICADO', 'asas', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 23:28:19'),
-(283, 39, 3, '0.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-07-01 20:45:35'),
-(284, 39, 44, '0.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-07-01 20:45:56'),
-(285, 40, 4, '1.00', '459.05', 'RECHAZADO', 'asd', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 22:57:16'),
-(286, 40, 9, '2.00', '362.42', 'RECHAZADO', 'sadad', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 22:57:39'),
-(287, 40, 24, '2.00', '577.05', 'RECHAZADO', 'dasd', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 22:58:05'),
-(288, 40, 52, '3.00', '216.64', 'RECHAZADO', 'dad', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 22:57:25'),
-(289, 40, 57, '0.00', '502.17', 'RECHAZADO', NULL, '0.00', 'NO ASIGNADO', NULL, '2022-06-30 18:38:55'),
-(290, 40, 3, '1.00', '692.98', 'RECHAZADO', 'dad', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 22:57:35'),
-(291, 40, 44, '2.00', '954.65', 'RECHAZADO', 'dad', '0.00', 'NO ASIGNADO', NULL, '2022-07-01 22:57:31'),
-(292, 41, 3, '1.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(293, 41, 15, '2.00', '958.75', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(294, 41, 24, '2.00', '577.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(295, 41, 52, '1.00', '216.64', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(296, 41, 57, '4.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(297, 41, 4, '1.00', '459.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(298, 41, 29, '11.00', '378.24', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(299, 42, 3, '1.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(300, 42, 15, '2.00', '958.75', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(301, 42, 24, '2.00', '577.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(302, 42, 52, '1.00', '216.64', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(303, 42, 57, '4.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(304, 42, 4, '1.00', '459.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(305, 42, 29, '11.00', '378.24', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(306, 43, 3, '1.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(307, 43, 15, '2.00', '958.75', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(308, 43, 24, '2.00', '577.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(309, 43, 52, '1.00', '216.64', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(310, 43, 57, '4.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(311, 43, 4, '1.00', '459.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(312, 43, 29, '11.00', '378.24', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(313, 44, 3, '1.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(314, 44, 15, '2.00', '958.75', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(315, 44, 24, '2.00', '577.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(316, 44, 52, '1.00', '216.64', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(317, 44, 57, '4.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(318, 44, 4, '1.00', '459.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(319, 44, 29, '11.00', '378.24', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(320, 45, 3, '2.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(321, 45, 44, '1.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(322, 45, 52, '2.00', '216.64', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(323, 45, 21, '2.00', '785.44', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(324, 45, 53, '1.00', '952.16', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(325, 45, 57, '4.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(326, 45, 24, '1.00', '577.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(327, 46, 3, '2.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(328, 46, 44, '1.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(329, 46, 52, '2.00', '216.64', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(330, 46, 21, '2.00', '785.44', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(331, 46, 53, '1.00', '952.16', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(332, 46, 57, '4.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(333, 46, 24, '1.00', '577.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(334, 47, 3, '2.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(335, 47, 44, '1.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(336, 47, 52, '2.00', '216.64', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(337, 47, 21, '2.00', '785.44', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(338, 47, 53, '1.00', '952.16', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(339, 47, 57, '4.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(340, 47, 24, '1.00', '577.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(341, 48, 3, '3.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(342, 48, 44, '1.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(343, 48, 52, '2.00', '216.64', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(344, 48, 21, '2.00', '785.44', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(345, 48, 53, '1.00', '952.16', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(346, 48, 57, '6.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(347, 48, 24, '2.00', '577.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', NULL, NULL),
-(348, 33, 17, '1.00', '906.47', 'RECHAZADO', 'LNK', '0.00', 'NO ASIGNADO', '2022-06-25 21:51:57', '2022-07-01 18:15:24'),
-(349, 34, 8, '2.00', '563.25', 'RECHAZADO', 'Se rechazó todo.', '0.00', 'NO ASIGNADO', '2022-06-25 22:19:52', '2022-06-29 00:17:01'),
-(374, 34, 57, '4.00', '502.17', 'VALIDADO', 'Se aceptop todo completo', '4.00', 'ASIGNADO', '2022-06-29 00:16:11', '2022-07-05 19:41:21'),
-(375, 36, 8, '1.00', '563.25', 'ACEPTADO', '2', '0.00', 'NO ASIGNADO', '2022-06-29 16:40:28', '2022-07-02 18:28:57'),
-(379, 33, 63, '3.00', '600.00', 'ACEPTADO', NULL, '0.00', 'NO ASIGNADO', '2022-07-01 09:28:01', '2022-07-01 09:28:17'),
-(380, 33, 63, '3.00', '610.00', 'VALIDADO', 'NJ', '3.00', 'ASIGNADO', '2022-07-01 09:28:01', '2022-07-05 19:42:04'),
-(381, 33, 21, '1.00', '800.00', 'VALIDADO', 'NGG', '1.00', 'ASIGNADO', '2022-07-01 09:28:45', '2022-07-05 18:20:59'),
-(382, 33, 64, '3.00', '7850.00', 'MODIFICADO', NULL, '0.00', 'NO ASIGNADO', '2022-07-01 09:30:29', '2022-07-01 09:30:29'),
-(383, 33, 64, '1.00', '785.00', 'VALIDADO', 'ÑL', '1.00', 'ASIGNADO', '2022-07-01 09:30:29', '2022-07-05 19:42:07'),
-(384, 33, 44, '1.00', '954.65', 'VALIDADO', 'Se aceptó todo.', '1.00', 'ASIGNADO', '2022-07-01 09:34:51', '2022-07-05 18:21:03'),
-(385, 33, 52, '2.00', '216.64', 'VALIDADO', 'ÑÑ', '2.00', 'ASIGNADO', '2022-07-01 09:34:57', '2022-07-05 18:21:06'),
-(386, 35, 65, '32.00', '2600.00', 'MODIFICADO', NULL, '0.00', 'NO ASIGNADO', '2022-07-01 09:38:12', '2022-07-01 09:38:12'),
-(387, 35, 65, '2.00', '260.00', 'VALIDADO', '5', '0.00', 'NO ASIGNADO', '2022-07-01 09:38:12', '2022-07-01 21:36:35'),
-(388, 35, 57, '2.00', '502.17', 'VALIDADO', 'AS', '0.00', 'NO ASIGNADO', '2022-07-01 09:42:24', '2022-07-01 09:42:24'),
-(390, 39, 66, '18.00', '69.50', 'MODIFICADO', '32', '0.00', 'NO ASIGNADO', '2022-07-01 20:49:10', '2022-07-02 18:18:39'),
-(391, 39, 67, '400.00', '150.00', 'MODIFICADO', '36', '0.00', 'NO ASIGNADO', '2022-07-01 21:14:02', '2022-07-02 18:25:29'),
-(393, 38, 68, '45.00', '36.00', 'MODIFICADO', NULL, '0.00', 'NO ASIGNADO', '2022-07-01 21:41:08', '2022-07-01 22:06:37'),
-(394, 38, 68, '22.00', '36.00', 'VALIDADO', 'sda', '0.00', 'NO ASIGNADO', '2022-07-01 21:41:08', '2022-07-01 22:06:51'),
-(395, 38, 52, '2.00', '216.64', 'VALIDADO', 'da', '0.00', 'NO ASIGNADO', '2022-07-01 22:05:55', '2022-07-01 22:05:55'),
-(396, 38, 44, '1.00', '1000.00', 'VALIDADO', 'da', '0.00', 'NO ASIGNADO', '2022-07-01 22:06:08', '2022-07-01 22:06:08'),
-(397, 38, 9, '2.00', '350.00', 'VALIDADO', 'da', '0.00', 'NO ASIGNADO', '2022-07-01 22:06:18', '2022-07-01 22:06:18'),
-(398, 38, 57, '1.00', '506.00', 'VALIDADO', 'sad', '0.00', 'NO ASIGNADO', '2022-07-01 22:06:27', '2022-07-01 22:07:00'),
-(399, 37, 69, '2.00', '452.00', 'MODIFICADO', NULL, '0.00', 'NO ASIGNADO', '2022-07-01 22:36:30', '2022-07-01 22:36:30'),
-(400, 37, 69, '1.00', '440.00', 'VALIDADO', 'jk', '0.00', 'NO ASIGNADO', '2022-07-01 22:36:30', '2022-07-01 22:37:32'),
-(401, 37, 52, '3.00', '150.00', 'VALIDADO', 'jj', '0.00', 'NO ASIGNADO', '2022-07-01 22:36:41', '2022-07-01 22:37:46'),
-(408, 39, 24, '2.00', '577.05', 'VALIDADO', 'sas', '0.00', 'NO ASIGNADO', '2022-07-01 23:28:13', '2022-07-01 23:28:13'),
-(409, 39, 57, '3.00', '502.17', 'VALIDADO', 'asas', '0.00', 'NO ASIGNADO', '2022-07-01 23:28:19', '2022-07-01 23:28:19'),
-(410, 33, 57, '2.00', '420.00', 'VALIDADO', 'as', '2.00', 'ASIGNADO', '2022-07-01 23:30:57', '2022-07-05 18:21:12'),
-(411, 34, 9, '2.00', '362.42', 'VALIDADO', 'a', '2.00', 'ASIGNADO', '2022-07-01 23:31:24', '2022-07-04 23:15:14'),
-(412, 35, 21, '3.00', '785.44', 'VALIDADO', 'ASA', '0.00', 'NO ASIGNADO', '2022-07-02 18:15:04', '2022-07-02 18:15:04'),
-(413, 37, 70, '6.00', '156.00', 'MODIFICADO', NULL, '0.00', 'NO ASIGNADO', '2022-07-02 18:16:04', '2022-07-02 18:17:29'),
-(414, 37, 70, '4.00', '156.00', 'VALIDADO', '55', '0.00', 'NO ASIGNADO', '2022-07-02 18:16:04', '2022-07-02 18:17:29'),
-(415, 37, 24, '1.00', '600.00', 'VALIDADO', 'jk', '0.00', 'NO ASIGNADO', '2022-07-02 18:17:05', '2022-07-02 18:17:17'),
-(417, 39, 67, '9.00', '150.00', 'VALIDADO', '36', '0.00', 'NO ASIGNADO', '2022-07-02 18:25:29', '2022-07-02 18:26:06'),
-(418, 36, 8, '1.00', '560.00', 'VALIDADO', '2', '0.00', 'NO ASIGNADO', '2022-07-02 18:28:57', '2022-07-02 18:28:57'),
-(419, 36, 57, '4.00', '500.00', 'VALIDADO', '.', '0.00', 'NO ASIGNADO', '2022-07-02 18:29:05', '2022-07-02 18:29:05'),
-(420, 36, 44, '1.00', '1000.00', 'VALIDADO', '5', '0.00', 'NO ASIGNADO', '2022-07-02 18:29:13', '2022-07-02 18:29:13'),
-(421, 36, 9, '1.00', '300.00', 'VALIDADO', '.', '0.00', 'NO ASIGNADO', '2022-07-02 18:29:23', '2022-07-02 18:29:23');
+(1, 2, 3, '1.00', '692.98', 'PENDIENTE', 'zzzx', '0.00', 'NO ASIGNADO', '2022-07-09 15:42:07', '2022-07-09 23:22:59'),
+(2, 2, 57, '4.00', '502.17', 'PENDIENTE', 'zxxz', '0.00', 'NO ASIGNADO', '2022-07-09 15:42:07', '2022-07-09 23:23:16'),
+(3, 2, 21, '0.00', '785.44', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:08', '2022-07-09 23:09:39'),
+(4, 2, 44, '1.00', '954.65', 'PENDIENTE', 'zxxx', '0.00', 'NO ASIGNADO', '2022-07-09 15:42:08', '2022-07-09 23:23:26'),
+(5, 3, 3, '1.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:09', NULL),
+(6, 3, 57, '5.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:09', '2022-07-09 23:10:26'),
+(7, 3, 21, '0.00', '785.44', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:09', '2022-07-09 23:10:29'),
+(8, 3, 44, '1.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:09', '2022-07-09 23:10:39'),
+(9, 4, 3, '2.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:10', NULL),
+(10, 4, 24, '1.00', '577.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:10', NULL),
+(11, 4, 57, '12.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:10', NULL),
+(12, 4, 9, '2.00', '362.42', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:10', '2022-07-09 23:11:29'),
+(13, 4, 21, '1.00', '785.44', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:10', '2022-07-09 23:11:40'),
+(14, 4, 44, '3.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:10', '2022-07-09 23:11:37'),
+(15, 4, 52, '0.00', '216.64', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:10', '2022-07-09 23:11:06'),
+(16, 5, 3, '2.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:11', NULL),
+(17, 5, 24, '1.00', '577.05', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:11', NULL),
+(18, 5, 57, '12.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:11', NULL),
+(19, 5, 9, '3.00', '362.42', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:11', NULL),
+(20, 5, 21, '3.00', '785.44', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:11', NULL),
+(21, 5, 44, '4.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:11', NULL),
+(22, 5, 52, '2.00', '216.64', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:11', NULL),
+(23, 6, 57, '2.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:12', NULL),
+(24, 6, 3, '1.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:13', '2022-07-09 20:51:39'),
+(25, 6, 44, '0.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:13', '2022-07-09 23:07:31'),
+(26, 7, 57, '2.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:13', NULL),
+(27, 7, 3, '2.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:14', NULL),
+(28, 7, 44, '2.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:14', NULL),
+(29, 8, 57, '2.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:14', NULL),
+(30, 8, 3, '2.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:15', NULL),
+(31, 8, 44, '2.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:15', NULL),
+(32, 9, 57, '2.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:15', NULL),
+(33, 9, 3, '2.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:16', NULL),
+(34, 9, 44, '2.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:16', NULL),
+(35, 10, 57, '6.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:17', NULL),
+(36, 10, 3, '1.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:17', NULL),
+(37, 10, 29, '22.00', '378.24', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:17', NULL),
+(38, 11, 57, '6.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:18', NULL),
+(39, 11, 3, '1.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:18', NULL),
+(40, 11, 29, '22.00', '378.24', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:18', NULL),
+(41, 12, 57, '6.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:19', NULL),
+(42, 12, 3, '1.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:19', NULL),
+(43, 12, 29, '22.00', '378.24', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:20', NULL),
+(44, 13, 57, '6.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:20', NULL),
+(45, 13, 3, '1.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:21', NULL),
+(46, 13, 29, '22.00', '378.24', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:21', NULL),
+(47, 14, 3, '3.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:22', NULL),
+(48, 14, 57, '4.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:22', NULL),
+(49, 14, 21, '2.00', '785.44', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:22', NULL),
+(50, 14, 44, '2.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:23', NULL),
+(51, 15, 3, '3.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:24', NULL),
+(52, 15, 57, '4.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:24', NULL),
+(53, 15, 21, '2.00', '785.44', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:24', NULL),
+(54, 15, 44, '2.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:25', NULL),
+(55, 16, 3, '3.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:25', NULL),
+(56, 16, 57, '4.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:26', NULL),
+(57, 16, 21, '2.00', '785.44', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:26', NULL),
+(58, 16, 44, '2.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:27', NULL),
+(59, 17, 3, '3.00', '692.98', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:27', NULL),
+(60, 17, 57, '4.00', '502.17', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:27', NULL),
+(61, 17, 21, '2.00', '785.44', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:28', NULL),
+(62, 17, 44, '2.00', '954.65', 'PENDIENTE', NULL, '0.00', 'NO ASIGNADO', '2022-07-09 15:42:28', NULL),
+(63, 2, 11, '1.00', '405.08', 'PENDIENTE', 'zxzxzxz', '0.00', 'NO ASIGNADO', '2022-07-09 23:09:28', '2022-07-09 23:23:11'),
+(64, 2, 28, '1.00', '515.10', 'PENDIENTE', 'xzz', '0.00', 'NO ASIGNADO', '2022-07-09 23:09:32', '2022-07-09 23:23:21'),
+(65, 3, 50, '1.00', '846.80', 'PENDIENTE', '', '0.00', 'NO ASIGNADO', '2022-07-09 23:10:35', '2022-07-09 23:10:35'),
+(66, 4, 65, '1.00', '2600.00', 'PENDIENTE', '', '0.00', 'NO ASIGNADO', '2022-07-09 23:11:24', '2022-07-09 23:11:24'),
+(67, 2, 71, '52.00', '500.00', 'RECHAZADO', 'x', '0.00', 'NO ASIGNADO', '2022-07-09 23:15:58', '2022-07-09 23:23:47');
 
 -- --------------------------------------------------------
 
@@ -2605,18 +2315,10 @@ CREATE TABLE `order_request_new_items` (
 --
 
 INSERT INTO `order_request_new_items` (`id`, `order_request_id`, `new_item`, `quantity`, `measurement_unit_id`, `brand`, `datasheet`, `image`, `state`, `item_id`, `observation`, `created_at`, `updated_at`) VALUES
-(9, 33, 'Ruka', '3.00', 3, 'saa', '-sad\n-sa\n-sa', 'public/newMaterials/zHyV8jgLSvA3k9SovgkQP6pehGMkaLVgHhWm51w2.jpg', 'CREADO', 64, '', '2022-06-25 21:53:12', '2022-07-01 09:30:29'),
-(10, 33, 'Shino', '3.00', 9, 'Suryuu', '-ssa\n-sa\n-ñláéíóú', 'public/newMaterials/hvhXgQ5Myw77Np2aIOPZtaGSarDTcgEkCWnnuU1t.jpg', 'CREADO', 63, '', '2022-06-25 21:54:03', '2022-07-01 09:28:01'),
-(11, 35, 'YAMI', '32.00', 3, 'SDSA', 'SDASD', 'public/newMaterials/h8jbuHVOvBZmHiy6luMaYxfILhTYYweUqZga4BwR.jpg', 'CREADO', 65, '', '2022-06-25 23:17:09', '2022-07-01 09:38:12'),
-(12, 36, 'Perno ed 1/2\"', '12.00', 1, '33', 'das', 'public/newMaterials/zxhcqq8HPDSqiOTKo9U3eIYyDaHvgUdxiJaBXXKu.png', 'RECHAZADO', NULL, '', '2022-06-29 16:39:43', '2022-07-01 09:56:10'),
-(13, 40, 'ARDUINO UNO', '12.00', 2, 'ARDUINO', '-NINGUNA', 'public/newMaterials/ZqdVsQCe4FRjdxjgNGKbSvrLI2PUAm7b66QAvmwR.jpg', 'RECHAZADO', NULL, '', '2022-06-30 18:38:42', '2022-07-01 09:59:58'),
-(14, 39, 'SIESTA', '400.00', 1, 'POP UP', '-Editado', 'public/newMaterials/3OgF3aUzTFg7dk37LkZhz6hz3S9wmloI2FotmG2g.jpg', 'CREADO', 67, '', '2022-07-01 18:21:35', '2022-07-01 21:14:03'),
-(16, 39, 'KOTORI', '320.00', 1, 'GHG', 'SDA', 'public/newMaterials/fCfInt5S1XjoTAazPQl6YmZjDARC0ZWepv7U13Du.jpg', 'CREADO', NULL, '', '2022-07-01 20:30:07', '2022-07-01 20:49:10'),
-(17, 38, 'Kurumi Tokisaki', '45.00', 1, 'figma', 'lknlk', 'public/newMaterials/L1RogEtjFauRgOxcNhhPwsBITzlYpWf9trIMBiDR.jpg', 'CREADO', 68, '', '2022-07-01 21:01:32', '2022-07-01 21:41:08'),
-(18, 38, 'ninin', '22.00', 6, 'pop up', '-sdad-', 'public/newMaterials/iALbNJDMxYFxqyc7wMlHyfPpCIPEF1OFBMrrqG7M.jpg', 'RECHAZADO', NULL, '', '2022-07-01 21:03:08', '2022-07-01 22:05:40'),
-(20, 37, 'NEPTUNIA', '2.00', 4, 'BANPRESTO', '-NUEVA', 'public/newMaterials/43jFlkhV3Uok4udePPLUQu3aXKxWbfdB71GeLE4A.jpg', 'CREADO', 69, '', '2022-07-01 22:26:00', '2022-07-01 22:36:30'),
-(21, 37, 'SIESTA', '5.00', 2, 'FIGMA', 'ADASD', 'public/newMaterials/U4DnnKLHf1ySJYNnij3X4GI9ATacV7ITTkfrcaIQ.jpg', 'RECHAZADO', NULL, '', '2022-07-01 22:26:28', '2022-07-02 18:16:37'),
-(22, 37, 'MAYURI', '6.00', 5, 'DATE A LIVE', '-MOVIE', 'public/newMaterials/DPzB3hATRpH7MGUsKihwXssugO14xAqn7loUCF80.jpg', 'CREADO', 70, '', '2022-07-01 22:27:13', '2022-07-02 18:16:04');
+(23, 6, 'KOTORI', '1.00', 2, 'BANDAI', 'DAS', 'public/newMaterials/6IpsNOjWtQ8oA9tZNVkYr2t3Pwwi2sXZyCiuUrv4.jpg', 'PENDIENTE', NULL, '', '2022-07-09 20:51:03', '2022-07-09 20:51:03'),
+(24, 6, 'Sore', '5.00', 4, 'SIESTA', '-sad\n-sad', 'public/newMaterials/VICNjGXJ7r0TB0uDqmk4hxmXjlBa76iMsBKXON0z.jpg', 'PENDIENTE', NULL, '', '2022-07-09 23:07:08', '2022-07-09 23:07:22'),
+(25, 2, 'REM', '52.00', 2, 'Taito', '-ssa-\nassd-', 'public/newMaterials/clTFxIg4DpkVYC8VJxJrhhpcLW5b7AHKk8df6mXm.jpg', 'CREADO', 71, '', '2022-07-09 23:09:22', '2022-07-09 23:15:58'),
+(26, 7, 'ARDUINO MEGA2560', '123.00', 3, 'ARUINO', '-1 CANTDAD MAS CABLES', 'public/newMaterials/BPcb3RhHbd7Ya2a02EDgZx7MAEVK3OKX297EwKP0.png', 'PENDIENTE', NULL, '', '2022-07-09 23:14:01', '2022-07-09 23:14:01');
 
 -- --------------------------------------------------------
 
@@ -2697,9 +2399,33 @@ CREATE TABLE `pre_stockpiles` (
   `implement` bigint(20) UNSIGNED NOT NULL,
   `state` enum('PENDIENTE','VALIDADO','RECHAZADO') COLLATE utf8mb4_unicode_ci NOT NULL,
   `ceco_id` bigint(20) UNSIGNED NOT NULL,
+  `pre_stockpile_date_id` bigint(20) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `pre_stockpile_dates`
+--
+
+CREATE TABLE `pre_stockpile_dates` (
+  `id` bigint(20) NOT NULL,
+  `open_pre_stockpile` date NOT NULL,
+  `close_pre_stockpile` date NOT NULL,
+  `state` enum('PENDIENTE','ABIERTO','CERRADO') NOT NULL DEFAULT 'PENDIENTE',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `pre_stockpile_dates`
+--
+
+INSERT INTO `pre_stockpile_dates` (`id`, `open_pre_stockpile`, `close_pre_stockpile`, `state`, `created_at`, `updated_at`) VALUES
+(1, '2022-07-09', '2022-07-10', 'PENDIENTE', '2022-07-09 18:04:44', '2022-07-09 18:04:44'),
+(2, '2022-08-08', '2022-08-09', 'PENDIENTE', '2022-07-09 18:04:44', '2022-07-09 18:04:44');
 
 -- --------------------------------------------------------
 
@@ -2709,10 +2435,11 @@ CREATE TABLE `pre_stockpiles` (
 
 CREATE TABLE `pre_stockpile_details` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `pre_stockpile` bigint(20) UNSIGNED NOT NULL,
+  `pre_stockpile_id` bigint(20) UNSIGNED NOT NULL,
   `item_id` bigint(20) UNSIGNED NOT NULL,
   `quantity` decimal(8,2) NOT NULL,
-  `precio` decimal(8,2) NOT NULL,
+  `remaining_quantity` decimal(8,2) NOT NULL,
+  `price` decimal(8,2) NOT NULL,
   `warehouse_id` bigint(20) UNSIGNED NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -2999,9 +2726,8 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('dJz7qCUzwHshleB8PNalcpAKELxiJDYCeHT3IVYU', NULL, '192.168.0.7', 'AVG Antivirus', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiZXZQT1pNOFVCdkR2NHl2ZHdTQVgwdkFwVW11dWM1bnFHQ1J4SHlldCI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MTg6Imh0dHA6Ly8xOTIuMTY4LjAuNyI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1657331412),
-('Kwkx0UAzBia1wsA7DswmLn11JkBhRNKi0yIi2MV2', 3, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.114 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoieEhjUTZpeGRsdnZtWnBHZks2N056ZUdZU29EektTNExJNjYyQ3dXSCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTQ6Imh0dHA6Ly9zaXN0ZW1hLnRlc3Qvb3BlcmF0b3IvTWFudGVuaW1pZW50b3MtUGVuZGllbnRlcyI7fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjM7fQ==', 1657325433),
-('wm76WssaRpXesPnpFb7lITNGEjnCZkD2Ad4WjNyM', 5, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.114 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiOTlaUGNaeFplWHhOcHU0a1M2Wm1lcXhkVlNINHJZWERWWEpuaDM5MSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjU0OiJodHRwOi8vc2lzdGVtYS50ZXN0L29wZXJhdG9yL01hbnRlbmltaWVudG9zLVBlbmRpZW50ZXMiO31zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aTo1O30=', 1657347043);
+('37fJuge5uChwQX8cOOvC089wJDGVCP6Mpo5itHA7', 5, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiY3hMUjNuMklnZklrRG1GWWhzVUtnaFZId3BrUHlId2xhZHd6aFd1ayI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzU6Imh0dHA6Ly9zaXN0ZW1hL29wZXJhdG9yL1ByZS1yZXNlcnZhIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NTtzOjIxOiJwYXNzd29yZF9oYXNoX3NhbmN0dW0iO3M6NjA6IiQyeSQxMCQ5MklYVU5wa2pPMHJPUTVieU1pLlllNG9Lb0VhM1JvOWxsQy8ub2cvYXQyLnVoZVdHL2lnaSI7fQ==', 1657392115),
+('7emt19WPyixoovTkFudVQiwlL8aXyHbeo2vS6uj4', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiVzNvQjBrc01GMVhUbHBKSHpmU2NEbE1GZml0Nkpab2ZPNXBha1FZOSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mzg6Imh0dHA6Ly9zaXN0ZW1hL3BsYW5uZXIvdmFsaWRhci1wZWRpZG9zIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDt9', 1657391167);
 
 -- --------------------------------------------------------
 
@@ -3054,19 +2780,6 @@ CREATE TABLE `stocks` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Volcado de datos para la tabla `stocks`
---
-
-INSERT INTO `stocks` (`id`, `item_id`, `quantity`, `price`, `warehouse_id`, `created_at`, `updated_at`) VALUES
-(2, 21, '2.00', '1600.00', 1, NULL, NULL),
-(3, 44, '1.00', '954.65', 1, NULL, NULL),
-(4, 64, '1.00', '785.00', 1, NULL, NULL),
-(5, 52, '2.00', '433.28', 1, NULL, NULL),
-(6, 57, '7.00', '3350.85', 1, NULL, NULL),
-(7, 9, '1.00', '222.67', 1, NULL, NULL),
-(8, 63, '3.00', '1830.00', 1, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -3256,8 +2969,8 @@ CREATE TABLE `tractors` (
 INSERT INTO `tractors` (`id`, `tractor_model_id`, `tractor_number`, `hour_meter`, `location_id`, `created_at`, `updated_at`) VALUES
 (1, 1, '72307', '700.00', 1, '2022-06-20 21:22:03', '2022-07-07 02:36:52'),
 (2, 1, '76737', '900.00', 1, '2022-06-20 21:22:03', '2022-07-07 02:37:04'),
-(3, 1, '65116', '750.00', 2, '2022-06-20 21:22:04', '2022-07-07 02:37:48'),
-(4, 1, '76977', '800.00', 2, '2022-06-20 21:22:04', '2022-07-07 02:37:32'),
+(3, 1, '65116', '1700.00', 2, '2022-06-20 21:22:04', '2022-07-09 15:03:09'),
+(4, 1, '76977', '1350.00', 2, '2022-06-20 21:22:04', '2022-07-09 15:04:53'),
 (5, 2, '72317', '342.00', 3, '2022-06-20 21:22:04', '2022-06-20 21:22:04'),
 (6, 2, '67891', '79.00', 3, '2022-06-20 21:22:04', '2022-06-20 21:22:04'),
 (7, 2, '72448', '452.00', 4, '2022-06-20 21:22:04', '2022-06-20 21:22:04'),
@@ -3324,14 +3037,8 @@ CREATE TABLE `tractor_reports` (
 --
 
 INSERT INTO `tractor_reports` (`id`, `user_id`, `tractor_id`, `labor_id`, `correlative`, `date`, `shift`, `implement_id`, `hour_meter_start`, `hour_meter_end`, `hours`, `observations`, `lote_id`, `is_canceled`, `created_at`, `updated_at`) VALUES
-(1, 1, 2, 1, 'sadada', '2022-06-23', 'MAÑANA', 1, '435.00', '450.00', '15.00', '', 1, 0, '2022-06-24 17:57:46', '2022-06-24 18:00:49'),
-(2, 2, 1, 3, '12553', '2022-06-24', 'NOCHE', 1, '268.00', '282.00', '14.00', '', 1, 0, '2022-06-25 22:07:10', '2022-06-25 22:19:32'),
-(3, 3, 3, 4, '1365646', '2022-07-06', 'MAÑANA', 3, '390.00', '450.00', '60.00', 'saSDSDA', 3, 0, '2022-07-07 07:36:16', '2022-07-07 07:36:16'),
-(4, 4, 3, 4, '54398363', '2022-07-06', 'MAÑANA', 4, '450.00', '700.00', '250.00', 'WDEQ', 3, 0, '2022-07-07 07:36:36', '2022-07-07 07:36:36'),
-(5, 1, 1, 3, '3265465', '2022-07-06', 'MAÑANA', 1, '282.00', '700.00', '418.00', 'SAD', 1, 0, '2022-07-07 07:36:52', '2022-07-07 07:36:52'),
-(6, 2, 2, 3, '2113', '2022-07-06', 'MAÑANA', 2, '450.00', '900.00', '450.00', 'EQW21', 1, 0, '2022-07-07 07:37:04', '2022-07-07 07:37:04'),
-(7, 3, 4, 2, '213213', '2022-07-06', 'NOCHE', 3, '414.00', '800.00', '386.00', '', 3, 0, '2022-07-07 07:37:32', '2022-07-07 07:37:32'),
-(8, 3, 3, 4, '245456', '2022-07-06', 'NOCHE', 4, '700.00', '750.00', '50.00', 'SDA', 3, 0, '2022-07-07 07:37:48', '2022-07-07 07:37:48');
+(9, 3, 3, 2, '24121363', '2022-07-08', 'MAÑANA', 3, '750.00', '1700.00', '950.00', 'adsad', 3, 0, '2022-07-09 20:03:09', '2022-07-09 20:03:09'),
+(10, 4, 4, 4, '45322833', '2022-07-08', 'NOCHE', 4, '800.00', '1350.00', '550.00', 'asas', 3, 0, '2022-07-09 20:04:02', '2022-07-09 20:04:53');
 
 --
 -- Disparadores `tractor_reports`
@@ -3393,13 +3100,10 @@ CREATE TABLE `tractor_schedulings` (
 --
 
 INSERT INTO `tractor_schedulings` (`id`, `user_id`, `labor_id`, `tractor_id`, `implement_id`, `date`, `shift`, `lote_id`, `is_canceled`, `created_at`, `updated_at`) VALUES
-(1, 7, 2, 7, 7, '2022-06-25', 'MAÑANA', 7, 1, '2022-06-24 17:07:11', '2022-06-24 17:08:20'),
-(2, 8, 1, 7, 8, '2022-06-25', 'MAÑANA', 7, 0, '2022-06-24 17:07:23', '2022-06-24 17:07:23'),
-(3, 5, 1, 5, 5, '2022-06-25', 'NOCHE', 5, 0, '2022-06-24 17:07:42', '2022-06-24 17:08:11'),
-(4, 6, 4, 5, 6, '2022-06-25', 'NOCHE', 5, 0, '2022-06-24 17:07:51', '2022-06-24 17:07:51'),
-(5, 5, 3, 5, 5, '2022-06-25', 'MAÑANA', 5, 1, '2022-06-24 17:37:42', '2022-06-24 17:40:25'),
-(6, 6, 4, 5, 5, '2022-07-02', 'MAÑANA', 5, 0, '2022-07-01 22:28:34', '2022-07-01 22:28:34'),
-(7, 5, 4, 6, 6, '2022-07-02', 'NOCHE', 5, 0, '2022-07-01 22:28:45', '2022-07-01 22:28:45');
+(8, 6, 1, 5, 5, '2022-07-10', 'MAÑANA', 6, 0, '2022-07-09 20:01:13', '2022-07-09 20:01:13'),
+(9, 5, 4, 5, 5, '2022-07-10', 'MAÑANA', 6, 0, '2022-07-09 20:01:23', '2022-07-09 20:01:23'),
+(10, 7, 2, 7, 7, '2022-07-10', 'NOCHE', 7, 0, '2022-07-09 20:01:41', '2022-07-09 20:01:58'),
+(11, 8, 4, 8, 7, '2022-07-10', 'MAÑANA', 7, 1, '2022-07-09 20:01:52', '2022-07-09 20:02:02');
 
 -- --------------------------------------------------------
 
@@ -3432,12 +3136,12 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `code`, `name`, `lastname`, `location_id`, `email`, `email_verified_at`, `password`, `two_factor_secret`, `two_factor_recovery_codes`, `two_factor_confirmed_at`, `is_admin`, `remember_token`, `current_team_id`, `profile_photo_path`, `created_at`, `updated_at`) VALUES
-(1, '777269', 'Mr. Ford Vandervort', 'Kunze', 1, 'roob.brianne@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'WPn7K7yearpM20WS3s964CPUZ2vtDhTFL8wlqrSDztRxP3X56ohOycrlwG8V', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
-(2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '3DKrIkMWt3jIXg69NAE526q76vAEEmns9MsmPACorvjwqMwQYj7Mi6QQoMIu', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
-(3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'lhojjEAiJKr92QAxNgJwXhEcm4HSe56ZLSXSJUxVJm5eYOvshi0Eso93MwIZ', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'W4E2Tb3Qn0kiEFSjJR6ZHDyC2rtoHLtLiCO9Xr7yXUthV6OR7MqppsSPeeCP', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'Oez5hWgGNfZkraPBczri2IXpecESS65AmoH6uU7tmL7WOMMKK7xlv2aZ3Ga9', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(6, '502387', 'Bella Block', 'Bashirian', 3, 'sibyl08@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '3NXfsNa9xGchlBQ9iIbNaHjLcFz5unflenQ1Z74g5YCsxiXyXk0bKpoWgElS', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(1, '777269', 'Mr. Ford Vandervort', 'Kunze', 1, 'roob.brianne@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'nFhY4qi4tZD0LCwogwnPuqxUUqdv6dKDOgtKw2AIE9H35lHtvlCCwZ5Tnmiw', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
+(2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'CH5a14s3lYlYb4FhejjGVMjThqJqwEipakGBMIwD5doNHUluQ2dgFRakvM7k', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
+(3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'tT4wc3FGZMgNxvTJCyrWeyYHkHPxt9RchcpUiGo6RyoInl1gQLZ96iS18V1R', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'gR7zVHfElUCMEQ1bkXCNoHoGABlqrN1mkSeZBrs5umJqqb9wfDFTx7Meisat', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'Em98Dcm4PF2einSIVhPVgi4BG3Tm4RAYAzJq1Ful4q0SKfUCqtIIt5PaaEde', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(6, '502387', 'Bella Block', 'Bashirian', 3, 'sibyl08@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'NjF0mAf8dv0bxuX6JgTJE3hanQPiVggkS4um6xgFFzD2B4FLy3hlA5WexcW8', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (7, '981787', 'Jaylon Prosacco', 'Langosh', 4, 'pleuschke@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'rc7GJRvdk8Hja3W1jLepIOIhBPkUfcaM2TtoYLw1sJTXXmjxVBy2kQtGm8t1', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
 (8, '588440', 'Irving Strosin', 'Langosh', 4, 'mercedes57@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'Xz2S4RCr9v6EVwxQhozRejcp04TFyIs2GCHh2Tfl34GSok2M0yzbvy4gDfuv', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
 (9, '454006', 'Margarett Heller', 'Cruickshank', 5, 'oconner.sydnie@example.org', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'GvbEM8VRr6', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
@@ -3497,28 +3201,6 @@ CREATE TABLE `work_orders` (
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Volcado de datos para la tabla `work_orders`
---
-
-INSERT INTO `work_orders` (`id`, `implement_id`, `user_id`, `location_id`, `date`, `maintenance`, `state`, `is_canceled`, `created_at`, `updated_at`) VALUES
-(65, 1, 1, 1, '2022-07-11', '1', 'NO VALIDADO', 0, '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(66, 2, 2, 1, '2022-07-11', '1', 'NO VALIDADO', 0, '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(67, 3, 3, 2, '2022-07-11', '1', 'NO VALIDADO', 0, '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(68, 4, 4, 2, '2022-07-11', '1', 'NO VALIDADO', 0, '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(69, 5, 5, 3, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(70, 6, 6, 3, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(71, 7, 7, 4, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(72, 8, 8, 4, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(73, 9, 9, 5, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(74, 10, 10, 5, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-09 04:47:16', '2022-07-09 04:47:16'),
-(75, 11, 11, 6, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-09 04:47:16', '2022-07-09 04:47:16'),
-(76, 12, 12, 6, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-09 04:47:16', '2022-07-09 04:47:16'),
-(77, 13, 13, 7, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-09 04:47:16', '2022-07-09 04:47:16'),
-(78, 14, 14, 7, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-09 04:47:16', '2022-07-09 04:47:16'),
-(79, 15, 15, 8, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-09 04:47:16', '2022-07-09 04:47:16'),
-(80, 16, 16, 8, '2022-07-11', '1', 'PENDIENTE', 0, '2022-07-09 04:47:17', '2022-07-09 04:47:17');
-
 -- --------------------------------------------------------
 
 --
@@ -3539,272 +3221,13 @@ CREATE TABLE `work_order_details` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Volcado de datos para la tabla `work_order_details`
---
-
-INSERT INTO `work_order_details` (`id`, `work_order_id`, `task_id`, `state`, `is_checked`, `component_implement_id`, `component_part_id`, `observation`, `created_at`, `updated_at`) VALUES
-(1013, 65, 95, 'ACEPTADO', 0, 1, NULL, NULL, NULL, NULL),
-(1014, 65, 51, 'RECOMENDADO', 0, NULL, 1, NULL, NULL, NULL),
-(1015, 65, 62, 'RECOMENDADO', 0, NULL, 2, NULL, NULL, NULL),
-(1016, 65, 82, 'RECOMENDADO', 0, NULL, 3, NULL, NULL, NULL),
-(1017, 65, 1, 'ACEPTADO', 0, 2, NULL, NULL, NULL, NULL),
-(1018, 65, 23, 'ACEPTADO', 0, 2, NULL, NULL, NULL, NULL),
-(1019, 65, 31, 'ACEPTADO', 0, 2, NULL, NULL, NULL, NULL),
-(1020, 65, 84, 'ACEPTADO', 0, NULL, 4, NULL, NULL, NULL),
-(1021, 65, 60, 'RECOMENDADO', 0, NULL, 5, NULL, NULL, NULL),
-(1022, 65, 72, 'RECOMENDADO', 0, NULL, 6, NULL, NULL, NULL),
-(1023, 65, 90, 'ACEPTADO', 0, 3, NULL, NULL, NULL, NULL),
-(1024, 65, 84, 'ACEPTADO', 0, NULL, 7, NULL, NULL, NULL),
-(1025, 65, 32, 'ACEPTADO', 0, NULL, 8, NULL, NULL, NULL),
-(1026, 65, 82, 'RECOMENDADO', 0, NULL, 9, NULL, NULL, NULL),
-(1027, 66, 95, 'ACEPTADO', 0, 4, NULL, NULL, NULL, NULL),
-(1028, 66, 51, 'RECOMENDADO', 0, NULL, 28, NULL, NULL, NULL),
-(1029, 66, 62, 'RECOMENDADO', 0, NULL, 29, NULL, NULL, NULL),
-(1030, 66, 82, 'RECOMENDADO', 0, NULL, 30, NULL, NULL, NULL),
-(1031, 66, 1, 'ACEPTADO', 0, 5, NULL, NULL, NULL, NULL),
-(1032, 66, 23, 'ACEPTADO', 0, 5, NULL, NULL, NULL, NULL),
-(1033, 66, 31, 'ACEPTADO', 0, 5, NULL, NULL, NULL, NULL),
-(1034, 66, 84, 'ACEPTADO', 0, NULL, 31, NULL, NULL, NULL),
-(1035, 66, 60, 'RECOMENDADO', 0, NULL, 32, NULL, NULL, NULL),
-(1036, 66, 72, 'RECOMENDADO', 0, NULL, 33, NULL, NULL, NULL),
-(1037, 66, 90, 'ACEPTADO', 0, 6, NULL, NULL, NULL, NULL),
-(1038, 66, 84, 'ACEPTADO', 0, NULL, 34, NULL, NULL, NULL),
-(1039, 66, 32, 'ACEPTADO', 0, NULL, 35, NULL, NULL, NULL),
-(1040, 66, 82, 'RECOMENDADO', 0, NULL, 36, NULL, NULL, NULL),
-(1041, 67, 95, 'ACEPTADO', 0, 7, NULL, NULL, NULL, NULL),
-(1042, 67, 51, 'RECOMENDADO', 0, NULL, 10, NULL, NULL, NULL),
-(1043, 67, 62, 'RECOMENDADO', 0, NULL, 11, NULL, NULL, NULL),
-(1044, 67, 82, 'RECOMENDADO', 0, NULL, 12, NULL, NULL, NULL),
-(1045, 67, 1, 'ACEPTADO', 0, 8, NULL, NULL, NULL, NULL),
-(1046, 67, 23, 'ACEPTADO', 0, 8, NULL, NULL, NULL, NULL),
-(1047, 67, 31, 'ACEPTADO', 0, 8, NULL, NULL, NULL, NULL),
-(1048, 67, 84, 'ACEPTADO', 0, NULL, 13, NULL, NULL, NULL),
-(1049, 67, 60, 'RECOMENDADO', 0, NULL, 14, NULL, NULL, NULL),
-(1050, 67, 72, 'RECOMENDADO', 0, NULL, 15, NULL, NULL, NULL),
-(1051, 67, 90, 'ACEPTADO', 0, 9, NULL, NULL, NULL, NULL),
-(1052, 67, 84, 'ACEPTADO', 0, NULL, 16, NULL, NULL, NULL),
-(1053, 67, 32, 'ACEPTADO', 0, NULL, 17, NULL, NULL, NULL),
-(1054, 67, 82, 'RECOMENDADO', 0, NULL, 18, NULL, NULL, NULL),
-(1055, 68, 95, 'ACEPTADO', 0, 10, NULL, NULL, NULL, NULL),
-(1056, 68, 51, 'RECOMENDADO', 0, NULL, 19, NULL, NULL, NULL),
-(1057, 68, 88, 'ACEPTADO', 0, NULL, 20, NULL, NULL, NULL),
-(1058, 68, 82, 'RECOMENDADO', 0, NULL, 21, NULL, NULL, NULL),
-(1059, 68, 1, 'ACEPTADO', 0, 11, NULL, NULL, NULL, NULL),
-(1060, 68, 23, 'ACEPTADO', 0, 11, NULL, NULL, NULL, NULL),
-(1061, 68, 31, 'ACEPTADO', 0, 11, NULL, NULL, NULL, NULL),
-(1062, 68, 84, 'ACEPTADO', 0, NULL, 22, NULL, NULL, NULL),
-(1063, 68, 60, 'RECOMENDADO', 0, NULL, 23, NULL, NULL, NULL),
-(1064, 68, 18, 'ACEPTADO', 0, NULL, 24, NULL, NULL, NULL),
-(1065, 68, 39, 'ACEPTADO', 0, NULL, 24, NULL, NULL, NULL),
-(1066, 68, 90, 'ACEPTADO', 0, 12, NULL, NULL, NULL, NULL),
-(1067, 68, 84, 'ACEPTADO', 0, NULL, 25, NULL, NULL, NULL),
-(1068, 68, 32, 'ACEPTADO', 0, NULL, 26, NULL, NULL, NULL),
-(1069, 68, 82, 'RECOMENDADO', 0, NULL, 27, NULL, NULL, NULL),
-(1070, 69, 90, 'ACEPTADO', 0, 13, NULL, NULL, NULL, NULL),
-(1071, 69, 84, 'ACEPTADO', 0, NULL, 37, NULL, NULL, NULL),
-(1072, 69, 32, 'ACEPTADO', 0, NULL, 38, NULL, NULL, NULL),
-(1073, 69, 96, 'ACEPTADO', 0, NULL, 39, NULL, NULL, NULL),
-(1074, 69, 27, 'ACEPTADO', 0, 14, NULL, NULL, NULL, NULL),
-(1075, 69, 8, 'ACEPTADO', 0, NULL, 40, NULL, NULL, NULL),
-(1076, 69, 84, 'ACEPTADO', 0, NULL, 41, NULL, NULL, NULL),
-(1077, 69, 88, 'ACEPTADO', 0, NULL, 42, NULL, NULL, NULL),
-(1078, 69, 14, 'ACEPTADO', 0, 15, NULL, NULL, NULL, NULL),
-(1079, 69, 4, 'ACEPTADO', 0, NULL, 43, NULL, NULL, NULL),
-(1080, 69, 35, 'ACEPTADO', 0, NULL, 43, NULL, NULL, NULL),
-(1081, 69, 18, 'ACEPTADO', 0, NULL, 44, NULL, NULL, NULL),
-(1082, 69, 39, 'ACEPTADO', 0, NULL, 44, NULL, NULL, NULL),
-(1083, 69, 32, 'ACEPTADO', 0, NULL, 45, NULL, NULL, NULL),
-(1084, 70, 90, 'ACEPTADO', 0, 16, NULL, NULL, NULL, NULL),
-(1085, 70, 84, 'ACEPTADO', 0, NULL, 46, NULL, NULL, NULL),
-(1086, 70, 32, 'ACEPTADO', 0, NULL, 47, NULL, NULL, NULL),
-(1087, 70, 96, 'ACEPTADO', 0, NULL, 48, NULL, NULL, NULL),
-(1088, 70, 27, 'ACEPTADO', 0, 17, NULL, NULL, NULL, NULL),
-(1089, 70, 8, 'ACEPTADO', 0, NULL, 49, NULL, NULL, NULL),
-(1090, 70, 84, 'ACEPTADO', 0, NULL, 50, NULL, NULL, NULL),
-(1091, 70, 88, 'ACEPTADO', 0, NULL, 51, NULL, NULL, NULL),
-(1092, 70, 14, 'ACEPTADO', 0, 18, NULL, NULL, NULL, NULL),
-(1093, 70, 4, 'ACEPTADO', 0, NULL, 52, NULL, NULL, NULL),
-(1094, 70, 35, 'ACEPTADO', 0, NULL, 52, NULL, NULL, NULL),
-(1095, 70, 18, 'ACEPTADO', 0, NULL, 53, NULL, NULL, NULL),
-(1096, 70, 39, 'ACEPTADO', 0, NULL, 53, NULL, NULL, NULL),
-(1097, 70, 32, 'ACEPTADO', 0, NULL, 54, NULL, NULL, NULL),
-(1098, 71, 90, 'ACEPTADO', 0, 19, NULL, NULL, NULL, NULL),
-(1099, 71, 84, 'ACEPTADO', 0, NULL, 55, NULL, NULL, NULL),
-(1100, 71, 32, 'ACEPTADO', 0, NULL, 56, NULL, NULL, NULL),
-(1101, 71, 96, 'ACEPTADO', 0, NULL, 57, NULL, NULL, NULL),
-(1102, 71, 27, 'ACEPTADO', 0, 20, NULL, NULL, NULL, NULL),
-(1103, 71, 8, 'ACEPTADO', 0, NULL, 58, NULL, NULL, NULL),
-(1104, 71, 84, 'ACEPTADO', 0, NULL, 59, NULL, NULL, NULL),
-(1105, 71, 88, 'ACEPTADO', 0, NULL, 60, NULL, NULL, NULL),
-(1106, 71, 14, 'ACEPTADO', 0, 21, NULL, NULL, NULL, NULL),
-(1107, 71, 4, 'ACEPTADO', 0, NULL, 61, NULL, NULL, NULL),
-(1108, 71, 35, 'ACEPTADO', 0, NULL, 61, NULL, NULL, NULL),
-(1109, 71, 18, 'ACEPTADO', 0, NULL, 62, NULL, NULL, NULL),
-(1110, 71, 39, 'ACEPTADO', 0, NULL, 62, NULL, NULL, NULL),
-(1111, 71, 32, 'ACEPTADO', 0, NULL, 63, NULL, NULL, NULL),
-(1112, 72, 90, 'ACEPTADO', 0, 22, NULL, NULL, NULL, NULL),
-(1113, 72, 84, 'ACEPTADO', 0, NULL, 64, NULL, NULL, NULL),
-(1114, 72, 32, 'ACEPTADO', 0, NULL, 65, NULL, NULL, NULL),
-(1115, 72, 96, 'ACEPTADO', 0, NULL, 66, NULL, NULL, NULL),
-(1116, 72, 27, 'ACEPTADO', 0, 23, NULL, NULL, NULL, NULL),
-(1117, 72, 8, 'ACEPTADO', 0, NULL, 67, NULL, NULL, NULL),
-(1118, 72, 84, 'ACEPTADO', 0, NULL, 68, NULL, NULL, NULL),
-(1119, 72, 88, 'ACEPTADO', 0, NULL, 69, NULL, NULL, NULL),
-(1120, 72, 14, 'ACEPTADO', 0, 24, NULL, NULL, NULL, NULL),
-(1121, 72, 4, 'ACEPTADO', 0, NULL, 70, NULL, NULL, NULL),
-(1122, 72, 35, 'ACEPTADO', 0, NULL, 70, NULL, NULL, NULL),
-(1123, 72, 18, 'ACEPTADO', 0, NULL, 71, NULL, NULL, NULL),
-(1124, 72, 39, 'ACEPTADO', 0, NULL, 71, NULL, NULL, NULL),
-(1125, 72, 32, 'ACEPTADO', 0, NULL, 72, NULL, NULL, NULL),
-(1126, 73, 10, 'ACEPTADO', 0, 25, NULL, NULL, NULL, NULL),
-(1127, 73, 29, 'ACEPTADO', 0, 25, NULL, NULL, NULL, NULL),
-(1128, 73, 9, 'ACEPTADO', 0, NULL, 73, NULL, NULL, NULL),
-(1129, 73, 21, 'ACEPTADO', 0, NULL, 73, NULL, NULL, NULL),
-(1130, 73, 22, 'ACEPTADO', 0, NULL, 73, NULL, NULL, NULL),
-(1131, 73, 24, 'ACEPTADO', 0, NULL, 73, NULL, NULL, NULL),
-(1132, 73, 32, 'ACEPTADO', 0, NULL, 74, NULL, NULL, NULL),
-(1133, 73, 96, 'ACEPTADO', 0, NULL, 75, NULL, NULL, NULL),
-(1134, 73, 85, 'ACEPTADO', 0, 26, NULL, NULL, NULL, NULL),
-(1135, 73, 4, 'ACEPTADO', 0, NULL, 76, NULL, NULL, NULL),
-(1136, 73, 35, 'ACEPTADO', 0, NULL, 76, NULL, NULL, NULL),
-(1137, 73, 9, 'ACEPTADO', 0, NULL, 77, NULL, NULL, NULL),
-(1138, 73, 21, 'ACEPTADO', 0, NULL, 77, NULL, NULL, NULL),
-(1139, 73, 22, 'ACEPTADO', 0, NULL, 77, NULL, NULL, NULL),
-(1140, 73, 24, 'ACEPTADO', 0, NULL, 77, NULL, NULL, NULL),
-(1141, 73, 88, 'ACEPTADO', 0, NULL, 78, NULL, NULL, NULL),
-(1142, 73, 25, 'ACEPTADO', 0, 27, NULL, NULL, NULL, NULL),
-(1143, 73, 8, 'ACEPTADO', 0, NULL, 79, NULL, NULL, NULL),
-(1144, 73, 33, 'ACEPTADO', 0, NULL, 80, NULL, NULL, NULL),
-(1145, 73, 96, 'ACEPTADO', 0, NULL, 81, NULL, NULL, NULL),
-(1146, 74, 10, 'ACEPTADO', 0, 28, NULL, NULL, NULL, NULL),
-(1147, 74, 29, 'ACEPTADO', 0, 28, NULL, NULL, NULL, NULL),
-(1148, 74, 9, 'ACEPTADO', 0, NULL, 82, NULL, NULL, NULL),
-(1149, 74, 21, 'ACEPTADO', 0, NULL, 82, NULL, NULL, NULL),
-(1150, 74, 22, 'ACEPTADO', 0, NULL, 82, NULL, NULL, NULL),
-(1151, 74, 24, 'ACEPTADO', 0, NULL, 82, NULL, NULL, NULL),
-(1152, 74, 32, 'ACEPTADO', 0, NULL, 83, NULL, NULL, NULL),
-(1153, 74, 96, 'ACEPTADO', 0, NULL, 84, NULL, NULL, NULL),
-(1154, 74, 85, 'ACEPTADO', 0, 29, NULL, NULL, NULL, NULL),
-(1155, 74, 4, 'ACEPTADO', 0, NULL, 85, NULL, NULL, NULL),
-(1156, 74, 35, 'ACEPTADO', 0, NULL, 85, NULL, NULL, NULL),
-(1157, 74, 9, 'ACEPTADO', 0, NULL, 86, NULL, NULL, NULL),
-(1158, 74, 21, 'ACEPTADO', 0, NULL, 86, NULL, NULL, NULL),
-(1159, 74, 22, 'ACEPTADO', 0, NULL, 86, NULL, NULL, NULL),
-(1160, 74, 24, 'ACEPTADO', 0, NULL, 86, NULL, NULL, NULL),
-(1161, 74, 88, 'ACEPTADO', 0, NULL, 87, NULL, NULL, NULL),
-(1162, 74, 25, 'ACEPTADO', 0, 30, NULL, NULL, NULL, NULL),
-(1163, 74, 8, 'ACEPTADO', 0, NULL, 88, NULL, NULL, NULL),
-(1164, 74, 33, 'ACEPTADO', 0, NULL, 89, NULL, NULL, NULL),
-(1165, 74, 96, 'ACEPTADO', 0, NULL, 90, NULL, NULL, NULL),
-(1166, 75, 10, 'ACEPTADO', 0, 31, NULL, NULL, NULL, NULL),
-(1167, 75, 29, 'ACEPTADO', 0, 31, NULL, NULL, NULL, NULL),
-(1168, 75, 9, 'ACEPTADO', 0, NULL, 91, NULL, NULL, NULL),
-(1169, 75, 21, 'ACEPTADO', 0, NULL, 91, NULL, NULL, NULL),
-(1170, 75, 22, 'ACEPTADO', 0, NULL, 91, NULL, NULL, NULL),
-(1171, 75, 24, 'ACEPTADO', 0, NULL, 91, NULL, NULL, NULL),
-(1172, 75, 32, 'ACEPTADO', 0, NULL, 92, NULL, NULL, NULL),
-(1173, 75, 96, 'ACEPTADO', 0, NULL, 93, NULL, NULL, NULL),
-(1174, 75, 85, 'ACEPTADO', 0, 32, NULL, NULL, NULL, NULL),
-(1175, 75, 4, 'ACEPTADO', 0, NULL, 94, NULL, NULL, NULL),
-(1176, 75, 35, 'ACEPTADO', 0, NULL, 94, NULL, NULL, NULL),
-(1177, 75, 9, 'ACEPTADO', 0, NULL, 95, NULL, NULL, NULL),
-(1178, 75, 21, 'ACEPTADO', 0, NULL, 95, NULL, NULL, NULL),
-(1179, 75, 22, 'ACEPTADO', 0, NULL, 95, NULL, NULL, NULL),
-(1180, 75, 24, 'ACEPTADO', 0, NULL, 95, NULL, NULL, NULL),
-(1181, 75, 88, 'ACEPTADO', 0, NULL, 96, NULL, NULL, NULL),
-(1182, 75, 25, 'ACEPTADO', 0, 33, NULL, NULL, NULL, NULL),
-(1183, 75, 8, 'ACEPTADO', 0, NULL, 97, NULL, NULL, NULL),
-(1184, 75, 33, 'ACEPTADO', 0, NULL, 98, NULL, NULL, NULL),
-(1185, 75, 96, 'ACEPTADO', 0, NULL, 99, NULL, NULL, NULL),
-(1186, 76, 10, 'ACEPTADO', 0, 34, NULL, NULL, NULL, NULL),
-(1187, 76, 29, 'ACEPTADO', 0, 34, NULL, NULL, NULL, NULL),
-(1188, 76, 9, 'ACEPTADO', 0, NULL, 100, NULL, NULL, NULL),
-(1189, 76, 21, 'ACEPTADO', 0, NULL, 100, NULL, NULL, NULL),
-(1190, 76, 22, 'ACEPTADO', 0, NULL, 100, NULL, NULL, NULL),
-(1191, 76, 24, 'ACEPTADO', 0, NULL, 100, NULL, NULL, NULL),
-(1192, 76, 32, 'ACEPTADO', 0, NULL, 101, NULL, NULL, NULL),
-(1193, 76, 96, 'ACEPTADO', 0, NULL, 102, NULL, NULL, NULL),
-(1194, 76, 85, 'ACEPTADO', 0, 35, NULL, NULL, NULL, NULL),
-(1195, 76, 4, 'ACEPTADO', 0, NULL, 103, NULL, NULL, NULL),
-(1196, 76, 35, 'ACEPTADO', 0, NULL, 103, NULL, NULL, NULL),
-(1197, 76, 9, 'ACEPTADO', 0, NULL, 104, NULL, NULL, NULL),
-(1198, 76, 21, 'ACEPTADO', 0, NULL, 104, NULL, NULL, NULL),
-(1199, 76, 22, 'ACEPTADO', 0, NULL, 104, NULL, NULL, NULL),
-(1200, 76, 24, 'ACEPTADO', 0, NULL, 104, NULL, NULL, NULL),
-(1201, 76, 88, 'ACEPTADO', 0, NULL, 105, NULL, NULL, NULL),
-(1202, 76, 25, 'ACEPTADO', 0, 36, NULL, NULL, NULL, NULL),
-(1203, 76, 8, 'ACEPTADO', 0, NULL, 106, NULL, NULL, NULL),
-(1204, 76, 33, 'ACEPTADO', 0, NULL, 107, NULL, NULL, NULL),
-(1205, 76, 96, 'ACEPTADO', 0, NULL, 108, NULL, NULL, NULL),
-(1206, 77, 95, 'ACEPTADO', 0, 37, NULL, NULL, NULL, NULL),
-(1207, 77, 4, 'ACEPTADO', 0, NULL, 109, NULL, NULL, NULL),
-(1208, 77, 35, 'ACEPTADO', 0, NULL, 109, NULL, NULL, NULL),
-(1209, 77, 88, 'ACEPTADO', 0, NULL, 110, NULL, NULL, NULL),
-(1210, 77, 96, 'ACEPTADO', 0, NULL, 111, NULL, NULL, NULL),
-(1211, 77, 94, 'ACEPTADO', 0, 38, NULL, NULL, NULL, NULL),
-(1212, 77, 87, 'ACEPTADO', 0, NULL, 112, NULL, NULL, NULL),
-(1213, 77, 38, 'ACEPTADO', 0, NULL, 113, NULL, NULL, NULL),
-(1214, 77, 96, 'ACEPTADO', 0, NULL, 114, NULL, NULL, NULL),
-(1215, 77, 14, 'ACEPTADO', 0, 39, NULL, NULL, NULL, NULL),
-(1216, 77, 4, 'ACEPTADO', 0, NULL, 115, NULL, NULL, NULL),
-(1217, 77, 35, 'ACEPTADO', 0, NULL, 115, NULL, NULL, NULL),
-(1218, 77, 18, 'ACEPTADO', 0, NULL, 116, NULL, NULL, NULL),
-(1219, 77, 39, 'ACEPTADO', 0, NULL, 116, NULL, NULL, NULL),
-(1220, 77, 32, 'ACEPTADO', 0, NULL, 117, NULL, NULL, NULL),
-(1221, 78, 95, 'ACEPTADO', 0, 40, NULL, NULL, NULL, NULL),
-(1222, 78, 4, 'ACEPTADO', 0, NULL, 118, NULL, NULL, NULL),
-(1223, 78, 35, 'ACEPTADO', 0, NULL, 118, NULL, NULL, NULL),
-(1224, 78, 88, 'ACEPTADO', 0, NULL, 119, NULL, NULL, NULL),
-(1225, 78, 96, 'ACEPTADO', 0, NULL, 120, NULL, NULL, NULL),
-(1226, 78, 94, 'ACEPTADO', 0, 41, NULL, NULL, NULL, NULL),
-(1227, 78, 87, 'ACEPTADO', 0, NULL, 121, NULL, NULL, NULL),
-(1228, 78, 38, 'ACEPTADO', 0, NULL, 122, NULL, NULL, NULL),
-(1229, 78, 96, 'ACEPTADO', 0, NULL, 123, NULL, NULL, NULL),
-(1230, 78, 14, 'ACEPTADO', 0, 42, NULL, NULL, NULL, NULL),
-(1231, 78, 4, 'ACEPTADO', 0, NULL, 124, NULL, NULL, NULL),
-(1232, 78, 35, 'ACEPTADO', 0, NULL, 124, NULL, NULL, NULL),
-(1233, 78, 18, 'ACEPTADO', 0, NULL, 125, NULL, NULL, NULL),
-(1234, 78, 39, 'ACEPTADO', 0, NULL, 125, NULL, NULL, NULL),
-(1235, 78, 32, 'ACEPTADO', 0, NULL, 126, NULL, NULL, NULL),
-(1236, 79, 95, 'ACEPTADO', 0, 43, NULL, NULL, NULL, NULL),
-(1237, 79, 4, 'ACEPTADO', 0, NULL, 127, NULL, NULL, NULL),
-(1238, 79, 35, 'ACEPTADO', 0, NULL, 127, NULL, NULL, NULL),
-(1239, 79, 88, 'ACEPTADO', 0, NULL, 128, NULL, NULL, NULL),
-(1240, 79, 96, 'ACEPTADO', 0, NULL, 129, NULL, NULL, NULL),
-(1241, 79, 94, 'ACEPTADO', 0, 44, NULL, NULL, NULL, NULL),
-(1242, 79, 87, 'ACEPTADO', 0, NULL, 130, NULL, NULL, NULL),
-(1243, 79, 38, 'ACEPTADO', 0, NULL, 131, NULL, NULL, NULL),
-(1244, 79, 96, 'ACEPTADO', 0, NULL, 132, NULL, NULL, NULL),
-(1245, 79, 14, 'ACEPTADO', 0, 45, NULL, NULL, NULL, NULL),
-(1246, 79, 4, 'ACEPTADO', 0, NULL, 133, NULL, NULL, NULL),
-(1247, 79, 35, 'ACEPTADO', 0, NULL, 133, NULL, NULL, NULL),
-(1248, 79, 18, 'ACEPTADO', 0, NULL, 134, NULL, NULL, NULL),
-(1249, 79, 39, 'ACEPTADO', 0, NULL, 134, NULL, NULL, NULL),
-(1250, 79, 32, 'ACEPTADO', 0, NULL, 135, NULL, NULL, NULL),
-(1251, 80, 95, 'ACEPTADO', 0, 46, NULL, NULL, NULL, NULL),
-(1252, 80, 4, 'ACEPTADO', 0, NULL, 136, NULL, NULL, NULL),
-(1253, 80, 35, 'ACEPTADO', 0, NULL, 136, NULL, NULL, NULL),
-(1254, 80, 88, 'ACEPTADO', 0, NULL, 137, NULL, NULL, NULL),
-(1255, 80, 96, 'ACEPTADO', 0, NULL, 138, NULL, NULL, NULL),
-(1256, 80, 94, 'ACEPTADO', 0, 47, NULL, NULL, NULL, NULL),
-(1257, 80, 87, 'ACEPTADO', 0, NULL, 139, NULL, NULL, NULL),
-(1258, 80, 38, 'ACEPTADO', 0, NULL, 140, NULL, NULL, NULL),
-(1259, 80, 96, 'ACEPTADO', 0, NULL, 141, NULL, NULL, NULL),
-(1260, 80, 14, 'ACEPTADO', 0, 48, NULL, NULL, NULL, NULL),
-(1261, 80, 4, 'ACEPTADO', 0, NULL, 142, NULL, NULL, NULL),
-(1262, 80, 35, 'ACEPTADO', 0, NULL, 142, NULL, NULL, NULL),
-(1263, 80, 18, 'ACEPTADO', 0, NULL, 143, NULL, NULL, NULL),
-(1264, 80, 39, 'ACEPTADO', 0, NULL, 143, NULL, NULL, NULL),
-(1265, 80, 32, 'ACEPTADO', 0, NULL, 144, NULL, NULL, NULL);
-
---
 -- Disparadores `work_order_details`
 --
 DELIMITER $$
 CREATE TRIGGER `componente_ordenado` AFTER UPDATE ON `work_order_details` FOR EACH ROW BEGIN
 IF new.state = "ACEPTADO" THEN
 	IF new.component_part_id IS NULL THEN
-    	UPDATE component_implement SET state = "ORDENADO" WHERE id = new.component_implement_id;	
+    	UPDATE component_implement SET state = "ORDENADO" WHERE id = new.component_implement_id;
     ELSE
     UPDATE component_part SET state = "ORDENADO" WHERE id = new.component_part_id;
     END IF;
@@ -3858,126 +3281,6 @@ CREATE TABLE `work_order_required_materials` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---
--- Volcado de datos para la tabla `work_order_required_materials`
---
-
-INSERT INTO `work_order_required_materials` (`id`, `work_order_id`, `item_id`, `quantity`, `created_at`, `updated_at`) VALUES
-(1505, 65, 1, '2.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1506, 65, 5, '2.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1507, 65, 7, '4.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1508, 65, 3, '1.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1509, 65, 24, '1.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1510, 65, 57, '6.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1511, 65, 22, '1.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1512, 65, 16, '1.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1513, 65, 12, '6.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1514, 65, 6, '1.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1515, 65, 8, '2.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1516, 65, 11, '2.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1517, 65, 31, '6.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1518, 65, 41, '6.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1519, 65, 49, '6.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1520, 65, 50, '12.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1521, 65, 21, '1.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1522, 65, 44, '2.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1523, 65, 28, '4.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1524, 65, 30, '8.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1525, 66, 1, '2.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1526, 66, 5, '2.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1527, 66, 7, '4.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1528, 66, 3, '1.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1529, 66, 24, '1.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1530, 66, 57, '6.00', '2022-07-09 04:47:13', '2022-07-09 04:47:14'),
-(1531, 66, 22, '1.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1532, 66, 16, '1.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1533, 66, 12, '6.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1534, 66, 6, '1.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1535, 66, 8, '2.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1536, 66, 11, '2.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1537, 66, 31, '6.00', '2022-07-09 04:47:13', '2022-07-09 04:47:14'),
-(1538, 66, 41, '6.00', '2022-07-09 04:47:13', '2022-07-09 04:47:14'),
-(1539, 66, 49, '6.00', '2022-07-09 04:47:13', '2022-07-09 04:47:14'),
-(1540, 66, 50, '12.00', '2022-07-09 04:47:13', '2022-07-09 04:47:14'),
-(1541, 66, 21, '1.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1542, 66, 44, '2.00', '2022-07-09 04:47:13', '2022-07-09 04:47:13'),
-(1543, 66, 28, '4.00', '2022-07-09 04:47:13', '2022-07-09 04:47:14'),
-(1544, 66, 30, '8.00', '2022-07-09 04:47:13', '2022-07-09 04:47:14'),
-(1545, 67, 1, '2.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1546, 67, 5, '2.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1547, 67, 7, '4.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1548, 67, 3, '1.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1549, 67, 24, '1.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1550, 67, 57, '6.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1551, 67, 22, '1.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1552, 67, 16, '1.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1553, 67, 12, '6.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1554, 67, 6, '1.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1555, 67, 8, '2.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1556, 67, 11, '2.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1557, 67, 31, '6.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1558, 67, 41, '6.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1559, 67, 49, '6.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1560, 67, 50, '12.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1561, 67, 21, '1.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1562, 67, 44, '2.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1563, 67, 28, '4.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1564, 67, 30, '8.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1565, 68, 1, '2.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1566, 68, 5, '2.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1567, 68, 7, '4.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1568, 68, 3, '1.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1569, 68, 57, '6.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1570, 68, 22, '1.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1571, 68, 16, '1.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1572, 68, 12, '6.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1573, 68, 6, '1.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1574, 68, 8, '2.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1575, 68, 11, '2.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1576, 68, 31, '6.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1577, 68, 41, '6.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1578, 68, 49, '6.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1579, 68, 50, '12.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1580, 68, 21, '1.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1581, 68, 28, '4.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1582, 68, 30, '8.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1583, 69, 28, '2.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1584, 69, 30, '4.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1585, 69, 31, '4.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1586, 69, 41, '4.00', '2022-07-09 04:47:14', '2022-07-09 04:47:14'),
-(1587, 69, 49, '4.00', '2022-07-09 04:47:14', '2022-07-09 04:47:15'),
-(1588, 69, 50, '8.00', '2022-07-09 04:47:14', '2022-07-09 04:47:15'),
-(1589, 70, 28, '2.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1590, 70, 30, '4.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1591, 70, 31, '4.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1592, 70, 41, '4.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1593, 70, 49, '4.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1594, 70, 50, '8.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1595, 71, 28, '2.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1596, 71, 30, '4.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1597, 71, 31, '4.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1598, 71, 41, '4.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1599, 71, 49, '4.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1600, 71, 50, '8.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1601, 72, 28, '2.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1602, 72, 30, '4.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1603, 72, 31, '4.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1604, 72, 41, '4.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1605, 72, 49, '4.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1606, 72, 50, '8.00', '2022-07-09 04:47:15', '2022-07-09 04:47:15'),
-(1607, 77, 1, '2.00', '2022-07-09 04:47:16', '2022-07-09 04:47:16'),
-(1608, 77, 5, '2.00', '2022-07-09 04:47:16', '2022-07-09 04:47:16'),
-(1609, 77, 7, '4.00', '2022-07-09 04:47:16', '2022-07-09 04:47:16'),
-(1610, 78, 1, '2.00', '2022-07-09 04:47:16', '2022-07-09 04:47:16'),
-(1611, 78, 5, '2.00', '2022-07-09 04:47:16', '2022-07-09 04:47:16'),
-(1612, 78, 7, '4.00', '2022-07-09 04:47:16', '2022-07-09 04:47:16'),
-(1613, 79, 1, '2.00', '2022-07-09 04:47:16', '2022-07-09 04:47:16'),
-(1614, 79, 5, '2.00', '2022-07-09 04:47:16', '2022-07-09 04:47:16'),
-(1615, 79, 7, '4.00', '2022-07-09 04:47:16', '2022-07-09 04:47:16'),
-(1616, 80, 1, '2.00', '2022-07-09 04:47:17', '2022-07-09 04:47:17'),
-(1617, 80, 5, '2.00', '2022-07-09 04:47:17', '2022-07-09 04:47:17'),
-(1618, 80, 7, '4.00', '2022-07-09 04:47:17', '2022-07-09 04:47:17');
 
 -- --------------------------------------------------------
 
@@ -4090,7 +3393,8 @@ ALTER TABLE `components`
 ALTER TABLE `component_implement`
   ADD PRIMARY KEY (`id`),
   ADD KEY `component_implement_component_id_foreign` (`component_id`),
-  ADD KEY `component_implement_implement_id_foreign` (`implement_id`);
+  ADD KEY `component_implement_implement_id_foreign` (`implement_id`),
+  ADD KEY `component_implement_work_order_id_foreign` (`work_order_id`);
 
 --
 -- Indices de la tabla `component_implement_model`
@@ -4270,7 +3574,8 @@ ALTER TABLE `operator_assigned_stocks`
   ADD PRIMARY KEY (`id`),
   ADD KEY `operator_assigned_stocks_user_id_foreign` (`user_id`),
   ADD KEY `operator_assigned_stocks_item_id_foreign` (`item_id`),
-  ADD KEY `operator_assigned_stocks_warehouse_id_foreign` (`warehouse_id`);
+  ADD KEY `operator_assigned_stocks_warehouse_id_foreign` (`warehouse_id`),
+  ADD KEY `operator_assigned_stocks_ceco_id_foreign` (`ceco_id`);
 
 --
 -- Indices de la tabla `operator_stocks`
@@ -4279,7 +3584,8 @@ ALTER TABLE `operator_stocks`
   ADD PRIMARY KEY (`id`),
   ADD KEY `operator_stocks_user_id_foreign` (`user_id`),
   ADD KEY `operator_stocks_item_id_foreign` (`item_id`),
-  ADD KEY `operator_stocks_warehouse_id_foreign` (`warehouse_id`);
+  ADD KEY `operator_stocks_warehouse_id_foreign` (`warehouse_id`),
+  ADD KEY `operator_stocks_ceco_id_foreign` (`ceco_id`);
 
 --
 -- Indices de la tabla `operator_stock_details`
@@ -4289,7 +3595,8 @@ ALTER TABLE `operator_stock_details`
   ADD KEY `operator_stock_details_user_id_foreign` (`user_id`),
   ADD KEY `operator_stock_details_item_id_foreign` (`item_id`),
   ADD KEY `operator_stock_details_warehouse_id_foreign` (`warehouse_id`),
-  ADD KEY `operator_stock_details_order_request_detail_id_foreign` (`order_request_detail_id`);
+  ADD KEY `operator_stock_details_order_request_detail_id_foreign` (`order_request_detail_id`),
+  ADD KEY `operator_stock_details_ceco_id_foreign` (`ceco_id`);
 
 --
 -- Indices de la tabla `order_dates`
@@ -4351,14 +3658,21 @@ ALTER TABLE `personal_access_tokens`
 ALTER TABLE `pre_stockpiles`
   ADD PRIMARY KEY (`id`),
   ADD KEY `pre_stockpiles_user_id_foreign` (`user_id`),
-  ADD KEY `pre_stockpiles_implement_foreign` (`implement`);
+  ADD KEY `pre_stockpiles_implement_foreign` (`implement`),
+  ADD KEY `pre_stockpiles_pre_stockpile_date_id_foreign` (`pre_stockpile_date_id`);
+
+--
+-- Indices de la tabla `pre_stockpile_dates`
+--
+ALTER TABLE `pre_stockpile_dates`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indices de la tabla `pre_stockpile_details`
 --
 ALTER TABLE `pre_stockpile_details`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `pre_stockpile_details_pre_stockpile_foreign` (`pre_stockpile`),
+  ADD KEY `pre_stockpile_details_pre_stockpile_foreign` (`pre_stockpile_id`),
   ADD KEY `pre_stockpile_details_item_id_foreign` (`item_id`),
   ADD KEY `pre_stockpile_details_warehouse_id_foreign` (`warehouse_id`);
 
@@ -4572,13 +3886,13 @@ ALTER TABLE `zones`
 -- AUTO_INCREMENT de la tabla `affected_movement`
 --
 ALTER TABLE `affected_movement`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT de la tabla `brands`
 --
 ALTER TABLE `brands`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT de la tabla `cecos`
@@ -4608,7 +3922,7 @@ ALTER TABLE `components`
 -- AUTO_INCREMENT de la tabla `component_implement`
 --
 ALTER TABLE `component_implement`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=97;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=145;
 
 --
 -- AUTO_INCREMENT de la tabla `component_implement_model`
@@ -4620,7 +3934,7 @@ ALTER TABLE `component_implement_model`
 -- AUTO_INCREMENT de la tabla `component_part`
 --
 ALTER TABLE `component_part`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=145;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=289;
 
 --
 -- AUTO_INCREMENT de la tabla `component_part_model`
@@ -4680,7 +3994,7 @@ ALTER TABLE `implement_models`
 -- AUTO_INCREMENT de la tabla `items`
 --
 ALTER TABLE `items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
 
 --
 -- AUTO_INCREMENT de la tabla `labors`
@@ -4734,19 +4048,19 @@ ALTER TABLE `min_stock_details`
 -- AUTO_INCREMENT de la tabla `operator_assigned_stocks`
 --
 ALTER TABLE `operator_assigned_stocks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT de la tabla `operator_stocks`
 --
 ALTER TABLE `operator_stocks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT de la tabla `operator_stock_details`
 --
 ALTER TABLE `operator_stock_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT de la tabla `order_dates`
@@ -4758,19 +4072,19 @@ ALTER TABLE `order_dates`
 -- AUTO_INCREMENT de la tabla `order_requests`
 --
 ALTER TABLE `order_requests`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT de la tabla `order_request_details`
 --
 ALTER TABLE `order_request_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=422;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
 
 --
 -- AUTO_INCREMENT de la tabla `order_request_new_items`
 --
 ALTER TABLE `order_request_new_items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT de la tabla `permissions`
@@ -4789,6 +4103,12 @@ ALTER TABLE `personal_access_tokens`
 --
 ALTER TABLE `pre_stockpiles`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `pre_stockpile_dates`
+--
+ALTER TABLE `pre_stockpile_dates`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `pre_stockpile_details`
@@ -4848,7 +4168,7 @@ ALTER TABLE `stockpile_details`
 -- AUTO_INCREMENT de la tabla `stocks`
 --
 ALTER TABLE `stocks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT de la tabla `systems`
@@ -4884,13 +4204,13 @@ ALTER TABLE `tractor_models`
 -- AUTO_INCREMENT de la tabla `tractor_reports`
 --
 ALTER TABLE `tractor_reports`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT de la tabla `tractor_schedulings`
 --
 ALTER TABLE `tractor_schedulings`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT de la tabla `users`
@@ -4975,7 +4295,8 @@ ALTER TABLE `components`
 --
 ALTER TABLE `component_implement`
   ADD CONSTRAINT `component_implement_component_id_foreign` FOREIGN KEY (`component_id`) REFERENCES `components` (`id`),
-  ADD CONSTRAINT `component_implement_implement_id_foreign` FOREIGN KEY (`implement_id`) REFERENCES `implements` (`id`);
+  ADD CONSTRAINT `component_implement_implement_id_foreign` FOREIGN KEY (`implement_id`) REFERENCES `implements` (`id`),
+  ADD CONSTRAINT `component_implement_work_order_id_foreign` FOREIGN KEY (`work_order_id`) REFERENCES `work_orders` (`id`);
 
 --
 -- Filtros para la tabla `component_implement_model`
@@ -5085,6 +4406,7 @@ ALTER TABLE `model_has_roles`
 -- Filtros para la tabla `operator_assigned_stocks`
 --
 ALTER TABLE `operator_assigned_stocks`
+  ADD CONSTRAINT `operator_assigned_stocks_ceco_id_foreign` FOREIGN KEY (`ceco_id`) REFERENCES `cecos` (`id`),
   ADD CONSTRAINT `operator_assigned_stocks_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
   ADD CONSTRAINT `operator_assigned_stocks_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   ADD CONSTRAINT `operator_assigned_stocks_warehouse_id_foreign` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`id`);
@@ -5093,6 +4415,7 @@ ALTER TABLE `operator_assigned_stocks`
 -- Filtros para la tabla `operator_stocks`
 --
 ALTER TABLE `operator_stocks`
+  ADD CONSTRAINT `operator_stocks_ceco_id_foreign` FOREIGN KEY (`ceco_id`) REFERENCES `cecos` (`id`),
   ADD CONSTRAINT `operator_stocks_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
   ADD CONSTRAINT `operator_stocks_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   ADD CONSTRAINT `operator_stocks_warehouse_id_foreign` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`id`);
@@ -5101,6 +4424,7 @@ ALTER TABLE `operator_stocks`
 -- Filtros para la tabla `operator_stock_details`
 --
 ALTER TABLE `operator_stock_details`
+  ADD CONSTRAINT `operator_stock_details_ceco_id_foreign` FOREIGN KEY (`ceco_id`) REFERENCES `cecos` (`id`),
   ADD CONSTRAINT `operator_stock_details_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
   ADD CONSTRAINT `operator_stock_details_order_request_detail_id_foreign` FOREIGN KEY (`order_request_detail_id`) REFERENCES `order_request_details` (`id`),
   ADD CONSTRAINT `operator_stock_details_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
@@ -5135,6 +4459,7 @@ ALTER TABLE `order_request_new_items`
 --
 ALTER TABLE `pre_stockpiles`
   ADD CONSTRAINT `pre_stockpiles_implement_foreign` FOREIGN KEY (`implement`) REFERENCES `implements` (`id`),
+  ADD CONSTRAINT `pre_stockpiles_pre_stockpile_date_id_foreign` FOREIGN KEY (`pre_stockpile_date_id`) REFERENCES `pre_stockpile_dates` (`id`),
   ADD CONSTRAINT `pre_stockpiles_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 --
@@ -5142,7 +4467,7 @@ ALTER TABLE `pre_stockpiles`
 --
 ALTER TABLE `pre_stockpile_details`
   ADD CONSTRAINT `pre_stockpile_details_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
-  ADD CONSTRAINT `pre_stockpile_details_pre_stockpile_foreign` FOREIGN KEY (`pre_stockpile`) REFERENCES `pre_stockpiles` (`id`),
+  ADD CONSTRAINT `pre_stockpile_details_pre_stockpile_foreign` FOREIGN KEY (`pre_stockpile_id`) REFERENCES `pre_stockpiles` (`id`),
   ADD CONSTRAINT `pre_stockpile_details_warehouse_id_foreign` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`id`);
 
 --
@@ -5285,125 +4610,141 @@ CREATE DEFINER=`root`@`localhost` EVENT `liberar_material_event` ON SCHEDULE EVE
 CREATE DEFINER=`root`@`localhost` EVENT `asignar_monto_ceco` ON SCHEDULE EVERY 1 MONTH STARTS '2022-06-01 00:00:00' ON COMPLETION NOT PRESERVE DISABLE DO UPDATE ceco_allocation_amounts SET caa.is_allocated = true WHERE date <= CURDATE() AND is_allocated = false$$
 
 CREATE DEFINER=`root`@`localhost` EVENT `Listar_materiales_pedido` ON SCHEDULE EVERY 1 DAY STARTS '2022-06-27 00:00:00' ON COMPLETION PRESERVE DISABLE DO BEGIN
-/*-------Variables para la fecha para abrir el pedido--------*/
-DECLARE fecha_solicitud INT;
-DECLARE fecha_abrir_solicitud DATE;
-/*-------Obtener la fecha para abrir el pedido-------*/
-SELECT id,open_request INTO fecha_solicitud, fecha_abrir_solicitud FROM order_dates r WHERE r.state = "PENDIENTE" ORDER BY open_request ASC LIMIT 1;
-IF(fecha_abrir_solicitud <= NOW()) THEN
-BEGIN
-/*--------variables para detener el ciclo-----------*/
-DECLARE componente_final INT DEFAULT 0;
-DECLARE pieza_final  INT DEFAULT 0;
-/*-------------------------------------------------*/
-/*---------variables para almacenar variables del componente----------*/
-DECLARE pedido INT;  #order_request_id
-DECLARE implemento INT;
-DECLARE componente INT;
-DECLARE responsable INT;
-DECLARE item INT;
-DECLARE tiempo_vida DECIMAL(8,2);
-DECLARE horas DECIMAL(8,2);
-DECLARE cantidad DECIMAL(8,2);
-DECLARE precio_estimado DECIMAL(8,2);
-/*------------------------------------------------------------------------*/
-/*--------------variables para la pieza------------------------------------*/
-DECLARE pieza INT;
-DECLARE item_pieza INT;
-DECLARE horas_pieza DECIMAL(8,2);
-DECLARE tiempo_vida_pieza DECIMAL(8,2);
-DECLARE cantidad_pieza DECIMAL(8,2);
-DECLARE precio_estimado_pieza DECIMAL(8,2);
-/*------------------------------------------------------------------------------*/
-/*---------Declarando cursores para iterar por cada componente y pieza-----------*/
-DECLARE cur_comp CURSOR FOR SELECT i.id, c.id, c.item_id, c.lifespan, i.user_id, it.estimated_price FROM component_implement_model cim INNER JOIN implements i ON i.implement_model_id = cim.implement_model_id INNER JOIN components c ON c.id = cim.component_id INNER JOIN items it ON it.id = c.item_id;
-DECLARE CONTINUE HANDLER FOR NOT FOUND SET componente_final = 1;
-/*-----------------------------------------------------------------------------------*/
-OPEN cur_comp;
-	bucle:LOOP
-    IF componente_final = 1 THEN
-    	LEAVE bucle;
+    /*-------Variables para la fecha para abrir el pedido--------*/
+    DECLARE fecha_solicitud INT;
+    DECLARE fecha_abrir_solicitud DATE;
+    /*-------Obtener la fecha para abrir el pedido-------*/
+    SELECT id,open_request INTO fecha_solicitud, fecha_abrir_solicitud FROM order_dates r WHERE r.state = "PENDIENTE" ORDER BY open_request ASC LIMIT 1;
+    IF(fecha_abrir_solicitud <= NOW()) THEN
+        BEGIN
+        /*-----------VARIABLES PARA DETENER CICLOS--------------*/
+        DECLARE implemento_final INT DEFAULT 0;
+        DECLARE componente_final INT DEFAULT 0;
+        DECLARE pieza_final INT DEFAULT 0;
+        /*--------------VARIABLES CABECERA SOLICITUD DE PEDIDO-------------------*/
+        DECLARE implemento INT;
+        DECLARE responsable INT;
+        /*--------------VARIABLES PARA EL DETALLE DE ORDEN DE TRABAJO---------*/
+        DECLARE solicitud_pedido INT;
+        DECLARE componente_del_implemento INT;
+        DECLARE pieza_del_componente INT;
+        /*--------------VARIABLE PARA ALMACENAR EL MODELO DEL IMPLEMENTO------------------------*/
+        DECLARE modelo_del_implemento INT;
+        /*--------------VARIABLES PARA ALMACENAR DATOS DEL COMPONENTE---------*/
+        DECLARE componente INT;
+        DECLARE horas_componente DECIMAL(8,2);
+        DECLARE tiempo_vida_componente DECIMAL(8,2);
+        DECLARE cantidad_componente INT;
+        DECLARE item_componente INT;
+        DECLARE precio_componente DECIMAL(8,2);
+        /*-------------VARIABLES PARA ALMCENAR DATOS DE LA PIEZA--------------*/
+        DECLARE pieza INT;
+        DECLARE horas_pieza DECIMAL(8,2);
+        DECLARE tiempo_vida_pieza DECIMAL(8,2);
+        DECLARE cantidad_pieza INT;
+        DECLARE item_pieza INT;
+        DECLARE precio_pieza DECIMAL(8,2);
+        /*-------------CURSOR PARA ITERAR LOS IMPLEMENTO------*/
+        DECLARE cursor_implementos CURSOR FOR SELECT id,implement_model_id,user_id FROM implements;
+        DECLARE CONTINUE HANDLER FOR NOT FOUND SET implemento_final = 1;
+        /*-------------ABRIR CURSOR DE IMPLEMENTOS------------*/
+        OPEN cursor_implementos;
+            bucle_implementos:LOOP
+                IF implemento_final = 1 THEN
+                    LEAVE bucle_implementos;
+                END IF;
+            /*-----------------------------------OBTENER EL ID Y EL MODELO DEL IMPLEMENTO ---------------------------*/
+                FETCH cursor_implementos INTO implemento,modelo_del_implemento,responsable;
+            /*-----------CREAR LA CABECERA DE LA SOLICITUD DE PEDIDO SI NO EXISTE EN LA FECHA ASIGNADA---------------*/
+                IF NOT EXISTS(SELECT * FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" AND order_date_id = fecha_solicitud) THEN
+                    INSERT INTO order_requests(user_id,implement_id,order_date_id) VALUES (responsable,implemento,fecha_solicitud);
+                /*-----------OBTENER ID DE LA CABECERA DE LA SOLICITUD DE PEDIDO-------------------*/
+                    SELECT id INTO solicitud_pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" AND order_date_id = fecha_solicitud;
+            /*--------CURSOR PARA ITERAR CADA COMPONENTE DEL IMPLEMENTO-------*/
+                    BEGIN
+                        DECLARE cursor_componentes CURSOR FOR SELECT cim.component_id,i.estimated_price FROM component_implement_model cim INNER JOIN components c ON c.id = cim.component_id INNER JOIN items i ON i.id = c.item_id WHERE cim.implement_model_id = modelo_del_implemento;
+                        DECLARE CONTINUE HANDLER FOR NOT FOUND SET componente_final = 1;
+                        /*------------ABRIR CURSOR COMPONENTES---------------*/
+                        OPEN cursor_componentes;
+                            bucle_componentes:LOOP
+                                IF componente_final = 1 THEN
+                                    LEAVE bucle_componentes;
+                                END IF;
+                                /*--------------------OBTENER EL COMPONENTE DEL IMPLEMENTO-------------------------*/
+                                FETCH cursor_componentes INTO componente,precio_componente;
+                                /*----------------COMPROBAR SI EXISTE EL COMPONENTE CON SU IMPLEMENTO EN LA TABLA component_implement-------------*/
+                                IF NOT EXISTS(SELECT * FROM component_implement WHERE component_id = componente AND implement_id = implemento AND state = "PENDIENTE") THEN
+                                    INSERT INTO component_implement (component_id,implement_id) VALUES (componente,implemento);
+                                END IF;
+                                /*---------------OBTENER HORAS DEL COMPONENTE--------------------------*/
+                                SELECT id,hours INTO componente_del_implemento,horas_componente FROM component_implement WHERE component_id = componente AND implement_id = implemento AND state = "PENDIENTE";
+                                /*---------------OBTENER EL TIEMPO DE VIDA DEL COMPONENTE------------------------*/
+                                SELECT lifespan,item_id INTO tiempo_vida_componente,item_componente FROM components WHERE id = componente;
+                                IF horas_componente >= tiempo_vida_componente THEN
+                                    SELECT tiempo_vida_componente INTO horas_componente;
+                                END IF;
+                                /*---------------CALCULAR CUANTOS RECAMBIOS NECESITARÁ EN 2 MESES-----------------------------------*/
+                                SELECT FLOOR((horas_componente+336)/tiempo_vida_componente) INTO cantidad_componente;
+                                /*---------------PEDIR LOS MATERIALES NECESARIOS PARA LOS DOS MESES-------------------------------*/
+                                IF(cantidad_componente > 0) THEN
+                                    /*-----------PEDIR MATERIAL---------------------*/
+                                    IF NOT EXISTS(SELECT * FROM order_request_details WHERE order_request_id = solicitud_pedido AND item_id = item_componente AND state = "PENDIENTE") THEN
+                                        INSERT INTO order_request_details (order_request_id,item_id,quantity,estimated_price) VALUES (solicitud_pedido,item_componente,cantidad_componente,precio_componente);
+                                    ELSE
+                                        UPDATE order_request_details SET quantity = quantity + cantidad_componente WHERE order_request_id = solicitud_pedido AND item_id = item_componente AND state = "PENDIENTE";
+                                    END IF;
+                                END IF;
+                                    /*-------------CURSOR PARA ITERAR POR CADA PIEZA DEL COMPONENTE-----------------------*/
+                                BEGIN
+                                    DECLARE cursor_piezas CURSOR FOR SELECT cpm.part,i.estimated_price FROM component_part_model cpm INNER JOIN components c ON c.id = cpm.part INNER JOIN items i ON i.id = c.item_id WHERE cpm.component = componente;
+                                    DECLARE CONTINUE HANDLER FOR NOT FOUND SET pieza_final = 1;
+                                    /*---------ABRIR CURSOR DE LAS PIEZAS DEL COMPONENTE--------------------*/
+                                    OPEN cursor_piezas;
+                                        bucle_piezas:LOOP
+                                            IF pieza_final = 1 THEN
+                                                LEAVE bucle_piezas;
+                                            END IF;
+                                                /*----OBTENER PIEZAS DEL COMPONENTE----------------------------*/
+                                            FETCH cursor_piezas INTO pieza,precio_pieza;
+                                                /*----------------COMPROBAR SI EXISTE LA PIEZA CON SU COMPONENTE CON SU IMPLEMENTO EN LA TABLA component_parts-------------*/
+                                            IF NOT EXISTS(SELECT * FROM component_part WHERE component_implement_id  = componente_del_implemento AND part = pieza AND state = "PENDIENTE") THEN
+                                                INSERT INTO component_part (component_implement_id,part) VALUES (componente_del_implemento,pieza);
+                                            END IF;
+                                            /*---------------OBTENER HORAS DE LA PIEZA--------------------------*/
+                                            SELECT id,hours INTO pieza_del_componente,horas_pieza FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE";
+                                            /*---------------OBTENER EL TIEMPO DE VIDA DE LA PIEZA------------------------*/
+                                            SELECT lifespan,item_id INTO tiempo_vida_pieza,item_pieza FROM components WHERE id = pieza;
+                                            IF(horas_pieza >= tiempo_vida_pieza)THEN
+                                                SELECT tiempo_vida_pieza INTO horas_pieza;
+                                            END IF;
+                                            /*---------------CALCULAR CANTIDAD DE RECAMBIOS DENTRO DE 2 MESES-----------------------------------*/
+                                            SELECT FLOOR((horas_pieza+336)/tiempo_vida_pieza) INTO cantidad_pieza;
+                                            /*---------------PEDIR LOS MATERIALES NECESARIOS PARA LOS DOS MESES-------------------------------*/
+                                            IF(cantidad_pieza > 0) THEN
+                                                /*-----------PEDIR MATERIAL---------------------*/
+                                                IF NOT EXISTS(SELECT * FROM order_request_details WHERE order_request_id = solicitud_pedido AND item_id = item_pieza AND state = "PENDIENTE") THEN
+                                                    INSERT INTO order_request_details (order_request_id,item_id,quantity,estimated_price) VALUES (solicitud_pedido,item_pieza,(cantidad_pieza-cantidad_componente),precio_pieza);
+                                                ELSE
+                                                    UPDATE order_request_details SET quantity = (quantity + cantidad_pieza - cantidad_componente) WHERE order_request_id = solicitud_pedido AND item_id = item_pieza AND state = "PENDIENTE";
+                                                END IF;
+                                            END IF;
+                                        END LOOP bucle_piezas;
+                                    CLOSE cursor_piezas;
+                                    /*--------------------PONER PIEZA FINAL A 0-------------------*/
+                                    SELECT 0 INTO pieza_final;
+                                END;
+                            END LOOP bucle_componentes;
+                        CLOSE cursor_componentes;
+                        /*--------------------PONER COMPONENTE FINAL A 0-------------------*/
+                        SELECT 0 INTO componente_final;
+                    END;
+                END IF;
+            END LOOP bucle_implementos;
+        CLOSE cursor_implementos;
+        /*----------ABRIR FECHA DE PEDIDO-------------------*/
+        UPDATE order_dates SET state = "ABIERTO" WHERE id = fecha_solicitud;
+        END;
     END IF;
-    FETCH cur_comp INTO implemento,componente,item,tiempo_vida,responsable,precio_estimado;
-    /*--------------Obtener horas del componente-----------------------------------*/
-    IF EXISTS(SELECT * FROM component_implement WHERE implement_id = implemento AND component_id = componente AND state = "PENDIENTE") THEN
-    	SELECT hours INTO horas FROM component_implement WHERE implement_id = implemento AND component_id = componente AND state = "PENDIENTE" LIMIT 1;
-    ELSE
-    	SELECT 0 INTO horas;
-    END IF;
-    /*-----------------------------------------------------------*/
-    /*-------Calcular la cantidad del pedido-------------------*/
-    SELECT ROUND((336+horas)/tiempo_vida) INTO cantidad;
-    /*-----------Verificar si se requiere el componente----------*/
-    IF(cantidad > 0) THEN
-    /*------------Verificar si existe la cabecera de la solicitud------*/
-    	IF NOT EXISTS(SELECT * FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE") THEN
-        	INSERT INTO order_requests(user_id,implement_id,order_date_id) VALUES (responsable,implemento,fecha_solicitud);
-        END IF;
-    /*-----------Obteniendo la cabecera de la solicitud-------------------------*/
-        SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
-    /*------Creando la solicitud del componente--------*/
-    	INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price) VALUES (pedido,item,cantidad,precio_estimado);
-    END IF;
-    BEGIN
-    /*-------Declarando cursor para piezas---------------------*/
-    	DECLARE cur_part CURSOR FOR SELECT cpm.part,c.lifespan,c.item_id,it.estimated_price FROM component_part_model cpm INNER JOIN components c ON c.id = cpm.part INNER JOIN items it ON it.id = c.item_id WHERE cpm.component = componente;
-        DECLARE CONTINUE HANDLER FOR NOT FOUND SET pieza_final = 1;
-    /*--------------------------------------------------*/
-    	OPEN cur_part;
-        	bucle2:LOOP
-            IF pieza_final = 1 THEN
-            	LEAVE bucle2;
-            END IF;
-            FETCH cur_part INTO pieza,tiempo_vida_pieza,item_pieza,precio_estimado_pieza;
-            /*--------------Obtener horas de la pieza-------------------------------*/
-            IF EXISTS(SELECT * FROM component_part cp INNER JOIN component_implement ci ON ci.id = cp.component_implement_id WHERE ci.component_id = componente AND cp.part = pieza AND cp.state = "PENDIENTE") THEN
-    			SELECT cp.hours INTO horas_pieza FROM component_part cp INNER JOIN component_implement ci ON ci.id = cp.component_implement_id WHERE ci.component_id = componente AND cp.part = pieza AND cp.state = "PENDIENTE" LIMIT 1;
-    		ELSE
-    			SELECT 0 INTO horas_pieza;
-    		END IF;
-            /*------------------------------------------------------------*/
-            /*-------------Calcular la cantidad del pedido---------------------*/
-            SELECT ROUND((336+horas_pieza)/tiempo_vida_pieza) INTO cantidad_pieza;
-            /*----------Verificar si se requiere la pieza----------------------------*/
-            IF(cantidad_pieza > 0) THEN
-            /*----------Verificar si existe la cabecera de la solicitud-------------------------------*/
-            IF NOT EXISTS(SELECT * FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE") THEN
-        		INSERT INTO order_requests(user_id,implement_id,order_date_id) VALUES (responsable,implemento,fecha_solicitud);
-        	END IF;
-            /*-------------Obteniendo la cabecera de la solicitud--------------------------------------------------*/
-            SELECT id INTO pedido FROM order_requests WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" LIMIT 1;
-            /*-------------Creando la solicitud de la pieza---------------------------------------------*/
-            IF EXISTS(SELECT * FROM order_request_details r WHERE r.order_request_id = pedido AND r.item_id = item_pieza) THEN
-            	UPDATE order_request_details r SET r.quantity = r.quantity + cantidad_pieza WHERE r.order_request_id = pedido AND r.item_id = item_pieza;
-            ELSE
-            	INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price) VALUES (pedido,item_pieza,cantidad_pieza,precio_estimado_pieza);
-            END IF;
-
-            END IF;
-            END LOOP bucle2;
-            SELECT 0 INTO pieza_final;
-        CLOSE cur_part;
-    /*----------------------*/
-    END;
-    END LOOP bucle;
-CLOSE cur_comp;
-UPDATE order_dates SET state = "ABIERTO" WHERE id = fecha_solicitud;
-END;
-END IF;
-END$$
-
-CREATE DEFINER=`root`@`localhost` EVENT `cerrarPedido` ON SCHEDULE EVERY 1 DAY STARTS '2022-07-01 00:00:00' ON COMPLETION NOT PRESERVE DISABLE DO BEGIN
-/*---Variables para la fecha para cerrar el pedido----------*/
-DECLARE fecha_solicitud INT;
-DECLARE fecha_cerrar_solicitud DATE;
-/*-------Obtener la fecha para cerrar el pedido-------*/
-SELECT id,close_request INTO fecha_solicitud, fecha_cerrar_solicitud FROM order_dates r WHERE r.state = "ABIERTO" ORDER BY open_request ASC LIMIT 1;
-/*----Validar la fecha de cierre de pedido-----------*/
-IF(fecha_cerrar_solicitud <= NOW()) THEN
-/*--------Cerrar pedido----------------*/
-UPDATE order_dates SET state = "CERRADO" WHERE state = "ABIERTO" LIMIT 1;
-END IF;
 END$$
 
 CREATE DEFINER=`root`@`localhost` EVENT `Listar_mantenimientos_programados` ON SCHEDULE EVERY 1 DAY STARTS '2022-07-05 00:21:00' ON COMPLETION NOT PRESERVE DISABLE DO BEGIN
@@ -5473,6 +4814,9 @@ OPEN cursor_implementos;
                         SELECT id,hours INTO componente_del_implemento,horas_componente FROM component_implement WHERE component_id = componente AND implement_id = implemento AND state = "PENDIENTE";
                         /*---------------OBTENER EL TIEMPO DE VIDA DEL COMPONENTE------------------------*/
                         SELECT lifespan,item_id INTO tiempo_vida_componente,item_componente FROM components WHERE id = componente;
+                        IF horas_componente >= tiempo_vida_componente THEN
+                            SELECT tiempo_vida_componente INTO horas_componente;
+                        END IF;
                         /*---------------CALCULAR SI NECESITA RECAMBIO DENTRO DE 3 DIAS-----------------------------------*/
                         SELECT FLOOR((horas_componente+24)/tiempo_vida_componente) INTO cantidad_componente;
                         /*---------------TAREA DE RECAMBIO SI LO NECESITA-------------------------------*/
@@ -5488,7 +4832,11 @@ OPEN cursor_implementos;
                                 UPDATE work_orders SET state = "NO VALIDADO" WHERE id = orden_trabajo;
                             END IF;
                             /*------------PONER EL MATERIAL REQUERIDO----------------------------------------*/
-                            INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_componente);
+                            IF NOT EXISTS(SELECT * FROM work_order_required_materials WHERE work_order_id = orden_trabajo AND item_id = item_componente) THEN
+                                INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_componente);
+                            ELSE
+                                UPDATE work_order_required_materials SET quantity = quantity + 1 WHERE work_order_id = orden_trabajo AND item_id = item_componente;
+                            END IF;
                         /*----------------RUTINARIO SI NO NECESITA RECAMBIO----------------------------*/
                         ELSE
                             /*------------CURSOR PARA CREAR EL RUTINARIO POR CADA COMPONENTE----------------*/
@@ -5517,7 +4865,12 @@ OPEN cursor_implementos;
                                                             LEAVE bucle_materiales;
                                                         END IF;
                                                         FETCH cursor_materiales INTO item_componente;
-                                                        INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_componente);
+                                                        /*------------PONER EL MATERIAL REQUERIDO----------------------------------------*/
+                                                        IF NOT EXISTS(SELECT * FROM work_order_required_materials WHERE work_order_id = orden_trabajo AND item_id = item_componente) THEN
+                                                            INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_componente);
+                                                        ELSE
+                                                            UPDATE work_order_required_materials SET quantity = quantity + 1 WHERE work_order_id = orden_trabajo AND item_id = item_componente;
+                                                        END IF;
                                                     END LOOP bucle_materiales;
                                                 CLOSE cursor_materiales;
                                                 SELECT 0 INTO material_final;
@@ -5550,6 +4903,9 @@ OPEN cursor_implementos;
                                         SELECT id,hours INTO pieza_del_componente,horas_pieza FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE";
                                         /*---------------OBTENER EL TIEMPO DE VIDA DE LA PIEZA------------------------*/
                                         SELECT lifespan,item_id INTO tiempo_vida_pieza,item_pieza FROM components WHERE id = pieza;
+                                        IF horas_pieza >= tiempo_vida_pieza THEN
+                                            SELECT tiempo_vida_pieza INTO horas_pieza;
+                                        END IF;
                                         /*---------------CALCULAR SI NECESITA RECAMBIO DENTRO DE 3 DIAS-----------------------------------*/
                                         SELECT FLOOR((horas_pieza+24)/tiempo_vida_pieza) INTO cantidad_pieza;
                                         /*---------------TAREA DE RECAMBIO SI LO NECESITA-------------------------------*/
@@ -5565,7 +4921,11 @@ OPEN cursor_implementos;
                                                 UPDATE work_orders SET state = "NO VALIDADO" WHERE id = orden_trabajo;
                                             END IF;
                                             /*------------PONER EL MATERIAL REQUERIDO----------------------------------------*/
-                                            INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_pieza);
+                                            IF NOT EXISTS(SELECT * FROM work_order_required_materials WHERE work_order_id = orden_trabajo AND item_id = item_pieza) THEN
+                                                INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_pieza);
+                                            ELSE
+                                                UPDATE work_order_required_materials SET quantity = quantity + 1 WHERE work_order_id = orden_trabajo AND item_id = item_pieza;
+                                            END IF;
                                         /*--------------RUTINARIO SI NO NECESITA RECAMBIO---------------------------------*/
                                         ELSE
                                         /*--------------CURSOR PARA CREAR EL RUTINARIO DE CADA COMPONENTE-----------------*/
@@ -5594,7 +4954,12 @@ OPEN cursor_implementos;
                                                                             LEAVE bucle_materiales;
                                                                         END IF;
                                                                         FETCH cursor_materiales INTO item_pieza;
-                                                                        INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_pieza);
+                                                                        /*------------PONER EL MATERIAL REQUERIDO----------------------------------------*/
+                                                                        IF NOT EXISTS(SELECT * FROM work_order_required_materials WHERE work_order_id = orden_trabajo AND item_id = item_pieza) THEN
+                                                                            INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_pieza);
+                                                                        ELSE
+                                                                            UPDATE work_order_required_materials SET quantity = quantity + 1 WHERE work_order_id = orden_trabajo AND item_id = item_pieza;
+                                                                        END IF;
                                                                     END LOOP bucle_materiales;
                                                                 CLOSE cursor_materiales;
                                                                 SELECT 0 INTO material_final;
@@ -5620,6 +4985,159 @@ OPEN cursor_implementos;
         END IF;
     END LOOP bucle_implementos;
 CLOSE cursor_implementos;
+END$$
+
+CREATE DEFINER=`root`@`localhost` EVENT `Listar_prereserva` ON SCHEDULE EVERY 1 DAY STARTS '2022-06-27 00:00:00' ON COMPLETION NOT PRESERVE DISABLE DO BEGIN
+    /*-------Variables para la fecha para abrir el pedido--------*/
+    DECLARE fecha_solicitud INT;
+    DECLARE fecha_abrir_solicitud DATE;
+    /*-------Obtener la fecha para abrir el pedido-------*/
+    SELECT id,open_pre_stockpile INTO fecha_solicitud, fecha_abrir_solicitud FROM pre_stockpile_dates r WHERE r.state = "PENDIENTE" ORDER BY open_pre_stockpile ASC LIMIT 1;
+    IF(fecha_abrir_solicitud <= NOW()) THEN
+        BEGIN
+        /*-----------VARIABLES PARA DETENER CICLOS--------------*/
+        DECLARE implemento_final INT DEFAULT 0;
+        DECLARE componente_final INT DEFAULT 0;
+        DECLARE pieza_final INT DEFAULT 0;
+        /*--------------VARIABLES CABECERA SOLICITUD DE PEDIDO-------------------*/
+        DECLARE implemento INT;
+        DECLARE responsable INT;
+        DECLARE ceco INT;
+        DECLARE almacen INT;
+        /*--------------VARIABLES PARA EL DETALLE DE ORDEN DE TRABAJO---------*/
+        DECLARE solicitud_pedido INT;
+        DECLARE componente_del_implemento INT;
+        DECLARE pieza_del_componente INT;
+        /*--------------VARIABLE PARA ALMACENAR EL MODELO DEL IMPLEMENTO------------------------*/
+        DECLARE modelo_del_implemento INT;
+        /*--------------VARIABLES PARA ALMACENAR DATOS DEL COMPONENTE---------*/
+        DECLARE componente INT;
+        DECLARE horas_componente DECIMAL(8,2);
+        DECLARE tiempo_vida_componente DECIMAL(8,2);
+        DECLARE cantidad_componente INT;
+        DECLARE item_componente INT;
+        DECLARE precio_componente DECIMAL(8,2);
+        /*-------------VARIABLES PARA ALMCENAR DATOS DE LA PIEZA--------------*/
+        DECLARE pieza INT;
+        DECLARE horas_pieza DECIMAL(8,2);
+        DECLARE tiempo_vida_pieza DECIMAL(8,2);
+        DECLARE cantidad_pieza INT;
+        DECLARE item_pieza INT;
+        DECLARE precio_pieza DECIMAL(8,2);
+        /*-------------CURSOR PARA ITERAR LOS IMPLEMENTO------*/
+        DECLARE cursor_implementos CURSOR FOR SELECT id,implement_model_id,user_id,ceco_id,w.id FROM implements i INNER JOIN warehouses w ON w.location_id = i.location_id;
+        DECLARE CONTINUE HANDLER FOR NOT FOUND SET implemento_final = 1;
+        /*-------------ABRIR CURSOR DE IMPLEMENTOS------------*/
+        OPEN cursor_implementos;
+            bucle_implementos:LOOP
+                IF implemento_final = 1 THEN
+                    LEAVE bucle_implementos;
+                END IF;
+            /*-----------------------------------OBTENER EL ID Y EL MODELO DEL IMPLEMENTO ---------------------------*/
+                FETCH cursor_implementos INTO implemento,modelo_del_implemento,responsable,ceco,almacen;
+            /*-----------CREAR LA CABECERA DE LA SOLICITUD DE PEDIDO SI NO EXISTE EN LA FECHA ASIGNADA---------------*/
+                IF NOT EXISTS(SELECT * FROM pre_stockpiles WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" AND pre_stockpile_date_id = fecha_solicitud) THEN
+                    INSERT INTO pre_stockpiles(user_id,implement_id,ceco_id,pre_stockpile_date_id) VALUES (responsable,implemento,ceco,fecha_solicitud);
+                /*-----------OBTENER ID DE LA CABECERA DE LA SOLICITUD DE PEDIDO-------------------*/
+                    SELECT id INTO solicitud_pedido FROM pre_stockpiles WHERE implement_id = implemento  AND user_id = responsable AND state = "PENDIENTE" AND pre_stockpile_date_id = fecha_solicitud;
+            /*--------CURSOR PARA ITERAR CADA COMPONENTE DEL IMPLEMENTO-------*/
+                    BEGIN
+                        DECLARE cursor_componentes CURSOR FOR SELECT cim.component_id,i.estimated_price FROM component_implement_model cim INNER JOIN components c ON c.id = cim.component_id INNER JOIN items i ON i.id = c.item_id WHERE cim.implement_model_id = modelo_del_implemento;
+                        DECLARE CONTINUE HANDLER FOR NOT FOUND SET componente_final = 1;
+                        /*------------ABRIR CURSOR COMPONENTES---------------*/
+                        OPEN cursor_componentes;
+                            bucle_componentes:LOOP
+                                IF componente_final = 1 THEN
+                                    LEAVE bucle_componentes;
+                                END IF;
+                                /*--------------------OBTENER EL COMPONENTE DEL IMPLEMENTO-------------------------*/
+                                FETCH cursor_componentes INTO componente,precio_componente;
+                                /*----------------COMPROBAR SI EXISTE EL COMPONENTE CON SU IMPLEMENTO EN LA TABLA component_implement-------------*/
+                                IF NOT EXISTS(SELECT * FROM component_implement WHERE component_id = componente AND implement_id = implemento AND state = "PENDIENTE") THEN
+                                    INSERT INTO component_implement (component_id,implement_id) VALUES (componente,implemento);
+                                END IF;
+                                /*---------------OBTENER HORAS DEL COMPONENTE--------------------------*/
+                                SELECT id,hours INTO componente_del_implemento,horas_componente FROM component_implement WHERE component_id = componente AND implement_id = implemento AND state = "PENDIENTE";
+                                /*---------------OBTENER EL TIEMPO DE VIDA DEL COMPONENTE------------------------*/
+                                SELECT lifespan,item_id INTO tiempo_vida_componente,item_componente FROM components WHERE id = componente;
+                                IF horas_componente >= tiempo_vida_componente THEN
+                                    SELECT tiempo_vida_componente INTO horas_componente;
+                                END IF;
+                                /*---------------CALCULAR CUANTOS RECAMBIOS NECESITARÁ EN 2 MESES-----------------------------------*/
+                                SELECT FLOOR((horas_componente+168)/tiempo_vida_componente) INTO cantidad_componente;
+                                /*---------------PEDIR LOS MATERIALES NECESARIOS PARA LOS DOS MESES-------------------------------*/
+                                IF(cantidad_componente > 0) THEN
+                                    /*-----------PEDIR MATERIAL---------------------*/
+                                    IF NOT EXISTS(SELECT * FROM pre_stockpile_details WHERE pre_stockpile_id = solicitud_pedido AND item_id = item_componente AND state = "PENDIENTE") THEN
+                                        INSERT INTO pre_stockpile_details (pre_stockpile_id,item_id,quantity,remaining_quantity,price,warehouse_id) VALUES (solicitud_pedido,item_componente,cantidad_componente,cantidad_componente,precio_componente,almacen);
+                                    ELSE
+                                        UPDATE pre_stockpile_details SET quantity = quantity + cantidad_componente, remaining_quantity = remaining_quantity + cantidad_componente WHERE pre_stockpile_id = solicitud_pedido AND item_id = item_componente AND state = "PENDIENTE";
+                                    END IF;
+                                END IF;
+                                    /*-------------CURSOR PARA ITERAR POR CADA PIEZA DEL COMPONENTE-----------------------*/
+                                BEGIN
+                                    DECLARE cursor_piezas CURSOR FOR SELECT cpm.part,i.estimated_price FROM component_part_model cpm INNER JOIN components c ON c.id = cpm.part INNER JOIN items i ON i.id = c.item_id WHERE cpm.component = componente;
+                                    DECLARE CONTINUE HANDLER FOR NOT FOUND SET pieza_final = 1;
+                                    /*---------ABRIR CURSOR DE LAS PIEZAS DEL COMPONENTE--------------------*/
+                                    OPEN cursor_piezas;
+                                        bucle_piezas:LOOP
+                                            IF pieza_final = 1 THEN
+                                                LEAVE bucle_piezas;
+                                            END IF;
+                                                /*----OBTENER PIEZAS DEL COMPONENTE----------------------------*/
+                                            FETCH cursor_piezas INTO pieza,precio_pieza;
+                                                /*----------------COMPROBAR SI EXISTE LA PIEZA CON SU COMPONENTE CON SU IMPLEMENTO EN LA TABLA component_parts-------------*/
+                                            IF NOT EXISTS(SELECT * FROM component_part WHERE component_implement_id  = componente_del_implemento AND part = pieza AND state = "PENDIENTE") THEN
+                                                INSERT INTO component_part (component_implement_id,part) VALUES (componente_del_implemento,pieza);
+                                            END IF;
+                                            /*---------------OBTENER HORAS DE LA PIEZA--------------------------*/
+                                            SELECT id,hours INTO pieza_del_componente,horas_pieza FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE";
+                                            /*---------------OBTENER EL TIEMPO DE VIDA DE LA PIEZA------------------------*/
+                                            SELECT lifespan,item_id INTO tiempo_vida_pieza,item_pieza FROM components WHERE id = pieza;
+                                            IF(horas_pieza >= tiempo_vida_pieza)THEN
+                                                SELECT tiempo_vida_pieza INTO horas_pieza;
+                                            END IF;
+                                            /*---------------CALCULAR CANTIDAD DE RECAMBIOS DENTRO DE 2 MESES-----------------------------------*/
+                                            SELECT FLOOR((horas_pieza+168)/tiempo_vida_pieza) INTO cantidad_pieza;
+                                            /*---------------PEDIR LOS MATERIALES NECESARIOS PARA LOS DOS MESES-------------------------------*/
+                                            IF(cantidad_pieza > 0) THEN
+                                                /*-----------PEDIR MATERIAL---------------------*/
+                                                IF NOT EXISTS(SELECT * FROM pre_stockpile_details WHERE pre_stockpile_id = solicitud_pedido AND item_id = item_pieza AND state = "PENDIENTE") THEN
+                                                    INSERT INTO pre_stockpile_details (pre_stockpile_id,item_id,quantity,remaining_quantity,price,warehouse_id) VALUES (solicitud_pedido,item_pieza,cantidad_pieza,cantidad_pieza,precio_pieza,almacen);
+                                                ELSE
+                                                    UPDATE pre_stockpile_details SET quantity = (quantity + cantidad_pieza - cantidad_componente), remaining_quantity = (remaining_quantity + cantidad_pieza - cantidad_componente) WHERE pre_stockpile_id = solicitud_pedido AND item_id = item_pieza AND state = "PENDIENTE";
+                                                END IF;
+                                            END IF;
+                                        END LOOP bucle_piezas;
+                                    CLOSE cursor_piezas;
+                                    /*--------------------PONER PIEZA FINAL A 0-------------------*/
+                                    SELECT 0 INTO pieza_final;
+                                END;
+                            END LOOP bucle_componentes;
+                        CLOSE cursor_componentes;
+                        /*--------------------PONER COMPONENTE FINAL A 0-------------------*/
+                        SELECT 0 INTO componente_final;
+                    END;
+                END IF;
+            END LOOP bucle_implementos;
+        CLOSE cursor_implementos;
+        /*----------ABRIR FECHA DE PEDIDO-------------------*/
+        UPDATE order_dates SET state = "ABIERTO" WHERE id = fecha_solicitud;
+        END;
+    END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` EVENT `cerrarPedido` ON SCHEDULE EVERY 1 DAY STARTS '2022-07-01 00:00:00' ON COMPLETION NOT PRESERVE DISABLE DO BEGIN
+/*---Variables para la fecha para cerrar el pedido----------*/
+DECLARE fecha_solicitud INT;
+DECLARE fecha_cerrar_solicitud DATE;
+/*-------Obtener la fecha para cerrar el pedido-------*/
+SELECT id,close_request INTO fecha_solicitud, fecha_cerrar_solicitud FROM order_dates r WHERE r.state = "ABIERTO" ORDER BY open_request ASC LIMIT 1;
+/*----Validar la fecha de cierre de pedido-----------*/
+IF(fecha_cerrar_solicitud <= NOW()) THEN
+/*--------Cerrar pedido----------------*/
+UPDATE order_dates SET state = "CERRADO" WHERE state = "ABIERTO" LIMIT 1;
+END IF;
 END$$
 
 DELIMITER ;
