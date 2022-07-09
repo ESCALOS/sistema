@@ -47,6 +47,7 @@ class ValidateWorkOrder extends Component
                         ->update(['state' => 'ACEPTADO']);
 
         $work_order = WorkOrder::find($this->orden_trabajo);
+        
         $work_order->state = "PENDIENTE";
         $work_order->save();
 

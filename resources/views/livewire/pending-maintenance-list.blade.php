@@ -39,7 +39,7 @@
             <div class=" rounded-md bg-yellow-200 shadow-md py-4">
                 <h1 class="text-lg font-bold">Materiales Requeridos</h1>
             </div>
-            <div style="height:180px;overflow:auto">
+            <div style="height:240px;overflow:auto">
                 <table class="min-w-max w-full">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -47,7 +47,10 @@
                                 <span>Material</span>
                             </th>
                             <th class="py-3 text-center">
-                                <span>Cantidad</span>
+                                <span>Requerido</span>
+                            </th>
+                            <th class="py-3 text-center">
+                                <span>Almacen</span>
                             </th>
                         </tr>
                     </thead>
@@ -65,16 +68,21 @@
                                         <span class="font-medium">{{$request->quantity}} </span>
                                     </div>
                                 </td>
+                                <td class="py-3 px-6 text-center">
+                                    <div>
+                                        <span class="font-medium">{{$request->quantity}} </span>
+                                    </div>
+                                </td>
                             </tr>
                         @endforeach
                         @endisset
                     </tbody>
                 </table>
             </div>
-            <div class=" rounded-md bg-yellow-200 shadow-md py-4">
+            <div class=" rounded-md bg-green-200 shadow-md py-4">
                 <h1 class="text-lg font-bold">Tareas</h1>
             </div>
-            <div style="height:180px;overflow:auto">
+            <div style="height:240px;overflow:auto">
                 <table class="min-w-max w-full">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -103,7 +111,7 @@
                                         <span class="font-medium">{{strtoupper($request->pieza)}} </span>
                                     </div>
                                 </td>
-                                <td class="py-3 px-6 text-center">
+                                <td class="py-3 px-6 text-center" style="max-width:150px">
                                     <div>
                                         <span class="font-medium">{{$request->task}} </span>
                                     </div>

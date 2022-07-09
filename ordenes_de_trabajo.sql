@@ -80,7 +80,11 @@ OPEN cursor_implementos;
                                 UPDATE work_orders SET state = "NO VALIDADO" WHERE id = orden_trabajo;
                             END IF;
                             /*------------PONER EL MATERIAL REQUERIDO----------------------------------------*/
-                            INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_componente);
+                            IF NOT EXISTS(SELECT * FROM work_order_required_materials WHERE work_order_id = orden_trabajo AND item_id = item_componente) THEN
+                                INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_componente);
+                            ELSE
+                                UPDATE work_order_required_materials SET quantity = quantity + 1 WHERE work_order_id = orden_trabajo AND item_id = item_componente;
+                            END IF;
                         /*----------------RUTINARIO SI NO NECESITA RECAMBIO----------------------------*/
                         ELSE
                             /*------------CURSOR PARA CREAR EL RUTINARIO POR CADA COMPONENTE----------------*/
@@ -109,7 +113,12 @@ OPEN cursor_implementos;
                                                             LEAVE bucle_materiales;
                                                         END IF;
                                                         FETCH cursor_materiales INTO item_componente;
-                                                        INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_componente);
+                                                        /*------------PONER EL MATERIAL REQUERIDO----------------------------------------*/
+                                                        IF NOT EXISTS(SELECT * FROM work_order_required_materials WHERE work_order_id = orden_trabajo AND item_id = item_componente) THEN
+                                                            INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_componente);
+                                                        ELSE
+                                                            UPDATE work_order_required_materials SET quantity = quantity + 1 WHERE work_order_id = orden_trabajo AND item_id = item_componente;
+                                                        END IF;
                                                     END LOOP bucle_materiales;
                                                 CLOSE cursor_materiales;
                                                 SELECT 0 INTO material_final;
@@ -157,7 +166,11 @@ OPEN cursor_implementos;
                                                 UPDATE work_orders SET state = "NO VALIDADO" WHERE id = orden_trabajo;
                                             END IF;
                                             /*------------PONER EL MATERIAL REQUERIDO----------------------------------------*/
-                                            INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_pieza);
+                                            IF NOT EXISTS(SELECT * FROM work_order_required_materials WHERE work_order_id = orden_trabajo AND item_id = item_pieza) THEN
+                                                INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_pieza);
+                                            ELSE
+                                                UPDATE work_order_required_materials SET quantity = quantity + 1 WHERE work_order_id = orden_trabajo AND item_id = item_pieza;
+                                            END IF;
                                         /*--------------RUTINARIO SI NO NECESITA RECAMBIO---------------------------------*/
                                         ELSE
                                         /*--------------CURSOR PARA CREAR EL RUTINARIO DE CADA COMPONENTE-----------------*/
@@ -186,7 +199,12 @@ OPEN cursor_implementos;
                                                                             LEAVE bucle_materiales;
                                                                         END IF;
                                                                         FETCH cursor_materiales INTO item_pieza;
-                                                                        INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_pieza);
+                                                                        /*------------PONER EL MATERIAL REQUERIDO----------------------------------------*/
+                                                                        IF NOT EXISTS(SELECT * FROM work_order_required_materials WHERE work_order_id = orden_trabajo AND item_id = item_pieza) THEN
+                                                                            INSERT INTO work_order_required_materials(work_order_id,item_id) VALUES (orden_trabajo,item_pieza);
+                                                                        ELSE
+                                                                            UPDATE work_order_required_materials SET quantity = quantity + 1 WHERE work_order_id = orden_trabajo AND item_id = item_pieza;
+                                                                        END IF;
                                                                     END LOOP bucle_materiales;
                                                                 CLOSE cursor_materiales;
                                                                 SELECT 0 INTO material_final;
