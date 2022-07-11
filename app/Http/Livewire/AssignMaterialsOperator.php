@@ -50,6 +50,7 @@ class AssignMaterialsOperator extends Component
     public $detalle_pedido_unidad_medida = "";
     public $detalle_pedido_precio = 0;
     public $detalle_pedido_precio_total = 0;
+    public $warehouse = 0;
 /*---------------------ESCUCHAR FUNCIONES-------------------*/
     protected $listeners = ['anularAsignacionMaterial'];
 /*------------------REGLAS DE VALIDACION----------------------*/
@@ -145,7 +146,7 @@ class AssignMaterialsOperator extends Component
                 'quantity' => $this->detalle_pedido_cantidad,
                 'price' => $detalle_pedido->estimated_price,
                 'warehouse_id' => $operador_data->location->warehouse->id,
-                'ceco_id' => $detalle_pedido->implement->ceco_id,
+                'ceco_id' => $detalle_pedido->orderRequest->implement->ceco_id,
                 'state' => "CONFIRMADO",
                 'order_request_detail_id' => $this->id_detalle_pedido,
             ]);

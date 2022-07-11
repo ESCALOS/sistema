@@ -3,7 +3,7 @@ BEGIN
     DECLARE fecha_solicitud INT;
     DECLARE fecha_abrir_solicitud DATE;
     /*-------Obtener la fecha para abrir el pedido-------*/
-    SELECT id,open_pre_stockpile INTO fecha_solicitud, fecha_abrir_solicitud FROM pre_stockpile_dates r WHERE r.state = "PENDIENTE" ORDER BY open_pre_stockpile ASC LIMIT 1;
+    SELECT id,open_pre_stockpile INTO fecha_solicitud, fecha_abrir_solicitud FROM pre_stockpile_dates WHERE state = "PENDIENTE" ORDER BY open_pre_stockpile ASC LIMIT 1;
     IF(fecha_abrir_solicitud <= NOW()) THEN
         BEGIN
         /*-----------VARIABLES PARA DETENER CICLOS--------------*/
@@ -36,7 +36,7 @@ BEGIN
         DECLARE item_pieza INT;
         DECLARE precio_pieza DECIMAL(8,2);
         /*-------------CURSOR PARA ITERAR LOS IMPLEMENTO------*/
-        DECLARE cursor_implementos CURSOR FOR SELECT id,implement_model_id,user_id,ceco_id,w.id FROM implements i INNER JOIN warehouses w ON w.location_id = i.location_id;
+        DECLARE cursor_implementos CURSOR FOR SELECT i.id,i.implement_model_id,i.user_id,i.ceco_id,w.id FROM implements i INNER JOIN warehouses w ON w.location_id = i.location_id;
         DECLARE CONTINUE HANDLER FOR NOT FOUND SET implemento_final = 1;
         /*-------------ABRIR CURSOR DE IMPLEMENTOS------------*/
         OPEN cursor_implementos;
@@ -80,9 +80,9 @@ BEGIN
                                 IF(cantidad_componente > 0) THEN
                                     /*-----------PEDIR MATERIAL---------------------*/
                                     IF NOT EXISTS(SELECT * FROM pre_stockpile_details WHERE pre_stockpile_id = solicitud_pedido AND item_id = item_componente AND state = "PENDIENTE") THEN
-                                        INSERT INTO pre_stockpile_details (pre_stockpile_id,item_id,quantity,remaining_quantity,price,warehouse_id) VALUES (solicitud_pedido,item_componente,cantidad_componente,cantidad_componente,precio_componente,almacen);
+                                        INSERT INTO pre_stockpile_details (pre_stockpile_id,item_id,quantity,price,warehouse_id) VALUES (solicitud_pedido,item_componente,cantidad_componente,precio_componente,almacen);
                                     ELSE
-                                        UPDATE pre_stockpile_details SET quantity = quantity + cantidad_componente, remaining_quantity = remaining_quantity + cantidad_componente WHERE pre_stockpile_id = solicitud_pedido AND item_id = item_componente AND state = "PENDIENTE";
+                                        UPDATE pre_stockpile_details SET quantity = quantity + cantidad_componente WHERE pre_stockpile_id = solicitud_pedido AND item_id = item_componente AND state = "PENDIENTE";
                                     END IF;
                                 END IF;
                                     /*-------------CURSOR PARA ITERAR POR CADA PIEZA DEL COMPONENTE-----------------------*/
@@ -114,9 +114,9 @@ BEGIN
                                             IF(cantidad_pieza > 0) THEN
                                                 /*-----------PEDIR MATERIAL---------------------*/
                                                 IF NOT EXISTS(SELECT * FROM pre_stockpile_details WHERE pre_stockpile_id = solicitud_pedido AND item_id = item_pieza AND state = "PENDIENTE") THEN
-                                                    INSERT INTO pre_stockpile_details (pre_stockpile_id,item_id,quantity,remaining_quantity,price,warehouse_id) VALUES (solicitud_pedido,item_pieza,cantidad_pieza,cantidad_pieza,precio_pieza,almacen);
+                                                    INSERT INTO pre_stockpile_details (pre_stockpile_id,item_id,quantity,price,warehouse_id) VALUES (solicitud_pedido,item_pieza,cantidad_pieza,precio_pieza,almacen);
                                                 ELSE
-                                                    UPDATE pre_stockpile_details SET quantity = (quantity + cantidad_pieza - cantidad_componente), remaining_quantity = (remaining_quantity + cantidad_pieza - cantidad_componente) WHERE pre_stockpile_id = solicitud_pedido AND item_id = item_pieza AND state = "PENDIENTE";
+                                                    UPDATE pre_stockpile_details SET quantity = (quantity + cantidad_pieza - cantidad_componente) WHERE pre_stockpile_id = solicitud_pedido AND item_id = item_pieza AND state = "PENDIENTE";
                                                 END IF;
                                             END IF;
                                         END LOOP bucle_piezas;
@@ -133,7 +133,7 @@ BEGIN
             END LOOP bucle_implementos;
         CLOSE cursor_implementos;
         /*----------ABRIR FECHA DE PEDIDO-------------------*/
-        UPDATE order_dates SET state = "ABIERTO" WHERE id = fecha_solicitud;
+        UPDATE pre_stockpile_dates SET state = "ABIERTO" WHERE id = fecha_solicitud;
         END;
     END IF;
 END

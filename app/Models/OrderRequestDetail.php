@@ -17,4 +17,7 @@ class OrderRequestDetail extends Model
     public function item(){
         return $this->belongsTo(Item::class);
     }
+    public function implement(){
+        return $this->belongsTo(Implement::class);
+    }
 }

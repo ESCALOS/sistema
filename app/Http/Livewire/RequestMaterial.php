@@ -35,6 +35,7 @@ class RequestMaterial extends Component
     public $idImplemento = 0;
     public $implemento;
     public $idRequest;
+    
     public $open_edit = false;
     public $open_edit_new = false;
     public $material_edit = 0;

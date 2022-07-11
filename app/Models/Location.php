@@ -21,7 +21,7 @@ class Location extends Model
         return $this->hasMany(WorkOrder::class);
     }
     public function warehouse(){
-        return $this->belongsTo(warehouse::class);
+        return $this->hasOne(Warehouse::class);
     }
     public function implements(){
         return $this->hasMany(Implement::class);
