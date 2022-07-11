@@ -12,7 +12,6 @@ use App\Models\OrderRequest;
 use App\Models\OrderRequestDetail;
 use App\Models\Sede;
 use App\Models\User;
-use App\Models\Warehouse;
 use App\Models\Zone;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -50,7 +49,6 @@ class AssignMaterialsOperator extends Component
     public $detalle_pedido_unidad_medida = "";
     public $detalle_pedido_precio = 0;
     public $detalle_pedido_precio_total = 0;
-    public $warehouse = 0;
 /*---------------------ESCUCHAR FUNCIONES-------------------*/
     protected $listeners = ['anularAsignacionMaterial'];
 /*------------------REGLAS DE VALIDACION----------------------*/

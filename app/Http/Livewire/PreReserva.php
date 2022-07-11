@@ -73,7 +73,7 @@ class PreReserva extends Component
             $join->on('pre_stockpiles.user_id','operator_assigned_stocks.user_id')->on('pre_stockpile_details.item_id','operator_assigned_stocks.item_id');
     })->select('pre_stockpile_details.id','items.type','pre_stockpile_details.quantity','measurement_units.abbreviation','operator_assigned_stocks.quantity as stock','items.sku','items.item')
     ->where('pre_stockpile_details.pre_stockpile_id',$this->id_pre_reserva)->get();
-        
+
         return view('livewire.pre-reserva',compact('implements','pre_stockpile_details'));
     }
 }

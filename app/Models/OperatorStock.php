@@ -15,7 +15,7 @@ class OperatorStock extends Model
         return $this->belongsTo(User::class);
     }
     public function item(){
-        return $this->belongsTo(Item::class,'item_id');
+        return $this->belongsTo(Item::class);
     }
     public function warehouse(){
         return $this->belongsTo(Warehouse::class);

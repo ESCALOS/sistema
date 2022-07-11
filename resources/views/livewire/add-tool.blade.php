@@ -1,5 +1,5 @@
 <div>
-    <button wire:click="$set('open_tool','true')" style="width: 150px" class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md">
+    <button wire:click="$set('open_tool','true')" class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md w-full">
         Herramienta
     </button>
     <x-jet-dialog-modal wire:model="open_tool">

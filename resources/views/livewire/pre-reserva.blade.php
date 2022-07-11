@@ -45,22 +45,14 @@
                     <h1 class="text-md font-bold">Añadir a la solicitud:</h1>
                 </div>
                 <div class="p-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-                    <button wire:click="$set('open_componente','true')" class="px-4 py-2 bg-green-500 hover:bg-green-700 text-white rounded-md">
-                        Componente
-                    </button>
-                    <button wire:click="$set('open_pieza','true')" class="px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-md">
-                        Pieza
-                    </button>
-                    <button wire:click="$set('open_fungible','true')" class="px-4 py-2 bg-amber-500 hover:bg-amber-700 text-white rounded-md">
-                        Fungible
-                    </button>
-                    <button wire:click="$set('open_herramienta','true')" class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md">
-                        Herramienta
-                    </button>
+                    @livewire('add-component-pre-reserva', ['id_pre_reserva' => $id_pre_reserva, 'id_implemento' => $id_implemento])
+                    @livewire('add-part-pre-reserva', ['id_pre_reserva' => $id_pre_reserva, 'id_implemento' => $id_implemento])
+                    @livewire('add-material-pre-reserva', ['id_pre_reserva' => $id_pre_reserva, 'id_implemento' => $id_implemento])
+                    @livewire('add-tool-pre-reserva', ['id_pre_reserva' => $id_pre_reserva, 'id_implemento' => $id_implemento])
                 </div>
             </div>
             <!-------TABLA DE MATERIALES PEDIDOS YA EXISTENTES -->
-            <div style="height:400px;overflow:auto">
+            <div style="height:240px;overflow:auto">
                 <table class="min-w-max w-full">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">

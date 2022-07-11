@@ -2,7 +2,6 @@
 
 namespace App\Http\Livewire;
 
-use App\Models\Component as ModelsComponent;
 use App\Models\Implement;
 use App\Models\Item;
 use App\Models\OrderRequest;
