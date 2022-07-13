@@ -124,6 +124,10 @@ OPEN cursor_implementos;
                                                         END IF;
                                                     END LOOP bucle_materiales;
                                                 CLOSE cursor_materiales;
+                                                /*------------MARCAR COMO NO VALIDADO HASTA QUE EL SUPERVISOR LO APRUEBE O LO RECHACE-------------*/
+                                                IF NOT EXISTS(SELECT * FROM work_orders WHERE id = orden_trabajo AND state = "NO VALIDADO") THEN
+                                                    UPDATE work_orders SET state = "NO VALIDADO" WHERE id = orden_trabajo;
+                                                END IF;
                                                 SELECT 0 INTO material_final;
                                             END;
                                         END IF;

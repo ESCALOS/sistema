@@ -39,6 +39,7 @@
             @role('planner')
             <a href="{{ route('planner.validate-request-materials') }}" class="{{ request()->routeIs('planner.validate-request-materials') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium">Validar Solicitud de Materiales</a>
             <a href="{{ route('planner.assign-materials-operator') }}" class="{{ request()->routeIs('planner.assign-materials-operator') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium">Asignar Materiales</a>
+            <a href="{{ route('planner.validate-pre-reserva') }}" class="{{ request()->routeIs('planner.validate-pre-reserva') ?  'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}} px-3 py-2 rounded-md text-sm font-medium">Validar Pre-reserva</a>
             @endrole
           </div>
         </div>

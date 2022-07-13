@@ -94,7 +94,7 @@
                     cancelButtonText: 'No, cancelar!',
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        
+
                         Livewire.emitTo('pre-reserva', 'cerrarPreReserva');
 
                         Swal.fire(
@@ -256,6 +256,105 @@
                     })
             });
 /*------------------------------------------------------------------------------------------*/
+        @endif
+        @if(Route::is('planner.validate-pre-reserva'))
+/*--------------ALERTAS PARA LA VISTA DE VALIDAR PRE-RESERVA(PLANNER)---------------*/
+    /*--------------------Confirmacion Reinsertar Pre-reserva Rechazada--------------------------------------*/
+            Livewire.on('confirmarReinsertarRechazado', solicitud =>{
+                Swal.fire({
+                    title: '¿Está seguro de reinsertar el material '+solicitud[1]+'?',
+                    text: "Esta acción es irreversible",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, reinsertar!',
+                    cancelButtonText: 'No, cancelar!',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+
+                        Livewire.emit('reinsertarRechazado',solicitud[0]);
+
+                        Swal.fire(
+                            'Material Reinsertado!',
+                            'El material se encuentra pendiente a validar',
+                            'success'
+                        )
+                    }
+                })
+            });
+    /*----------Confirmación para cerrar solicitud de pedido-----------------*/
+        /*-------[0] => id   --  [1] => Nombre Implemento -- [2] => Monto Usado--  [3] => Cantidad de materiales nuevos pendientes -----------*/
+            Livewire.on('confirmarValidarPreReserva', solicitud =>{
+                if(solicitud[0] <= 0){
+                    Swal.fire(
+                                'Implemento no seleccionado',
+                                'Seleccione un implemento',
+                                'error'
+                            )
+                }else if(solicitud[2] > 0){
+                    Swal.fire(
+                                'Hay pedidos pendientes a validar',
+                                'Valide o rechace los pedidos',
+                                'info'
+                            )
+                }else if(solicitud[3] > 0){
+                    Swal.fire(
+                                'Hay ' + solicitud[3] + ' materiales nuevos por validar',
+                                'Valide o rechace los pedidos',
+                                'info'
+                            )
+                }else{
+                    Swal.fire({
+                    title: '¿Validar la solicitud de pre-reserva del implemento '+solicitud[1]+'?',
+                    text: "Esta acción es irreversible",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, validar!',
+                    cancelButtonText: 'No, cancelar!',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+
+                            Livewire.emitTo('validate-pre-reserva','validarPreReserva');
+
+                            Swal.fire(
+                                'Solicitud de pedido validado!',
+                                'El pedido se validó correctamente',
+                                'success'
+                            )
+                        }
+                    })
+                }
+            });
+    /*------------------------Rechazar solicitud de pedido ---------------------------------*/
+        /*------------- [0] => Nombre Implemento ---------------------------------*/
+        Livewire.on('confirmarRechazarPreReserva', implemento =>{
+
+            Swal.fire({
+            title: 'Rechazar la solicitud de pre-reserva del implemento '+implemento+'?',
+            text: "Esta acción es irreversible",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, validar!',
+            cancelButtonText: 'No, cancelar!',
+            }).then((result) => {
+                if (result.isConfirmed) {
+
+                    Livewire.emitTo('validate-pre-reserva','rechazarPreReserva');
+
+                    Swal.fire(
+                        'Solicitud de pedido rechazada!',
+                        'El pedido se rechazó correctamente',
+                        'success'
+                    )
+                }
+            })
+        });
+/*----------------------------------------------------------------------------------*/
         @endif
         @if(Route::is('overseer.validate-work-order'))
 /*--------------ALERTA PARA VALIDAR EL RECAMBIO DE MATERIALES---------------------------*/

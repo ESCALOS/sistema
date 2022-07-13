@@ -36,10 +36,10 @@ class PendingMaintenanceList extends Component
         $tareas = NULL;
         $materiales = NULL;
 
-        $fechas = WorkOrder::where('state','PENDIENTE')
+        $fechas = WorkOrder::where('state','NO VALIDADO')
                             ->where('user_id',Auth::user()->id)
-                            ->select('work_orders.date')
-                            ->groupBy('work_orders.date')
+                            ->select('date')
+                            ->groupBy('date')
                             ->get();
 
         if($this->dia != ""){

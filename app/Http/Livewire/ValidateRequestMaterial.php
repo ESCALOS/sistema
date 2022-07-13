@@ -178,8 +178,8 @@ class ValidateRequestMaterial extends Component
         }
     }
     public function updatedIdImplemento(){
-        $order_request = OrderRequest::where('implement_id',$this->id_implemento)->where('state',"CERRADO")->first();
-        if($order_request != null){
+        if(OrderRequest::where('implement_id',$this->id_implemento)->where('state',"CERRADO")->exists()){
+            $order_request = OrderRequest::where('implement_id',$this->id_implemento)->where('state',"CERRADO")->first();
             $this->id_solicitud_pedido = $order_request->id;
             $this->cantidad_materiales_nuevos = OrderRequestNewItem::where('order_request_id',$this->id_solicitud_pedido)->where('state','PENDIENTE')->count();
         }else{
@@ -302,7 +302,7 @@ class ValidateRequestMaterial extends Component
                 $material->save();
             }
             $this->open_validate_material = false;
-            $this->reset('id_material','material','cantidad','precio','precioTotal','observation');
+            $this->reset('id_material','material','cantidad','cantidad_pedida','precio','precioTotal','observation');
         }
         $this->validacion = "";
     }
@@ -320,7 +320,7 @@ class ValidateRequestMaterial extends Component
         $this->open_validate_resquest = true;
     }
     public function validarSolicitudPedido(){
-        /*---------------------Verificar si no existe ningún material existente y nuevo pendiente en validar y-----*/
+        /*---------------------Verificar si no existe ningún material existente y nuevo pendiente en validar-----*/
         if(OrderRequestDetail::where('order_request_id',$this->id_solicitud_pedido)->where('quantity','>',0)->where('state','PENDIENTE')->doesntExist() &&
         OrderRequestNewItem::where('order_request_id',$this->id_solicitud_pedido)->where('state','PENDIENTE')->doesntExist()){
             $order_request = OrderRequest::find($this->id_solicitud_pedido);
@@ -495,7 +495,7 @@ class ValidateRequestMaterial extends Component
             }
         }
         /*--------------------Mostrar a los usuarios que tienen solicitudes de pedido cerrada----------------------*/
-        $users = DB::table('users')->whereIn('id',$this->incluidos)->get();
+        $users = DB::table('users')->whereIn('id',$this->incluidos)->select('id','name','lastname')->get();
 
     /*----------------------DATOS DEL MODAL DE VALIDACIÓN ------------------------------------------*/
         /*--------------------------Mostrar montos del ceco-----------------------------------------------*/
