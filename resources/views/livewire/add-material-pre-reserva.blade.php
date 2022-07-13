@@ -24,7 +24,7 @@
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
 
                     <x-jet-label>Cantidad:</x-jet-label>
-                    <x-jet-input type="number" min="0" class="text-center" style="height:30px;width: 100%" wire:model="quantity_material_for_add" />
+                    <x-jet-input type="number" min="0" max="{{$stock_material_for_add}}" class="text-center" style="height:30px;width: 100%" wire:model="quantity_material_for_add" />
 
                     <x-jet-input-error for="quantity_material_for_add"/>
 

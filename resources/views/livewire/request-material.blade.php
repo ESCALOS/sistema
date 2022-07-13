@@ -16,7 +16,7 @@
             </div>
             @if ($monto_usado > $monto_asignado)
                 <div class="mt-4 mx-6 px-6 cursor-default" title="Este monto es calculado de todos las solicitudes del ceco" >
-                    <div class="h-32 md:h-16 w-full p-4 text-white text-2xl font-black bg-red-600 rounded-lg">
+                    <div class="w-full p-4 text-white text-center text-2xl font-black bg-red-600 rounded-lg">
                         EL MONTO REBASA AL ASIGNADO
                     </div>
                 </div>

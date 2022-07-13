@@ -4,8 +4,11 @@ namespace App\Http\Livewire;
 
 use App\Models\Implement;
 use App\Models\Item;
+use App\Models\OperatorStock;
 use App\Models\PreStockpile;
+use App\Models\PreStockpileDate;
 use App\Models\PreStockpileDetail;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -13,48 +16,77 @@ class AddPartPreReserva extends Component
 {
     public $open_pieza = false;
     public $id_implemento = 0;
+    public $id_ceco = 0;
     public $id_pre_reserva = 0;
-    public $part_for_add;
-    public $component_for_part;
+    public $part_for_add = 0;
+    public $component_for_part = 0;
     public $quantity_part_for_add = 1;
+    public $stock_part_for_add = 0;
     public $excluidos = [];
 
     protected $rules = [
         'part_for_add' => 'required|exists:items,id',
-        'quantity_part_for_add' => 'required|gt:0'
+        'quantity_part_for_add' => 'required|gt:0|lte:stock_part_for_add'
     ];
 
     protected $messages = [
-        'part_for_add.required' => 'Seleccione el componente',
+        'part_for_add.required' => 'Seleccione la pieza',
         'part_for_add.exists' => 'La pieza no existe',
         'quantity_part_for_add.required' => 'Ingrese una cantidad',
-        'quantity_part_for_add.gt' => 'La cantidad debe ser mayor de 0'
+        'quantity_part_for_add.gt' => 'La cantidad debe ser mayor de 0',
+        'quantity_part_for_add.lte' => 'No hay suficiente cantidad de en el almacén'
     ];
 
     protected $listeners = ['cambioImplemento'=>'cambioImplemento'];
 
-    public function updatedOpenComponente(){
-        $this->reset(['part_for_add','quantity_component_for_add']);
+    public function updatedOpenPieza(){
+        $this->component_for_part = 0;
+        $this->part_for_add = 0;
+        $this->quantity_part_for_add = 1;
+        $this->stock_part_for_add = 0;
     }
 
-    public function cambioImplemento(Implement $id_implemento){
-        $this->id_implemento = $id_implemento->id;
+    public function updatedComponentForPart(){
+        $this->part_for_add = 0;
+        $this->quantity_part_for_add = 1;
+        $this->stock_part_for_add = 0;
+    }
+
+    public function updatedPartForAdd(){
+        if($this->part_for_add > 0){
+            if(OperatorStock::where('item_id',$this->part_for_add)->where('user_id',Auth::user()->id)->exists()){
+                $asignado = OperatorStock::where('item_id',$this->part_for_add)->where('user_id',Auth::user()->id)->first();
+                $this->stock_part_for_add = floatval($asignado->quantity);
+            }else{
+                $this->stock_part_for_add = 0;
+            }
+        }else{
+            $this->stock_part_for_add = 0;
+        }
+    }
+
+    public function cambioImplemento(Implement $implemento){
+        $this->id_implemento = $implemento->id;
+        $this->id_ceco = $implemento->ceco_id;
         $this->excluidos = [];
     }
 
     public function store(){
         $this->validate();
-
-        $pre_stockpile_id = PreStockpile::where('implement_id',$this->id_implemento)->where('state','PENDIENTE')->first();
-        if(is_null($pre_stockpile_id)){
+        
+        if(PreStockpile::where('implement_id',$this->id_implemento)->where('state','PENDIENTE')->exists()){
+            $pre_stockpile = PreStockpile::where('implement_id',$this->id_implemento)->where('state','PENDIENTE')->first();
+        }else{
+            $pre_stockpile_dates = PreStockpileDate::where('state','ABIERTO')->first();
             $pre_stockpile = PreStockpile::create([
                 'user_id' => auth()->user()->id,
-                'implement_id' => $this->id_implemento
+                'implement_id' => $this->id_implemento,
+                'ceco_id' => $this->id_ceco,
+                'pre_stockpile_date_id' =>  $pre_stockpile_dates->id
             ]);
-            $this->id_pre_reserva = $pre_stockpile->id;
-        }else{
-            $this->id_pre_reserva = $pre_stockpile_id->id;
         }
+
+        $this->id_pre_reserva = $pre_stockpile->id;
 
         $item = Item::find($this->part_for_add);
         PreStockpileDetail::create([
@@ -65,7 +97,7 @@ class AddPartPreReserva extends Component
             'warehouse_id' => auth()->user()->location->warehouse->id,
         ]);
 
-        $this->reset(['part_for_add','quantity_part_for_add']);
+        $this->reset(['part_for_add','quantity_part_for_add','stock_part_for_add']);
         $this->open_pieza = false;
         $this->emit('render',$this->id_pre_reserva);
         $this->emit('alert');
@@ -81,7 +113,7 @@ class AddPartPreReserva extends Component
         }
 
         $components = DB::table('componentes_del_implemento')->where('implement_id','=',$this->id_implemento)->get();
-
+        
         if($this->component_for_part > 0){
             $parts = DB::table('pieza_simplificada')->where('component_id',$this->component_for_part)->whereNotIn('item_id',$this->excluidos)->get();
         }else{

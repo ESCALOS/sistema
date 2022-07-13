@@ -9,7 +9,7 @@
             </div>
             @if ($monto_usado > $monto_asignado)
                 <div class="mt-4 mx-6 px-6 cursor-default" title="Este monto es calculado de todos las solicitudes del ceco" >
-                    <div class="h-32 md:h-16 w-full p-4 text-white text-2xl font-black bg-red-600 rounded-lg">
+                    <div class="w-full p-4 text-white text-center text-2xl font-black bg-red-600 rounded-lg">
                         EL MONTO REBASA AL ASIGNADO
                     </div>
                 </div>
@@ -105,6 +105,52 @@
         </div>
         @endif
     </div>
+    <x-jet-dialog-modal maxWidth="sm" wire:model="open_edit">
+        <x-slot name="title">
+            {{ strtoupper($material_edit_name) }}
+        </x-slot>
+        <x-slot name="content">
+
+            <div class="mb-2">
+                <x-jet-label class="text-md">Cantidad:</x-jet-label>
+                <div class="flex" style="padding-left: 1rem; padding-right:1rem;">
+
+                    <input class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" max="{{$material_stock_edit}}" style="height:30px;width: 100%" wire:model="material_edit_quantity" />
+
+                    <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
+                        {{$material_measurement_edit}}
+                    </span>
+                </div>
+                
+                <x-jet-input-error for="material_edit_quantity"/>
+            </div>
+            
+            <div class="mb-2">
+                <x-jet-label class="text-md">Stock:</x-jet-label>
+                <div class="flex" style="padding-left: 1rem; padding-right:1rem;">
+
+                    <input readonly class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" wire:model="material_stock_edit" />
+
+                    <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
+                        {{$material_measurement_edit}}
+                    </span>
+                </div>
+                <x-jet-input-error for="material_stock_edit"/>
+            </div>
+
+        </x-slot>
+        <x-slot name="footer">
+            <x-jet-button wire:loading.attr="disabled" wire:click="actualizar()">
+                Actualizar
+            </x-jet-button>
+            <div wire:loading wire:target="actualizar">
+                Registrando...
+            </div>
+            <x-jet-secondary-button wire:click="$set('open_edit',false)" class="ml-2">
+                Cancelar
+            </x-jet-secondary-button>
+        </x-slot>
+    </x-jet-dialog-modal>
     @else
     <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
         <div class="text-center">

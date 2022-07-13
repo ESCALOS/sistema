@@ -62,6 +62,7 @@ class RequestNewMaterial extends Component
         && !preg_match('/.jpeg$/i',$nombre_de_imagen)
         && !preg_match('/.png$/i',$nombre_de_imagen)
         && !preg_match('/.gif$/i',$nombre_de_imagen)
+        && !preg_match('/.jfif$/i',$nombre_de_imagen)
         && !preg_match('/.svg$/i',$nombre_de_imagen)){
             $this->material_new_image = "";
             $this->iteration++;

@@ -2,8 +2,8 @@
 -- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
--- Servidor: localhost
--- Tiempo de generación: 11-07-2022 a las 21:14:04
+-- Servidor: 127.0.0.1
+-- Tiempo de generación: 13-07-2022 a las 07:30:10
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -611,7 +611,12 @@ INSERT INTO `affected_movement` (`id`, `operator_stock_id`, `operator_stock_deta
 (62, 51, 63, 62, 38),
 (63, 52, 64, 63, 39),
 (64, 53, 65, 64, 40),
-(65, 54, 66, 65, 41);
+(65, 54, 66, 65, 41),
+(66, 55, 67, 66, 42),
+(67, 56, 69, 67, 43),
+(68, 57, 70, 68, 44),
+(69, 59, 71, 69, 45),
+(70, 59, 72, 70, 45);
 
 -- --------------------------------------------------------
 
@@ -694,7 +699,7 @@ INSERT INTO `cecos` (`id`, `code`, `description`, `location_id`, `amount`, `ware
 (1, '584070', 'magni', 1, '2533.00', '4576.49', '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
 (2, '297800', 'distinctio', 1, '2086.00', '5005.28', '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
 (3, '421733', 'maxime', 2, '2139.00', '14963.28', '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(4, '771845', 'quasi', 2, '1028.00', '3700.00', '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(4, '771845', 'quasi', 2, '1028.00', '5855.00', '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (5, '057182', 'inventore', 3, '1134.00', '2050.00', '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (6, '797793', 'neque', 3, '2024.00', '3600.00', '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (7, '931896', 'exercitationem', 4, '1545.00', '0.00', '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
@@ -2255,7 +2260,7 @@ CREATE TABLE `operator_assigned_stocks` (
   `price` decimal(8,2) NOT NULL,
   `warehouse_id` bigint(20) UNSIGNED NOT NULL,
   `ceco_id` bigint(20) UNSIGNED NOT NULL,
-  `state` enum('ASIGNADO','LIBERADO','ANULADO') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `state` enum('ASIGNADO','LIBERADO','ANULADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ASIGNADO',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -2297,7 +2302,12 @@ INSERT INTO `operator_assigned_stocks` (`id`, `user_id`, `item_id`, `quantity`, 
 (62, 6, 57, '2.00', '300.00', 5, 6, 'ASIGNADO', NULL, NULL),
 (63, 9, 57, '6.00', '400.00', 4, 9, 'ASIGNADO', NULL, NULL),
 (64, 9, 29, '2.00', '400.00', 4, 9, 'ASIGNADO', NULL, NULL),
-(65, 9, 3, '1.00', '900.00', 4, 9, 'ASIGNADO', NULL, NULL);
+(65, 9, 3, '1.00', '900.00', 4, 9, 'ASIGNADO', NULL, NULL),
+(66, 4, 51, '2.00', '200.00', 6, 4, 'ASIGNADO', NULL, NULL),
+(67, 4, 72, '2.00', '75.00', 6, 4, 'ASIGNADO', NULL, NULL),
+(68, 4, 73, '2.00', '60.00', 6, 4, 'ASIGNADO', NULL, NULL),
+(69, 4, 66, '3.00', '45.00', 6, 4, 'ASIGNADO', NULL, NULL),
+(70, 4, 51, '3.00', '450.00', 6, 4, 'ASIGNADO', NULL, NULL);
 
 --
 -- Disparadores `operator_assigned_stocks`
@@ -2364,7 +2374,11 @@ INSERT INTO `operator_stocks` (`id`, `user_id`, `item_id`, `quantity`, `price`, 
 (51, 6, 57, '2.00', '600.00', 5, 6, NULL, NULL),
 (52, 9, 57, '6.00', '2400.00', 4, 9, NULL, NULL),
 (53, 9, 29, '2.00', '800.00', 4, 9, NULL, NULL),
-(54, 9, 3, '1.00', '900.00', 4, 9, NULL, NULL);
+(54, 9, 3, '1.00', '900.00', 4, 9, NULL, NULL),
+(55, 4, 51, '5.00', '1750.00', 6, 4, NULL, NULL),
+(56, 4, 72, '2.00', '150.00', 6, 4, NULL, NULL),
+(57, 4, 73, '2.00', '120.00', 6, 4, NULL, NULL),
+(59, 4, 66, '3.00', '135.00', 6, 4, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -2382,7 +2396,7 @@ CREATE TABLE `operator_stock_details` (
   `warehouse_id` bigint(20) UNSIGNED NOT NULL,
   `ceco_id` bigint(20) UNSIGNED NOT NULL,
   `state` enum('CONFIRMADO','ANULADO','LIBERADO') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `order_request_detail_id` bigint(20) UNSIGNED NOT NULL,
+  `order_request_detail_id` bigint(20) UNSIGNED DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -2424,7 +2438,12 @@ INSERT INTO `operator_stock_details` (`id`, `user_id`, `item_id`, `movement`, `q
 (63, 6, 57, 'INGRESO', '2.00', '300.00', 5, 6, 'CONFIRMADO', 105, '2022-07-11 12:47:50', '2022-07-11 12:47:50'),
 (64, 9, 57, 'INGRESO', '6.00', '400.00', 4, 9, 'CONFIRMADO', 106, '2022-07-11 12:48:15', '2022-07-11 12:48:15'),
 (65, 9, 29, 'INGRESO', '2.00', '400.00', 4, 9, 'CONFIRMADO', 107, '2022-07-11 12:48:18', '2022-07-11 12:48:18'),
-(66, 9, 3, 'INGRESO', '1.00', '900.00', 4, 9, 'CONFIRMADO', 108, '2022-07-11 12:48:20', '2022-07-11 12:48:20');
+(66, 9, 3, 'INGRESO', '1.00', '900.00', 4, 9, 'CONFIRMADO', 108, '2022-07-11 12:48:20', '2022-07-11 12:48:20'),
+(67, 4, 51, 'INGRESO', '2.00', '200.00', 6, 4, 'CONFIRMADO', NULL, NULL, NULL),
+(69, 4, 72, 'INGRESO', '2.00', '75.00', 6, 4, 'CONFIRMADO', NULL, NULL, NULL),
+(70, 4, 73, 'INGRESO', '2.00', '60.00', 6, 4, 'CONFIRMADO', NULL, NULL, NULL),
+(71, 4, 66, 'INGRESO', '3.00', '45.00', 6, 4, 'CONFIRMADO', NULL, NULL, NULL),
+(72, 4, 51, 'INGRESO', '3.00', '450.00', 6, 4, 'CONFIRMADO', NULL, NULL, NULL);
 
 --
 -- Disparadores `operator_stock_details`
@@ -2539,8 +2558,8 @@ CREATE TABLE `order_dates` (
   `order_date` date NOT NULL,
   `arrival_date` date NOT NULL,
   `state` enum('PENDIENTE','ABIERTO','CERRADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -2548,7 +2567,7 @@ CREATE TABLE `order_dates` (
 --
 
 INSERT INTO `order_dates` (`id`, `open_request`, `close_request`, `order_date`, `arrival_date`, `state`, `created_at`, `updated_at`) VALUES
-(1, '2022-04-25', '2022-04-28', '2022-05-02', '2022-07-01', 'ABIERTO', '2022-06-20 22:22:55', '2022-06-20 22:22:55'),
+(1, '2022-04-25', '2022-04-28', '2022-05-02', '2022-07-01', 'CERRADO', '2022-06-20 22:22:55', '2022-06-20 22:22:55'),
 (2, '2022-06-27', '2022-06-30', '2022-07-04', '2022-09-01', 'PENDIENTE', '2022-06-20 22:22:55', '2022-06-20 22:22:55'),
 (3, '2022-08-29', '2022-09-01', '2022-09-05', '2022-11-01', 'PENDIENTE', '2022-06-20 22:22:55', '2022-06-20 22:22:55'),
 (4, '2022-10-31', '2022-11-03', '2022-11-07', '2023-01-01', 'PENDIENTE', '2022-06-20 22:22:56', '2022-06-20 22:22:56');
@@ -2567,8 +2586,8 @@ CREATE TABLE `order_requests` (
   `validate_by` bigint(20) UNSIGNED DEFAULT NULL,
   `is_canceled` tinyint(1) NOT NULL DEFAULT 0,
   `order_date_id` bigint(20) UNSIGNED NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -2591,7 +2610,8 @@ INSERT INTO `order_requests` (`id`, `user_id`, `implement_id`, `state`, `validat
 (14, 13, 13, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
 (15, 14, 14, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
 (16, 15, 15, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
-(17, 16, 16, 'PENDIENTE', NULL, 0, 1, NULL, NULL);
+(17, 16, 16, 'PENDIENTE', NULL, 0, 1, NULL, NULL),
+(18, 4, 4, 'CERRADO', NULL, 0, 1, '2022-07-13 01:37:38', '2022-07-13 01:48:11');
 
 -- --------------------------------------------------------
 
@@ -2610,7 +2630,7 @@ CREATE TABLE `order_request_details` (
   `assigned_quantity` decimal(8,2) NOT NULL DEFAULT 0.00,
   `assigned_state` enum('NO ASIGNADO','ASIGNADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'NO ASIGNADO',
   `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT NULL
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -2723,7 +2743,12 @@ INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quant
 (109, 11, 74, '2.00', '60.00', 'ACEPTADO', NULL, '0.00', 'NO ASIGNADO', '2022-07-11 20:38:40', '2022-07-11 20:38:40'),
 (110, 11, 74, '2.00', '60.00', 'VALIDADO', NULL, '0.00', 'NO ASIGNADO', '2022-07-11 20:38:40', '2022-07-11 20:38:40'),
 (111, 11, 57, '1.00', '502.17', 'VALIDADO', 'sd', '0.00', 'NO ASIGNADO', '2022-07-11 20:39:05', '2022-07-11 20:39:05'),
-(112, 11, 3, '1.00', '692.98', 'VALIDADO', 'as', '0.00', 'NO ASIGNADO', '2022-07-11 20:39:39', '2022-07-11 20:39:39');
+(112, 11, 3, '1.00', '692.98', 'VALIDADO', 'as', '0.00', 'NO ASIGNADO', '2022-07-11 20:39:39', '2022-07-11 20:39:39'),
+(113, 18, 17, '2.00', '906.47', 'PENDIENTE', '', '0.00', 'NO ASIGNADO', '2022-07-13 01:37:38', '2022-07-13 01:38:44'),
+(114, 18, 5, '2.00', '317.70', 'PENDIENTE', '', '0.00', 'NO ASIGNADO', '2022-07-13 01:38:37', '2022-07-13 01:38:41'),
+(115, 18, 8, '2.00', '563.25', 'PENDIENTE', '', '0.00', 'NO ASIGNADO', '2022-07-13 01:40:37', '2022-07-13 01:40:45'),
+(116, 18, 9, '0.00', '362.42', 'PENDIENTE', '', '0.00', 'NO ASIGNADO', '2022-07-13 01:42:11', '2022-07-13 01:42:23'),
+(117, 18, 44, '0.00', '954.65', 'PENDIENTE', '', '0.00', 'NO ASIGNADO', '2022-07-13 01:42:14', '2022-07-13 01:42:26');
 
 -- --------------------------------------------------------
 
@@ -2756,7 +2781,8 @@ INSERT INTO `order_request_new_items` (`id`, `order_request_id`, `new_item`, `qu
 (24, 6, 'Sore', '5.00', 4, 'SIESTA', '-sad\n-sad', 'public/newMaterials/VICNjGXJ7r0TB0uDqmk4hxmXjlBa76iMsBKXON0z.jpg', 'CREADO', 72, '', '2022-07-09 23:07:08', '2022-07-11 12:12:51'),
 (25, 2, 'REM', '52.00', 2, 'Taito', '-ssa-\nassd-', 'public/newMaterials/clTFxIg4DpkVYC8VJxJrhhpcLW5b7AHKk8df6mXm.jpg', 'CREADO', 71, '', '2022-07-09 23:09:22', '2022-07-09 23:15:58'),
 (26, 7, 'ARDUINO MEGA2560', '123.00', 3, 'ARUINO', '-1 CANTDAD MAS CABLES', 'public/newMaterials/BPcb3RhHbd7Ya2a02EDgZx7MAEVK3OKX297EwKP0.png', 'CREADO', 73, '', '2022-07-09 23:14:01', '2022-07-11 12:13:43'),
-(27, 11, 'ARDUINO MEGA 2560', '2.00', 7, 'ARDUINO', '-2GB\n', 'public/newMaterials/2mEFPdLAN3Sa0yMu8Z7tLZ5WWdEDAeSJMJQK7GRp.png', 'CREADO', 74, '', '2022-07-11 20:36:09', '2022-07-11 20:38:40');
+(27, 11, 'ARDUINO MEGA 2560', '2.00', 7, 'ARDUINO', '-2GB\n', 'public/newMaterials/2mEFPdLAN3Sa0yMu8Z7tLZ5WWdEDAeSJMJQK7GRp.png', 'CREADO', 74, '', '2022-07-11 20:36:09', '2022-07-11 20:38:40'),
+(28, 18, 'Megumi Katou', '2.00', 1, 'Banpresto', '-Hermosa.\n-Bien detallada.', 'public/newMaterials/g7Kp8kbpMafFFCN0EV9OOqvjhYjEer8sV6Ss4mfR.jpg', 'PENDIENTE', NULL, '', '2022-07-13 01:46:30', '2022-07-13 01:48:00');
 
 -- --------------------------------------------------------
 
@@ -2835,11 +2861,11 @@ CREATE TABLE `pre_stockpiles` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `user_id` bigint(20) UNSIGNED NOT NULL,
   `implement_id` bigint(20) UNSIGNED NOT NULL,
-  `state` enum('PENDIENTE','CERRADO','VALIDADO','RECHAZADO') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `state` enum('PENDIENTE','CERRADO','VALIDADO','RECHAZADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
   `ceco_id` bigint(20) UNSIGNED NOT NULL,
   `pre_stockpile_date_id` bigint(20) NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -2850,7 +2876,7 @@ INSERT INTO `pre_stockpiles` (`id`, `user_id`, `implement_id`, `state`, `ceco_id
 (17, 1, 1, 'PENDIENTE', 1, 1, NULL, NULL),
 (18, 2, 2, 'PENDIENTE', 2, 1, NULL, NULL),
 (19, 3, 3, 'PENDIENTE', 3, 1, NULL, NULL),
-(20, 4, 4, 'PENDIENTE', 4, 1, NULL, NULL),
+(20, 4, 4, 'CERRADO', 4, 1, NULL, '2022-07-13 10:19:15'),
 (21, 5, 5, 'PENDIENTE', 5, 1, NULL, NULL),
 (22, 6, 6, 'PENDIENTE', 6, 1, NULL, NULL),
 (23, 7, 7, 'PENDIENTE', 7, 1, NULL, NULL),
@@ -2903,8 +2929,8 @@ CREATE TABLE `pre_stockpile_details` (
   `state` enum('PENDIENTE','ACEPTADO','MODIFICADO','RECHAZADO','VALIDADO','INCOMPLETO','CONCLUIDO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
   `used_quantity` decimal(8,2) NOT NULL DEFAULT 0.00,
   `warehouse_id` bigint(20) UNSIGNED NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -2921,13 +2947,9 @@ INSERT INTO `pre_stockpile_details` (`id`, `pre_stockpile_id`, `item_id`, `quant
 (29, 19, 21, '2.00', '785.44', 'PENDIENTE', '0.00', 6, NULL, NULL),
 (30, 19, 44, '2.00', '954.65', 'PENDIENTE', '0.00', 6, NULL, NULL),
 (31, 19, 52, '2.00', '216.64', 'PENDIENTE', '0.00', 6, NULL, NULL),
-(32, 20, 3, '1.00', '692.98', 'PENDIENTE', '0.00', 6, NULL, NULL),
-(33, 20, 24, '1.00', '577.05', 'PENDIENTE', '0.00', 6, NULL, NULL),
-(34, 20, 57, '6.00', '502.17', 'PENDIENTE', '0.00', 6, NULL, NULL),
-(35, 20, 9, '3.00', '362.42', 'PENDIENTE', '0.00', 6, NULL, NULL),
-(36, 20, 21, '2.00', '785.44', 'PENDIENTE', '0.00', 6, NULL, NULL),
-(37, 20, 44, '2.00', '954.65', 'PENDIENTE', '0.00', 6, NULL, NULL),
-(38, 20, 52, '2.00', '216.64', 'PENDIENTE', '0.00', 6, NULL, NULL),
+(35, 20, 9, '1.00', '362.42', 'PENDIENTE', '0.00', 6, NULL, '2022-07-13 09:58:54'),
+(37, 20, 44, '1.00', '954.65', 'PENDIENTE', '0.00', 6, NULL, '2022-07-13 09:58:58'),
+(38, 20, 52, '1.00', '216.64', 'PENDIENTE', '0.00', 6, NULL, '2022-07-13 09:57:45'),
 (39, 25, 29, '10.00', '378.24', 'PENDIENTE', '0.00', 4, NULL, NULL),
 (40, 26, 29, '10.00', '378.24', 'PENDIENTE', '0.00', 4, NULL, NULL),
 (41, 27, 29, '10.00', '378.24', 'PENDIENTE', '0.00', 8, NULL, NULL),
@@ -2935,7 +2957,14 @@ INSERT INTO `pre_stockpile_details` (`id`, `pre_stockpile_id`, `item_id`, `quant
 (43, 29, 21, '1.00', '785.44', 'PENDIENTE', '0.00', 3, NULL, NULL),
 (44, 30, 21, '1.00', '785.44', 'PENDIENTE', '0.00', 3, NULL, NULL),
 (45, 31, 21, '1.00', '785.44', 'PENDIENTE', '0.00', 1, NULL, NULL),
-(46, 32, 21, '1.00', '785.44', 'PENDIENTE', '0.00', 1, NULL, NULL);
+(46, 32, 21, '1.00', '785.44', 'PENDIENTE', '0.00', 1, NULL, NULL),
+(50, 20, 57, '6.00', '502.17', 'PENDIENTE', '0.00', 6, '2022-07-13 03:43:48', '2022-07-13 09:59:16'),
+(51, 20, 3, '1.00', '692.98', 'PENDIENTE', '0.00', 6, '2022-07-13 03:45:08', '2022-07-13 09:58:49'),
+(53, 20, 72, '0.00', '30.00', 'PENDIENTE', '0.00', 6, '2022-07-13 04:34:19', '2022-07-13 09:57:59'),
+(54, 20, 21, '1.00', '785.44', 'PENDIENTE', '0.00', 6, '2022-07-13 06:26:28', '2022-07-13 09:58:20'),
+(55, 20, 73, '0.00', '150.00', 'PENDIENTE', '0.00', 6, '2022-07-13 06:28:08', '2022-07-13 09:51:18'),
+(57, 20, 24, '1.00', '577.05', 'PENDIENTE', '0.00', 6, '2022-07-13 06:35:09', '2022-07-13 09:59:06'),
+(58, 20, 51, '0.00', '368.41', 'PENDIENTE', '0.00', 6, '2022-07-13 06:56:25', '2022-07-13 09:58:14');
 
 -- --------------------------------------------------------
 
@@ -3218,8 +3247,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('PngJscpuo1RZdr0tf2HPLCnLmgOL9WBVMU0mUWdZ', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiVjZ1TjBTSEZLUEpXOU83UjNxSUZHS29LTVF5VXE5MzdpVmNreFNkaSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzU6Imh0dHA6Ly9zaXN0ZW1hL29wZXJhdG9yL1ByZS1yZXNlcnZhIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjIxOiJwYXNzd29yZF9oYXNoX3NhbmN0dW0iO3M6NjA6IiQyeSQxMCQ5MklYVU5wa2pPMHJPUTVieU1pLlllNG9Lb0VhM1JvOWxsQy8ub2cvYXQyLnVoZVdHL2lnaSI7fQ==', 1657566633),
-('rkTtktOKN2ZZQKvnbjsrSzUJOMByk46jJPgqjvD7', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiU1M3cFptQnBZNzJqSmIxbnZ5NDNGMVFNaUNKeHpJelhjWGloM1dXaiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzU6Imh0dHA6Ly9zaXN0ZW1hL29wZXJhdG9yL1ByZS1yZXNlcnZhIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDt9', 1657562218);
+('Yg3rdyflKsccyMw4xIzoh4NIH1p8C9C83LPPaoAA', 4, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.114 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiWTBSOFJ3WnprTllpY2c0MHNaOUJQZHlSUGE3bVBBdFRWbjZmcWZlUyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDA6Imh0dHA6Ly9zaXN0ZW1hLnRlc3Qvb3BlcmF0b3IvUHJlLXJlc2VydmEiO31zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aTo0O30=', 1657689555);
 
 -- --------------------------------------------------------
 
@@ -3299,7 +3327,11 @@ INSERT INTO `stocks` (`id`, `item_id`, `quantity`, `price`, `warehouse_id`, `cre
 (38, 44, '2.00', '400.00', 5, NULL, NULL),
 (39, 57, '6.00', '2400.00', 4, NULL, NULL),
 (40, 29, '2.00', '800.00', 4, NULL, NULL),
-(41, 3, '1.00', '900.00', 4, NULL, NULL);
+(41, 3, '1.00', '900.00', 4, NULL, NULL),
+(42, 51, '5.00', '1750.00', 6, NULL, NULL),
+(43, 72, '2.00', '150.00', 6, NULL, NULL),
+(44, 73, '2.00', '120.00', 6, NULL, NULL),
+(45, 66, '3.00', '135.00', 6, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -3659,7 +3691,7 @@ INSERT INTO `users` (`id`, `code`, `name`, `lastname`, `location_id`, `email`, `
 (1, '777269', 'Mr. Ford Vandervort', 'Kunze', 1, 'roob.brianne@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'nFhY4qi4tZD0LCwogwnPuqxUUqdv6dKDOgtKw2AIE9H35lHtvlCCwZ5Tnmiw', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
 (2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'CH5a14s3lYlYb4FhejjGVMjThqJqwEipakGBMIwD5doNHUluQ2dgFRakvM7k', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
 (3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'tT4wc3FGZMgNxvTJCyrWeyYHkHPxt9RchcpUiGo6RyoInl1gQLZ96iS18V1R', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'OR6sQBvkcRhupVSK1JxbBKI5sJpPG5M1I5RekkhzCQTfBfNpcDpe1bqecsxZ', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'PNxYjVl9JOGrq8S2VV8bKJlUnVY6nZgSxtE8VjsVGhoXiG5zsADIJKp8mEyl', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '0v37tsYVj0FVEUOEiByFpQoesb78gFUIUuvugw9TaIOWxFWFaCm8J6Y71EtL', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (6, '502387', 'Bella Block', 'Bashirian', 3, 'sibyl08@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'n3wqWMahCOBtaxLTld7QtaDsqeJhRAmBLhGsOolvdzHlZskQGSnPnYkZ3nm9', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (7, '981787', 'Jaylon Prosacco', 'Langosh', 4, 'pleuschke@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'rc7GJRvdk8Hja3W1jLepIOIhBPkUfcaM2TtoYLw1sJTXXmjxVBy2kQtGm8t1', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
@@ -4798,7 +4830,7 @@ ALTER TABLE `zones`
 -- AUTO_INCREMENT de la tabla `affected_movement`
 --
 ALTER TABLE `affected_movement`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
 
 --
 -- AUTO_INCREMENT de la tabla `brands`
@@ -4960,19 +4992,19 @@ ALTER TABLE `min_stock_details`
 -- AUTO_INCREMENT de la tabla `operator_assigned_stocks`
 --
 ALTER TABLE `operator_assigned_stocks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
 
 --
 -- AUTO_INCREMENT de la tabla `operator_stocks`
 --
 ALTER TABLE `operator_stocks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT de la tabla `operator_stock_details`
 --
 ALTER TABLE `operator_stock_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
 
 --
 -- AUTO_INCREMENT de la tabla `order_dates`
@@ -4984,19 +5016,19 @@ ALTER TABLE `order_dates`
 -- AUTO_INCREMENT de la tabla `order_requests`
 --
 ALTER TABLE `order_requests`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT de la tabla `order_request_details`
 --
 ALTER TABLE `order_request_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=113;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=118;
 
 --
 -- AUTO_INCREMENT de la tabla `order_request_new_items`
 --
 ALTER TABLE `order_request_new_items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT de la tabla `permissions`
@@ -5026,7 +5058,7 @@ ALTER TABLE `pre_stockpile_dates`
 -- AUTO_INCREMENT de la tabla `pre_stockpile_details`
 --
 ALTER TABLE `pre_stockpile_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
 
 --
 -- AUTO_INCREMENT de la tabla `released_stocks`
@@ -5080,7 +5112,7 @@ ALTER TABLE `stockpile_details`
 -- AUTO_INCREMENT de la tabla `stocks`
 --
 ALTER TABLE `stocks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
 -- AUTO_INCREMENT de la tabla `systems`

@@ -72,7 +72,35 @@
                         Swal.fire(
                             'Pedido Cerrado!',
                             'Se procesó el pedido',
-                            'Se le notificará cuando se apruebe'
+                            'success'
+                        )
+                    }
+                })
+            });
+/*------------------------------------------------------------------------------------------------------*/
+        @endif
+        @if (Route::is('operator.pre-reserva'))
+/*--------------ALERTAS PARA LA CONFIRMACION DE CERRAR Pre-Reserva(OPERADOR) --------------------*/
+    /*--------------------Confirmacion para cerra la pre-reserva--------------------------------------*/
+            Livewire.on('confirmarCerrarPreReserva', implemento =>{
+                Swal.fire({
+                    title: '¿Está seguro de cerrar la pre-reserva de '+implemento+'?',
+                    text: "Esta acción es irreversible",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, cerrar!',
+                    cancelButtonText: 'No, cancelar!',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        
+                        Livewire.emitTo('pre-reserva', 'cerrarPreReserva');
+
+                        Swal.fire(
+                            'Pre-reserva Cerrado!',
+                            'Se procesó la Pre-reserva',
+                            'success'
                         )
                     }
                 })

@@ -13,7 +13,7 @@
                     <select id="tool" class="form-select text-center" style="width: 100%" wire:model='tool_for_add'>
                         <option value="">Seleccione una opción</option>
                         @foreach ($tools as $tool)
-                            <option value="{{ $tool->item_id }}">{{ $tool->item }} </option>
+                            <option value="{{ $tool->id }}">{{ $tool->item }} </option>
                         @endforeach
                     </select>
 
@@ -24,7 +24,7 @@
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
 
                     <x-jet-label>Cantidad:</x-jet-label>
-                    <x-jet-input type="number" min="0" class="text-center" style="height:30px;width: 100%" wire:model="quantity_tool_for_add" />
+                    <x-jet-input type="number" min="0" max="{{$stock_tool_for_add}}" class="text-center" style="height:30px;width: 100%" wire:model="quantity_tool_for_add" />
 
                     <x-jet-input-error for="quantity_tool_for_add"/>
 
@@ -33,7 +33,7 @@
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
 
                     <x-jet-label>Stock:</x-jet-label>
-                    <x-jet-input type="number" min="0" class="text-center" style="height:30px;width: 100%" wire:model="stock_tool_for_add" />
+                    <x-jet-input type="number" readonly min="0" class="text-center" style="height:30px;width: 100%" wire:model="stock_tool_for_add" />
 
                     <x-jet-input-error for="stock_tool_for_add"/>
 
