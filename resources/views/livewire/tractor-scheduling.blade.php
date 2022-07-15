@@ -38,6 +38,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="bg-white p-6 grid items-center" style="grid-template-columns: repeat(3, minmax(0, 1fr))">
                 @livewire('create-tractor-scheduling')
                 <div>
@@ -54,40 +55,29 @@
                             <div class="grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
                                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                                     <x-jet-label>Día:</x-jet-label>
-                                    <x-jet-input type="date" min="2022-05-18" style="height:30px;width: 100%" wire:model.defer="date"/>
+                                    <x-jet-input readonly type="date" min="2022-05-18" style="height:30px;width: 100%" value="{{$date}}"/>
 
                                     <x-jet-input-error for="date"/>
                                 </div>
                                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                                     <x-jet-label>Turno:</x-jet-label>
-                                    <select class="form-select" style="width: 100%" wire:model.defer='shift'>
-                                        <option>MAÑANA</option>
-                                        <option>NOCHE</option>
-                                    </select>
+                                    <x-jet-input readonly type="text" style="height:30px;width: 100%" value="{{$shift}}"/>
 
                                     <x-jet-input-error for="shift"/>
 
                                 </div>
                                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                                     <x-jet-label>Ubicación:</x-jet-label>
-                                    <select class="form-select" style="width: 100%" wire:model='location'>
-                                        <option value="0">Seleccione una opción</option>
-                                        @foreach ($locations as $location)
-                                            <option value="{{ $location->id }}">{{ $location->location }}</option>
-                                        @endforeach
-                                    </select>
+
+                                    <x-jet-input readonly type="text" style="height:30px;width: 100%" value="{{$location_name}}"/>
 
                                     <x-jet-input-error for="location"/>
 
                                 </div>
                                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                                     <x-jet-label>Lote:</x-jet-label>
-                                    <select class="form-select" style="width: 100%" wire:model='lote'>
-                                        <option value="0">Seleccione una opción</option>
-                                        @foreach ($lotes as $lote)
-                                            <option value="{{ $lote->id }}">{{ $lote->lote }}</option>
-                                        @endforeach
-                                    </select>
+
+                                    <x-jet-input readonly type="text" style="height:30px;width: 100%" value="{{$lote_name}}"/>
 
                                     <x-jet-input-error for="lote"/>
 
@@ -169,27 +159,27 @@
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                             <th class="py-3 text-center">
                                 <span class="hidden sm:block">Operario</span>
-                                <img class="sm:hidden flex mx-auto" src="img/correlative.svg" alt="correlative"
+                                <img class="sm:hidden flex mx-auto" src="/img/labor.svg" alt="correlative"
                                     width="25">
                             </th>
                             <th class="py-3 text-center">
                                 <span class="hidden sm:block">Tractor</span>
-                                <img class="sm:hidden flex mx-auto" src="img/tractor.svg" alt="correlative"
+                                <img class="sm:hidden flex mx-auto" src="/img/tractor.svg" alt="correlative"
                                     width="25">
                             </th>
                             <th class="py-3 text-center">
-                                <span class="hidden sm:block">Labor</span>
-                                <img class="sm:hidden flex mx-auto" src="img/labor.svg" alt="correlative"
+                                <span class="hidden sm:block">Implemento</span>
+                                <img class="sm:hidden flex mx-auto" src="/img/tractor.svg" alt="implement"
                                     width="25">
                             </th>
                             <th class="py-3 text-center">
                                 <span class="hidden sm:block">Fecha</span>
-                                <img class="sm:hidden flex mx-auto" src="img/date.svg" alt="correlative"
+                                <img class="sm:hidden flex mx-auto" src="/img/date.svg" alt="correlative"
                                     width="25">
                             </th>
                             <th class="py-3 text-center">
                                 <span class="hidden sm:block">Turno</span>
-                                <img class="sm:hidden flex mx-auto" src="img/shift.svg" alt="correlative"
+                                <img class="sm:hidden flex mx-auto" src="/img/shift.svg" alt="correlative"
                                     width="25">
                             </th>
                         </tr>
@@ -197,24 +187,24 @@
                     <tbody  x-data="{open:false}" class="text-gray-600 text-sm font-light">
                         @foreach ($tractorSchedulings as $tractorScheduling)
                             <tr style="cursor:pointer" wire:click="seleccionar({{$tractorScheduling->id}})" class="border-b {{ $tractorScheduling->id == $idSchedule ? 'bg-blue-200' : '' }} border-gray-200">
-                                <td class="py-3 px-6 text-left">
-                                    <div class="flex items-center">
+                                <td class="py-3 text-center">
+                                    <div class="">
                                         <span class="font-medium">{{ $tractorScheduling->user->name }}</span>
                                     </div>
                                 </td>
-                                <td class="py-3 px-6 text-left">
-                                    <div class="flex items-center">
+                                <td class="py-3 text-center">
+                                    <div class="">
                                         <span class="font-medium">{{ $tractorScheduling->tractor->tractorModel->model }}
                                             {{ $tractorScheduling->tractor->tractor_number }}</span>
                                     </div>
                                 </td>
-                                <td class="py-3 px-2 text-left">
-                                    <div class="flex items-center">
-                                        <span class="font-medium">{{ $tractorScheduling->labor->labor }}</span>
+                                <td class="py-3 text-center">
+                                    <div class="">
+                                        <span class="font-medium">{{ $tractorScheduling->implement->implementModel->implement_model }} {{$tractorScheduling->implement->implement_number}} </span>
                                     </div>
                                 </td>
-                                <td class="py-3 px-2 text-left">
-                                    <div class="flex items-center">
+                                <td class="py-3 text-center">
+                                    <div class="">
                                         <span class="font-medium">{{ $tractorScheduling->date }}</span>
                                     </div>
                                 </td>

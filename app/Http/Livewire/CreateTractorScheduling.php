@@ -24,6 +24,10 @@ class CreateTractorScheduling extends Component
     public $date;
     public $shift = "MAÑANA";
 
+    public $usuarios_usados = [];
+    public $tractores_usados = [];
+    public $implementos_usados = [];
+
     protected function rules(){
         return [
             'location' => 'required|exists:locations,id',
@@ -73,7 +77,7 @@ class CreateTractorScheduling extends Component
             'date' => $this->date,
             'shift' => $this->shift,
         ]);
-        $this->reset(['user','labor','tractor','implement']);
+        $this->resetExcept(['open','location','lote','date','shift']);
 
         $this->emit('render');
         $this->emit('alert');
@@ -86,14 +90,42 @@ class CreateTractorScheduling extends Component
         $this->user = 0;
     }
 
+    public function updatedOpen(){
+        $this->resetExcept('open','location','lote');
+        if(!$this->open){
+            $this->reset('usuarios_usados','tractores_usados','implementos_usados');
+        }
+    }
+
+    public function updatedDate(){
+        $this->reset('usuarios_usados','tractores_usados','implementos_usados');
+    }
+
+    public function updatedShift(){
+        $this->reset('usuarios_usados','tractores_usados','implementos_usados');
+    }
+
     public function render()
     {
+        $this->reset('usuarios_usados','tractores_usados','implementos_usados');
         $this->date = date('Y-m-d',strtotime(date('Y-m-d')."+1 days"));
         $locations = Location::where('sede_id',Auth::user()->location->sede->id)->get();
-        $tractors = Tractor::where('location_id',$this->location)->get();
-        $users = User::where('location_id',$this->location)->get();
+
+    /*---------------Verificar si existe programación del día y turno-------------*/
+        if(TractorScheduling::where('date',$this->date)->where('shift',$this->shift)->where('is_canceled',0)->exists()){
+        /*--------------Obtener registros ya seleccionados-------------------------------*/
+            $addeds = TractorScheduling::where('date',$this->date)->where('shift',$this->shift)->where('is_canceled',0)->get();
+            foreach($addeds as $added){
+                array_push($this->usuarios_usados,$added->user_id);
+                array_push($this->tractores_usados,$added->tractor_id);
+                array_push($this->implementos_usados,$added->implement_id);
+            }
+        }
+
+        $tractors = Tractor::where('location_id',$this->location)->whereNotIn('id',$this->tractores_usados)->get();
+        $users = User::where('location_id',$this->location)->whereNotIn('id',$this->usuarios_usados)->get();
         $labors = Labor::all();
-        $implements = Implement::where('location_id',$this->location)->get();
+        $implements = Implement::where('location_id',$this->location)->whereNotIn('id',$this->implementos_usados)->get();
         $lotes = Lote::where('location_id',$this->location)->get();
 
         return view('livewire.create-tractor-scheduling', compact('tractors', 'users', 'labors', 'implements', 'locations','lotes'));

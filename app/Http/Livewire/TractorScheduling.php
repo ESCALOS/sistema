@@ -12,7 +12,6 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
-use phpDocumentor\Reflection\Types\This;
 
 class TractorScheduling extends Component
 {
@@ -25,13 +24,19 @@ class TractorScheduling extends Component
     public $open_edit = false;
 
     public $location;
+    public $location_name;
     public $lote;
+    public $lote_name;
     public $date;
     public $shift;
     public $user;
     public $tractor;
     public $labor;
     public $implement;
+
+    public $usuarios_usados = [];
+    public $tractores_usados = [];
+    public $implementos_usados = [];
 
     protected $listeners = ['render'];
 
@@ -87,7 +92,9 @@ class TractorScheduling extends Component
     public function editar(){
         $scheduling = ModelsTractorScheduling::find($this->idSchedule);
         $this->location = $scheduling->lote->location->id;
+        $this->location_name = $scheduling->lote->location->location;
         $this->lote = $scheduling->lote_id;
+        $this->lote_name = $scheduling->lote->lote;
         $this->date = $scheduling->date;
         $this->shift = $scheduling->shift;
         $this->user = $scheduling->user_id;
@@ -100,9 +107,9 @@ class TractorScheduling extends Component
     public function actualizar(){
         $this->validate();
         $scheduling = ModelsTractorScheduling::find($this->idSchedule);
-        $scheduling->lote_id = $this->lote;
-        $scheduling->date = $this->date;
-        $scheduling->shift = $this->shift;
+        //$scheduling->lote_id = $this->lote;
+        //$scheduling->date = $this->date;
+        //$scheduling->shift = $this->shift;
         $scheduling->user_id = $this->user;
         $scheduling->tractor_id = $this->tractor;
         $scheduling->labor_id = $this->labor;
@@ -120,6 +127,22 @@ class TractorScheduling extends Component
         $this->user = 0;
     }
 
+    public function updatedOpen(){
+        $this->resetExcept('open','location','lote');
+        if(!$this->open){
+            $this->reset('usuarios_usados','tractores_usados','implementos_usados');
+        }
+    }
+
+    public function updatedDate(){
+        $this->reset('usuarios_usados','tractores_usados','implementos_usados');
+
+    }
+
+    public function updatedShift(){
+        $this->reset('usuarios_usados','tractores_usados','implementos_usados');
+    }
+
     public function render()
     {
         $sede_general = Auth::user()->location->sede->id;
@@ -135,13 +158,25 @@ class TractorScheduling extends Component
             $join->on('sedes.id','=','locations.sede_id');
         })->where('sedes.id','=',$sede_general)->select('implements.*')->get();
 
+
+        /*---------------Verificar si existe programación del día y turno-------------*/
+        if(ModelsTractorScheduling::where('date',$this->date)->where('shift',$this->shift)->where('is_canceled',0)->whereNotIn('id',[$this->idSchedule])->exists()){
+            /*--------------Obtener registros ya seleccionados-------------------------------*/
+            $addeds = ModelsTractorScheduling::where('date',$this->date)->where('shift',$this->shift)->where('is_canceled',0)->whereNotIn('id',[$this->idSchedule])->get();
+            foreach($addeds as $added){
+                array_push($this->usuarios_usados,$added->user_id);
+                array_push($this->tractores_usados,$added->tractor_id);
+                array_push($this->implementos_usados,$added->implement_id);
+            }
+        }
+
         /*----------------CRUD-------------------------------------------------------*/
         $locations = Location::where('sede_id',Auth::user()->location->sede->id)->get();
         $lotes = Lote::where('location_id',$this->location)->get();
-        $users = User::where('location_id',$this->location)->get();
-        $tractors = Tractor::where('location_id',$this->location)->get();
+        $users = User::where('location_id',$this->location)->whereNotIn('id',$this->usuarios_usados)->get();
+        $tractors = Tractor::where('location_id',$this->location)->whereNotIn('id',$this->tractores_usados)->get();
         $labors = Labor::all();
-        $implements = Implement::where('location_id',$this->location)->get();
+        $implements = Implement::where('location_id',$this->location)->whereNotIn('id',$this->implementos_usados)->get();
 
         $tractorSchedulings = ModelsTractorScheduling::where('is_canceled',0);
 
