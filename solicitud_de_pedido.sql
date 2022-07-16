@@ -13,7 +13,7 @@ BEGIN
         /*--------------VARIABLES CABECERA SOLICITUD DE PEDIDO-------------------*/
         DECLARE implemento INT;
         DECLARE responsable INT;
-        /*--------------VARIABLES PARA EL DETALLE DE ORDEN DE TRABAJO---------*/
+        /*--------------VARIABLES PARA EL DETALLE DE SOLICITUD DE PEDIDO---------*/
         DECLARE solicitud_pedido INT;
         DECLARE componente_del_implemento INT;
         DECLARE pieza_del_componente INT;

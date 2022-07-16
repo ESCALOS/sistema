@@ -28,6 +28,11 @@ class CreateTractorReport extends Component
     public $hour_meter_end;
     public $observations = "";
 
+    
+    public $usuarios_usados = [];
+    public $tractores_usados = [];
+    public $implementos_usados = [];
+
     protected $rules = [
         'location' => 'required|exists:locations,id',
         'lote' => 'required|exists:lotes,id',
@@ -81,7 +86,8 @@ class CreateTractorReport extends Component
             'observations' => $this->observations,
             'lote_id' => $this->lote,
         ]);
-        $this->reset(['correlative','user','tractor','labor','implement','horometro_inicial','hour_meter_end','observations']);
+
+        $this->resetExcept(['open','location','lote','date','shift']);
 
         $this->emit('render');
         $this->emit('alert');
@@ -94,24 +100,54 @@ class CreateTractorReport extends Component
         $this->user = 0;
     }
 
+    public function updatedOpen(){
+        $this->resetExcept('open','location','lote');
+        if(!$this->open){
+            $this->reset('usuarios_usados','tractores_usados','implementos_usados');
+        }
+    }
+
+    public function updatedDate(){
+        $this->reset('usuarios_usados','tractores_usados','implementos_usados');
+    }
+
+    public function updatedShift(){
+        $this->reset('usuarios_usados','tractores_usados','implementos_usados');
+    }
+
     public function render()
     {
-        if($this->date == ""){
-            $this->date = date('Y-m-d',strtotime(date('Y-m-d')."-1 days"));
-        }
-        $locations = Location::where('sede_id',Auth::user()->location->sede->id)->get();
-        $tractors = Tractor::where('location_id',$this->location)->get();
-        $users = User::where('location_id',$this->location)->get();
-        $labors = Labor::all();
-        $implements = Implement::where('location_id',$this->location)->get();
-        $lotes = Lote::where('location_id',$this->location)->get();
+        /*------------Resetar datos usados----------------------------------------------*/
+            $this->reset('usuarios_usados','tractores_usados','implementos_usados');
+        /*-----------Poner una fecha anterior por defecto-------------------------------*/
+            if($this->date == ""){
+                $this->date = date('Y-m-d',strtotime(date('Y-m-d')."-1 days"));
+            }
+            $locations = Location::where('sede_id',Auth::user()->location->sede->id)->get();
 
-        if($this->tractor > 0){
-            $tractor = Tractor::find($this->tractor);
-            $this->horometro_inicial = $tractor->hour_meter;
-        }else{
-            $this->horometro_inicial = 0;
-        }
+        /*---------------Verificar si existe programación del día y turno-------------*/
+            if(TractorReport::where('date',$this->date)->where('shift',$this->shift)->where('is_canceled',0)->exists()){
+                /*--------------Obtener registros ya seleccionados-------------------------------*/
+                    $addeds = TractorReport::where('date',$this->date)->where('shift',$this->shift)->where('is_canceled',0)->get();
+                    foreach($addeds as $added){
+                        array_push($this->usuarios_usados,$added->user_id);
+                        array_push($this->tractores_usados,$added->tractor_id);
+                        array_push($this->implementos_usados,$added->implement_id);
+                    }
+            }
+
+            $tractors = Tractor::where('location_id',$this->location)->whereNotIn('id',$this->tractores_usados)->get();
+            $users = User::where('location_id',$this->location)->whereNotIn('id',$this->usuarios_usados)->get();
+            $labors = Labor::all();
+            $implements = Implement::where('location_id',$this->location)->whereNotIn('id',$this->implementos_usados)->get();
+            $lotes = Lote::where('location_id',$this->location)->get();
+
+            if($this->tractor > 0){
+                $tractor = Tractor::find($this->tractor);
+                $this->horometro_inicial = $tractor->hour_meter;
+            }else{
+                $this->horometro_inicial = 0;
+            }
 
         return view('livewire.create-tractor-report',compact('tractors','labors','implements','users','locations','lotes'));
     }

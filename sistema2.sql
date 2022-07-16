@@ -2,8 +2,8 @@
 -- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
--- Servidor: localhost
--- Tiempo de generación: 15-07-2022 a las 21:25:29
+-- Servidor: 127.0.0.1
+-- Tiempo de generación: 16-07-2022 a las 07:19:41
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -846,12 +846,12 @@ INSERT INTO `component_implement` (`id`, `component_id`, `implement_id`, `hours`
 (100, 28, 4, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:04:02', '2022-07-15 16:13:53'),
 (101, 8, 4, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:04:02', '2022-07-15 16:13:53'),
 (102, 20, 4, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:04:02', '2022-07-15 16:13:53'),
-(103, 28, 1, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:05:56', '2022-07-09 15:05:56'),
-(104, 8, 1, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:07', '2022-07-09 15:42:07'),
-(105, 20, 1, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:08', '2022-07-09 15:42:08'),
-(106, 28, 2, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:08', '2022-07-09 15:42:08'),
-(107, 8, 2, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
-(108, 20, 2, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
+(103, 28, 1, '253.30', 'PENDIENTE', NULL, '2022-07-09 15:05:56', '2022-07-16 00:08:47'),
+(104, 8, 1, '253.30', 'PENDIENTE', NULL, '2022-07-09 15:42:07', '2022-07-16 00:08:47'),
+(105, 20, 1, '253.30', 'PENDIENTE', NULL, '2022-07-09 15:42:08', '2022-07-16 00:08:47'),
+(106, 28, 2, '644.30', 'PENDIENTE', NULL, '2022-07-09 15:42:08', '2022-07-16 00:08:32'),
+(107, 8, 2, '644.30', 'PENDIENTE', NULL, '2022-07-09 15:42:09', '2022-07-16 00:08:32'),
+(108, 20, 2, '644.30', 'PENDIENTE', NULL, '2022-07-09 15:42:09', '2022-07-16 00:08:32'),
 (109, 20, 5, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
 (110, 19, 5, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
 (111, 22, 5, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
@@ -958,24 +958,24 @@ INSERT INTO `component_part` (`id`, `component_implement_id`, `part`, `hours`, `
 (160, 102, 4, '0.00', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-15 16:14:27'),
 (161, 102, 29, '0.00', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-15 16:14:27'),
 (162, 102, 33, '0.00', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-15 16:14:27'),
-(163, 103, 2, '0.00', 'PENDIENTE', '2022-07-09 15:05:56', '2022-07-09 15:05:56'),
-(164, 103, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:07', '2022-07-09 15:42:07'),
-(165, 103, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:07', '2022-07-09 15:42:07'),
-(166, 104, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:07', '2022-07-09 15:42:07'),
-(167, 104, 11, '0.00', 'PENDIENTE', '2022-07-09 15:42:07', '2022-07-09 15:42:07'),
-(168, 104, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-09 15:42:08'),
-(169, 105, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-09 15:42:08'),
-(170, 105, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-09 15:42:08'),
-(171, 105, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-09 15:42:08'),
-(172, 106, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-09 15:42:08'),
-(173, 106, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
-(174, 106, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
-(175, 107, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
-(176, 107, 11, '0.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
-(177, 107, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
-(178, 108, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
-(179, 108, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
-(180, 108, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-09 15:42:09'),
+(163, 103, 2, '253.30', 'PENDIENTE', '2022-07-09 15:05:56', '2022-07-16 00:08:47'),
+(164, 103, 13, '253.30', 'PENDIENTE', '2022-07-09 15:42:07', '2022-07-16 00:08:47'),
+(165, 103, 33, '253.30', 'PENDIENTE', '2022-07-09 15:42:07', '2022-07-16 00:08:47'),
+(166, 104, 4, '253.30', 'PENDIENTE', '2022-07-09 15:42:07', '2022-07-16 00:08:47'),
+(167, 104, 11, '253.30', 'PENDIENTE', '2022-07-09 15:42:07', '2022-07-16 00:08:47'),
+(168, 104, 23, '253.30', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-16 00:08:47'),
+(169, 105, 4, '253.30', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-16 00:08:47'),
+(170, 105, 29, '253.30', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-16 00:08:47'),
+(171, 105, 33, '253.30', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-16 00:08:47'),
+(172, 106, 2, '644.30', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-16 00:08:32'),
+(173, 106, 13, '644.30', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-16 00:08:32'),
+(174, 106, 33, '644.30', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-16 00:08:32'),
+(175, 107, 4, '644.30', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-16 00:08:32'),
+(176, 107, 11, '644.30', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-16 00:08:32'),
+(177, 107, 23, '644.30', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-16 00:08:32'),
+(178, 108, 4, '644.30', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-16 00:08:32'),
+(179, 108, 29, '644.30', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-16 00:08:32'),
+(180, 108, 33, '644.30', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-16 00:08:32'),
 (181, 109, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
 (182, 109, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
 (183, 109, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
@@ -1360,8 +1360,8 @@ CREATE TABLE `implements` (
 --
 
 INSERT INTO `implements` (`id`, `implement_model_id`, `implement_number`, `hours`, `user_id`, `location_id`, `ceco_id`, `created_at`, `updated_at`) VALUES
-(1, 1, '5243', '446.90', 1, 1, 1, '2022-06-20 21:21:59', '2022-07-07 02:36:52'),
-(2, 1, '2399', '407.44', 2, 1, 2, '2022-06-20 21:21:59', '2022-07-07 02:37:04'),
+(1, 1, '5243', '700.20', 1, 1, 1, '2022-06-20 21:21:59', '2022-07-16 00:08:47'),
+(2, 1, '2399', '1051.74', 2, 1, 2, '2022-06-20 21:21:59', '2022-07-16 00:08:32'),
 (3, 1, '6977', '1239.11', 3, 2, 3, '2022-06-20 21:21:59', '2022-07-09 15:03:09'),
 (4, 1, '9149', '803.56', 4, 2, 4, '2022-06-20 21:21:59', '2022-07-09 15:04:53'),
 (5, 2, '3513', '43.59', 5, 3, 5, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
@@ -1947,31 +1947,18 @@ INSERT INTO `model_has_roles` (`role_id`, `model_type`, `model_id`) VALUES
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `operator_assigned_stocks`
+-- Estructura de tabla para la tabla `operator_stock`
 --
 
-CREATE TABLE `operator_assigned_stocks` (
+CREATE TABLE `operator_stock` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `user_id` bigint(20) UNSIGNED NOT NULL,
   `item_id` bigint(20) UNSIGNED NOT NULL,
-  `quantity` decimal(8,2) NOT NULL,
-  `price` decimal(8,2) NOT NULL,
-  `warehouse_id` bigint(20) UNSIGNED NOT NULL,
-  `ceco_id` bigint(20) UNSIGNED NOT NULL,
-  `state` enum('ASIGNADO','LIBERADO','ANULADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ASIGNADO',
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Disparadores `operator_assigned_stocks`
---
-DELIMITER $$
-CREATE TRIGGER `liberar_material` AFTER UPDATE ON `operator_assigned_stocks` FOR EACH ROW IF new.state = "LIBERADO" THEN
-INSERT INTO released_stock_details (user_id, item_id, movement, quantity, price, warehouse_id, operator_assigned_stock_id) VALUES (old.user_id, old.item_id, 'INGRESO', old.quantity, old.price, old.warehouse_id,old.id);
-END IF
-$$
-DELIMITER ;
+  `ordered_quantity` decimal(8,2) NOT NULL DEFAULT 0.00,
+  `used_quantity` decimal(8,2) NOT NULL DEFAULT 0.00,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -2011,7 +1998,7 @@ CREATE TABLE `order_requests` (
   `user_id` bigint(20) UNSIGNED NOT NULL,
   `implement_id` bigint(20) UNSIGNED NOT NULL,
   `state` enum('PENDIENTE','CERRADO','VALIDADO','RECHAZADO','INCOMPLETO','CONCLUIDO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
-  `validate_by` bigint(20) UNSIGNED DEFAULT NULL,
+  `validated_by` bigint(20) UNSIGNED DEFAULT NULL,
   `is_canceled` tinyint(1) NOT NULL DEFAULT 0,
   `order_date_id` bigint(20) UNSIGNED NOT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
@@ -2033,7 +2020,7 @@ CREATE TABLE `order_request_details` (
   `state` enum('PENDIENTE','ACEPTADO','MODIFICADO','RECHAZADO','VALIDADO','INCOMPLETO','CONCLUIDO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
   `observation` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `used_quantity` decimal(8,2) NOT NULL DEFAULT 0.00,
-  `assigned_state` enum('NO ASIGNADO','ASIGNADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'NO ASIGNADO',
+  `arrival_state` enum('NO CONCLUIDO','CONCLUIDO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'NO CONCLUIDO',
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -2189,7 +2176,7 @@ CREATE TABLE `pre_stockpiles` (
   `user_id` bigint(20) UNSIGNED NOT NULL,
   `implement_id` bigint(20) UNSIGNED NOT NULL,
   `state` enum('PENDIENTE','CERRADO','VALIDADO','RECHAZADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
-  `validate_by` bigint(20) UNSIGNED DEFAULT NULL,
+  `validated_by` bigint(20) UNSIGNED DEFAULT NULL,
   `ceco_id` bigint(20) UNSIGNED NOT NULL,
   `pre_stockpile_date_id` bigint(20) NOT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
@@ -2238,63 +2225,6 @@ CREATE TABLE `pre_stockpile_details` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `released_stocks`
---
-
-CREATE TABLE `released_stocks` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `item_id` bigint(20) UNSIGNED NOT NULL,
-  `quantity` decimal(8,2) NOT NULL,
-  `price` decimal(8,2) NOT NULL,
-  `warehouse_id` bigint(20) UNSIGNED NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `released_stock_details`
---
-
-CREATE TABLE `released_stock_details` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `user_id` bigint(20) UNSIGNED NOT NULL,
-  `item_id` bigint(20) UNSIGNED NOT NULL,
-  `movement` enum('INGRESO','SALIDA') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `quantity` decimal(8,2) NOT NULL,
-  `price` decimal(8,2) NOT NULL,
-  `warehouse_id` bigint(20) UNSIGNED NOT NULL,
-  `operator_assigned_stock_id` bigint(20) UNSIGNED NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Disparadores `released_stock_details`
---
-DELIMITER $$
-CREATE TRIGGER `acumular_stock_liberado` BEFORE INSERT ON `released_stock_details` FOR EACH ROW BEGIN
-IF new.movement = "INGRESO" THEN
-IF EXISTS(SELECT * FROM released_stocks WHERE item_id =  new.item_id AND warehouse_id = new.warehouse_id) THEN
-UPDATE released_stocks SET quantity = quantity + new.quantity, price = price + new.price WHERE item_id = new.item_id AND warehouse_id = new.warehouse_id;
-ELSE
-INSERT INTO released_stocks (item_id,quantity,price,warehouse_id) VALUES (new.item_id,new.quantity,new.price, new.warehouse_id);
-END IF;
-INSERT INTO operator_stock_details(user_id, item_id, movement, quantity, price, warehouse_id,state) VALUES (new.user_id, new.item_id, 'SALIDA', new.quantity, new.price, new.warehouse_id, 'LIBERADO');
-/*-----------END INGRESO-------------------*/
-ELSE
-/*-----------BEGIN SALIDA-----------------*/
-UPDATE released_stocks SET quantity = quantity - new.quantity, price = price - new.price  WHERE item_id = new.item_id AND warehouse_id = new.warehouse_id;
-/*----------------END SALIDA---------------*/
-END IF;
-END
-$$
-DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -2520,7 +2450,9 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('mLGPAfsGHcw6TE5sLYddLGcvxE55p98hR28YrhB5', 5, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiTjlrNXVoZU1aT0R1UTI1MUZteXkwZnd0S3VhWmNwN1pKaXJ4WmdsNCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDg6Imh0dHA6Ly9zaXN0ZW1hL3N1cGVydmlzb3IvUHJvZ3JhbWFjaW9uLVRyYWN0b3JlcyI7fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjU7fQ==', 1657912881);
+('amnwKwldnUCT0bQccbcdln4N14eM3hWBg7rOi4oB', NULL, '192.168.0.7', 'AVG Antivirus', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiWGVPV295U1lpYlFkN3FSaTBPcUhlM1lSaHlNc25oNm9kTjFTRHU2USI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MTg6Imh0dHA6Ly8xOTIuMTY4LjAuNyI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1657938586),
+('O04cvD6hSiMQx4Er6eWTkgYffP1k9HFzxt7j9hW4', 5, '127.0.0.1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiVVBLZkJnY043TUxjcTVISXVQUm1LQ2ttcmxsSWRORnFpZkpxNFFwNyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTM6Imh0dHA6Ly9zaXN0ZW1hLnRlc3Qvc3VwZXJ2aXNvci9Qcm9ncmFtYWNpb24tVHJhY3RvcmVzIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NTt9', 1657927193),
+('o9rHJxOAd7mTQL5Wlk7u0etAZgYKvC0CqbyvBtVh', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.114 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoielpSQXpMU1BwdWJCNXkzMFRlam1LOGlZcGx2WUI5aTk4YnJYTWdueSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDk6Imh0dHA6Ly9zaXN0ZW1hLnRlc3Qvb3BlcmF0b3Ivc29saWNpdGFyLW1hdGVyaWFsZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToyO30=', 1657931156);
 
 -- --------------------------------------------------------
 
@@ -2574,38 +2506,6 @@ CREATE TABLE `stocks` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Volcado de datos para la tabla `stocks`
---
-
-INSERT INTO `stocks` (`id`, `item_id`, `quantity`, `price`, `reserved_quantity`, `warehouse_id`, `created_at`, `updated_at`) VALUES
-(20, 44, '2.00', '1909.30', '0.00', 7, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(21, 3, '2.00', '1385.96', '0.00', 7, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(22, 11, '1.00', '405.08', '0.00', 7, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(23, 57, '9.00', '4519.53', '0.00', 7, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(24, 28, '1.00', '515.10', '0.00', 7, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(25, 50, '1.00', '846.80', '0.00', 7, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(26, 3, '4.00', '1785.96', '0.00', 6, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(27, 57, '18.00', '6626.04', '0.00', 6, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(28, 24, '2.00', '1077.05', '0.00', 6, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(29, 9, '5.00', '1624.84', '0.00', 6, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(30, 44, '6.00', '3163.95', '0.00', 6, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(31, 21, '4.00', '1385.44', '0.00', 6, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(32, 65, '1.00', '2600.00', '0.00', 6, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(33, 52, '2.00', '400.00', '0.00', 6, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(34, 72, '5.00', '150.00', '0.00', 5, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(35, 3, '3.00', '2300.00', '0.00', 5, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(36, 57, '4.00', '1600.00', '0.00', 5, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(37, 73, '8.00', '1200.00', '0.00', 5, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(38, 44, '2.00', '400.00', '0.00', 5, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(39, 57, '6.00', '2400.00', '0.00', 4, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(40, 29, '2.00', '800.00', '0.00', 4, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(41, 3, '1.00', '900.00', '0.00', 4, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(42, 51, '5.00', '1750.00', '0.00', 6, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(43, 72, '2.00', '150.00', '0.00', 6, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(44, 73, '2.00', '120.00', '0.00', 6, '2022-07-15 14:31:56', '2022-07-15 14:31:56'),
-(45, 66, '3.00', '135.00', '0.00', 6, '2022-07-15 14:31:56', '2022-07-15 14:31:56');
 
 -- --------------------------------------------------------
 
@@ -2827,8 +2727,8 @@ CREATE TABLE `tractors` (
 --
 
 INSERT INTO `tractors` (`id`, `tractor_model_id`, `tractor_number`, `hour_meter`, `location_id`, `created_at`, `updated_at`) VALUES
-(1, 1, '72307', '700.00', 1, '2022-06-20 21:22:03', '2022-07-07 02:36:52'),
-(2, 1, '76737', '900.00', 1, '2022-06-20 21:22:03', '2022-07-07 02:37:04'),
+(1, 1, '72307', '998.00', 1, '2022-06-20 21:22:03', '2022-07-16 00:08:47'),
+(2, 1, '76737', '1658.00', 1, '2022-06-20 21:22:03', '2022-07-16 00:08:32'),
 (3, 1, '65116', '1700.00', 2, '2022-06-20 21:22:04', '2022-07-09 15:03:09'),
 (4, 1, '76977', '1350.00', 2, '2022-06-20 21:22:04', '2022-07-09 15:04:53'),
 (5, 2, '72317', '342.00', 3, '2022-06-20 21:22:04', '2022-06-20 21:22:04'),
@@ -2891,6 +2791,22 @@ CREATE TABLE `tractor_reports` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `tractor_reports`
+--
+
+INSERT INTO `tractor_reports` (`id`, `user_id`, `tractor_id`, `labor_id`, `correlative`, `date`, `shift`, `implement_id`, `hour_meter_start`, `hour_meter_end`, `hours`, `observations`, `lote_id`, `is_canceled`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 2, '253363', '2022-07-14', 'MAÑANA', 1, '700.00', '900.00', '200.00', '66', 1, 0, '2022-07-16 04:25:15', '2022-07-16 04:25:15'),
+(2, 2, 2, 3, '253665', '2022-07-14', 'MAÑANA', 2, '900.00', '1500.00', '600.00', '', 1, 0, '2022-07-16 04:43:59', '2022-07-16 04:43:59'),
+(3, 1, 2, 3, '455236', '2022-07-14', 'NOCHE', 2, '1500.00', '1650.00', '150.00', '', 1, 0, '2022-07-16 04:45:06', '2022-07-16 04:45:06'),
+(4, 2, 1, 2, '253662', '2022-07-14', 'NOCHE', 1, '900.00', '952.00', '52.00', '', 1, 0, '2022-07-16 04:57:08', '2022-07-16 04:57:08'),
+(5, 1, 1, 4, '125633', '2022-07-15', 'NOCHE', 1, '952.00', '978.00', '26.00', '', 1, 1, '2022-07-16 04:57:25', '2022-07-16 05:06:26'),
+(6, 2, 2, 3, '36525', '2022-07-15', 'NOCHE', 2, '1650.00', '1700.00', '50.00', '', 1, 1, '2022-07-16 04:57:37', '2022-07-16 04:57:50'),
+(7, 2, 2, 4, '252366', '2022-07-15', 'NOCHE', 2, '1650.00', '1658.00', '8.00', '', 1, 1, '2022-07-16 04:58:20', '2022-07-16 05:06:23'),
+(8, 1, 1, 3, '12563', '2022-07-15', 'MAÑANA', 1, '952.00', '978.00', '26.00', '', 1, 0, '2022-07-16 05:08:15', '2022-07-16 05:08:15'),
+(9, 2, 2, 3, '22533', '2022-07-15', 'MAÑANA', 2, '1650.00', '1658.00', '8.00', '', 2, 0, '2022-07-16 05:08:32', '2022-07-16 05:08:32'),
+(10, 1, 1, 2, '125663', '2022-07-15', 'NOCHE', 1, '978.00', '998.00', '20.00', '', 2, 0, '2022-07-16 05:08:47', '2022-07-16 05:08:47');
 
 --
 -- Disparadores `tractor_reports`
@@ -3052,6 +2968,7 @@ CREATE TABLE `work_orders` (
   `date` date NOT NULL,
   `maintenance` enum('1','2','3') COLLATE utf8mb4_unicode_ci NOT NULL,
   `state` enum('PENDIENTE','NO VALIDADO','VALIDADO','CONCLUIDO','RECHAZADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
+  `validated_by` bigint(20) UNSIGNED NOT NULL,
   `is_canceled` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -3412,14 +3329,10 @@ ALTER TABLE `model_has_roles`
   ADD KEY `model_has_roles_model_id_model_type_index` (`model_id`,`model_type`);
 
 --
--- Indices de la tabla `operator_assigned_stocks`
+-- Indices de la tabla `operator_stock`
 --
-ALTER TABLE `operator_assigned_stocks`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `operator_assigned_stocks_user_id_foreign` (`user_id`),
-  ADD KEY `operator_assigned_stocks_item_id_foreign` (`item_id`),
-  ADD KEY `operator_assigned_stocks_warehouse_id_foreign` (`warehouse_id`),
-  ADD KEY `operator_assigned_stocks_ceco_id_foreign` (`ceco_id`);
+ALTER TABLE `operator_stock`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indices de la tabla `order_dates`
@@ -3434,7 +3347,7 @@ ALTER TABLE `order_requests`
   ADD PRIMARY KEY (`id`),
   ADD KEY `order_requests_user_id_foreign` (`user_id`),
   ADD KEY `order_requests_implement_id_foreign` (`implement_id`),
-  ADD KEY `order_requests_validate_by_foreign` (`validate_by`),
+  ADD KEY `order_requests_validate_by_foreign` (`validated_by`),
   ADD KEY `order_requests_order_date_id_foreign` (`order_date_id`);
 
 --
@@ -3490,7 +3403,7 @@ ALTER TABLE `pre_stockpiles`
   ADD KEY `pre_stockpiles_user_id_foreign` (`user_id`),
   ADD KEY `pre_stockpiles_implement_foreign` (`implement_id`),
   ADD KEY `pre_stockpiles_pre_stockpile_date_id_foreign` (`pre_stockpile_date_id`),
-  ADD KEY `pre_stockpiles_validate_by_foreign` (`validate_by`);
+  ADD KEY `pre_stockpiles_validate_by_foreign` (`validated_by`);
 
 --
 -- Indices de la tabla `pre_stockpile_dates`
@@ -3506,24 +3419,6 @@ ALTER TABLE `pre_stockpile_details`
   ADD KEY `pre_stockpile_details_pre_stockpile_foreign` (`pre_stockpile_id`),
   ADD KEY `pre_stockpile_details_item_id_foreign` (`item_id`),
   ADD KEY `pre_stockpile_details_warehouse_id_foreign` (`warehouse_id`);
-
---
--- Indices de la tabla `released_stocks`
---
-ALTER TABLE `released_stocks`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `released_stocks_item_id_foreign` (`item_id`),
-  ADD KEY `released_stocks_warehouse_id_foreign` (`warehouse_id`);
-
---
--- Indices de la tabla `released_stock_details`
---
-ALTER TABLE `released_stock_details`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `released_stock_details_user_id_foreign` (`user_id`),
-  ADD KEY `released_stock_details_item_id_foreign` (`item_id`),
-  ADD KEY `released_stock_details_warehouse_id_foreign` (`warehouse_id`),
-  ADD KEY `released_stock_details_operator_assigned_stock_id_foreign` (`operator_assigned_stock_id`);
 
 --
 -- Indices de la tabla `risks`
@@ -3876,10 +3771,10 @@ ALTER TABLE `min_stock_details`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT de la tabla `operator_assigned_stocks`
+-- AUTO_INCREMENT de la tabla `operator_stock`
 --
-ALTER TABLE `operator_assigned_stocks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
+ALTER TABLE `operator_stock`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `order_dates`
@@ -3939,18 +3834,6 @@ ALTER TABLE `pre_stockpile_dates`
 -- AUTO_INCREMENT de la tabla `pre_stockpile_details`
 --
 ALTER TABLE `pre_stockpile_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `released_stocks`
---
-ALTER TABLE `released_stocks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `released_stock_details`
---
-ALTER TABLE `released_stock_details`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -4035,7 +3918,7 @@ ALTER TABLE `tractor_models`
 -- AUTO_INCREMENT de la tabla `tractor_reports`
 --
 ALTER TABLE `tractor_reports`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT de la tabla `tractor_schedulings`
@@ -4229,22 +4112,13 @@ ALTER TABLE `model_has_roles`
   ADD CONSTRAINT `model_has_roles_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE;
 
 --
--- Filtros para la tabla `operator_assigned_stocks`
---
-ALTER TABLE `operator_assigned_stocks`
-  ADD CONSTRAINT `operator_assigned_stocks_ceco_id_foreign` FOREIGN KEY (`ceco_id`) REFERENCES `cecos` (`id`),
-  ADD CONSTRAINT `operator_assigned_stocks_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
-  ADD CONSTRAINT `operator_assigned_stocks_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `operator_assigned_stocks_warehouse_id_foreign` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`id`);
-
---
 -- Filtros para la tabla `order_requests`
 --
 ALTER TABLE `order_requests`
   ADD CONSTRAINT `order_requests_implement_id_foreign` FOREIGN KEY (`implement_id`) REFERENCES `implements` (`id`),
   ADD CONSTRAINT `order_requests_order_date_id_foreign` FOREIGN KEY (`order_date_id`) REFERENCES `order_dates` (`id`),
   ADD CONSTRAINT `order_requests_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `order_requests_validate_by_foreign` FOREIGN KEY (`validate_by`) REFERENCES `users` (`id`);
+  ADD CONSTRAINT `order_requests_validate_by_foreign` FOREIGN KEY (`validated_by`) REFERENCES `users` (`id`);
 
 --
 -- Filtros para la tabla `order_request_details`
@@ -4274,7 +4148,7 @@ ALTER TABLE `pre_stockpiles`
   ADD CONSTRAINT `pre_stockpiles_implement_id_foreign` FOREIGN KEY (`implement_id`) REFERENCES `implements` (`id`),
   ADD CONSTRAINT `pre_stockpiles_pre_stockpile_date_id_foreign` FOREIGN KEY (`pre_stockpile_date_id`) REFERENCES `pre_stockpile_dates` (`id`),
   ADD CONSTRAINT `pre_stockpiles_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `pre_stockpiles_validate_by_foreign` FOREIGN KEY (`validate_by`) REFERENCES `users` (`id`);
+  ADD CONSTRAINT `pre_stockpiles_validate_by_foreign` FOREIGN KEY (`validated_by`) REFERENCES `users` (`id`);
 
 --
 -- Filtros para la tabla `pre_stockpile_details`
@@ -4283,22 +4157,6 @@ ALTER TABLE `pre_stockpile_details`
   ADD CONSTRAINT `pre_stockpile_details_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
   ADD CONSTRAINT `pre_stockpile_details_pre_stockpile_foreign` FOREIGN KEY (`pre_stockpile_id`) REFERENCES `pre_stockpiles` (`id`),
   ADD CONSTRAINT `pre_stockpile_details_warehouse_id_foreign` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`id`);
-
---
--- Filtros para la tabla `released_stocks`
---
-ALTER TABLE `released_stocks`
-  ADD CONSTRAINT `released_stocks_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
-  ADD CONSTRAINT `released_stocks_warehouse_id_foreign` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`id`);
-
---
--- Filtros para la tabla `released_stock_details`
---
-ALTER TABLE `released_stock_details`
-  ADD CONSTRAINT `released_stock_details_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
-  ADD CONSTRAINT `released_stock_details_operator_assigned_stock_id_foreign` FOREIGN KEY (`operator_assigned_stock_id`) REFERENCES `operator_assigned_stocks` (`id`),
-  ADD CONSTRAINT `released_stock_details_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `released_stock_details_warehouse_id_foreign` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`id`);
 
 --
 -- Filtros para la tabla `risk_task_order`
@@ -4419,8 +4277,6 @@ DELIMITER $$
 --
 -- Eventos
 --
-CREATE DEFINER=`root`@`localhost` EVENT `liberar_material_event` ON SCHEDULE EVERY 1 MONTH STARTS '2022-05-18 09:00:54' ON COMPLETION NOT PRESERVE DISABLE DO UPDATE operator_assigned_stocks SET state = "LIBERADO", quantity = 0, price = 0 WHERE DATE_ADD(updated_at, INTERVAL 3 MONTH) < CURRENT_TIMESTAMP AND quantity > 0$$
-
 CREATE DEFINER=`root`@`localhost` EVENT `asignar_monto_ceco` ON SCHEDULE EVERY 1 MONTH STARTS '2022-06-01 00:00:00' ON COMPLETION NOT PRESERVE DISABLE DO UPDATE ceco_allocation_amounts SET is_allocated = true WHERE date <= CURDATE() AND is_allocated = false$$
 
 CREATE DEFINER=`root`@`localhost` EVENT `Listar_materiales_pedido` ON SCHEDULE EVERY 1 DAY STARTS '2022-06-27 00:00:00' ON COMPLETION PRESERVE DISABLE DO BEGIN

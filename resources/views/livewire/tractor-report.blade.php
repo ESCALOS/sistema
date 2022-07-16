@@ -54,41 +54,29 @@
                             <div class="grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
                                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                                     <x-jet-label>Día:</x-jet-label>
-                                    <x-jet-input type="date" min="2022-05-18" style="height:30px;width: 100%" wire:model.defer="date"/>
+                                    <x-jet-input readonly type="date" min="2022-05-18" style="height:30px;width: 100%" value="{{$date}}"/>
 
                                     <x-jet-input-error for="date"/>
-
                                 </div>
                                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                                     <x-jet-label>Turno:</x-jet-label>
-                                    <select class="form-select" style="width: 100%" wire:model.defer='shift'>
-                                        <option>MAÑANA</option>
-                                        <option>NOCHE</option>
-                                    </select>
+                                    <x-jet-input readonly type="text" style="height:30px;width: 100%" value="{{$shift}}"/>
 
                                     <x-jet-input-error for="shift"/>
 
                                 </div>
                                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                                     <x-jet-label>Ubicación:</x-jet-label>
-                                    <select class="form-select" style="width: 100%" wire:model='location'>
-                                        <option value="0">Seleccione una opción</option>
-                                        @foreach ($locations as $location)
-                                            <option value="{{ $location->id }}">{{ $location->location }}</option>
-                                        @endforeach
-                                    </select>
+
+                                    <x-jet-input readonly type="text" style="height:30px;width: 100%" value="{{$location_name}}"/>
 
                                     <x-jet-input-error for="location"/>
 
                                 </div>
                                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
-                                    <x-jet-label>Ubicación:</x-jet-label>
-                                    <select class="form-select" style="width: 100%" wire:model='lote'>
-                                        <option value="0">Seleccione una opción</option>
-                                        @foreach ($lotes as $lote)
-                                            <option value="{{ $lote->id }}">{{ $lote->lote }}</option>
-                                        @endforeach
-                                    </select>
+                                    <x-jet-label>Lote:</x-jet-label>
+
+                                    <x-jet-input readonly type="text" style="height:30px;width: 100%" value="{{$lote_name}}"/>
 
                                     <x-jet-input-error for="lote"/>
 
@@ -192,50 +180,50 @@
                             <thead>
                                 <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                                     <th class="py-3 text-center">
-                                        <span class="hidden sm:block">Correlativo</span>
-                                        <img class="sm:hidden flex mx-auto" src="img/correlative.svg" alt="correlative"
+                                        <span class="hidden sm:block">Tractorista</span>
+                                        <img class="sm:hidden flex mx-auto" src="/img/driver.png" alt="driver"
                                             width="25">
                                     </th>
                                     <th class="py-3 text-center">
                                         <span class="hidden sm:block">Tractor</span>
-                                        <img class="sm:hidden flex mx-auto" src="img/tractor.svg" alt="tractor"
+                                        <img class="sm:hidden flex mx-auto" src="/img/tractor.svg" alt="tractor"
                                             width="25">
                                     </th>
                                     <th class="py-3 text-center">
-                                        <span class="hidden sm:block">Labor</span>
-                                        <img class="sm:hidden flex mx-auto" src="img/labor.svg" alt="labor" width="25">
+                                        <span class="hidden sm:block">Implemento</span>
+                                        <img class="sm:hidden flex mx-auto" src="/img/implement.png" alt="implement" width="25">
                                     </th>
                                     <th class="py-3 text-center">
                                         <span class="hidden sm:block">Día</span>
-                                        <img class="sm:hidden flex mx-auto" src="img/date.svg" alt="date" width="28">
+                                        <img class="sm:hidden flex mx-auto" src="/img/date.svg" alt="date" width="28">
                                     </th>
                                     <th class="py-3 text-center">
                                         <span class="hidden sm:block">Turno</span>
-                                        <img class="sm:hidden flex mx-auto" src="img/shift.svg" alt="shift" width="25">
+                                        <img class="sm:hidden flex mx-auto" src="/img/shift.svg" alt="shift" width="25">
                                     </th>
                                 </tr>
                             </thead>
                             <tbody  x-data="{open:false}" class="text-gray-600 text-sm font-light">
                                 @foreach ($tractorReports as $tractorReport)
                                     <tr style="cursor:pointer" wire:click="seleccionar({{$tractorReport->id}})" class="border-b {{ $tractorReport->id == $idReporte ? 'bg-blue-200' : '' }} border-gray-200">
-                                        <td class="py-3 px-6 text-left">
-                                            <div class="flex items-center">
-                                                <span class="font-medium">{{ $tractorReport->correlative }}</span>
+                                        <td class="py-3 text-center">
+                                            <div>
+                                                <span class="font-medium">{{ $tractorReport->user->name }}</span>
                                             </div>
                                         </td>
-                                        <td class="py-3 px-6 text-left">
-                                            <div class="flex items-center">
+                                        <td class="py-3 text-center">
+                                            <div>
                                                 <span class="font-medium">{{ $tractorReport->tractor->tractorModel->model }}
                                                     {{ $tractorReport->tractor->tractor_number }}</span>
                                             </div>
                                         </td>
-                                        <td class="py-3 px-2 text-left">
-                                            <div class="flex items-center">
-                                                <span class="font-medium">{{ $tractorReport->labor->labor }}</span>
+                                        <td class="py-3 text-center">
+                                            <div>
+                                                <span class="font-medium">{{ $tractorReport->implement->implementModel->implement_model }} {{$tractorReport->implement->implement_number}}</span>
                                             </div>
                                         </td>
-                                        <td class="py-3 px-2 text-left">
-                                            <div class="flex items-center">
+                                        <td class="py-3 text-center">
+                                            <div>
                                                 <span class="font-medium">{{ $tractorReport->date }}</span>
                                             </div>
                                         </td>

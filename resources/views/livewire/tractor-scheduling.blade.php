@@ -158,18 +158,18 @@
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                             <th class="py-3 text-center">
-                                <span class="hidden sm:block">Operario</span>
-                                <img class="sm:hidden flex mx-auto" src="/img/labor.svg" alt="correlative"
+                                <span class="hidden sm:block">Tractorista</span>
+                                <img class="sm:hidden flex mx-auto" src="/img/driver.png" alt="driver"
                                     width="25">
                             </th>
                             <th class="py-3 text-center">
                                 <span class="hidden sm:block">Tractor</span>
-                                <img class="sm:hidden flex mx-auto" src="/img/tractor.svg" alt="correlative"
+                                <img class="sm:hidden flex mx-auto" src="/img/tractor.svg" alt="tractor"
                                     width="25">
                             </th>
                             <th class="py-3 text-center">
                                 <span class="hidden sm:block">Implemento</span>
-                                <img class="sm:hidden flex mx-auto" src="/img/tractor.svg" alt="implement"
+                                <img class="sm:hidden flex mx-auto" src="/img/implement.png" alt="implement"
                                     width="25">
                             </th>
                             <th class="py-3 text-center">
@@ -188,23 +188,23 @@
                         @foreach ($tractorSchedulings as $tractorScheduling)
                             <tr style="cursor:pointer" wire:click="seleccionar({{$tractorScheduling->id}})" class="border-b {{ $tractorScheduling->id == $idSchedule ? 'bg-blue-200' : '' }} border-gray-200">
                                 <td class="py-3 text-center">
-                                    <div class="">
+                                    <div>
                                         <span class="font-medium">{{ $tractorScheduling->user->name }}</span>
                                     </div>
                                 </td>
                                 <td class="py-3 text-center">
-                                    <div class="">
+                                    <div>
                                         <span class="font-medium">{{ $tractorScheduling->tractor->tractorModel->model }}
                                             {{ $tractorScheduling->tractor->tractor_number }}</span>
                                     </div>
                                 </td>
                                 <td class="py-3 text-center">
-                                    <div class="">
+                                    <div>
                                         <span class="font-medium">{{ $tractorScheduling->implement->implementModel->implement_model }} {{$tractorScheduling->implement->implement_number}} </span>
                                     </div>
                                 </td>
                                 <td class="py-3 text-center">
-                                    <div class="">
+                                    <div>
                                         <span class="font-medium">{{ $tractorScheduling->date }}</span>
                                     </div>
                                 </td>

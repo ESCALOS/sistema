@@ -108,7 +108,10 @@ class CreateTractorScheduling extends Component
     public function render()
     {
         $this->reset('usuarios_usados','tractores_usados','implementos_usados');
-        $this->date = date('Y-m-d',strtotime(date('Y-m-d')."+1 days"));
+        if($this->date == ""){
+            $this->date = date('Y-m-d',strtotime(date('Y-m-d')."+1 days"));
+        }
+        
         $locations = Location::where('sede_id',Auth::user()->location->sede->id)->get();
 
     /*---------------Verificar si existe programación del día y turno-------------*/

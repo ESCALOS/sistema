@@ -233,7 +233,7 @@ class ValidatePreReserva extends Component
                     if(PreStockpileDetail::where('pre_stockpile_id',$this->id_pre_reserva)->where('quantity','>',0)->where('state','PENDIENTE')->doesntExist()){
                         $pre_stockpile = PreStockpile::find($this->id_pre_reserva);
                         $pre_stockpile->state = "VALIDADO";
-                        $pre_stockpile->validate_by = Auth::user()->id;
+                        $pre_stockpile->validated_by = Auth::user()->id;
                         $pre_stockpile->save();
                         $this->resetExcept(['tzone','tsede','tlocation']);
                         $this->render();

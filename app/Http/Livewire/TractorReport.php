@@ -25,7 +25,9 @@ class TractorReport extends Component
     public $open_edit = false;
 
     public $location;
+    public $location_name;
     public $lote;
+    public $lote_name;
     public $correlative;
     public $date;
     public $shift;
@@ -36,6 +38,10 @@ class TractorReport extends Component
     public $hour_meter_start;
     public $hour_meter_end;
     public $observations;
+
+    public $usuarios_usados = [];
+    public $tractores_usados = [];
+    public $implementos_usados = [];
 
     protected $rules = [
         'lote' => 'required|exists:lotes,id',
@@ -84,7 +90,9 @@ class TractorReport extends Component
     public function editar(){
         $reporte = ModelsTractorReport::find($this->idReporte);
         $this->location = $reporte->lote->location->id;
+        $this->location_name = $reporte->lote->location->location;
         $this->lote = $reporte->lote_id;
+        $this->lote_name = $reporte->lote->lote;
         $this->correlative = $reporte->correlative;
         $this->date = $reporte->date;
         $this->shift = $reporte->shift;
@@ -101,10 +109,10 @@ class TractorReport extends Component
     public function actualizar(){
         $this->validate();
         $reporte = ModelsTractorReport::find($this->idReporte);
-        $reporte->lote_id = $this->lote;
+        //$reporte->lote_id = $this->lote;
         $reporte->correlative = $this->correlative;
-        $reporte->date = $this->date;
-        $reporte->shift = $this->shift;
+        //$reporte->date = $this->date;
+        //$reporte->shift = $this->shift;
         $reporte->user_id = $this->user;
         $reporte->tractor_id = $this->tractor;
         $reporte->labor_id = $this->labor;
@@ -124,6 +132,23 @@ class TractorReport extends Component
         $this->user = 0;
     }
 
+    public function updatedOpen(){
+        $this->resetExcept('open','location','lote');
+        if(!$this->open){
+            $this->reset('usuarios_usados','tractores_usados','implementos_usados');
+        }
+    }
+
+    public function updatedDate(){
+        $this->reset('usuarios_usados','tractores_usados','implementos_usados');
+
+    }
+
+    public function updatedShift(){
+        $this->reset('usuarios_usados','tractores_usados','implementos_usados');
+    }
+
+
     public function render()
     {
         $sede_general = Auth::user()->location->sede->id;
@@ -139,13 +164,24 @@ class TractorReport extends Component
             $join->on('sedes.id','=','locations.sede_id');
         })->where('sedes.id','=',$sede_general)->select('implements.*')->get();
 
+        /*---------------Verificar si existe programación del día y turno-------------*/
+        if(ModelsTractorReport::where('date',$this->date)->where('shift',$this->shift)->where('is_canceled',0)->whereNotIn('id',[$this->idReporte])->exists()){
+            /*--------------Obtener registros ya seleccionados-------------------------------*/
+            $addeds = ModelsTractorReport::where('date',$this->date)->where('shift',$this->shift)->where('is_canceled',0)->whereNotIn('id',[$this->idReporte])->get();
+            foreach($addeds as $added){
+                array_push($this->usuarios_usados,$added->user_id);
+                array_push($this->tractores_usados,$added->tractor_id);
+                array_push($this->implementos_usados,$added->implement_id);
+            }
+        }
         /*----------------CRUD-------------------------------------------------------*/
         $locations = Location::where('sede_id',Auth::user()->location->sede->id)->get();
-        $tractors = Tractor::where('location_id',$this->location)->get();
-        $users = User::where('location_id',$this->location)->get();
-        $labors = Labor::all();
-        $implements = Implement::where('location_id',$this->location)->get();
         $lotes = Lote::where('location_id',$this->location)->get();
+        $users = User::where('location_id',$this->location)->whereNotIn('id',$this->usuarios_usados)->get();
+        $tractors = Tractor::where('location_id',$this->location)->whereNotIn('id',$this->tractores_usados)->get();
+        $labors = Labor::all();
+        $implements = Implement::where('location_id',$this->location)->whereNotIn('id',$this->implementos_usados)->get();
+
 
         $tractorReports = ModelsTractorReport::where('is_canceled',0);
 

@@ -325,7 +325,7 @@ class ValidateRequestMaterial extends Component
         OrderRequestNewItem::where('order_request_id',$this->id_solicitud_pedido)->where('state','PENDIENTE')->doesntExist()){
             $order_request = OrderRequest::find($this->id_solicitud_pedido);
             $order_request->state = "VALIDADO";
-            $order_request->validate_by = Auth::user()->id;
+            $order_request->validated_by = Auth::user()->id;
             $order_request->save();
             $this->resetExcept(['tzone','tsede','tlocation']);
             $this->render();
