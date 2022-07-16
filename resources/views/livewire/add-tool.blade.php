@@ -2,7 +2,7 @@
     <button wire:click="$set('open_tool','true')" class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md w-full">
         Herramienta
     </button>
-    <x-jet-dialog-modal wire:model="open_tool">
+    <x-jet-dialog-modal maxWidth="sm" wire:model="open_tool">
         <x-slot name="title">
             Agregar tool
         </x-slot>

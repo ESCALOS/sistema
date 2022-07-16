@@ -12,8 +12,8 @@ use Livewire\Component;
 class AddTool extends Component
 {
     public $open_tool = false;
-    public $idImplemento;
-    public $idRequest;
+    public $id_implemento;
+    public $id_request;
     public $tool_for_add;
     public $quantity_tool_for_add = 1;
     public $estimated_price_tool;
@@ -33,8 +33,8 @@ class AddTool extends Component
 
     protected $listeners = ['cambioImplemento'=>'cambioImplemento'];
 
-    public function cambioImplemento(Implement $idImplemento){
-        $this->idImplemento = $idImplemento->id;
+    public function cambioImplemento(Implement $id_implemento){
+        $this->id_implemento = $id_implemento->id;
         $this->excluidos = [];
     }
 
@@ -45,23 +45,23 @@ class AddTool extends Component
     public function store(){
         $this->validate();
 
-        if(OrderRequest::where('implement_id',$this->idImplemento)->where('state','PENDIENTE')->exists()){
-            $order_request = OrderRequest::where('implement_id',$this->idImplemento)->where('state','PENDIENTE')->first();
+        if(OrderRequest::where('implement_id',$this->id_implemento)->where('state','PENDIENTE')->exists()){
+            $order_request = OrderRequest::where('implement_id',$this->id_implemento)->where('state','PENDIENTE')->first();
         }else{
             $order_dates = OrderDate::where('state','ABIERTO')->first();
             $order_request = OrderRequest::create([
                 'user_id' => auth()->user()->id,
-                'implement_id' => $this->idImplemento,
+                'implement_id' => $this->id_implemento,
                 'order_date_id' => $order_dates->id
             ]);
-            $this->idRequest = $order_request->id;
+            $this->id_request = $order_request->id;
         }
-        
-        $this->idRequest = $order_request->id;
-        
+
+        $this->id_request = $order_request->id;
+
         $item = Item::find($this->tool_for_add);
         OrderRequestDetail::create([
-            'order_request_id' => $this->idRequest,
+            'order_request_id' => $this->id_request,
             'item_id' => $this->tool_for_add,
             'quantity' => $this->quantity_tool_for_add,
             'estimated_price' => $item->estimated_price,
@@ -88,7 +88,7 @@ class AddTool extends Component
 
     public function render()
     {
-        $added_components = OrderRequestDetail::where('order_request_id',$this->idRequest)->get();
+        $added_components = OrderRequestDetail::where('order_request_id',$this->id_request)->get();
         if($added_components != null){
             foreach($added_components as $added_component){
                 array_push($this->excluidos,$added_component->item_id);

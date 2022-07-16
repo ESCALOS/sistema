@@ -7,6 +7,7 @@ use App\Models\Component as ModelsComponent;
 use App\Models\Implement;
 use App\Models\Item;
 use App\Models\MeasurementUnit;
+use App\Models\OperatorStock;
 use App\Models\OrderDate;
 use App\Models\OrderRequest;
 use App\Models\OrderRequestDetail;
@@ -17,6 +18,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class RequestMaterial extends Component
 {
@@ -32,27 +34,26 @@ class RequestMaterial extends Component
     public $fecha_pedido_cierre;
     public $fecha_pedido_llegada;
 
-    public $idImplemento = 0;
+    public $id_implemento = 0;
     public $implemento;
-    public $idRequest;
-    
+    public $id_request;
+
     public $open_edit = false;
-    public $open_edit_new = false;
     public $material_edit = 0;
-
     public $material_edit_name = '';
+    public $quantity_edit;
+    public $measurement_unit_edit;
+    public $ordered_quantity = 0;
+    public $stock = 0;
 
+    public $open_edit_new = false;
     public $material_new_edit;
     public $material_new_edit_name ;
     public $material_new_edit_quantity;
     public $material_new_edit_measurement_unit;
-    public $material_new_edit_brand ;
     public $material_new_edit_datasheet;
     public $material_new_edit_image;
     public $material_new_edit_image_old;
-
-    public $quantity_edit;
-    public $measurement_unit_edit;
 
     public $iteration = 0;
 
@@ -66,7 +67,6 @@ class RequestMaterial extends Component
                     'material_new_edit_quantity' => 'required|gt:0',
                     'material_new_edit_measurement_unit' => 'required|exists:measurement_units,id',
                     'material_new_edit_datasheet' => 'required',
-                    'material_new_edit_brand' => 'required',
                 ];
             }else{
                 return [
@@ -74,7 +74,6 @@ class RequestMaterial extends Component
                     'material_new_edit_quantity' => 'required|gt:0',
                     'material_new_edit_measurement_unit' => 'required|exists:measurement_units,id',
                     'material_new_edit_datasheet' => 'required',
-                    'material_new_edit_brand' => 'required',
                     'material_new_edit_image' => 'image',
                 ];
             }
@@ -93,7 +92,6 @@ class RequestMaterial extends Component
         'material_new_edit_quantity.gt' => 'Debe ser mayor de 0',
         'material_new_edit_measurement_unit.required' => 'Seleccione una unidad de medida',
         'material_new_edit_measurement_unit.exists' => 'La unidad de medida no existe',
-        'material_new_edit_brand.required' => 'Ingrese la marca',
         'material_new_edit_datasheet.required' => 'Ingrese la ficha técnica',
         'material_new_edit_image.image' => 'El archivo debe de ser una imagen',
         'quantity_edit.required' => 'Ingrese la cantidad',
@@ -115,7 +113,7 @@ class RequestMaterial extends Component
     }
 
     public function updatedOpenEditNew(){
-        $this->reset('material_new_edit_name','material_new_edit_quantity','material_new_edit_measurement_unit','material_new_edit_brand','material_new_edit_datasheet','material_new_edit_image','material_new_edit_image_old');
+        $this->reset('material_new_edit_name','material_new_edit_quantity','material_new_edit_measurement_unit','material_new_edit_datasheet','material_new_edit_image','material_new_edit_image_old');
         $this->iteration++;
     }
 
@@ -129,7 +127,6 @@ class RequestMaterial extends Component
             $this->material_new_edit_name = $material->new_item;
             $this->material_new_edit_quantity = floatval($material->quantity);
             $this->material_new_edit_measurement_unit = $material->measurement_unit_id;
-            $this->material_new_edit_brand = $material->brand;
             $this->material_new_edit_datasheet = $material->datasheet;
             $this->material_new_edit_image_old = $material->image;
             $this->material_new_edit_observation = $material->observation;
@@ -147,15 +144,13 @@ class RequestMaterial extends Component
         $material = OrderRequestNewItem::find($this->material_new_edit);
         $material->quantity = $this->material_new_edit_quantity;
         $material->measurement_unit_id = $this->material_new_edit_measurement_unit;
-        $material->brand = $this->material_new_edit_brand;
         $material->datasheet = $this->material_new_edit_datasheet;
         if($this->material_new_edit_image != ""){
             $material->image = $image;
         }
-        //$material->observation = $this->material_new_edit_observation;
         $material->save();
         $this->open_edit_new = false;
-        $this->reset('material_new_edit_name','material_new_edit_quantity','material_new_edit_measurement_unit','material_new_edit_brand','material_new_edit_datasheet','material_new_edit_image','material_new_edit_image_old');
+        $this->reset('material_new_edit_name','material_new_edit_quantity','material_new_edit_measurement_unit','material_new_edit_datasheet','material_new_edit_image','material_new_edit_image_old');
         $this->iteration++;
     }
 
@@ -173,6 +168,15 @@ class RequestMaterial extends Component
         $this->material_edit_name = $material->item->item;
         $this->quantity_edit = floatval($material->quantity);
         $this->measurement_unit_edit = $material->item->measurementUnit->abbreviation;
+
+        if(OperatorStock::where('user_id',Auth::user()->id)->where('item_id',$this->$material->item_id)->exists()){
+            $operator_stock = OperatorStock::where('user_id',Auth::user()->id)->where('item_id',$this->$material->item_id)->first();
+            $this->ordered_quantity = $operator_stock->ordered_quantity - $operator_stock->used_quantity;
+        }else{
+            $this->ordered_quantity = 0;
+        }
+
+
         $this->open_edit = true;
     }
 
@@ -185,16 +189,16 @@ class RequestMaterial extends Component
         $this->render();
     }
 
-    public function updatedIdImplemento(){
-        $this->emit('cambioImplemento', $this->idImplemento);
+    public function updatedid_implemento(){
+        $this->emit('cambioImplemento', $this->id_implemento);
     }
 
     public function cerrarPedido(){
-        $request = OrderRequest::find($this->idRequest);
+        $request = OrderRequest::find($this->id_request);
         $request->state = 'CERRADO';
         $request->save();
-        $this->idRequest = 0;
-        $this->idImplemento = 0;
+        $this->id_request = 0;
+        $this->id_implemento = 0;
         $this->render();
     }
 
@@ -226,23 +230,23 @@ class RequestMaterial extends Component
         $measurement_units = MeasurementUnit::all();
 
         /*--------------Obtener los datos de la cabecera de la solicitud de pedido---------------------*/
-        if ($this->idImplemento > 0) {
-            $orderRequest = OrderRequest::where('implement_id', $this->idImplemento)->where('state', 'PENDIENTE')->first();
+        if ($this->id_implemento > 0) {
+            $orderRequest = OrderRequest::where('implement_id', $this->id_implemento)->where('state', 'PENDIENTE')->first();
             if ($orderRequest != null) {
-                $this->idRequest = $orderRequest->id;
+                $this->id_request = $orderRequest->id;
 
             } else {
-                $this->idRequest = 0;
+                $this->id_request = 0;
             }
         }
         /*---------Obtener el detalle de los materiales pedidos---------------------------------*/
-        $orderRequestDetails = OrderRequestDetail::where('order_request_id', $this->idRequest)->orderBy('id', 'desc')->get();
+        $orderRequestDetails = OrderRequestDetail::where('order_request_id', $this->id_request)->orderBy('id', 'desc')->get();
         /*-----------Obtener el detalle de los materiales nuevos pedidos--------------------------*/
-        $orderRequestNewItems = OrderRequestNewItem::where('order_request_id', $this->idRequest)->orderBy('id', 'desc')->get();
+        $orderRequestNewItems = OrderRequestNewItem::where('order_request_id', $this->id_request)->orderBy('id', 'desc')->get();
 
         /*--------------Obtener los datos del implemento y su ceco respectivo----------------------------*/
-        if ($this->idImplemento > 0) {
-            $implement = Implement::find($this->idImplemento);
+        if ($this->id_implemento > 0) {
+            $implement = Implement::find($this->id_implemento);
             $this->implemento = $implement->implementModel->implement_model.' '.$implement->implement_number;
 
              /*--------Obtener las fechas de llegada del pedido-------------------------------------*/

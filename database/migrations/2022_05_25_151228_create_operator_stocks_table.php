@@ -17,9 +17,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('item_id')->constrained();
-            $table->decimal('quantity',8,2);
-            $table->decimal('price',8,2);
-            $table->foreignId('warehouse_id')->constrained();
+            $table->decimal('ordered_quantity',8,2);
+            $table->decimal('used_quantity',8,2);
             $table->timestamps();
         });
     }

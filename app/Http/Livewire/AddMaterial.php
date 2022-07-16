@@ -15,8 +15,8 @@ use Livewire\Component;
 class AddMaterial extends Component
 {
     public $open_material = false;
-    public $idImplemento;
-    public $idRequest;
+    public $id_implemento;
+    public $id_request;
     public $material_for_add;
     public $quantity_material_for_add = 1;
     public $excluidos = [];
@@ -35,9 +35,9 @@ class AddMaterial extends Component
 
     protected $listeners = ['cambioImplemento'=>'cambioImplemento'];
 
-    public function cambioImplemento(Implement $idImplemento)
+    public function cambioImplemento(Implement $id_implemento)
     {
-        $this->idImplemento = $idImplemento->id;
+        $this->id_implemento = $id_implemento->id;
         $this->excluidos = [];
     }
     public function updatedOpenMaterial(){
@@ -46,7 +46,7 @@ class AddMaterial extends Component
 
     public function store(){
         $this->validate();
-        
+
         if(PreStockpile::where('implement_id',$this->id_implemento)->where('state','PENDIENTE')->exists()){
             $pre_stockpile = PreStockpile::where('implement_id',$this->id_implemento)->where('state','PENDIENTE')->first();
         }else{
@@ -79,7 +79,7 @@ class AddMaterial extends Component
     public function render()
     {
 
-        $added_components = OrderRequestDetail::where('order_request_id',$this->idRequest)->get();
+        $added_components = OrderRequestDetail::where('order_request_id',$this->id_request)->get();
         if($added_components != null){
             foreach($added_components as $added_component){
                 array_push($this->excluidos,$added_component->item_id);

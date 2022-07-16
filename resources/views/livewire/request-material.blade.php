@@ -23,7 +23,7 @@
             @endif
         </div>
     </div>
-    <div class="grid grid-cols-1 {{$idImplemento!=0?'sm:grid-cols-2':''}} gap-4">
+    <div class="grid grid-cols-1 {{$id_implemento!=0?'sm:grid-cols-2':''}} gap-4">
         <div>
             <div class="text-center">
                 <h1 class="text-lg font-bold pb-2">
@@ -31,7 +31,7 @@
                 </h1>
             </div>
             <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
-                <select class="form-select" style="width: 100%; height:2.5rem" wire:model='idImplemento'>
+                <select class="form-select" style="width: 100%; height:2.5rem" wire:model='id_implemento'>
                     <option value="0" class="text-center text-md font-bold">Seleccione una implemento</option>
                 @foreach ($implements as $implement)
                     <option value="{{ $implement->id }}" class="text-center text-md font-bold">Implemento: {{ strtoupper($implement->implementModel->implement_model) }} {{ $implement->implement_number }}</option>
@@ -39,7 +39,7 @@
                 </select>
             </div>
         </div>
-        @if ($idImplemento != 0)
+        @if ($id_implemento != 0)
         <div style="display:flex; align-items:center;justify-content:center" class="px-6 py-4">
             <button wire:click="$emit('confirmarCerrarPedido','{{$implemento}}')" class="w-full h-16 bg-orange-500 text-2xl font-bold hover:bg-orange-700 text-white rounded-full">
                 Cerrar Pedido
@@ -48,21 +48,20 @@
         @endif
     </div>
     <div class="px-6 py-4 text-center">
-        @if ($idImplemento > 0)
-    <!-- Crud Materiales Existentes -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <!-------GRID DE BOTONES PARA AGREGAR MATERIALES -->
-            <div style="height:280px">
+        @if ($id_implemento > 0)
+    <!-------GRID DE BOTONES PARA AGREGAR MATERIALES -->
+        <div>
                 <div class="text-center">
-                    <h1 class="text-md font-bold pb-4">Añadir a la solicitud:</h1>
+                    <h1 class="text-md font-bold">Añadir a la solicitud:</h1>
                 </div>
-                <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
-                    @livewire('add-component', ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
-                    @livewire('add-part',  ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
-                    @livewire('add-material',  ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
-                    @livewire('add-tool',  ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
+                <div class="p-4 grid grid-cols-4 gap-4 text-center">
+                    @livewire('add-component', ['id_request' => $id_request, 'id_implemento' => $id_implemento])
+                    @livewire('add-part',  ['id_request' => $id_request, 'id_implemento' => $id_implemento])
+                    @livewire('add-material',  ['id_request' => $id_request, 'id_implemento' => $id_implemento])
+                    @livewire('add-tool',  ['id_request' => $id_request, 'id_implemento' => $id_implemento])
                 </div>
-            </div>
+        </div>
+        <div>
             <!-------TABLA DE MATERIALES PEDIDOS YA EXISTENTES -->
             <div style="height:180px;overflow:auto">
                 <table class="min-w-max w-full">
@@ -105,8 +104,8 @@
         </div>
     <!-- Botones para elementos nuevos -->
         <div class="bg-white p-6 grid text-center gap-4" style="grid-column: 2 span/ 2 span">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    @livewire('request-new-material', ['idRequest' => $idRequest, 'idImplemento' => $idImplemento])
+                <div class="grid grid-cols-3 gap-4">
+                    @livewire('request-new-material', ['id_request' => $id_request, 'id_implemento' => $id_implemento])
                     <div>
                         <button wire:click="editar_nuevo()" class="px-4 py-2 w-full bg-yellow-500 hover:bg-yellow-700 text-white rounded-md">
                             Editar
@@ -129,9 +128,6 @@
                                 <span>Material Nuevo </span>
                             </th>
                             <th class="py-3 text-center">
-                                <span>Marca </span>
-                            </th>
-                            <th class="py-3 text-center">
                                 <span>Cantidad</span>
                             </th>
                         </tr>
@@ -142,11 +138,6 @@
                             <td class="py-3 px-6 text-center">
                                 <div>
                                     <span class="font-bold">{{ strtoupper($request->new_item) }}</span>
-                                </div>
-                            </td>
-                            <td class="py-3 px-6 text-center">
-                                <div>
-                                    <span class="font-bold">{{ strtoupper($request->brand) }}</span>
                                 </div>
                             </td>
                             <td class="py-3 px-6 text-center">
@@ -201,7 +192,7 @@
             {{ strtoupper($material_new_edit_name) }}
         </x-slot>
         <x-slot name="content">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
                     <x-jet-label>Cantidad:</x-jet-label>
                     <x-jet-input type="number" min="0" style="height:30px;width: 100%" wire:model="material_new_edit_quantity" />
@@ -221,18 +212,12 @@
                     <x-jet-input-error for="material_new_edit_measurement_unit"/>
 
                 </div>
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
-                    <x-jet-label>Marca:</x-jet-label>
-                    <x-jet-input type="text" style="height:30px;width: 100%" wire:model="material_new_edit_brand" />
 
-                    <x-jet-input-error for="material_new_edit_brand"/>
-
-                </div>
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 3 span/ 3 span">
+                <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 2 span/ 2 span">
                     <x-jet-label>Especificaciones:</x-jet-label>
                     <textarea class="form-control w-full text-sm" rows=5 wire:model.defer="material_new_edit_datasheet"></textarea>
                 </div>
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 3 span/ 3 span">
+                <div class="py-2" style="padding-left: 1rem; padding-right:1rem;grid-column: 2 span/ 2 span">
                     <x-jet-label>Imagen:</x-jet-label>
                     <input type="file"  id="upload{{$iteration}}" style="height:30px;width: 100%" wire:model="material_new_edit_image" accept="image/*"/>
 
@@ -240,7 +225,7 @@
 
                 </div>
 
-                <div wire:loading wire:target='material_new_edit_image' class="flex p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-blue-200 dark:text-blue-800" style="grid-column: 3 span/ 3 span">
+                <div wire:loading wire:target='material_new_edit_image' class="flex p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-blue-200 dark:text-blue-800" style="grid-column: 2 span/ 2 span">
                     <div>
                         <strong class="font-bold">Imagen Cargando!</strong> <span class="block sm:inline">Espere a que termine de cargar.</span>
                     </div>

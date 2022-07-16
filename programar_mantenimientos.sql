@@ -213,7 +213,7 @@ OPEN cursor_implementos;
                                         END IF;
                                         /*----OBTENER PIEZAS DEL COMPONENTE----------------------------*/
                                         FETCH cursor_piezas INTO pieza;
-                                        /*----------------COMPROBAR SI EXISTE LA PEIZA CON SU COMPONENTE CON SU IMPLEMENTO EN LA TABLA component_parts-------------*/
+                                        /*----------------COMPROBAR SI EXISTE LA PIEZA CON SU COMPONENTE CON SU IMPLEMENTO EN LA TABLA component_parts-------------*/
                                         IF NOT EXISTS(SELECT * FROM component_part WHERE component_implement_id  = componente_del_implemento AND part = pieza AND state = "PENDIENTE") THEN
                                             INSERT INTO component_part (component_implement_id,part) VALUES (componente_del_implemento,pieza);
                                         END IF;
