@@ -9,7 +9,7 @@
         <x-slot name="content">
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                     <x-jet-label>Componente: </x-jet-label>
-                    <select class="form-select" style="width: 100%" wire:model='tool_for_add'>
+                    <select class="form-select text-center" style="width: 100%" wire:model='tool_for_add'>
                         <option value="">Seleccione una opción</option>
                         @foreach ($components as $component)
                             <option value="{{ $component->id }}">{{ $component->item }} </option>
@@ -21,7 +21,7 @@
                 </div>
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
                     <x-jet-label>Cantidad:</x-jet-label>
-                    <x-jet-input type="number" min="0" style="height:30px;width: 100%" wire:model="quantity_tool_for_add" />
+                    <x-jet-input class="text-center" type="number" min="0" style="height:30px;width: 100%" wire:model="quantity_tool_for_add" />
 
                     <x-jet-input-error for="quantity_tool_for_add"/>
 

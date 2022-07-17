@@ -54,7 +54,7 @@
                 <div class="text-center">
                     <h1 class="text-md font-bold">Añadir a la solicitud:</h1>
                 </div>
-                <div class="p-4 grid grid-cols-4 gap-4 text-center">
+                <div class="p-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                     @livewire('add-component', ['id_request' => $id_request, 'id_implemento' => $id_implemento])
                     @livewire('add-part',  ['id_request' => $id_request, 'id_implemento' => $id_implemento])
                     @livewire('add-material',  ['id_request' => $id_request, 'id_implemento' => $id_implemento])
@@ -163,7 +163,8 @@
         </x-slot>
         <x-slot name="content">
 
-            <x-jet-label class="text-md">Cantidad:</x-jet-label>
+            <div class="mb-4">
+                <x-jet-label class="text-md">Cantidad:</x-jet-label>
                 <div class="flex">
 
                     <input class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" wire:model="quantity_edit" />
@@ -173,6 +174,21 @@
                         {{$measurement_unit_edit}}
                     </span>
                 </div>
+            </div>
+
+            <div class="mb-4">
+                <x-jet-label class="text-md">Stock:</x-jet-label>
+                <div class="flex">
+
+                    <input class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" wire:model="ordered_quantity" />
+
+                    <x-jet-input-error for="quantity_edit"/>
+                    <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
+                        {{$measurement_unit_edit}}
+                    </span>
+                </div>
+            </div>
+
         </x-slot>
         <x-slot name="footer">
             <x-jet-button wire:loading.attr="disabled" wire:click="actualizar()">

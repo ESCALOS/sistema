@@ -169,8 +169,8 @@ class RequestMaterial extends Component
         $this->quantity_edit = floatval($material->quantity);
         $this->measurement_unit_edit = $material->item->measurementUnit->abbreviation;
 
-        if(OperatorStock::where('user_id',Auth::user()->id)->where('item_id',$this->$material->item_id)->exists()){
-            $operator_stock = OperatorStock::where('user_id',Auth::user()->id)->where('item_id',$this->$material->item_id)->first();
+        if(OperatorStock::where('user_id',Auth::user()->id)->where('item_id',$material->item_id)->exists()){
+            $operator_stock = OperatorStock::where('user_id',Auth::user()->id)->where('item_id',$material->item_id)->first();
             $this->ordered_quantity = $operator_stock->ordered_quantity - $operator_stock->used_quantity;
         }else{
             $this->ordered_quantity = 0;
