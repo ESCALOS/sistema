@@ -90,7 +90,7 @@
                                 </td>
                                 <td class="py-3 px-6 text-center">
                                     <div>
-                                        <span class="font-medium">{{$request->stock}} {{$request->abbreviation}}</span>
+                                        <span class="font-medium">{{$request->ordered_quantity - $request->used_quantity}} {{$request->abbreviation}}</span>
                                     </div>
                                 </td>
                             </tr>
@@ -121,10 +121,10 @@
                         {{$material_measurement_edit}}
                     </span>
                 </div>
-                
+
                 <x-jet-input-error for="material_edit_quantity"/>
             </div>
-            
+
             <div class="mb-2">
                 <x-jet-label class="text-md">Stock:</x-jet-label>
                 <div class="flex" style="padding-left: 1rem; padding-right:1rem;">

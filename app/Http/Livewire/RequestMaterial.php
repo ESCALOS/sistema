@@ -4,6 +4,8 @@ namespace App\Http\Livewire;
 
 use App\Models\CecoAllocationAmount;
 use App\Models\Component as ModelsComponent;
+use App\Models\GeneralStock;
+use App\Models\GeneralWarehouse;
 use App\Models\Implement;
 use App\Models\Item;
 use App\Models\MeasurementUnit;
@@ -176,6 +178,16 @@ class RequestMaterial extends Component
             $this->ordered_quantity = 0;
         }
 
+        $stock = GeneralStock::join('general_warehouses',function($join){
+            $join->on('general_warehouses.id','=','general_stocks.general_warehouse_id');
+        })->where('general_stocks.item_id',$material->item_id)->where('general_warehouses.sede_id',Auth::user()->location->sede_id);
+
+        if($stock->exists()){
+            $stock_del_item = $stock->select('general_stocks.quantity')->first();
+            $this->stock = $stock_del_item->quantity;
+        }else{
+            $this->stock = 0;
+        }
 
         $this->open_edit = true;
     }

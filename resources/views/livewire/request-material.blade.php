@@ -153,7 +153,7 @@
         </div>
         @else
         <div class="px-6 py-4 text-center">
-            <h1 class="text-3xl font-bold pb-4">NINGÚN IMPLEMENTO SELECCIONADO</h1>
+            <h1 class="text-3xl font-bold pb-4">NINGÚN IMPLEMENTO SELECCIONADO </h1>
         </div>
         @endif
     </div>
@@ -177,10 +177,23 @@
             </div>
 
             <div class="mb-4">
-                <x-jet-label class="text-md">Stock:</x-jet-label>
+                <x-jet-label class="text-md">Pedida:</x-jet-label>
                 <div class="flex">
 
-                    <input class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" wire:model="ordered_quantity" />
+                    <input readonly class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" value="{{$ordered_quantity}}" />
+
+                    <x-jet-input-error for="quantity_edit"/>
+                    <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
+                        {{$measurement_unit_edit}}
+                    </span>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <x-jet-label class="text-md">En Almacén:</x-jet-label>
+                <div class="flex">
+
+                    <input readonly class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="text" style="height:30px;width: 100%" value="{{$stock}}"/>
 
                     <x-jet-input-error for="quantity_edit"/>
                     <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">

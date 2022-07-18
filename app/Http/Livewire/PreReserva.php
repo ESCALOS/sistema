@@ -121,7 +121,7 @@ class PreReserva extends Component
             $join->on('items.measurement_unit_id','=','measurement_units.id');
         })->join('operator_stocks',function($join){
             $join->on('pre_stockpiles.user_id','operator_stocks.user_id')->on('pre_stockpile_details.item_id','operator_stocks.item_id');
-        })->select('pre_stockpile_details.id','items.type','pre_stockpile_details.quantity','measurement_units.abbreviation','operator_stocks.quantity as stock','items.sku','items.item')
+        })->select('pre_stockpile_details.id','items.type','pre_stockpile_details.quantity','measurement_units.abbreviation','operator_stocks.ordered_quantity', 'operator_stocks.used_quantity','items.sku','items.item')
         ->where('pre_stockpile_details.pre_stockpile_id',$this->id_pre_reserva)->get();
 
     /*--------------Obtener los datos del implemento y su ceco respectivo----------------------------*/

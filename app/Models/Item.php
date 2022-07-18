@@ -23,22 +23,10 @@ class Item extends Model
     public function measurementUnit(){
         return $this->belongsTo(MeasurementUnit::class);
     }
-    public function operatorAssignedStock(){
-        return $this->hasMany(OperatorAssignedStock::class);
-    }
     public function operatorStock(){
         return $this->hasMany(OperatorStock::class);
     }
-    public function operatorStockDetail(){
-        return $this->hasMany(OperatorStockDetail::class);
-    }
     public function orderResquestDetail(){
         return $this->hasMany(OrderResquestDetail::class);
-    }
-    public function releasedStock(){
-        return $this->hasMany(ReleasedStock::class);
-    }
-    public function ReleasedStockDetail(){
-        return $this->hasMany(OrderRequest::class);
     }
 }

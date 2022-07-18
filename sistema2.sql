@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 16-07-2022 a las 21:26:38
+-- Tiempo de generación: 18-07-2022 a las 21:25:23
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -1507,14 +1507,97 @@ CREATE TABLE `failed_jobs` (
 
 CREATE TABLE `general_stocks` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `item_id` bigint(20) NOT NULL,
+  `item_id` bigint(20) UNSIGNED NOT NULL,
   `quantity` decimal(8,2) NOT NULL DEFAULT 0.00,
   `price` decimal(8,2) NOT NULL DEFAULT 0.00,
-  `reserved_quantity` decimal(8,2) NOT NULL DEFAULT 0.00,
   `general_warehouse_id` bigint(20) UNSIGNED NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `general_stocks`
+--
+
+INSERT INTO `general_stocks` (`id`, `item_id`, `quantity`, `price`, `general_warehouse_id`, `created_at`, `updated_at`) VALUES
+(1, 1, '75.00', '345.00', 2, '2022-07-18 17:16:21', '2022-07-18 17:24:05'),
+(2, 1, '64.00', '238.00', 1, '2022-07-18 17:16:21', '2022-07-18 19:07:09'),
+(3, 3, '2.00', '28.00', 1, '2022-07-18 19:12:11', '2022-07-18 19:12:11'),
+(4, 57, '5.00', '17.50', 1, '2022-07-18 19:12:11', '2022-07-18 19:12:11');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `general_stock_details`
+--
+
+CREATE TABLE `general_stock_details` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `item_id` bigint(20) UNSIGNED NOT NULL,
+  `movement` enum('INGRESO','SALIDA') NOT NULL DEFAULT 'INGRESO',
+  `quantity` decimal(8,2) NOT NULL DEFAULT 0.00,
+  `price` decimal(8,2) NOT NULL DEFAULT 0.00,
+  `general_warehouse_id` bigint(20) UNSIGNED NOT NULL,
+  `is_canceled` tinyint(1) NOT NULL DEFAULT 0,
+  `order_date_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `general_stock_details`
+--
+
+INSERT INTO `general_stock_details` (`id`, `item_id`, `movement`, `quantity`, `price`, `general_warehouse_id`, `is_canceled`, `order_date_id`, `created_at`, `updated_at`) VALUES
+(3, 1, 'INGRESO', '60.00', '4.50', 2, 1, NULL, '2022-07-18 17:16:21', '2022-07-18 17:18:02'),
+(4, 1, 'INGRESO', '20.00', '4.50', 1, 1, NULL, '2022-07-18 17:16:21', '2022-07-18 17:17:58'),
+(5, 1, 'INGRESO', '15.00', '5.00', 2, 1, NULL, '2022-07-18 17:16:46', '2022-07-18 17:17:52'),
+(6, 1, 'INGRESO', '60.00', '4.50', 2, 0, NULL, '2022-07-18 17:24:05', '2022-07-18 17:24:05'),
+(7, 1, 'INGRESO', '15.00', '5.00', 2, 0, NULL, '2022-07-18 17:24:05', '2022-07-18 17:24:05'),
+(8, 1, 'INGRESO', '50.00', '3.50', 1, 0, NULL, '2022-07-18 19:06:44', '2022-07-18 19:06:44'),
+(9, 1, 'INGRESO', '14.00', '4.50', 1, 0, NULL, '2022-07-18 19:07:09', '2022-07-18 19:07:09'),
+(10, 3, 'INGRESO', '2.00', '14.00', 1, 0, NULL, '2022-07-18 19:12:11', '2022-07-18 19:12:11'),
+(11, 57, 'INGRESO', '5.00', '3.50', 1, 0, NULL, '2022-07-18 19:12:11', '2022-07-18 19:12:11');
+
+--
+-- Disparadores `general_stock_details`
+--
+DELIMITER $$
+CREATE TRIGGER `actualizar_movimiento_stock_general` AFTER UPDATE ON `general_stock_details` FOR EACH ROW BEGIN
+	DECLARE last_price DECIMAL(8,2);
+	IF new.is_canceled THEN
+    	IF new.movement = "INGRESO" THEN
+        	UPDATE general_stocks SET quantity = quantity - new.quantity, price = price - (new.price*new.quantity) WHERE item_id = new.item_id AND general_warehouse_id = new.general_warehouse_id;
+        ELSE
+        	UPDATE general_stocks SET quantity = quantity + new.quantity, price = price + (new.price*new.quantity) WHERE item_id = new.item_id AND general_warehouse_id = new.general_warehouse_id;
+        END IF;
+    ELSE
+    	IF new.movement = "INGRESO" THEN
+        	UPDATE general_stocks SET quantity = quantity - old.quantity + new.quantity, price = price - (old.price - new.price)*quantity WHERE item_id = new.item_id AND general_warehouse_id = new.general_warehouse_id;
+            SELECT price INTO last_price FROM general_stock_details WHERE item_id = new.item_id AND general_warehouse_id = new.general_warehouse_id AND is_canceled = 0;
+            UPDATE items SET estimated_price = last_price WHERE item_id = new.item_id;
+        ELSE
+            UPDATE general_stocks SET quantity = quantity + old.quantity - new.quantity, price = price + (old.price - new.price)*quantity WHERE item_id = new.item_id AND general_warehouse_id = new.general_warehouse_id;
+            END IF;
+    END IF;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `insertar_movimiento_stock_general` AFTER INSERT ON `general_stock_details` FOR EACH ROW BEGIN
+    IF(new.movement = "INGRESO") THEN
+		IF EXISTS(SELECT * FROM general_stocks WHERE item_id = new.item_id AND general_warehouse_id = new.general_warehouse_id) THEN
+        	UPDATE general_stocks SET quantity = quantity + new.quantity, price = price + (new.price*new.quantity) WHERE item_id = new.item_id AND general_warehouse_id = new.general_warehouse_id;
+        ELSE
+    		INSERT INTO general_stocks (item_id, quantity, price, general_warehouse_id) VALUES (new.item_id, new.quantity, new.price*new.quantity, new.general_warehouse_id);
+        END IF;
+        UPDATE items SET i.estimated_price = new.price WHERE id = new.item_id;
+    ELSE
+		UPDATE general_stocks SET quantity = quantity - new.quantity, price = price - (new.price*new.quantity) WHERE item_id = new.item_id AND general_warehouse_id = new.general_warehouse_id;
+    END IF;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -2151,10 +2234,10 @@ INSERT INTO `model_has_roles` (`role_id`, `model_type`, `model_id`) VALUES
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `operator_stock`
+-- Estructura de tabla para la tabla `operator_stocks`
 --
 
-CREATE TABLE `operator_stock` (
+CREATE TABLE `operator_stocks` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `user_id` bigint(20) UNSIGNED NOT NULL,
   `item_id` bigint(20) UNSIGNED NOT NULL,
@@ -2165,17 +2248,17 @@ CREATE TABLE `operator_stock` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Volcado de datos para la tabla `operator_stock`
+-- Volcado de datos para la tabla `operator_stocks`
 --
 
-INSERT INTO `operator_stock` (`id`, `user_id`, `item_id`, `ordered_quantity`, `used_quantity`, `created_at`, `updated_at`) VALUES
-(1, 4, 1, '5.00', '3.00', '2022-07-16 17:15:36', '2022-07-16 17:15:36'),
-(2, 4, 3, '6.00', '4.00', '2022-07-16 17:15:36', '2022-07-16 17:15:36'),
-(3, 4, 24, '1.00', '0.00', '2022-07-16 17:17:33', '2022-07-16 17:17:33'),
-(4, 4, 57, '5.00', '5.00', '2022-07-16 17:17:33', '2022-07-16 17:17:33'),
-(5, 4, 9, '6.00', '5.00', '2022-07-16 17:19:08', '2022-07-16 17:19:08'),
-(6, 4, 21, '9.00', '1.00', '2022-07-16 17:19:08', '2022-07-16 17:19:08'),
-(7, 4, 52, '0.00', '0.00', '2022-07-16 17:22:06', '2022-07-16 17:22:06');
+INSERT INTO `operator_stocks` (`id`, `user_id`, `item_id`, `ordered_quantity`, `used_quantity`, `created_at`, `updated_at`) VALUES
+(1, 4, 1, '5.00', '3.00', '2022-07-16 22:15:36', '2022-07-16 22:15:36'),
+(2, 4, 3, '6.00', '4.00', '2022-07-16 22:15:36', '2022-07-16 22:15:36'),
+(3, 4, 24, '1.00', '0.00', '2022-07-16 22:17:33', '2022-07-16 22:17:33'),
+(4, 4, 57, '5.00', '5.00', '2022-07-16 22:17:33', '2022-07-16 22:17:33'),
+(5, 4, 9, '6.00', '5.00', '2022-07-16 22:19:08', '2022-07-16 22:19:08'),
+(6, 4, 21, '9.00', '1.00', '2022-07-16 22:19:08', '2022-07-16 22:19:08'),
+(7, 4, 52, '0.00', '0.00', '2022-07-16 22:22:06', '2022-07-16 22:22:06');
 
 -- --------------------------------------------------------
 
@@ -2825,7 +2908,8 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('KNXASS9PHHqZmabi0FT4JCQtd3QYeRxkBVyRoAf1', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiYW9WYmZmd0hibHBDaUZtaHNvNkZHWXAxNG5xNXBJVUJGaXNid3drSyI7czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo0NDoiaHR0cDovL3Npc3RlbWEvb3BlcmF0b3Ivc29saWNpdGFyLW1hdGVyaWFsZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjIxOiJwYXNzd29yZF9oYXNoX3NhbmN0dW0iO3M6NjA6IiQyeSQxMCQ5MklYVU5wa2pPMHJPUTVieU1pLlllNG9Lb0VhM1JvOWxsQy8ub2cvYXQyLnVoZVdHL2lnaSI7fQ==', 1657999573);
+('Pjf0BU4Gr6XAKtMNeLj4KngpiLgcS7AIl49in83S', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiU1VGN2RlZ2JVRWpnM2gyamN3UnpXcTlSYTJneEcxckFISnFyNVFxWCI7czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo0NDoiaHR0cDovL3Npc3RlbWEvb3BlcmF0b3Ivc29saWNpdGFyLW1hdGVyaWFsZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1658159973),
+('wI6lPthufkzr1nGvaVIcrIcLJyBTjB35sbNNPct0', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiUVA1b29HMVZoVDVoS0taMnRXckw2VUhGekE4Sk12cEdhSFlWMGZEeCI7czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo0NDoiaHR0cDovL3Npc3RlbWEvb3BlcmF0b3Ivc29saWNpdGFyLW1hdGVyaWFsZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1658171288);
 
 -- --------------------------------------------------------
 
@@ -2888,13 +2972,14 @@ CREATE TABLE `stocks` (
 CREATE TABLE `stock_details` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `item_id` bigint(20) UNSIGNED NOT NULL,
-  `movement` enum('INGRESO','SALIDA') NOT NULL DEFAULT 'INGRESO',
+  `movement` enum('INGRESO','SALIDA') NOT NULL DEFAULT 'SALIDA',
   `quantity` decimal(8,2) NOT NULL DEFAULT 0.00,
   `price` decimal(8,2) NOT NULL DEFAULT 0.00,
   `warehouse_id` bigint(20) UNSIGNED NOT NULL,
-  `ceco_id` bigint(20) UNSIGNED NOT NULL,
-  `state` enum('CONFIRMADO','ANULADO') NOT NULL DEFAULT 'CONFIRMADO',
+  `is_canceled` tinyint(1) NOT NULL DEFAULT 0,
   `order_request_id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `validated_by` bigint(20) UNSIGNED NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -3591,7 +3676,17 @@ ALTER TABLE `failed_jobs`
 --
 ALTER TABLE `general_stocks`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `general_stocks_general_warehouse_id_foreign` (`general_warehouse_id`);
+  ADD KEY `general_stocks_general_warehouse_id_foreign` (`general_warehouse_id`),
+  ADD KEY `general_stocks_general_item_id_foreign` (`item_id`);
+
+--
+-- Indices de la tabla `general_stock_details`
+--
+ALTER TABLE `general_stock_details`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `general_stock_details_general_warehouse_id_foreign` (`general_warehouse_id`),
+  ADD KEY `general_stock_details_order_date_id_foreign` (`order_date_id`),
+  ADD KEY `general_stock_details_item_id_foreign` (`item_id`);
 
 --
 -- Indices de la tabla `general_warehouses`
@@ -3702,12 +3797,12 @@ ALTER TABLE `model_has_roles`
   ADD KEY `model_has_roles_model_id_model_type_index` (`model_id`,`model_type`);
 
 --
--- Indices de la tabla `operator_stock`
+-- Indices de la tabla `operator_stocks`
 --
-ALTER TABLE `operator_stock`
+ALTER TABLE `operator_stocks`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `operator_stock_user_id_foreign` (`user_id`),
-  ADD KEY `operator_stock_item_id_foreign` (`item_id`);
+  ADD KEY `operator_stocks_user_id_foreign` (`user_id`),
+  ADD KEY `operator_stocks_item_id_foreign` (`item_id`);
 
 --
 -- Indices de la tabla `order_dates`
@@ -3872,7 +3967,11 @@ ALTER TABLE `stocks`
 -- Indices de la tabla `stock_details`
 --
 ALTER TABLE `stock_details`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `stock_details_item_id_foreign` (`item_id`),
+  ADD KEY `stock_details_warehouse_id_foreign` (`warehouse_id`),
+  ADD KEY `stock_details_user_id_foreign` (`user_id`),
+  ADD KEY `stock_details_validated_by_foreign` (`validated_by`);
 
 --
 -- Indices de la tabla `systems`
@@ -4071,7 +4170,13 @@ ALTER TABLE `failed_jobs`
 -- AUTO_INCREMENT de la tabla `general_stocks`
 --
 ALTER TABLE `general_stocks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT de la tabla `general_stock_details`
+--
+ALTER TABLE `general_stock_details`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT de la tabla `general_warehouses`
@@ -4146,9 +4251,9 @@ ALTER TABLE `min_stock_details`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT de la tabla `operator_stock`
+-- AUTO_INCREMENT de la tabla `operator_stocks`
 --
-ALTER TABLE `operator_stock`
+ALTER TABLE `operator_stocks`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
@@ -4417,7 +4522,16 @@ ALTER TABLE `epp_work_order`
 -- Filtros para la tabla `general_stocks`
 --
 ALTER TABLE `general_stocks`
+  ADD CONSTRAINT `general_stocks_general_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
   ADD CONSTRAINT `general_stocks_general_warehouse_id_foreign` FOREIGN KEY (`general_warehouse_id`) REFERENCES `general_warehouses` (`id`);
+
+--
+-- Filtros para la tabla `general_stock_details`
+--
+ALTER TABLE `general_stock_details`
+  ADD CONSTRAINT `general_stock_details_general_warehouse_id_foreign` FOREIGN KEY (`general_warehouse_id`) REFERENCES `general_warehouses` (`id`),
+  ADD CONSTRAINT `general_stock_details_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
+  ADD CONSTRAINT `general_stock_details_order_date_id_foreign` FOREIGN KEY (`order_date_id`) REFERENCES `order_dates` (`id`);
 
 --
 -- Filtros para la tabla `general_warehouses`
@@ -4487,11 +4601,11 @@ ALTER TABLE `model_has_roles`
   ADD CONSTRAINT `model_has_roles_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE;
 
 --
--- Filtros para la tabla `operator_stock`
+-- Filtros para la tabla `operator_stocks`
 --
-ALTER TABLE `operator_stock`
-  ADD CONSTRAINT `operator_stock_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
-  ADD CONSTRAINT `operator_stock_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `operator_stocks`
+  ADD CONSTRAINT `operator_stocks_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
+  ADD CONSTRAINT `operator_stocks_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 --
 -- Filtros para la tabla `order_requests`
@@ -4584,6 +4698,15 @@ ALTER TABLE `stockpile_details`
 ALTER TABLE `stocks`
   ADD CONSTRAINT `stocks_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
   ADD CONSTRAINT `stocks_warehouse_id_foreign` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`id`);
+
+--
+-- Filtros para la tabla `stock_details`
+--
+ALTER TABLE `stock_details`
+  ADD CONSTRAINT `stock_details_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
+  ADD CONSTRAINT `stock_details_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `stock_details_validated_by_foreign` FOREIGN KEY (`validated_by`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `stock_details_warehouse_id_foreign` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`id`);
 
 --
 -- Filtros para la tabla `tasks`
