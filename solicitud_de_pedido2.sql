@@ -225,10 +225,10 @@ BEGIN
                                                                                 SELECT frequency INTO frecuencia_pieza FROM preventive_maintenance_frequencies WHERE component_id = pieza;
                                                                             /*---------OBTENER HORAS DEL ÚLTIMO MATENIMIENTO DE LA PIEZA EN CASO HUBIERA----------------------*/
                                                                                 IF EXISTS(SELECT * FROM work_order_details wod INNER JOIN tasks t ON t.id = wod.task_id WHERE wod.component_part_id = pieza_del_componente AND t.type = "PREVENTIVO" AND is_checked = 1) THEN
-                                                                                        SELECT wod.component_hours INTO horas_ultimo_mantenimiento_pieza FROM work_order_details wod INNER JOIN tasks t ON t.id = wod.task_id WHERE wod.component_part_id = pieza_del_componente AND t.type = "PREVENTIVO" AND is_checked = 1 ORDER BY id DESC LIMIT 1;
-                                                                                    ELSE
-                                                                                        SELECT 0 INTO horas_ultimo_mantenimiento_pieza;
-                                                                                    END IF;
+                                                                                    SELECT wod.component_hours INTO horas_ultimo_mantenimiento_pieza FROM work_order_details wod INNER JOIN tasks t ON t.id = wod.task_id WHERE wod.component_part_id = pieza_del_componente AND t.type = "PREVENTIVO" AND is_checked = 1 ORDER BY id DESC LIMIT 1;
+                                                                                ELSE
+                                                                                    SELECT 0 INTO horas_ultimo_mantenimiento_pieza;
+                                                                                END IF;
                                                                             /*---------HACER EN CASO NECESITE RECAMBIO--------------------------------------------------------*/
                                                                                 IF(cantidad_pieza_recambio > 0) THEN
                                                                                         /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL RECAMBIO DEL COMPONENTE-----------------------*/

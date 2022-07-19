@@ -14,7 +14,7 @@ class RequestNewMaterial extends Component
     use WithFileUploads;
 
     public $id_request;
-    public $idImplemento;
+    public $id_implemento;
     public $iteration = 0;
 
     public $open_new_material;
@@ -48,9 +48,9 @@ class RequestNewMaterial extends Component
         'material_new_image.image' => 'El archivo debe de ser una imagen'
     ];
 
-    public function cambioImplemento(Implement $idImplemento)
+    public function cambioImplemento(Implement $id_implemento)
     {
-        $this->idImplemento = $idImplemento->id;
+        $this->id_implemento = $id_implemento->id;
     }
 
     public function updatedMaterialNewImage(){
@@ -76,11 +76,11 @@ class RequestNewMaterial extends Component
 
     public function store(){
         $this->validate();
-        $order_request_id = OrderRequest::where('implement_id',$this->idImplemento)->where('state','PENDIENTE')->first();
+        $order_request_id = OrderRequest::where('implement_id',$this->id_implemento)->where('state','PENDIENTE')->first();
         if(is_null($order_request_id)){
             $order_request = OrderRequest::create([
                 'user_id' => auth()->user()->id,
-                'implement_id' => $this->idImplemento
+                'implement_id' => $this->id_implemento
             ]);
             $this->id_request = $order_request->id;
         }else{

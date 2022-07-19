@@ -63,7 +63,7 @@
         </div>
         <div>
             <!-------TABLA DE MATERIALES PEDIDOS YA EXISTENTES -->
-            <div style="height:180px;overflow:auto">
+            <div style="max-height:180px;overflow:auto">
                 <table class="min-w-max w-full">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -76,6 +76,12 @@
                             <th class="py-3 text-center">
                                 <span>Cantidad</span>
                             </th>
+                            <th class="py-3 text-center">
+                                <span>Pedido</span>
+                            </th>
+                            <th class="py-3 text-center">
+                                <span>Stock</span>
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="text-gray-600 text-sm font-light">
@@ -83,17 +89,27 @@
                             <tr wire:dblclick="editar({{$request->id}})" class="border-b border-gray-200 unselected">
                                 <td class="py-3 px-6 text-center">
                                     <div>
-                                        <span class="font-medium">{{$request->item->sku}} </span>
+                                        <span class="font-medium">{{$request->sku}} </span>
                                     </div>
                                 </td>
                                 <td class="py-3 px-6 text-center">
                                     <div>
-                                        <span class="font-bold {{$request->item->type == "PIEZA" ? 'text-red-500' : ( $request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "FUNGIBLE" ? 'text-amber-500' : 'text-blue-500')))}} ">{{ strtoupper($request->item->item) }}</span>
+                                        <span class="font-bold {{$request->type == "PIEZA" ? 'text-red-500' : ( $request->type == "COMPONENTE" ? 'text-green-500' : ($request->type == "COMPONENTE" ? 'text-green-500' : ($request->type == "FUNGIBLE" ? 'text-amber-500' : 'text-blue-500')))}} ">{{ strtoupper($request->item) }}</span>
                                     </div>
                                 </td>
                                 <td class="py-3 px-6 text-center">
                                     <div>
-                                        <span class="font-medium">{{$request->quantity}} {{$request->item->measurementUnit->abbreviation}}</span>
+                                        <span class="font-medium">{{floatVal($request->quantity)}} {{$request->abbreviation}}</span>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-6 text-center">
+                                    <div>
+                                        <span class="font-medium">{{floatVal($request->ordered_quantity - $request->used_quantity)}} {{$request->abbreviation}}</span>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-6 text-center">
+                                    <div>
+                                        <span class="font-medium">{{floatVal($request->stock)}} {{$request->abbreviation}}</span>
                                     </div>
                                 </td>
                             </tr>
@@ -120,7 +136,7 @@
             </div>
         <div>
     <!-- Tabla para elementos nuevos -->
-        <div style="height:360px;overflow:auto">
+        <div style="max-height:360px;overflow:auto">
                 <table class="min-w-max w-full">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -167,7 +183,7 @@
                 <x-jet-label class="text-md">Cantidad:</x-jet-label>
                 <div class="flex">
 
-                    <input class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" wire:model="quantity_edit" />
+                    <input class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" wire:model="quantity_edit"/>
 
                     <x-jet-input-error for="quantity_edit"/>
                     <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
@@ -180,9 +196,8 @@
                 <x-jet-label class="text-md">Pedida:</x-jet-label>
                 <div class="flex">
 
-                    <input readonly class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" value="{{$ordered_quantity}}" />
+                    <input readonly class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" value="{{$ordered_quantity}}"/>
 
-                    <x-jet-input-error for="quantity_edit"/>
                     <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
                         {{$measurement_unit_edit}}
                     </span>
@@ -195,7 +210,6 @@
 
                     <input readonly class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="text" style="height:30px;width: 100%" value="{{$stock}}"/>
 
-                    <x-jet-input-error for="quantity_edit"/>
                     <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
                         {{$measurement_unit_edit}}
                     </span>
@@ -261,11 +275,11 @@
                 </div>
 
                 @if($material_new_edit_image)
-                <div class="p-2" style="margin-left:15px;margin-right:15px;grid-column: 3 span/ 3 span;height:16rem">
+                <div class="p-2" style="margin-left:15px;margin-right:15px;grid-column: 3 span/ 3 span;max-height:16rem">
                         <img style="display:inline;height:100%" src="{{ $material_new_edit_image->temporaryUrl() }}">
                     </div>
                 @else
-                    <div class="p-2" style="margin-left:15px;margin-right:15px;grid-column: 3 span/ 3 span;height:16rem">
+                    <div class="p-2" style="margin-left:15px;margin-right:15px;grid-column: 3 span/ 3 span;max-height:16rem">
                         <img style="display:inline;height:100%" src="{{ str_replace('public','/storage',$material_new_edit_image_old) }}">
                     </div>
                 @endif

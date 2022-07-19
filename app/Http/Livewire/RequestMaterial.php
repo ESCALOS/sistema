@@ -38,7 +38,7 @@ class RequestMaterial extends Component
 
     public $id_implemento = 0;
     public $implemento;
-    public $id_request;
+    public $id_request = 0;
 
     public $open_edit = false;
     public $material_edit = 0;
@@ -173,7 +173,7 @@ class RequestMaterial extends Component
 
         if(OperatorStock::where('user_id',Auth::user()->id)->where('item_id',$material->item_id)->exists()){
             $operator_stock = OperatorStock::where('user_id',Auth::user()->id)->where('item_id',$material->item_id)->first();
-            $this->ordered_quantity = $operator_stock->ordered_quantity - $operator_stock->used_quantity;
+            $this->ordered_quantity = floatval($operator_stock->ordered_quantity - $operator_stock->used_quantity);
         }else{
             $this->ordered_quantity = 0;
         }
@@ -184,7 +184,7 @@ class RequestMaterial extends Component
 
         if($stock->exists()){
             $stock_del_item = $stock->select('general_stocks.quantity')->first();
-            $this->stock = $stock_del_item->quantity;
+            $this->stock = floatval($stock_del_item->quantity);
         }else{
             $this->stock = 0;
         }
@@ -226,8 +226,6 @@ class RequestMaterial extends Component
             $this->fecha_pedido_cierre = $order_dates->close_request;
             $this->fecha_pedido_llegada = $order_dates->arrival_date;
         }
-
-
         /*---------------Obtener órdenes del implemento ya cerradas-----------------------------*/
         $ordenes_cerradas = OrderRequest::where('user_id', auth()->user()->id)->where('state', 'CERRADO')->get();
         /*-------------------------------------Almacenar los id de las solicitudes ya cerradas------------*/
@@ -252,7 +250,7 @@ class RequestMaterial extends Component
             }
         }
         /*---------Obtener el detalle de los materiales pedidos---------------------------------*/
-        $orderRequestDetails = OrderRequestDetail::where('order_request_id', $this->id_request)->orderBy('id', 'desc')->get();
+        $orderRequestDetails = DB::table('lista_de_materiales_pedidos')->where('order_request_id',$this->id_request)->select('id','sku','item','type','quantity','abbreviation','ordered_quantity','used_quantity','stock')->get();
         /*-----------Obtener el detalle de los materiales nuevos pedidos--------------------------*/
         $orderRequestNewItems = OrderRequestNewItem::where('order_request_id', $this->id_request)->orderBy('id', 'desc')->get();
 

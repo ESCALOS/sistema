@@ -2,7 +2,7 @@
     @if ($fecha_pedido != "")
 <!-- Fecha del pedido actual  -->
     <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
-        <h1 class="font-bold text-2xl">{{$fecha_pedido}} </h1>
+        <h1 class="font-bold text-2xl text-center">{{$fecha_pedido}} </h1>
     </div>
 <!-- Filtrar operarios que tienen pedidos por zona, sede y ubicación  -->
     <div class="grid grid-cols-1 sm:grid-cols-{{$tsede > 0 ? '3' : ($tzone > 0 ? '2' : '1')}} gap-4">
@@ -81,8 +81,8 @@
             </div>
             @endif
         <!------------------------------------------- SELECT DE LOS IMPLEMENTOS ------------------------------------------------- -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 shadow-xl mb-4">
-                <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div class="py-2 bg-gray-200 rounded-md shadow-xl" style="padding-left: 1rem; padding-right:1rem">
                     <x-jet-label>Implemento: </x-jet-label>
                     <select class="form-select" style="width: 100%" wire:model="id_implemento">
                         <option value="0">Seleccione una implemento</option>
@@ -95,8 +95,8 @@
 
                 </div>
 
-                <div class="p-6">
-                    <h1 class="text-lg font-bold text-blue-500">Monto Asignado: S/.{{$monto_asignado}}</h1>
+                <div class="mt-2 py-4 bg-red-500 rounded-md">
+                    <h1 class="text-lg font-bold text-white">Monto Asignado: S/.{{$monto_asignado}}</h1>
                 </div>
             </div>
         <!-------------------------------------------TABLA DE LOS MATERIALES ------------------------------------------------- -->
@@ -111,7 +111,7 @@
                                 <h1 class="text-lg font-bold {{$monto_usado > $monto_asignado ? 'text-red-500' : 'text-green-500'}}">Precio Estimado: S/.{{number_format($monto_usado,2)}}</h1>
                             </div>
                         </div>
-                        <div style="height:180px;overflow:auto">
+                        <div style="max-height:180px;overflow:auto">
                             <table class="min-w-max w-full">
                                 <thead>
                                     <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -160,7 +160,7 @@
                                 <h1 class="text-lg font-bold {{$monto_real > $monto_asignado ? 'text-red-500' : 'text-green-500'}} ">Precio Real: S/.{{number_format($monto_real,2)}}</h1>
                             </div>
                         </div>
-                        <div style="height:180px;overflow:auto">
+                        <div style="max-height:180px;overflow:auto">
                             <table class="min-w-max w-full">
                                 <thead>
                                     <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -200,7 +200,7 @@
                         </div>
             <!-- ------------------------ TABLA DE MATERIALES RECHAZADOS ---------------------------------------  -->
                     <h1 class="text-lg font-bold">Materiales Rechazados</h1>
-                    <div style="height:180px;overflow:auto">
+                    <div style="max-height:180px;overflow:auto">
                         <table class="min-w-max w-full">
                             <thead>
                                 <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -246,7 +246,7 @@
             <button wire:loading.attr="disabled" wire:click="$emit('confirmarValidarSolicitudPedido',[{{$id_solicitud_pedido}},'{{$implemento}}',{{$monto_usado}},{{$cantidad_materiales_nuevos}}])" style="width: 200px" class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md">
                 Validar
             </button>
-            <button wire:loading.attr="disabled" wire:click="$emit('confirmarRechazarSolicitudPedido','{{$implemento}}')" style="width: 200px" class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md">
+            <button wire:loading.attr="disabled" wire:click="$emit('confirmarRechazarSolicitudPedido','{{$implemento}}')" style="width: 200px" class="px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-md ml-2">
                 Rechazar
             </button>
         @endif
@@ -282,11 +282,6 @@
                 <x-jet-input type="number" min="0" disabled style="height:30px;width: 100%" class="text-center" value="{{$precioTotal}}"/>
 
             </div>
-            <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 3 span/ 3 span">
-                <x-jet-label>Observaciones:</x-jet-label>
-                <textarea class="form-control w-full text-sm" rows=5 wire:model.defer="observation"></textarea>
-                <x-jet-input-error for="observation"/>
-            </div>
         </x-slot>
         <x-slot name="footer">
             @if ($cantidad == 0)
@@ -312,13 +307,10 @@
            Materiales Nuevos Solicitados por {{$operador}}
         </x-slot>
         <x-slot name="content">
-            <div style="height:180px;overflow:auto">
+            <div style="max-height:180px;overflow:auto">
                 <table class="min-w-max w-full">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-3 text-center">
-                                <span>Código</span>
-                            </th>
                             <th class="py-3 text-center">
                                 <span>Componentes</span>
                             </th>
@@ -333,11 +325,6 @@
                                 <td class="py-3 px-6 text-center">
                                     <div>
                                         <span class="font-medium">{{$request->new_item}} </span>
-                                    </div>
-                                </td>
-                                <td class="py-3 px-6 text-center">
-                                    <div>
-                                        <span class="font-medium">{{$request->brand}}</span>
                                     </div>
                                 </td>
                                 <td class="py-3 px-6 text-center">
@@ -367,10 +354,6 @@
             <!-- Material Solicitado por el operador -->
                 <div class="grid grid-cols-1 sm:grid-cols-2">
                     <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
-                        <x-jet-label>Marca:</x-jet-label>
-                        <x-jet-input type="text" style="height:30px;width: 100%" readonly value="{{$material_nuevo_marca}}"/>
-                    </div>
-                    <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
                         <x-jet-label>Cantidad:</x-jet-label>
                         <x-jet-input type="text" style="height:30px;width: 100%" readonly value="{{$material_nuevo_cantidad}} {{$material_nuevo_unidad_medida}}" />
                     </div>
@@ -378,7 +361,7 @@
                         <x-jet-label>Especificaciones:</x-jet-label>
                         <textarea readonly class="form-control w-full text-sm" rows=5 wire:model.defer="material_nuevo_ficha_tecnica"></textarea>
                     </div>
-                    <div class="p-2" style="margin-left:15px;margin-right:15px;grid-column: 2 span/ 2 span;height:16rem">
+                    <div class="p-2" style="margin-left:15px;margin-right:15px;grid-column: 2 span/ 2 span;max-height:16rem">
                             <img style="display:inline;height:100%" src="{{ str_replace('public','/storage',$material_nuevo_imagen) }}">
                     </div>
                 </div>
@@ -396,26 +379,6 @@
                         <x-jet-input type="text" style="height:30px;width: 100%;text-align: center" wire:model="create_material_item" />
 
                         <x-jet-input-error for="create_material_item"/>
-
-                    </div>
-                    <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
-                        <x-jet-label>Marca:</x-jet-label>
-                        <div class="grid grid-cols-4">
-                            <div style="grid-column: 3 span/ 4 span">
-                                <select class="form-select" style="width: 100%;text-align: center" wire:model='create_material_brand'>
-                                    <option value="">Seleccione una opción</option>
-                                    @foreach ($brands as $brand)
-                                        <option value="{{ $brand->id }}">{{ $brand->brand }} </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div>
-                                <button class="px-4 bg-blue-400 text-white font-bold hover:bg-blue-600 rounded-md h-2" style="height:30px" wire:click="$set('open_add_new_brand',true)">
-                                    +
-                                </button>
-                            </div>
-                        </div>
-                        <x-jet-input-error for="create_material_brand"/>
 
                     </div>
                     <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
@@ -459,42 +422,18 @@
             </div>
         </x-slot>
         <x-slot name="footer">
+        <div class="mr-2">
             <x-jet-button wire:loading.attr="disabled" wire:click="agregarMaterialNuevo()">
                 Guardar
             </x-jet-button>
+        </div>
             <div wire:loading wire:target="agregarMaterialNuevo()">
                 Registrando...
             </div>
-            <x-jet-button class="ml-2" wire:loading.attr="disabled" wire:click="$emit('confirmarRechazarMaterialNuevo','{{$material_nuevo_nombre}}')">
+            <x-jet-button wire:loading.attr="disabled" wire:click="$emit('confirmarRechazarMaterialNuevo','{{$material_nuevo_nombre}}')">
                 Rechazar
             </x-jet-button>
             <x-jet-secondary-button wire:click="$set('open_detail_new_material',false)" class="ml-2">
-                Cancelar
-            </x-jet-secondary-button>
-        </x-slot>
-    </x-jet-dialog-modal>
-<!--------------------MODAL PARA AGREGAR MARCA-------------------------->
-    <x-jet-dialog-modal maxWidth="sm" wire:model='open_add_new_brand'>
-        <x-slot name="title">
-            Agregar nueva marca
-        </x-slot>
-        <x-slot name="content">
-            <div class="py-2 text-center" style="padding-left: 1rem; padding-right:1rem">
-                <x-jet-label>Marca:</x-jet-label>
-                <x-jet-input type="text" style="height:30px;width: 100%;text-align: center" wire:model="create_new_brand" />
-
-                <x-jet-input-error for="create_new_brand"/>
-
-            </div>
-        </x-slot>
-        <x-slot name="footer">
-            <x-jet-button wire:loading.attr="disabled" wire:click="addNewBrand()">
-                Guardar
-            </x-jet-button>
-            <div wire:loading wire:target="addNewBrand()">
-                Registrando...
-            </div>
-            <x-jet-secondary-button wire:click="$set('open_add_new_brand',false)" class="ml-2">
                 Cancelar
             </x-jet-secondary-button>
         </x-slot>
