@@ -14,10 +14,14 @@ class AddTool extends Component
     public $open_tool = false;
     public $id_implemento;
     public $id_request;
-    public $tool_for_add;
+    public $tool_for_add = 0;
     public $quantity_tool_for_add = 1;
-    public $estimated_price_tool;
     public $excluidos = [];
+
+    public $measurement_unit = "UN";
+
+    public $ordered_quantity = 0;
+    public $stock = 0;
 
     protected $rules = [
         'tool_for_add' => 'required|exists:items,id',
@@ -39,7 +43,9 @@ class AddTool extends Component
     }
 
     public function updatedOpenTool(){
-        $this->reset(['tool_for_add','quantity_tool_for_add','estimated_price_tool']);
+        if(!$this->open_tool){
+            $this->resetExcept(['id_implemento','open_tool','excluidos']);
+        }
     }
 
     public function store(){
@@ -65,25 +71,13 @@ class AddTool extends Component
             'item_id' => $this->tool_for_add,
             'quantity' => $this->quantity_tool_for_add,
             'estimated_price' => $item->estimated_price,
-            'observation' => '',
         ]);
 
-        $this->reset(['tool_for_add','quantity_tool_for_add','estimated_price_tool']);
+
+        $this->reset(['tool_for_add','quantity_tool_for_add']);
         $this->open_tool = false;
         $this->emit('render');
         $this->emit('alert');
-    }
-
-    public function updatedQuantitytoolForAdd(){
-
-        if($this->quantity_tool_for_add > 0){
-            $item = Item::where('id',$this->tool_for_add)->first();
-            $precio = $item->estimated_price;
-        }else{
-            $precio = 0;
-        }
-
-        $this->estimated_price_tool = floatval($precio)*floatval($this->quantity_tool_for_add);
     }
 
     public function render()

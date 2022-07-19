@@ -2,11 +2,14 @@
 
 namespace App\Http\Livewire;
 
+use App\Models\GeneralStock;
 use App\Models\Implement;
 use App\Models\Item;
+use App\Models\OperatorStock;
 use App\Models\OrderDate;
 use App\Models\OrderRequest;
 use App\Models\OrderRequestDetail;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -19,6 +22,11 @@ class AddPart extends Component
     public $quantity_part_for_add = 1;
     public $component_for_part = 0;
     public $excluidos = [];
+
+    public $measurement_unit = "UN";
+
+    public $ordered_quantity = 0;
+    public $stock = 0;
 
     protected $rules = [
         'component_for_part' => 'required|exists:items,id',
@@ -44,11 +52,40 @@ class AddPart extends Component
     }
 
     public function updatedOpenParte(){
-        $this->reset(['component_for_part','part_for_add','quantity_part_for_add']);
+        if(!$this->open_parte){
+            $this->resetExcept(['id_implemento','open_parte','excluidos']);
+        }
     }
 
     public function updatedComponentForPart(){
-        $this->reset(['part_for_add','quantity_part_for_add']);
+        $this->resetExcept(['id_implemento','open_parte','component_for_part','excluidos']);
+    }
+
+    public function updatedPartForAdd(){
+        if($this->part_for_add > 0){
+
+            $this->measurement_unit = Item::find($this->part_for_add)->measurementUnit->abbreviation;
+
+            if(OperatorStock::where('user_id',Auth::user()->id)->where('item_id',$this->part_for_add)->exists()){
+                $operator_stock = OperatorStock::where('user_id',Auth::user()->id)->where('item_id',$this->part_for_add)->first();
+                $this->ordered_quantity = floatval($operator_stock->ordered_quantity - $operator_stock->used_quantity);
+            }else{
+                $this->ordered_quantity = 0;
+            }
+
+            $stock = GeneralStock::join('general_warehouses',function($join){
+                $join->on('general_warehouses.id','=','general_stocks.general_warehouse_id');
+            })->where('general_stocks.item_id',$this->part_for_add)->where('general_warehouses.sede_id',Auth::user()->location->sede_id);
+
+            if($stock->exists()){
+                $stock_del_item = $stock->select('general_stocks.quantity')->first();
+                $this->stock = floatval($stock_del_item->quantity);
+            }else{
+                $this->stock = 0;
+            }
+        }else{
+            $this->reset('ordered_quantity','stock','measurement_unit');
+        }
     }
 
     public function store(){
@@ -74,7 +111,6 @@ class AddPart extends Component
             'item_id' => $this->part_for_add,
             'quantity' => $this->quantity_part_for_add,
             'estimated_price' => $item->estimated_price,
-            'observation' => '',
         ]);
 
         $this->reset(['part_for_add','quantity_part_for_add']);

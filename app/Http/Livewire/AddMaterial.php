@@ -2,14 +2,14 @@
 
 namespace App\Http\Livewire;
 
+use App\Models\GeneralStock;
 use App\Models\Implement;
 use App\Models\Item;
+use App\Models\OperatorStock;
 use App\Models\OrderDate;
 use App\Models\OrderRequest;
 use App\Models\OrderRequestDetail;
-use App\Models\PreStockpile;
-use App\Models\PreStockpileDate;
-use App\Models\PreStockpileDetail;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class AddMaterial extends Component
@@ -17,9 +17,14 @@ class AddMaterial extends Component
     public $open_material = false;
     public $id_implemento;
     public $id_request;
-    public $material_for_add;
+    public $material_for_add = 0;
     public $quantity_material_for_add = 1;
     public $excluidos = [];
+
+    public $measurement_unit = "UN";
+
+    public $ordered_quantity = 0;
+    public $stock = 0;
 
     protected $rules = [
         'material_for_add' => 'required|exists:items,id',
@@ -40,39 +45,68 @@ class AddMaterial extends Component
         $this->id_implemento = $id_implemento->id;
         $this->excluidos = [];
     }
+
     public function updatedOpenMaterial(){
-        $this->reset(['material_for_add','quantity_material_for_add']);
+        if(!$this->open_material){
+            $this->resetExcept(['id_implemento','open_material','excluidos']);
+        }
+    }
+
+    public function updatedMaterialForAdd(){
+        if($this->material_for_add > 0){
+
+            $this->measurement_unit = Item::find($this->material_for_add)->measurementUnit->abbreviation;
+
+            if(OperatorStock::where('user_id',Auth::user()->id)->where('item_id',$this->material_for_add)->exists()){
+                $operator_stock = OperatorStock::where('user_id',Auth::user()->id)->where('item_id',$this->material_for_add)->first();
+                $this->ordered_quantity = floatval($operator_stock->ordered_quantity - $operator_stock->used_quantity);
+            }else{
+                $this->ordered_quantity = 0;
+            }
+
+            $stock = GeneralStock::join('general_warehouses',function($join){
+                $join->on('general_warehouses.id','=','general_stocks.general_warehouse_id');
+            })->where('general_stocks.item_id',$this->material_for_add)->where('general_warehouses.sede_id',Auth::user()->location->sede_id);
+
+            if($stock->exists()){
+                $stock_del_item = $stock->select('general_stocks.quantity')->first();
+                $this->stock = floatval($stock_del_item->quantity);
+            }else{
+                $this->stock = 0;
+            }
+        }else{
+            $this->reset('ordered_quantity','stock','measurement_unit');
+        }
     }
 
     public function store(){
         $this->validate();
 
-        if(PreStockpile::where('implement_id',$this->id_implemento)->where('state','PENDIENTE')->exists()){
-            $pre_stockpile = PreStockpile::where('implement_id',$this->id_implemento)->where('state','PENDIENTE')->first();
+        if(OrderRequest::where('implement_id',$this->id_implemento)->where('state','PENDIENTE')->exists()){
+            $order_request = OrderRequest::where('implement_id',$this->id_implemento)->where('state','PENDIENTE')->first();
         }else{
-            $pre_stockpile_dates = PreStockpileDate::where('state','ABIERTO')->first();
-            $pre_stockpile = PreStockpile::create([
+            $order_dates = OrderDate::where('state','ABIERTO')->first();
+            $order_request = OrderRequest::create([
                 'user_id' => auth()->user()->id,
-                'implement_id' => $this->idmplemento,
-                'ceco_id' => $this->id_ceco,
-                'pre_stockpile_date_id' =>  $pre_stockpile_dates->id
+                'implement_id' => $this->id_implemento,
+                'order_date_id' => $order_dates->id
             ]);
+            $this->id_request = $order_request->id;
         }
 
-        $this->id_pre_reserva = $pre_stockpile->id;
+        $this->id_request = $order_request->id;
 
-        $item = Item::find($this->component_for_add);
-        PreStockpileDetail::create([
-            'pre_stockpile_id' => $this->id_pre_reserva,
-            'item_id' => $this->component_for_add,
-            'quantity' => $this->quantity_component_for_add,
-            'price' => $item->estimated_price,
-            'warehouse_id' => auth()->user()->location->warehouse->id,
+        $item = Item::find($this->material_for_add);
+        OrderRequestDetail::create([
+            'order_request_id' => $this->id_request,
+            'item_id' => $this->material_for_add,
+            'quantity' => $this->quantity_material_for_add,
+            'estimated_price' => $item->estimated_price,
         ]);
 
-        $this->reset(['component_for_add','quantity_component_for_add']);
-        $this->open_componente = false;
-        $this->emit('render',$this->id_pre_reserva);
+        $this->reset(['material_for_add','quantity_material_for_add']);
+        $this->open_material = false;
+        $this->emit('render');
         $this->emit('alert');
     }
 

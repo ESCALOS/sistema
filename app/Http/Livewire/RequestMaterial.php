@@ -31,6 +31,7 @@ class RequestMaterial extends Component
     public $monto_asignado = 0;
     public $monto_usado = 0;
 
+    public $fecha_pedido_id = 0;
     public $fecha_pedido = "";
     public $fecha_pedido_abierto;
     public $fecha_pedido_cierre;
@@ -217,70 +218,69 @@ class RequestMaterial extends Component
     public function render(){
 
         /*---------------Obtener la fecha del pedido------------------------------------------*/
-        if(OrderDate::where('state','ABIERTO')->exists()){
-            $order_dates = OrderDate::where('state','ABIERTO')->first();
-
-            $this->fecha_pedido = $order_dates->order_date;
-            $this->fecha_pedido = date("d-m-Y", strtotime($this->fecha_pedido));
-            $this->fecha_pedido_abierto = $order_dates->open_request;
-            $this->fecha_pedido_cierre = $order_dates->close_request;
-            $this->fecha_pedido_llegada = $order_dates->arrival_date;
-        }
-        /*---------------Obtener órdenes del implemento ya cerradas-----------------------------*/
-        $ordenes_cerradas = OrderRequest::where('user_id', auth()->user()->id)->where('state', 'CERRADO')->get();
-        /*-------------------------------------Almacenar los id de las solicitudes ya cerradas------------*/
-        if($ordenes_cerradas != null){
-            foreach($ordenes_cerradas as $ordenes_cerrada){
-                array_push($this->excluidos,$ordenes_cerrada->implement_id);
+            if(OrderDate::where('state','ABIERTO')->exists()){
+                $order_dates = OrderDate::where('state','ABIERTO')->first();
+                $this->fecha_pedido_id = $order_dates->id;
+                $this->fecha_pedido = $order_dates->order_date;
+                $this->fecha_pedido = date("d-m-Y", strtotime($this->fecha_pedido));
+                $this->fecha_pedido_abierto = $order_dates->open_request;
+                $this->fecha_pedido_cierre = $order_dates->close_request;
+                $this->fecha_pedido_llegada = $order_dates->arrival_date;
             }
-        }
+        /*---------------Obtener órdenes del implemento ya cerradas-----------------------------*/
+            $ordenes_cerradas = OrderRequest::where('user_id', auth()->user()->id)->where('state', 'CERRADO')->orwhere('state','VALIDADO')->where('order_date_id',$this->fecha_pedido_id)->get();
+        /*-------------------------------------Almacenar los id de las solicitudes ya cerradas------------*/
+            if($ordenes_cerradas != null){
+                foreach($ordenes_cerradas as $ordenes_cerrada){
+                    array_push($this->excluidos,$ordenes_cerrada->implement_id);
+                }
+            }
         /*---------------------Obtener los implementos con solicitudes abiertas-------------------------------*/
-        $implements = Implement::where('user_id', auth()->user()->id)->whereNotIn('id',$this->excluidos)->get();
+            $implements = Implement::where('user_id', auth()->user()->id)->whereNotIn('id',$this->excluidos)->get();
         /*----Obtener las unidades de medida-----------------------------------*/
-        $measurement_units = MeasurementUnit::all();
+            $measurement_units = MeasurementUnit::all();
 
         /*--------------Obtener los datos de la cabecera de la solicitud de pedido---------------------*/
-        if ($this->id_implemento > 0) {
-            $orderRequest = OrderRequest::where('implement_id', $this->id_implemento)->where('state', 'PENDIENTE')->first();
-            if ($orderRequest != null) {
-                $this->id_request = $orderRequest->id;
-
-            } else {
-                $this->id_request = 0;
+            if ($this->id_implemento > 0) {
+                if (OrderRequest::where('implement_id', $this->id_implemento)->where('state', 'PENDIENTE')->where('order_date_id',$this->fecha_pedido_id)->exists()) {
+                    $orderRequest = OrderRequest::where('implement_id', $this->id_implemento)->where('state', 'PENDIENTE')->where('order_date_id',$this->fecha_pedido_id)->first();
+                    $this->id_request = $orderRequest->id;
+                } else {
+                    $this->id_request = 0;
+                }
             }
-        }
         /*---------Obtener el detalle de los materiales pedidos---------------------------------*/
-        $orderRequestDetails = DB::table('lista_de_materiales_pedidos')->where('order_request_id',$this->id_request)->select('id','sku','item','type','quantity','abbreviation','ordered_quantity','used_quantity','stock')->get();
+            $orderRequestDetails = DB::table('lista_de_materiales_pedidos')->where('order_request_id',$this->id_request)->select('id','sku','item','type','quantity','abbreviation','ordered_quantity','used_quantity','stock')->get();
         /*-----------Obtener el detalle de los materiales nuevos pedidos--------------------------*/
-        $orderRequestNewItems = OrderRequestNewItem::where('order_request_id', $this->id_request)->orderBy('id', 'desc')->get();
+            $orderRequestNewItems = OrderRequestNewItem::where('order_request_id', $this->id_request)->where('state','PENDIENTE')->orderBy('id', 'desc')->get();
 
         /*--------------Obtener los datos del implemento y su ceco respectivo----------------------------*/
-        if ($this->id_implemento > 0) {
-            $implement = Implement::find($this->id_implemento);
-            $this->implemento = $implement->implementModel->implement_model.' '.$implement->implement_number;
+            if ($this->id_implemento > 0) {
+                    $implement = Implement::find($this->id_implemento);
+                    $this->implemento = $implement->implementModel->implement_model.' '.$implement->implement_number;
 
-             /*--------Obtener las fechas de llegada del pedido-------------------------------------*/
-            $fecha_llegada1 = Carbon::parse($this->fecha_pedido_llegada);
-            $fecha_llegada2 = $fecha_llegada1->addMonth();
-            /*---------------------Obtener el monto Asignado para los meses de llegada del pedido-------------*/
-            $this->monto_asignado = CecoAllocationAmount::where('ceco_id',$implement->ceco_id)->whereDate('date','>=',$this->fecha_pedido_llegada)->whereDate('date','<=',$fecha_llegada2)->sum('allocation_amount');
+                /*--------Obtener las fechas de llegada del pedido-------------------------------------*/
+                    $fecha_llegada1 = Carbon::parse($this->fecha_pedido_llegada);
+                    $fecha_llegada2 = $fecha_llegada1->addMonth();
+                /*---------------------Obtener el monto Asignado para los meses de llegada del pedido-------------*/
+                    $this->monto_asignado = CecoAllocationAmount::where('ceco_id',$implement->ceco_id)->whereDate('date','>=',$this->fecha_pedido_llegada)->whereDate('date','<=',$fecha_llegada2)->sum('allocation_amount');
 
-            /*-------------------Obtener el monto usado por el ceco en total-------------------------------------------*/
-            $this->monto_usado = OrderRequestDetail::join('order_requests', function ($join){
-                                                        $join->on('order_requests.id','=','order_request_details.order_request_id');
-                                                    })->join('implements', function ($join){
-                                                        $join->on('implements.id','=','order_requests.implement_id');
-                                                    })->where('implements.ceco_id','=',$implement->ceco_id)
-                                                      ->where('order_request_details.state','=','PENDIENTE')
-                                                      ->where('order_request_details.quantity','<>',0)
-                                                      ->selectRaw('SUM(order_request_details.estimated_price*order_request_details.quantity) AS total')
-                                                      ->value('total');
+                /*-------------------Obtener el monto usado por el ceco en total-------------------------------------------*/
+                    $this->monto_usado = OrderRequestDetail::join('order_requests', function ($join){
+                                                                $join->on('order_requests.id','=','order_request_details.order_request_id');
+                                                            })->join('implements', function ($join){
+                                                                $join->on('implements.id','=','order_requests.implement_id');
+                                                            })->where('implements.ceco_id','=',$implement->ceco_id)
+                                                            ->where('order_request_details.state','=','PENDIENTE')
+                                                            ->where('order_request_details.quantity','<>',0)
+                                                            ->selectRaw('SUM(order_request_details.estimated_price*order_request_details.quantity) AS total')
+                                                            ->value('total');
 
-        } else {
-            $this->monto_asignado = 0;
-            $this->monto_usado = 0;
-        }
+            } else {
+                $this->monto_asignado = 0;
+                $this->monto_usado = 0;
+            }
 
-        return view('livewire.request-material', compact('implements', 'orderRequestDetails', 'orderRequestNewItems', 'measurement_units'));
+            return view('livewire.request-material', compact('implements', 'orderRequestDetails', 'orderRequestNewItems', 'measurement_units'));
     }
 }
