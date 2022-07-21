@@ -28,7 +28,7 @@ class CreateTractorReport extends Component
     public $hour_meter_end;
     public $observations = "";
 
-    
+
     public $usuarios_usados = [];
     public $tractores_usados = [];
     public $implementos_usados = [];
@@ -36,7 +36,7 @@ class CreateTractorReport extends Component
     protected $rules = [
         'location' => 'required|exists:locations,id',
         'lote' => 'required|exists:lotes,id',
-        'correlative' => 'required',
+        'correlative' => 'required|unique:tractor_reports',
         'date' => 'required|date|date_format:Y-m-d',
         'shift' => 'required',
         'user' => 'required|exists:users,id',

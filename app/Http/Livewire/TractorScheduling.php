@@ -145,6 +145,7 @@ class TractorScheduling extends Component
 
     public function render()
     {
+        $this->reset('usuarios_usados','tractores_usados','implementos_usados');
         $sede_general = Auth::user()->location->sede->id;
         $filtro_tractores = Tractor::join('locations',function($join){
             $join->on('locations.id','=','tractors.location_id');
