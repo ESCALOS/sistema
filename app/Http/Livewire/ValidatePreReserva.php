@@ -13,8 +13,6 @@ use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
-use phpDocumentor\Reflection\Types\This;
-use Prophecy\Promise\ThrowPromise;
 
 class ValidatePreReserva extends Component
 {

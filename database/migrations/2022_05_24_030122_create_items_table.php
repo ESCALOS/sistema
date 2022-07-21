@@ -17,7 +17,6 @@ return new class extends Migration
             $table->id();
             $table->string('sku',15)->unique();
             $table->string('item')->unique();
-            $table->foreignId('brand_id')->constrained();
             $table->foreignId('measurement_unit_id')->constrained();
             $table->decimal('estimated_price',8,2);
             $table->enum('type',['FUNGIBLE','COMPONENTE','PIEZA','HERRAMIENTA']);

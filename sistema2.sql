@@ -2,8 +2,8 @@
 -- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
--- Servidor: localhost
--- Tiempo de generación: 19-07-2022 a las 21:26:52
+-- Servidor: 127.0.0.1
+-- Tiempo de generación: 21-07-2022 a las 07:34:53
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -1020,7 +1020,9 @@ INSERT INTO `components` (`id`, `item_id`, `component`, `system_id`, `is_part`, 
 (31, 54, 'fubvgxmw', NULL, 1, '18.00', NULL, NULL),
 (32, 55, 'upvgdrsm', 5, 0, '4575.00', NULL, NULL),
 (33, 57, 'peorviek', NULL, 1, '234.00', NULL, NULL),
-(34, 59, 'qvjzldtw', 3, 0, '2974.00', NULL, NULL);
+(34, 59, 'qvjzldtw', 3, 0, '2974.00', NULL, NULL),
+(37, 87, 'VÁLVULA', NULL, 0, '105.00', NULL, NULL),
+(38, 88, 'BUJIA', NULL, 1, '272.00', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1510,7 +1512,7 @@ CREATE TABLE `general_stocks` (
   `item_id` bigint(20) UNSIGNED NOT NULL,
   `quantity` decimal(8,2) NOT NULL DEFAULT 0.00,
   `price` decimal(8,2) NOT NULL DEFAULT 0.00,
-  `general_warehouse_id` bigint(20) UNSIGNED NOT NULL,
+  `sede_id` bigint(20) UNSIGNED NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -1519,7 +1521,7 @@ CREATE TABLE `general_stocks` (
 -- Volcado de datos para la tabla `general_stocks`
 --
 
-INSERT INTO `general_stocks` (`id`, `item_id`, `quantity`, `price`, `general_warehouse_id`, `created_at`, `updated_at`) VALUES
+INSERT INTO `general_stocks` (`id`, `item_id`, `quantity`, `price`, `sede_id`, `created_at`, `updated_at`) VALUES
 (1, 1, '75.00', '345.00', 2, '2022-07-18 17:16:21', '2022-07-18 17:24:05'),
 (2, 1, '64.00', '238.00', 1, '2022-07-18 17:16:21', '2022-07-18 19:07:09'),
 (3, 3, '2.00', '28.00', 1, '2022-07-18 19:12:11', '2022-07-18 19:12:11'),
@@ -1537,7 +1539,7 @@ CREATE TABLE `general_stock_details` (
   `movement` enum('INGRESO','SALIDA') NOT NULL DEFAULT 'INGRESO',
   `quantity` decimal(8,2) NOT NULL DEFAULT 0.00,
   `price` decimal(8,2) NOT NULL DEFAULT 0.00,
-  `general_warehouse_id` bigint(20) UNSIGNED NOT NULL,
+  `sede_id` bigint(20) UNSIGNED NOT NULL,
   `is_canceled` tinyint(1) NOT NULL DEFAULT 0,
   `order_date_id` bigint(20) UNSIGNED DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -1548,7 +1550,7 @@ CREATE TABLE `general_stock_details` (
 -- Volcado de datos para la tabla `general_stock_details`
 --
 
-INSERT INTO `general_stock_details` (`id`, `item_id`, `movement`, `quantity`, `price`, `general_warehouse_id`, `is_canceled`, `order_date_id`, `created_at`, `updated_at`) VALUES
+INSERT INTO `general_stock_details` (`id`, `item_id`, `movement`, `quantity`, `price`, `sede_id`, `is_canceled`, `order_date_id`, `created_at`, `updated_at`) VALUES
 (3, 1, 'INGRESO', '60.00', '4.50', 2, 1, NULL, '2022-07-18 17:16:21', '2022-07-18 17:18:02'),
 (4, 1, 'INGRESO', '20.00', '4.50', 1, 1, NULL, '2022-07-18 17:16:21', '2022-07-18 17:17:58'),
 (5, 1, 'INGRESO', '15.00', '5.00', 2, 1, NULL, '2022-07-18 17:16:46', '2022-07-18 17:17:52'),
@@ -1567,17 +1569,17 @@ CREATE TRIGGER `actualizar_movimiento_stock_general` AFTER UPDATE ON `general_st
 	DECLARE last_price DECIMAL(8,2);
 	IF new.is_canceled THEN
     	IF new.movement = "INGRESO" THEN
-        	UPDATE general_stocks SET quantity = quantity - new.quantity, price = price - (new.price*new.quantity) WHERE item_id = new.item_id AND general_warehouse_id = new.general_warehouse_id;
+        	UPDATE general_stocks SET quantity = quantity - new.quantity, price = price - (new.price*new.quantity) WHERE item_id = new.item_id AND sede_id = new.sede_id;
         ELSE
-        	UPDATE general_stocks SET quantity = quantity + new.quantity, price = price + (new.price*new.quantity) WHERE item_id = new.item_id AND general_warehouse_id = new.general_warehouse_id;
+        	UPDATE general_stocks SET quantity = quantity + new.quantity, price = price + (new.price*new.quantity) WHERE item_id = new.item_id AND sede_id = new.sede_id;
         END IF;
     ELSE
     	IF new.movement = "INGRESO" THEN
-        	UPDATE general_stocks SET quantity = quantity - old.quantity + new.quantity, price = price - (old.price - new.price)*quantity WHERE item_id = new.item_id AND general_warehouse_id = new.general_warehouse_id;
-            SELECT price INTO last_price FROM general_stock_details WHERE item_id = new.item_id AND general_warehouse_id = new.general_warehouse_id AND is_canceled = 0;
+        	UPDATE general_stocks SET quantity = quantity - old.quantity + new.quantity, price = price - (old.price - new.price)*quantity WHERE item_id = new.item_id AND sede_id = new.sede_id;
+            SELECT price INTO last_price FROM general_stock_details WHERE item_id = new.item_id AND sede_id = new.sede_id AND is_canceled = 0;
             UPDATE items SET estimated_price = last_price WHERE item_id = new.item_id;
         ELSE
-            UPDATE general_stocks SET quantity = quantity + old.quantity - new.quantity, price = price + (old.price - new.price)*quantity WHERE item_id = new.item_id AND general_warehouse_id = new.general_warehouse_id;
+            UPDATE general_stocks SET quantity = quantity + old.quantity - new.quantity, price = price + (old.price - new.price)*quantity WHERE item_id = new.item_id AND sede_id = new.sede_id;
             END IF;
     END IF;
 END
@@ -1586,14 +1588,14 @@ DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER `insertar_movimiento_stock_general` AFTER INSERT ON `general_stock_details` FOR EACH ROW BEGIN
     IF(new.movement = "INGRESO") THEN
-		IF EXISTS(SELECT * FROM general_stocks WHERE item_id = new.item_id AND general_warehouse_id = new.general_warehouse_id) THEN
-        	UPDATE general_stocks SET quantity = quantity + new.quantity, price = price + (new.price*new.quantity) WHERE item_id = new.item_id AND general_warehouse_id = new.general_warehouse_id;
+		IF EXISTS(SELECT * FROM general_stocks WHERE item_id = new.item_id AND sede_id = new.sede_id) THEN
+        	UPDATE general_stocks SET quantity = quantity + new.quantity, price = price + (new.price*new.quantity) WHERE item_id = new.item_id AND sede_id = new.sede_id;
         ELSE
-    		INSERT INTO general_stocks (item_id, quantity, price, general_warehouse_id) VALUES (new.item_id, new.quantity, new.price*new.quantity, new.general_warehouse_id);
+    		INSERT INTO general_stocks (item_id, quantity, price, general_warehouse_id) VALUES (new.item_id, new.quantity, new.price*new.quantity, new.sede_id);
         END IF;
         UPDATE items SET i.estimated_price = new.price WHERE id = new.item_id;
     ELSE
-		UPDATE general_stocks SET quantity = quantity - new.quantity, price = price - (new.price*new.quantity) WHERE item_id = new.item_id AND general_warehouse_id = new.general_warehouse_id;
+		UPDATE general_stocks SET quantity = quantity - new.quantity, price = price - (new.price*new.quantity) WHERE item_id = new.item_id AND sede_id = new.sede_id;
     END IF;
 END
 $$
@@ -1762,15 +1764,15 @@ CREATE TABLE `items` (
 --
 
 INSERT INTO `items` (`id`, `sku`, `item`, `measurement_unit_id`, `estimated_price`, `type`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, '55268423', 'emibwyfg', 1, '390.00', 'FUNGIBLE', 0, '2022-06-20 21:21:55', '2022-07-20 00:26:16'),
+(1, '55268423', 'emibwyfg', 1, '250.00', 'FUNGIBLE', 0, '2022-06-20 21:21:55', '2022-07-21 10:30:13'),
 (2, '93430686', 'fenphxjv', 8, '328.66', 'COMPONENTE', 0, '2022-06-20 21:21:55', '2022-06-20 21:21:55'),
-(3, '80410193', 'uodoiizm', 15, '692.98', 'PIEZA', 1, '2022-06-20 21:21:55', '2022-06-20 21:21:55'),
+(3, '80410193', 'uodoiizm', 15, '400.00', 'PIEZA', 1, '2022-06-20 21:21:55', '2022-07-21 10:29:22'),
 (4, '32172961', 'inqxlhvr', 25, '459.05', 'PIEZA', 0, '2022-06-20 21:21:55', '2022-06-20 21:21:55'),
-(5, '24557228', 'ajshyciq', 35, '317.70', 'FUNGIBLE', 0, '2022-06-20 21:21:55', '2022-06-20 21:21:55'),
+(5, '24557228', 'ajshyciq', 35, '150.00', 'FUNGIBLE', 0, '2022-06-20 21:21:55', '2022-07-21 10:30:20'),
 (6, '54017263', 'lsbacktu', 6, '353.62', 'FUNGIBLE', 0, '2022-06-20 21:21:55', '2022-06-20 21:21:55'),
 (7, '88284457', 'kuvozafk', 12, '521.02', 'HERRAMIENTA', 0, '2022-06-20 21:21:55', '2022-06-20 21:21:55'),
 (8, '44888932', 'hlfqhqzs', 36, '563.25', 'HERRAMIENTA', 0, '2022-06-20 21:21:55', '2022-06-20 21:21:55'),
-(9, '63566827', 'ynxsloty', 13, '362.42', 'PIEZA', 1, '2022-06-20 21:21:55', '2022-06-20 21:21:55'),
+(9, '63566827', 'ynxsloty', 13, '120.00', 'PIEZA', 1, '2022-06-20 21:21:55', '2022-07-21 10:29:42'),
 (10, '76748747', 'vdmjztzo', 46, '255.15', 'COMPONENTE', 0, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
 (11, '56684879', 'exitexcs', 7, '405.08', 'FUNGIBLE', 0, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
 (12, '79831941', 'vgldtuea', 1, '289.01', 'HERRAMIENTA', 0, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
@@ -1782,10 +1784,10 @@ INSERT INTO `items` (`id`, `sku`, `item`, `measurement_unit_id`, `estimated_pric
 (18, '06619500', 'jrnuwort', 2, '276.26', 'COMPONENTE', 0, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
 (19, '21102998', 'glqsvril', 7, '488.01', 'COMPONENTE', 0, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
 (20, '47215073', 'avpaglsu', 24, '642.75', 'HERRAMIENTA', 1, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
-(21, '81323780', 'qrrmsgax', 15, '785.44', 'PIEZA', 0, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
+(21, '81323780', 'qrrmsgax', 15, '500.00', 'PIEZA', 0, '2022-06-20 21:21:56', '2022-07-21 10:29:35'),
 (22, '39157590', 'ybyvnshl', 2, '391.84', 'FUNGIBLE', 0, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
 (23, '98004376', 'tqgvkyjd', 12, '973.03', 'COMPONENTE', 1, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
-(24, '36059421', 'hnvixqmu', 47, '577.05', 'PIEZA', 0, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
+(24, '36059421', 'hnvixqmu', 47, '350.00', 'PIEZA', 0, '2022-06-20 21:21:56', '2022-07-21 10:30:33'),
 (25, '95868526', 'nnxqjpih', 25, '289.79', 'PIEZA', 0, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
 (26, '48468841', 'ztypliaa', 13, '228.07', 'PIEZA', 0, '2022-06-20 21:21:57', '2022-06-20 21:21:57'),
 (27, '42247040', 'uufgzlwz', 29, '888.74', 'COMPONENTE', 1, '2022-06-20 21:21:57', '2022-06-20 21:21:57'),
@@ -1805,7 +1807,7 @@ INSERT INTO `items` (`id`, `sku`, `item`, `measurement_unit_id`, `estimated_pric
 (41, '55132606', 'sxuwykmm', 40, '803.68', 'HERRAMIENTA', 1, '2022-06-20 21:21:57', '2022-06-20 21:21:57'),
 (42, '19702921', 'ytqwfjkt', 13, '497.07', 'HERRAMIENTA', 1, '2022-06-20 21:21:57', '2022-06-20 21:21:57'),
 (43, '91153538', 'pvphmrrt', 13, '984.46', 'COMPONENTE', 0, '2022-06-20 21:21:57', '2022-06-20 21:21:57'),
-(44, '88209620', 'odzxmwyq', 3, '954.65', 'PIEZA', 1, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
+(44, '88209620', 'odzxmwyq', 3, '30.00', 'PIEZA', 1, '2022-06-20 21:21:58', '2022-07-21 10:30:06'),
 (45, '23261667', 'spnpzerr', 22, '894.30', 'COMPONENTE', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (46, '01253032', 'abqkzfka', 14, '697.98', 'COMPONENTE', 1, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (47, '10226033', 'tdtlgqur', 32, '245.22', 'COMPONENTE', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
@@ -1813,12 +1815,12 @@ INSERT INTO `items` (`id`, `sku`, `item`, `measurement_unit_id`, `estimated_pric
 (49, '42080919', 'tkszkird', 34, '945.11', 'HERRAMIENTA', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (50, '20962715', 'sncjkzkm', 10, '846.80', 'FUNGIBLE', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (51, '35177831', 'igkjtofr', 11, '368.41', 'COMPONENTE', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
-(52, '13254575', 'lxlrfbxf', 2, '216.64', 'PIEZA', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
+(52, '13254575', 'lxlrfbxf', 2, '100.00', 'PIEZA', 0, '2022-06-20 21:21:58', '2022-07-21 10:29:53'),
 (53, '34323256', 'tjhhvizw', 13, '952.16', 'PIEZA', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (54, '36718680', 'fubvgxmw', 16, '675.23', 'PIEZA', 1, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (55, '01411861', 'upvgdrsm', 29, '586.61', 'COMPONENTE', 1, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (56, '63768263', 'uezoavoy', 1, '918.22', 'HERRAMIENTA', 1, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
-(57, '66196453', 'peorviek', 46, '502.17', 'PIEZA', 1, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
+(57, '66196453', 'peorviek', 46, '200.00', 'PIEZA', 1, '2022-06-20 21:21:58', '2022-07-21 10:29:27'),
 (58, '85923667', 'qwieldov', 1, '483.13', 'HERRAMIENTA', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (59, '55183394', 'qvjzldtw', 50, '375.49', 'COMPONENTE', 1, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (60, '88387187', 'ouenaesm', 25, '473.77', 'FUNGIBLE', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
@@ -1835,7 +1837,14 @@ INSERT INTO `items` (`id`, `sku`, `item`, `measurement_unit_id`, `estimated_pric
 (73, '3325633', 'arduino mega2560', 3, '150.00', 'HERRAMIENTA', 1, '2022-07-11 12:13:43', '2022-07-11 12:13:43'),
 (74, '5225', 'arduino mega 3560', 7, '60.00', 'HERRAMIENTA', 1, '2022-07-11 20:38:40', '2022-07-11 20:38:40'),
 (75, '3652522', 'ruka 2.0', 12, '63.00', 'FUNGIBLE', 1, '2022-07-19 07:42:44', '2022-07-19 07:42:44'),
-(76, '145226', 'kotori 2.0', 1, '36.00', 'FUNGIBLE', 1, '2022-07-19 08:15:28', '2022-07-19 08:15:28');
+(76, '145226', 'kotori 2.0', 1, '36.00', 'FUNGIBLE', 1, '2022-07-19 08:15:28', '2022-07-19 08:15:28'),
+(85, '6933', 'LLAVE 9\"', 51, '26.30', 'HERRAMIENTA', 1, '2022-07-21 08:36:11', '2022-07-21 08:36:11'),
+(86, '5236', 'PERNO 1/2\"', 51, '12.00', 'FUNGIBLE', 1, '2022-07-21 08:36:11', '2022-07-21 08:36:11'),
+(87, '3622', 'VÁLVULA', 51, '500.00', 'COMPONENTE', 1, '2022-07-21 08:36:11', '2022-07-21 08:36:11'),
+(88, '2511', 'BUJIA', 51, '240.00', 'PIEZA', 1, '2022-07-21 08:36:11', '2022-07-21 08:36:11'),
+(89, '4577', 'PINTURA', 53, '36.00', 'FUNGIBLE', 1, '2022-07-21 08:36:11', '2022-07-21 08:36:11'),
+(90, '6352', 'CAL', 52, '52.00', 'FUNGIBLE', 1, '2022-07-21 08:36:11', '2022-07-21 08:36:11'),
+(91, '4588', 'GUANTES', 54, '8.50', 'FUNGIBLE', 1, '2022-07-21 08:36:11', '2022-07-21 08:36:11');
 
 --
 -- Disparadores `items`
@@ -1943,10 +1952,10 @@ CREATE TABLE `locations` (
 --
 
 INSERT INTO `locations` (`id`, `code`, `location`, `sede_id`, `created_at`, `updated_at`) VALUES
-(1, '461330', 'molestias', 1, '2022-06-20 21:21:36', '2022-06-20 21:21:36'),
-(2, '857147', 'omnis', 1, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
-(3, '639678', 'distinctio', 2, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(4, '719304', 'non', 2, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
+(1, '461330', 'CHINCHA ALTA', 1, '2022-06-20 21:21:36', '2022-06-20 21:21:36'),
+(2, '857147', 'CHINCHA BAJA', 1, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
+(3, '639678', 'LOS CASTILLOS', 2, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(4, '719304', 'SANTA MARGARITA', 2, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
 (5, '063994', 'ad', 3, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
 (6, '979452', 'occaecati', 3, '2022-06-20 21:21:40', '2022-06-20 21:21:40'),
 (7, '378233', 'in', 4, '2022-06-20 21:21:40', '2022-06-20 21:21:40'),
@@ -2057,7 +2066,11 @@ INSERT INTO `measurement_units` (`id`, `measurement_unit`, `abbreviation`, `crea
 (47, 'facere', 'zvy', '2022-06-20 21:21:46', '2022-06-20 21:21:46'),
 (48, 'distinctio', 'dmm', '2022-06-20 21:21:46', '2022-06-20 21:21:46'),
 (49, 'beatae', 'mgn', '2022-06-20 21:21:46', '2022-06-20 21:21:46'),
-(50, 'possimus', 'qsc', '2022-06-20 21:21:46', '2022-06-20 21:21:46');
+(50, 'possimus', 'qsc', '2022-06-20 21:21:46', '2022-06-20 21:21:46'),
+(51, 'UNIDAD', 'UN', NULL, NULL),
+(52, 'KILOGRAMO', 'KG', NULL, NULL),
+(53, 'GALÓN', 'GL', NULL, NULL),
+(54, 'PAR', 'PAR', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -2335,7 +2348,7 @@ INSERT INTO `order_requests` (`id`, `user_id`, `implement_id`, `state`, `validat
 (101, 1, 1, 'PENDIENTE', NULL, 0, 1, '2022-07-16 16:21:09', '2022-07-16 16:21:09'),
 (102, 2, 2, 'PENDIENTE', NULL, 0, 1, '2022-07-16 16:21:12', '2022-07-16 16:21:12'),
 (103, 3, 3, 'PENDIENTE', NULL, 0, 1, '2022-07-16 16:21:16', '2022-07-16 16:21:16'),
-(104, 4, 4, 'CERRADO', 4, 0, 1, '2022-07-16 16:21:19', '2022-07-19 19:14:33'),
+(104, 4, 4, 'CERRADO', 4, 0, 1, '2022-07-16 16:21:19', '2022-07-21 05:32:27'),
 (105, 5, 5, 'PENDIENTE', NULL, 0, 1, '2022-07-16 16:21:21', '2022-07-16 16:21:21'),
 (106, 6, 6, 'PENDIENTE', NULL, 0, 1, '2022-07-16 16:21:24', '2022-07-16 16:21:24'),
 (107, 7, 7, 'PENDIENTE', NULL, 0, 1, '2022-07-16 16:21:25', '2022-07-16 16:21:25'),
@@ -2410,12 +2423,12 @@ INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quant
 (28, 103, 21, '11.00', '785.44', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:17', '2022-07-16 16:21:17'),
 (29, 103, 44, '10.00', '954.65', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:17', '2022-07-16 16:21:18'),
 (30, 103, 52, '4.00', '216.64', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:18', '2022-07-16 16:21:18'),
-(32, 104, 3, '2.00', '692.98', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:19', '2022-07-20 00:15:44'),
-(34, 104, 57, '2.00', '502.17', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:19', '2022-07-20 00:15:47'),
-(35, 104, 9, '2.00', '362.42', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:20', '2022-07-20 00:15:33'),
-(36, 104, 21, '2.00', '785.44', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:20', '2022-07-20 00:15:40'),
-(37, 104, 44, '2.00', '954.65', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:20', '2022-07-20 00:15:36'),
-(38, 104, 52, '3.00', '216.64', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:20', '2022-07-20 00:15:29'),
+(32, 104, 3, '2.00', '692.98', 'ACEPTADO', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:19', '2022-07-21 10:29:22'),
+(34, 104, 57, '2.00', '502.17', 'ACEPTADO', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:19', '2022-07-21 10:29:27'),
+(35, 104, 9, '2.00', '362.42', 'ACEPTADO', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:20', '2022-07-21 10:29:42'),
+(36, 104, 21, '2.00', '785.44', 'ACEPTADO', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:20', '2022-07-21 10:29:35'),
+(37, 104, 44, '2.00', '954.65', 'ACEPTADO', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:20', '2022-07-21 10:30:06'),
+(38, 104, 52, '3.00', '216.64', 'ACEPTADO', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:20', '2022-07-21 10:29:53'),
 (39, 105, 9, '6.00', '362.42', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:21', '2022-07-16 16:21:22'),
 (40, 105, 52, '10.00', '216.64', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:22', '2022-07-16 16:21:23'),
 (41, 105, 57, '12.00', '502.17', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:22', '2022-07-16 16:21:22'),
@@ -2504,12 +2517,21 @@ INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quant
 (124, 116, 53, '3.00', '952.16', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:51', '2022-07-16 16:21:51'),
 (125, 116, 44, '10.00', '954.65', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:52', '2022-07-16 16:21:52'),
 (126, 116, 52, '8.00', '216.64', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-16 16:21:52', '2022-07-16 16:21:52'),
-(148, 104, 1, '1.00', '272.91', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-19 23:24:31', '2022-07-20 00:26:32'),
-(149, 104, 51, '1.00', '368.41', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-20 00:08:44', '2022-07-20 00:15:50'),
-(150, 104, 24, '1.00', '577.05', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-20 00:08:58', '2022-07-20 00:15:24'),
-(151, 104, 5, '2.00', '317.70', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-20 00:09:11', '2022-07-20 00:15:21'),
-(152, 104, 65, '3.00', '2600.00', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-20 00:09:20', '2022-07-20 00:15:53'),
-(153, 104, 7, '1.00', '521.02', 'PENDIENTE', '0.00', 'NO CONCLUIDO', '2022-07-20 00:09:27', '2022-07-20 00:15:56');
+(148, 104, 1, '1.00', '272.91', 'ACEPTADO', '0.00', 'NO CONCLUIDO', '2022-07-19 23:24:31', '2022-07-21 10:30:13'),
+(149, 104, 51, '1.00', '368.41', 'RECHAZADO', '0.00', 'NO CONCLUIDO', '2022-07-20 00:08:44', '2022-07-21 10:30:40'),
+(150, 104, 24, '1.00', '577.05', 'ACEPTADO', '0.00', 'NO CONCLUIDO', '2022-07-20 00:08:58', '2022-07-21 10:30:33'),
+(151, 104, 5, '2.00', '317.70', 'ACEPTADO', '0.00', 'NO CONCLUIDO', '2022-07-20 00:09:11', '2022-07-21 10:30:20'),
+(152, 104, 65, '3.00', '2600.00', 'RECHAZADO', '0.00', 'NO CONCLUIDO', '2022-07-20 00:09:20', '2022-07-21 10:30:24'),
+(153, 104, 7, '1.00', '521.02', 'RECHAZADO', '0.00', 'NO CONCLUIDO', '2022-07-20 00:09:27', '2022-07-21 10:30:37'),
+(168, 104, 3, '2.00', '400.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 10:29:22', '2022-07-21 10:29:22'),
+(169, 104, 57, '2.00', '200.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 10:29:27', '2022-07-21 10:29:27'),
+(170, 104, 21, '2.00', '500.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 10:29:35', '2022-07-21 10:29:35'),
+(171, 104, 9, '2.00', '120.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 10:29:42', '2022-07-21 10:29:42'),
+(172, 104, 52, '3.00', '100.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 10:29:53', '2022-07-21 10:29:53'),
+(173, 104, 44, '2.00', '30.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 10:30:06', '2022-07-21 10:30:06'),
+(174, 104, 1, '1.00', '250.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 10:30:13', '2022-07-21 10:30:13'),
+(175, 104, 5, '2.00', '150.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 10:30:20', '2022-07-21 10:30:20'),
+(176, 104, 24, '1.00', '350.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 10:30:33', '2022-07-21 10:30:33');
 
 -- --------------------------------------------------------
 
@@ -2919,9 +2941,9 @@ CREATE TABLE `sedes` (
 --
 
 INSERT INTO `sedes` (`id`, `code`, `sede`, `zone_id`, `created_at`, `updated_at`) VALUES
-(1, '443763', 'CHINCHA', 1, '2022-06-20 21:21:36', '2022-06-20 21:21:36'),
-(2, '916024', 'ICA', 1, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(3, '389512', 'quod', 2, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
+(1, '4102', 'CHINCHA', 1, '2022-06-20 21:21:36', '2022-06-20 21:21:36'),
+(2, '4101', 'ICA', 1, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(3, '389512', 'TRUJILLO', 2, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
 (4, '488295', 'facilis', 2, '2022-06-20 21:21:40', '2022-06-20 21:21:40');
 
 -- --------------------------------------------------------
@@ -2944,7 +2966,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('V8kuynbCgAduK5YUj7WKn8gdsgzWv5dy2TB9mOH5', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoibzVBdWxWdGRRd2VFOFpwc1ptbkVoYWo2NmFFWkpHalByZXVOZlRMYSI7czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czozODoiaHR0cDovL3Npc3RlbWEvcGxhbm5lci92YWxpZGFyLXBlZGlkb3MiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1658258806);
+('1Z2c78XdXXS0oioD1WuQx13U7VJqYoa540NilRzE', 4, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.114 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiMmN5ZHFSYURvSEt6OTRDcVNRMXlaeEk1VnU0bWc1R3l5TFk0ejlKeiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjQzOiJodHRwOi8vc2lzdGVtYS50ZXN0L3BsYW5uZXIvdmFsaWRhci1wZWRpZG9zIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDt9', 1658381569);
 
 -- --------------------------------------------------------
 
@@ -3416,7 +3438,11 @@ INSERT INTO `users` (`id`, `code`, `name`, `lastname`, `location_id`, `email`, `
 (13, '645058', 'Mr. Zachery Hoeger', 'Fadel', 7, 'xkoelpin@example.org', '2022-06-20 21:21:40', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '7IksTELjOl', NULL, NULL, '2022-06-20 21:21:40', '2022-06-20 21:21:40'),
 (14, '650494', 'Chauncey Cummings III', 'Gaylord', 7, 'doug54@example.org', '2022-06-20 21:21:40', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '0bdjgP8SoL', NULL, NULL, '2022-06-20 21:21:40', '2022-06-20 21:21:40'),
 (15, '057018', 'Meda Bode', 'Lynch', 8, 'garrison42@example.com', '2022-06-20 21:21:41', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'p93dRjOOBD', NULL, NULL, '2022-06-20 21:21:41', '2022-06-20 21:21:41'),
-(16, '266459', 'Carrie Haley', 'Wolf', 8, 'kathleen72@example.net', '2022-06-20 21:21:41', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'j6TyHWP4T1', NULL, NULL, '2022-06-20 21:21:41', '2022-06-20 21:21:41');
+(16, '266459', 'Carrie Haley', 'Wolf', 8, 'kathleen72@example.net', '2022-06-20 21:21:41', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'j6TyHWP4T1', NULL, NULL, '2022-06-20 21:21:41', '2022-06-20 21:21:41'),
+(35, '999999', 'CARLOS', 'ESCATE ROMÁN', 1, 'STORNBLOOD6969@GMAIL.COM', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, NULL, NULL, NULL, '2022-07-21 06:39:33', '2022-07-21 06:39:33'),
+(36, '888888', 'SEGIO', 'BERROCAL QUIÑONES', 4, 'SDD@GMAIL.COM', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, NULL, NULL, NULL, '2022-07-21 06:39:33', '2022-07-21 06:39:33'),
+(37, '777777', 'RAMÓN', 'AGUADO APAZA', 3, 'ASS@GMAIL.COM', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, NULL, NULL, NULL, '2022-07-21 06:39:33', '2022-07-21 06:39:33'),
+(38, '6666', 'LUCHO', 'ARANA PEREZ', 2, NULL, NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, NULL, NULL, NULL, '2022-07-21 06:39:33', '2022-07-21 06:39:33');
 
 -- --------------------------------------------------------
 
@@ -3586,7 +3612,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `lista_de_materiales_pedidos`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos`  AS SELECT `o`.`id` AS `order_request_id`, `o`.`user_id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock` FROM (((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `general_warehouses` `gw` on(`gw`.`sede_id` = `s`.`id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `o`.`user_id` and `ord`.`item_id` = `os`.`item_id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `ord`.`item_id` and `gs`.`general_warehouse_id` = `gw`.`id`)) ORDER BY `o`.`id` DESC  ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) ORDER BY `ord`.`id` DESC;
 
 -- --------------------------------------------------------
 
@@ -3720,7 +3746,7 @@ ALTER TABLE `failed_jobs`
 --
 ALTER TABLE `general_stocks`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `general_stocks_general_warehouse_id_foreign` (`general_warehouse_id`),
+  ADD KEY `general_stocks_general_warehouse_id_foreign` (`sede_id`),
   ADD KEY `general_stocks_general_item_id_foreign` (`item_id`);
 
 --
@@ -3728,7 +3754,7 @@ ALTER TABLE `general_stocks`
 --
 ALTER TABLE `general_stock_details`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `general_stock_details_general_warehouse_id_foreign` (`general_warehouse_id`),
+  ADD KEY `general_stock_details_general_warehouse_id_foreign` (`sede_id`),
   ADD KEY `general_stock_details_order_date_id_foreign` (`order_date_id`),
   ADD KEY `general_stock_details_item_id_foreign` (`item_id`);
 
@@ -4083,7 +4109,8 @@ ALTER TABLE `tractor_schedulings`
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `users_code_unique` (`code`),
-  ADD UNIQUE KEY `users_email_unique` (`email`);
+  ADD UNIQUE KEY `users_email_unique` (`email`),
+  ADD KEY `users_location_id_foreign` (`location_id`);
 
 --
 -- Indices de la tabla `warehouses`
@@ -4154,7 +4181,7 @@ ALTER TABLE `ceco_details`
 -- AUTO_INCREMENT de la tabla `components`
 --
 ALTER TABLE `components`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT de la tabla `component_implement`
@@ -4244,7 +4271,7 @@ ALTER TABLE `implement_models`
 -- AUTO_INCREMENT de la tabla `items`
 --
 ALTER TABLE `items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=77;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=92;
 
 --
 -- AUTO_INCREMENT de la tabla `labors`
@@ -4274,7 +4301,7 @@ ALTER TABLE `lotes`
 -- AUTO_INCREMENT de la tabla `measurement_units`
 --
 ALTER TABLE `measurement_units`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 
 --
 -- AUTO_INCREMENT de la tabla `migrations`
@@ -4316,7 +4343,7 @@ ALTER TABLE `order_requests`
 -- AUTO_INCREMENT de la tabla `order_request_details`
 --
 ALTER TABLE `order_request_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=168;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=177;
 
 --
 -- AUTO_INCREMENT de la tabla `order_request_new_items`
@@ -4454,7 +4481,7 @@ ALTER TABLE `tractor_schedulings`
 -- AUTO_INCREMENT de la tabla `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT de la tabla `warehouses`
@@ -4566,16 +4593,16 @@ ALTER TABLE `epp_work_order`
 -- Filtros para la tabla `general_stocks`
 --
 ALTER TABLE `general_stocks`
-  ADD CONSTRAINT `general_stocks_general_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
-  ADD CONSTRAINT `general_stocks_general_warehouse_id_foreign` FOREIGN KEY (`general_warehouse_id`) REFERENCES `general_warehouses` (`id`);
+  ADD CONSTRAINT `general_stocks_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
+  ADD CONSTRAINT `general_stocks_sede_id_foreign` FOREIGN KEY (`sede_id`) REFERENCES `sedes` (`id`);
 
 --
 -- Filtros para la tabla `general_stock_details`
 --
 ALTER TABLE `general_stock_details`
-  ADD CONSTRAINT `general_stock_details_general_warehouse_id_foreign` FOREIGN KEY (`general_warehouse_id`) REFERENCES `general_warehouses` (`id`),
   ADD CONSTRAINT `general_stock_details_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
-  ADD CONSTRAINT `general_stock_details_order_date_id_foreign` FOREIGN KEY (`order_date_id`) REFERENCES `order_dates` (`id`);
+  ADD CONSTRAINT `general_stock_details_order_date_id_foreign` FOREIGN KEY (`order_date_id`) REFERENCES `order_dates` (`id`),
+  ADD CONSTRAINT `general_stock_details_sede_id_foreign` FOREIGN KEY (`sede_id`) REFERENCES `sedes` (`id`);
 
 --
 -- Filtros para la tabla `general_warehouses`
@@ -4791,6 +4818,12 @@ ALTER TABLE `tractor_schedulings`
   ADD CONSTRAINT `tractor_schedulings_lote_id_foreign` FOREIGN KEY (`lote_id`) REFERENCES `lotes` (`id`),
   ADD CONSTRAINT `tractor_schedulings_tractor_id_foreign` FOREIGN KEY (`tractor_id`) REFERENCES `tractors` (`id`),
   ADD CONSTRAINT `tractor_schedulings_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+--
+-- Filtros para la tabla `users`
+--
+ALTER TABLE `users`
+  ADD CONSTRAINT `users_location_id_foreign` FOREIGN KEY (`location_id`) REFERENCES `locations` (`id`);
 
 --
 -- Filtros para la tabla `warehouses`

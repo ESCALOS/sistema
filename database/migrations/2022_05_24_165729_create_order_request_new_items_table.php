@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('new_item');
             $table->decimal('quantity',8,2);
             $table->foreignId('measurement_unit_id')->constrained();
-            $table->string('brand');
             $table->text('datasheet');
             $table->string('image',2048)->nullable();
             $table->enum('state',['PENDIENTE','CREADO','RECHAZADO'])->default('PENDIENTE');

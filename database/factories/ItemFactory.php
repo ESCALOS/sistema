@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Brand;
 use App\Models\Item;
 use App\Models\MeasurementUnit;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -19,7 +18,6 @@ class ItemFactory extends Factory
         return [
             'sku' => $this->faker->unique()->numerify('########'),
             'item' => $this->faker->unique()->lexify('????????'),
-            'brand_id' => Brand::all()->random()->id,
             'measurement_unit_id' => MeasurementUnit::all()->random()->id,
             'estimated_price' => $this->faker->randomFloat(2,200,1000),
             'type' => $this->faker->randomElement(['FUNGIBLE','COMPONENTE','PIEZA','HERRAMIENTA']),

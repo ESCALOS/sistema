@@ -17,9 +17,6 @@ class Item extends Model
     public function component(){
         return $this->hasOne(Component::class);
     }
-    public function brand(){
-        return $this->belongsTo(Brand::class);
-    }
     public function measurementUnit(){
         return $this->belongsTo(MeasurementUnit::class);
     }
