@@ -2,12 +2,13 @@
 
 namespace App\Http\Livewire;
 
-use App\Models\Brand;
 use App\Models\CecoAllocationAmount;
+use App\Models\GeneralStock;
 use App\Models\Implement;
 use App\Models\Item;
 use App\Models\Location;
 use App\Models\MeasurementUnit;
+use App\Models\OperatorStock;
 use App\Models\OrderDate;
 use App\Models\OrderRequest;
 use App\Models\OrderRequestDetail;
@@ -41,6 +42,8 @@ class ValidateRequestMaterial extends Component
     public $precio = 0;
     public $precioTotal = 0;
     public $measurement_unit = "";
+    public $ordered_quantity = 0;
+    public $stock = 0;
 /*------------------------Datos del pedido en curso----------------------*/
     public $fecha_pedido = "";
     public $fecha_pedido_llegada;
@@ -201,12 +204,29 @@ class ValidateRequestMaterial extends Component
         $this->id_material = $id;
         $material = OrderRequestDetail::find($id);
         $this->material = strtoupper($material->item->item);
+        $this->measurement_unit = $material->item->measurementUnit->abbreviation;
         /*--------Obtener cantidad del usuario------------------------------------------------*/
         if($material->state == "VALIDADO"){
             $order_validate = OrderRequestDetail::where('order_request_id',$this->id_solicitud_pedido)->where('item_id',$material->item_id)->orderBy('id','ASC')->first();
             $this->cantidad_pedida = floatval($order_validate->quantity);
         }else{
             $this->cantidad_pedida = floatval($material->quantity);
+        }
+        /*------------------------------------------------------------------------------------*/
+        if(OperatorStock::where('user_id',Auth::user()->id)->where('item_id',$material->item_id)->exists()){
+            $operator_stock = OperatorStock::where('user_id',Auth::user()->id)->where('item_id',$material->item_id)->first();
+            $this->ordered_quantity = floatval($operator_stock->ordered_quantity - $operator_stock->used_quantity);
+        }else{
+            $this->ordered_quantity = 0;
+        }
+
+        $stock = GeneralStock::where('item_id',$material->item_id)->where('sede_id',Auth::user()->location->sede_id);
+
+        if($stock->exists()){
+            $stock_del_item = $stock->select('general_stocks.quantity')->first();
+            $this->stock = floatval($stock_del_item->quantity);
+        }else{
+            $this->stock = 0;
         }
         /*------------------------------------------------------------------------------------*/
         $this->cantidad = floatval($material->quantity);
@@ -339,7 +359,7 @@ class ValidateRequestMaterial extends Component
         /*----------------Crear el nuevo item---------------------------------*/
         $nuevo_item = Item::create([
             'sku' => $this->create_material_sku,
-            'item' => strtolower($this->eliminar_acentos($this->create_material_item)),
+            'item' => strtolower($this->create_material_item),
             'measurement_unit_id' => $this->create_material_measurement_unit,
             'estimated_price' => $this->create_material_estimated_price,
             'type' => $this->create_material_type,
@@ -455,13 +475,11 @@ class ValidateRequestMaterial extends Component
             $join->on('implement_models.id','=','implements.implement_model_id');
         })->where('order_requests.user_id',$this->id_operador)->select('implements.*','implement_models.implement_model')->get();
 
-        $order_request_detail_operator = OrderRequestDetail::where('order_request_id',$this->id_solicitud_pedido)->where('quantity','>',0)->where('state','PENDIENTE')->get();
+        $order_request_detail_operator = $orderRequestDetails = DB::table('lista_de_materiales_pedidos')->where('order_request_id',$this->id_solicitud_pedido)->where('state','PENDIENTE')->where('quantity','>',0)->select('id','sku','item','type','quantity','abbreviation','ordered_quantity','used_quantity','stock')->get();
 
-        $order_request_detail_planner = OrderRequestDetail::where('order_request_id',$this->id_solicitud_pedido)->where('quantity','>',0)->where(function ($query){
-            $query->where('state','VALIDADO');
-        })->get();
+        $order_request_detail_planner = DB::table('lista_de_materiales_pedidos')->where('order_request_id',$this->id_solicitud_pedido)->where('state','VALIDADO')->select('id','sku','item','type','quantity','abbreviation','ordered_quantity','used_quantity','stock')->get();
 
-        $order_request_detail_rechazado = OrderRequestDetail::where('order_request_id',$this->id_solicitud_pedido)->where('quantity','>',0)->where('state','RECHAZADO')->get();
+        $order_request_detail_rechazado = DB::table('lista_de_materiales_pedidos')->where('order_request_id',$this->id_solicitud_pedido)->where('state','RECHAZADO')->select('id','sku','item','type','quantity','abbreviation','ordered_quantity','used_quantity','stock')->get();
     /*--------------------DATOS PARA EL MODAL DE MATERIALES NUEVOS-----------------------------------------------------------------------------------------------------------------*/
         $order_request_new_materials = OrderRequestNewItem::where('order_request_id',$this->id_solicitud_pedido)->where('state','PENDIENTE')->get();
         $measurement_units = MeasurementUnit::all();

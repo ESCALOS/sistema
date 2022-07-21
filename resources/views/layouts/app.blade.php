@@ -40,6 +40,11 @@
         @livewireScripts
 
         <script>
+
+/*------Poner estilo select 2---------------------------------------------------*/
+            Livewire.on('estiloSelect2',function(){
+                $('.select2').select2();
+            });
 /*------Alerta para registro----------------------------------------------------*/
             Livewire.on('alert', function(){
                 Swal.fire({
@@ -77,6 +82,8 @@
                     }
                 })
             });
+
+
 /*------------------------------------------------------------------------------------------------------*/
         @endif
         @if (Route::is('operator.pre-reserva'))

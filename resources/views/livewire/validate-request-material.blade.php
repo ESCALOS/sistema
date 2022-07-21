@@ -103,9 +103,10 @@
                 <div class="grid grid-cols-1 sm:grid-cols-1 gap-4 mt-4">
         <!------------------------ INICIO DE TABLAS --------------------------------------->
             <!------------------------ TABLA DE MATERIALES POR VALIDAR --------------------------------------->
+                    @if(count($order_request_detail_operator))
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4  rounded-md bg-yellow-200 shadow-md py-4">
                             <div>
-                                <h1 class="text-lg font-bold">Materiales No Validados</h1>
+                                <h1 class="text-lg font-bold">Pendiente a Validar</h1>
                             </div>
                             <div>
                                 <h1 class="text-lg font-bold {{$monto_usado > $monto_asignado ? 'text-red-500' : 'text-green-500'}}">Precio Estimado: S/.{{number_format($monto_usado,2)}}</h1>
@@ -122,7 +123,13 @@
                                             <span>Componentes</span>
                                         </th>
                                         <th class="py-3 text-center">
-                                            <span>Cantidad</span>
+                                            <span>Solicitado</span>
+                                        </th>
+                                        <th class="py-3 text-center">
+                                            <span>En Proceso</span>
+                                        </th>
+                                        <th class="py-3 text-center">
+                                            <span>Stock</span>
                                         </th>
                                     </tr>
                                 </thead>
@@ -131,19 +138,29 @@
                                         <tr wire:dblclick="mostrarModalValidarMaterial({{$request->id}})" class="border-b border-gray-200 unselected">
                                             <td class="py-3 px-6 text-center">
                                                 <div>
-                                                    <span class="font-medium">{{$request->item->sku}} </span>
+                                                    <span class="font-medium">{{$request->sku}} </span>
                                                 </div>
                                             </td>
                                             <td class="py-3 px-6 text-center">
                                                 <div>
-                                                    <span class="font-bold {{$request->item->type == "PIEZA" ? 'text-red-500' : ( $request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "FUNGIBLE" ? 'text-amber-500' : 'text-blue-500')))}} ">
-                                                        {{ strtoupper($request->item->item) }}
+                                                    <span class="font-bold {{$request->type == "PIEZA" ? 'text-red-500' : ( $request->type == "COMPONENTE" ? 'text-green-500' : ($request->type == "COMPONENTE" ? 'text-green-500' : ($request->type == "FUNGIBLE" ? 'text-amber-500' : 'text-blue-500')))}} ">
+                                                        {{ strtoupper($request->item) }}
                                                     </span>
                                                 </div>
                                             </td>
                                             <td class="py-3 px-6 text-center">
                                                 <div>
-                                                    <span class="font-medium">{{$request->quantity}} {{$request->item->measurementUnit->abbreviation}}</span>
+                                                    <span class="font-bold text-red-600">{{floatVal($request->quantity)}} {{$request->abbreviation}}</span>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 px-6 text-center">
+                                                <div>
+                                                    <span class="font-bold text-amber-600">{{floatVal($request->ordered_quantity - $request->used_quantity)}} {{$request->abbreviation}}</span>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 px-6 text-center">
+                                                <div>
+                                                    <span class="font-bold text-green-600">{{floatVal($request->stock)}} {{$request->abbreviation}}</span>
                                                 </div>
                                             </td>
                                         </tr>
@@ -151,10 +168,12 @@
                                 </tbody>
                             </table>
                         </div>
+                    @endif
             <!----------------------- TABLA DE MATERIALES VALIDADOS -------------------------------------------->
+                    @if(count($order_request_detail_planner))
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-md bg-yellow-200 shadow-md py-4">
                             <div>
-                                <h1 class="text-lg font-bold">Materiales Validados</h1>
+                                <h1 class="text-lg font-bold">Validado</h1>
                             </div>
                             <div>
                                 <h1 class="text-lg font-bold {{$monto_real > $monto_asignado ? 'text-red-500' : 'text-green-500'}} ">Precio Real: S/.{{number_format($monto_real,2)}}</h1>
@@ -171,7 +190,13 @@
                                             <span>Componentes</span>
                                         </th>
                                         <th class="py-3 text-center">
-                                            <span>Cantidad</span>
+                                            <span>Solicitado</span>
+                                        </th>
+                                        <th class="py-3 text-center">
+                                            <span>En Proceso</span>
+                                        </th>
+                                        <th class="py-3 text-center">
+                                            <span>Stock</span>
                                         </th>
                                     </tr>
                                 </thead>
@@ -180,17 +205,27 @@
                                         <tr wire:dblclick="mostrarModalValidarMaterial({{$request->id}})" class="border-b border-gray-200 unselected">
                                             <td class="py-3 px-6 text-center">
                                                 <div>
-                                                    <span class="font-medium">{{$request->item->sku}} </span>
+                                                    <span class="font-medium">{{$request->sku}} </span>
                                                 </div>
                                             </td>
                                             <td class="py-3 px-6 text-center">
                                                 <div>
-                                                    <span class="font-bold {{$request->item->type == "PIEZA" ? 'text-red-500' : ( $request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "FUNGIBLE" ? 'text-amber-500' : 'text-blue-500')))}} ">{{ strtoupper($request->item->item) }}</span>
+                                                    <span class="font-bold {{$request->type == "PIEZA" ? 'text-red-500' : ( $request->type == "COMPONENTE" ? 'text-green-500' : ($request->type == "COMPONENTE" ? 'text-green-500' : ($request->type == "FUNGIBLE" ? 'text-amber-500' : 'text-blue-500')))}} ">{{ strtoupper($request->item) }}</span>
                                                 </div>
                                             </td>
                                             <td class="py-3 px-6 text-center">
                                                 <div>
-                                                    <span class="font-medium">{{$request->quantity}} {{$request->item->measurementUnit->abbreviation}}</span>
+                                                    <span class="font-bold  text-red-600">{{floatVal($request->quantity)}} {{$request->abbreviation}}</span>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 px-6 text-center">
+                                                <div>
+                                                    <span class="font-bold text-amber-600">{{floatVal($request->ordered_quantity - $request->used_quantity)}} {{$request->abbreviation}}</span>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 px-6 text-center">
+                                                <div>
+                                                    <span class="font-bold text-green-600">{{floatVal($request->stock)}} {{$request->abbreviation}}</span>
                                                 </div>
                                             </td>
                                         </tr>
@@ -198,8 +233,12 @@
                                 </tbody>
                             </table>
                         </div>
+                    @endif
             <!-- ------------------------ TABLA DE MATERIALES RECHAZADOS ---------------------------------------  -->
-                    <h1 class="text-lg font-bold">Materiales Rechazados</h1>
+                @if(count($order_request_detail_rechazado))
+                    <div class="rounded-md bg-yellow-200 shadow-md py-4">
+                        <h1 class="text-lg font-bold">Rechazado</h1>
+                    </div>
                     <div style="max-height:180px;overflow:auto">
                         <table class="min-w-max w-full">
                             <thead>
@@ -211,26 +250,42 @@
                                         <span>Componentes</span>
                                     </th>
                                     <th class="py-3 text-center">
-                                        <span>Cantidad</span>
+                                        <span>Solicitado</span>
+                                    </th>
+                                    <th class="py-3 text-center">
+                                        <span>En Proceso</span>
+                                    </th>
+                                    <th class="py-3 text-center">
+                                        <span>Stock</span>
                                     </th>
                                 </tr>
                             </thead>
                             <tbody class="text-gray-600 text-sm font-light">
                                 @foreach ($order_request_detail_rechazado as $request)
-                                    <tr wire:dblclick="$emit('confirmarReinsertarRechazado',[{{$request->id}},'{{$request->item->item}}'])" class="border-b border-gray-200 unselected">
+                                    <tr wire:dblclick="$emit('confirmarReinsertarRechazado',[{{$request->id}},'{{$request->item}}'])" class="border-b border-gray-200 unselected">
                                         <td class="py-3 px-6 text-center">
                                             <div>
-                                                <span class="font-medium">{{$request->item->sku}} </span>
+                                                <span class="font-medium">{{$request->sku}} </span>
                                             </div>
                                         </td>
                                         <td class="py-3 px-6 text-center">
                                             <div>
-                                                <span class="font-bold {{$request->item->type == "PIEZA" ? 'text-red-500' : ( $request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "FUNGIBLE" ? 'text-amber-500' : 'text-blue-500')))}} ">{{ strtoupper($request->item->item) }}</span>
+                                                <span class="font-bold {{$request->type == "PIEZA" ? 'text-red-500' : ( $request->type == "COMPONENTE" ? 'text-green-500' : ($request->type == "COMPONENTE" ? 'text-green-500' : ($request->type == "FUNGIBLE" ? 'text-amber-500' : 'text-blue-500')))}} ">{{ strtoupper($request->item) }}</span>
                                             </div>
                                         </td>
                                         <td class="py-3 px-6 text-center">
                                             <div>
-                                                <span class="font-medium">{{$request->quantity}} {{$request->item->measurementUnit->abbreviation}}</span>
+                                                <span class="font-bold  text-red-600">{{floatVal($request->quantity)}} {{$request->abbreviation}}</span>
+                                            </div>
+                                        </td>
+                                        <td class="py-3 px-6 text-center">
+                                            <div>
+                                                <span class="font-bold text-amber-600">{{floatVal($request->ordered_quantity - $request->used_quantity)}} {{$request->abbreviation}}</span>
+                                            </div>
+                                        </td>
+                                        <td class="py-3 px-6 text-center">
+                                            <div>
+                                                <span class="font-bold text-green-600">{{floatVal($request->stock)}} {{$request->abbreviation}}</span>
                                             </div>
                                         </td>
                                     </tr>
@@ -238,6 +293,7 @@
                             </tbody>
                         </table>
                     </div>
+                @endif
         <!------------------------ FIN DE TABLAS --------------------------------------->
                 </div>
         </x-slot>
@@ -261,14 +317,40 @@
             <h1>{{$material}}</h1>
         </x-slot>
         <x-slot name="content">
-            <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
-                <x-jet-label>Cantidad - <span class="text-blue-700 text-sm">(0 para rechazar)</span></x-jet-label>
-                   <div class="flex">
-                     <input class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" wire:model="cantidad" />
 
-                    <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
-                        {{$measurement_unit}}
-                    </span>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="mb-4">
+                    <x-jet-label class="text-md">En Proceso:</x-jet-label>
+                    <div class="flex">
+
+                        <input readonly class="text-center border-gray-300 bg-amber-600 text-white font-bold text-lg focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" value="{{$ordered_quantity}}"/>
+
+                        <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
+                            {{$measurement_unit}}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <x-jet-label class="text-md">Stock:</x-jet-label>
+                    <div class="flex">
+
+                        <input readonly class="text-center border-gray-300 bg-green-600 text-white font-bold text-lg focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="text" style="height:30px;width: 100%" value="{{$stock}}"/>
+
+                        <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
+                            {{$measurement_unit}}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
+                <x-jet-label>Cantidad Solicitada - <span class="text-blue-700 text-sm">(0 para rechazar)</span></x-jet-label>
+                   <div class="flex">
+                        <input class="text-center border-gray-300 bg-red-600 text-white font-bold text-lg focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" wire:model="cantidad" />
+
+                        <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
+                            {{$measurement_unit}}
+                        </span>
                     </div>
                 <x-jet-input-error for="cantidad"/>
             </div>
@@ -315,7 +397,7 @@
                                 <span>Componentes</span>
                             </th>
                             <th class="py-3 text-center">
-                                <span>Cantidad</span>
+                                <span>Cantidad Solicitida</span>
                             </th>
                         </tr>
                     </thead>
@@ -329,7 +411,7 @@
                                 </td>
                                 <td class="py-3 px-6 text-center">
                                     <div>
-                                        <span class="font-medium">{{$request->quantity}} {{$request->measurementUnit->abbreviation}}</span>
+                                        <span class="font-medium">{{$request->quantity}} {{$request->abbreviation}}</span>
                                     </div>
                                 </td>
                             </tr>

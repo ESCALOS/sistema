@@ -2,11 +2,14 @@
 
 namespace App\Http\Livewire;
 
+use App\Models\GeneralStock;
 use App\Models\Implement;
 use App\Models\Item;
+use App\Models\OperatorStock;
 use App\Models\OrderDate;
 use App\Models\OrderRequest;
 use App\Models\OrderRequestDetail;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class AddTool extends Component
@@ -45,6 +48,31 @@ class AddTool extends Component
     public function updatedOpenTool(){
         if(!$this->open_tool){
             $this->resetExcept(['id_implemento','open_tool','excluidos']);
+        }
+    }
+
+    public function updatedToolForAdd(){
+        if($this->tool_for_add > 0){
+
+            $this->measurement_unit = Item::find($this->tool_for_add)->measurementUnit->abbreviation;
+
+            if(OperatorStock::where('user_id',Auth::user()->id)->where('item_id',$this->tool_for_add)->exists()){
+                $operator_stock = OperatorStock::where('user_id',Auth::user()->id)->where('item_id',$this->tool_for_add)->first();
+                $this->ordered_quantity = floatval($operator_stock->ordered_quantity - $operator_stock->used_quantity);
+            }else{
+                $this->ordered_quantity = 0;
+            }
+
+            $stock = GeneralStock::where('item_id',$this->tool_for_add)->where('sede_id',Auth::user()->location->sede_id);
+
+            if($stock->exists()){
+                $stock_del_item = $stock->select('general_stocks.quantity')->first();
+                $this->stock = floatval($stock_del_item->quantity);
+            }else{
+                $this->stock = 0;
+            }
+        }else{
+            $this->reset('ordered_quantity','stock','measurement_unit');
         }
     }
 
@@ -88,7 +116,8 @@ class AddTool extends Component
                 array_push($this->excluidos,$added_component->item_id);
             }
         }
-        $components = Item::where('type','HERRAMIENTA')->whereNotIn('id',$this->excluidos)->get();
+        $components = Item::where('type','HERRAMIENTA')->whereNotIn('id',$this->excluidos)->select('id','sku','item')->get();
+        $this->emit('estiloSelect2');
         return view('livewire.add-tool',compact('components'));
     }
 }

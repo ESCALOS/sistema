@@ -64,9 +64,7 @@ class AddMaterial extends Component
                 $this->ordered_quantity = 0;
             }
 
-            $stock = GeneralStock::join('general_warehouses',function($join){
-                $join->on('general_warehouses.id','=','general_stocks.general_warehouse_id');
-            })->where('general_stocks.item_id',$this->material_for_add)->where('general_warehouses.sede_id',Auth::user()->location->sede_id);
+            $stock = GeneralStock::where('item_id',$this->material_for_add)->where('sede_id',Auth::user()->location->sede_id);
 
             if($stock->exists()){
                 $stock_del_item = $stock->select('general_stocks.quantity')->first();
@@ -119,7 +117,8 @@ class AddMaterial extends Component
                 array_push($this->excluidos,$added_component->item_id);
             }
         }
-        $components = Item::where('type','FUNGIBLE')->whereNotIn('id',$this->excluidos)->get();
+        $components = Item::where('type','FUNGIBLE')->whereNotIn('id',$this->excluidos)->select('id','item','sku')->get();
+        $this->emit('estiloSelect2');
         return view('livewire.add-material',compact('components'));
     }
 }

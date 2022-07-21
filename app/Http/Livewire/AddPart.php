@@ -18,7 +18,7 @@ class AddPart extends Component
     public $open_parte = false;
     public $id_implemento;
     public $id_request;
-    public $part_for_add= 0;
+    public $part_for_add = 0;
     public $quantity_part_for_add = 1;
     public $component_for_part = 0;
     public $excluidos = [];
@@ -73,9 +73,7 @@ class AddPart extends Component
                 $this->ordered_quantity = 0;
             }
 
-            $stock = GeneralStock::join('general_warehouses',function($join){
-                $join->on('general_warehouses.id','=','general_stocks.general_warehouse_id');
-            })->where('general_stocks.item_id',$this->part_for_add)->where('general_warehouses.sede_id',Auth::user()->location->sede_id);
+            $stock = GeneralStock::where('item_id',$this->part_for_add)->where('sede_id',Auth::user()->location->sede_id);
 
             if($stock->exists()){
                 $stock_del_item = $stock->select('general_stocks.quantity')->first();
@@ -133,7 +131,7 @@ class AddPart extends Component
         }else{
             $parts = [];
         }
-
+        $this->emit('estiloSelect2');
         return view('livewire.add-part',compact('components','parts'));
     }
 }

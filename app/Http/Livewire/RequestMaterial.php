@@ -197,7 +197,7 @@ class RequestMaterial extends Component
         $this->render();
     }
 
-    public function updatedid_implemento(){
+    public function updatedIdImplemento(){
         $this->emit('cambioImplemento', $this->id_implemento);
     }
 
@@ -245,7 +245,7 @@ class RequestMaterial extends Component
                 }
             }
         /*---------Obtener el detalle de los materiales pedidos---------------------------------*/
-            $orderRequestDetails = DB::table('lista_de_materiales_pedidos')->where('order_request_id',$this->id_request)->select('id','sku','item','type','quantity','abbreviation','ordered_quantity','used_quantity','stock')->get();
+            $orderRequestDetails = DB::table('lista_de_materiales_pedidos')->where('order_request_id',$this->id_request)->where('state','PENDIENTE')->select('id','sku','item','type','quantity','abbreviation','ordered_quantity','used_quantity','stock')->get();
         /*-----------Obtener el detalle de los materiales nuevos pedidos--------------------------*/
             $orderRequestNewItems = OrderRequestNewItem::where('order_request_id', $this->id_request)->where('state','PENDIENTE')->orderBy('id', 'desc')->get();
 
@@ -276,6 +276,7 @@ class RequestMaterial extends Component
                 $this->monto_usado = 0;
             }
 
+            $this->emit('estiloSelect2');
             return view('livewire.request-material', compact('implements', 'orderRequestDetails', 'orderRequestNewItems', 'measurement_units'));
     }
 }

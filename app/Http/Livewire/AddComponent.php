@@ -65,9 +65,7 @@ class AddComponent extends Component
                 $this->ordered_quantity = 0;
             }
 
-            $stock = GeneralStock::join('general_warehouses',function($join){
-                $join->on('general_warehouses.id','=','general_stocks.general_warehouse_id');
-            })->where('general_stocks.item_id',$this->component_for_add)->where('general_warehouses.sede_id',Auth::user()->location->sede_id);
+            $stock = GeneralStock::where('item_id',$this->component_for_add)->where('sede_id',Auth::user()->location->sede_id);
 
             if($stock->exists()){
                 $stock_del_item = $stock->select('general_stocks.quantity')->first();
@@ -119,6 +117,8 @@ class AddComponent extends Component
             }
         }
         $components = DB::table('componentes_del_implemento')->where('implement_id','=',$this->id_implemento)->whereNotIn('item_id',$this->excluidos)->get();
+
+        $this->emit('estiloSelect2');
 
         return view('livewire.add-component',compact('components'));
     }

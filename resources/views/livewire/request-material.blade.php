@@ -31,7 +31,7 @@
                 </h1>
             </div>
             <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
-                <select class="form-select" style="width: 100%; height:2.5rem" wire:model='id_implemento'>
+                <select class="select2" id="id_implemento" style="width: 100%; height:2.5rem" wire:model='id_implemento'>
                     <option value="0" class="text-center text-md font-bold">Seleccione una implemento</option>
                 @foreach ($implements as $implement)
                     <option value="{{ $implement->id }}" class="text-center text-md font-bold">Implemento: {{ strtoupper($implement->implementModel->implement_model) }} {{ $implement->implement_number }}</option>
@@ -74,10 +74,10 @@
                                 <span>Componentes</span>
                             </th>
                             <th class="py-3 text-center">
-                                <span>Cantidad</span>
+                                <span>Solicitado</span>
                             </th>
                             <th class="py-3 text-center">
-                                <span>Pedido</span>
+                                <span>En Proceso</span>
                             </th>
                             <th class="py-3 text-center">
                                 <span>Stock</span>
@@ -99,17 +99,17 @@
                                 </td>
                                 <td class="py-3 px-6 text-center">
                                     <div>
-                                        <span class="font-medium">{{floatVal($request->quantity)}} {{$request->abbreviation}}</span>
+                                        <span class="font-bold text-red-600">{{floatVal($request->quantity)}} {{$request->abbreviation}}</span>
                                     </div>
                                 </td>
                                 <td class="py-3 px-6 text-center">
                                     <div>
-                                        <span class="font-medium">{{floatVal($request->ordered_quantity - $request->used_quantity)}} {{$request->abbreviation}}</span>
+                                        <span class="font-bold text-amber-600">{{floatVal($request->ordered_quantity - $request->used_quantity)}} {{$request->abbreviation}}</span>
                                     </div>
                                 </td>
                                 <td class="py-3 px-6 text-center">
                                     <div>
-                                        <span class="font-medium">{{floatVal($request->stock)}} {{$request->abbreviation}}</span>
+                                        <span class="font-bold text-green-600">{{floatVal($request->stock)}} {{$request->abbreviation}}</span>
                                     </div>
                                 </td>
                             </tr>
@@ -144,7 +144,7 @@
                                 <span>Material Nuevo </span>
                             </th>
                             <th class="py-3 text-center">
-                                <span>Cantidad</span>
+                                <span>Cantidad Solicitada</span>
                             </th>
                         </tr>
                     </thead>
@@ -179,37 +179,39 @@
         </x-slot>
         <x-slot name="content">
 
+            <div class="grid grid-cols-2 gap-4">
+                <div class="mb-4">
+                    <x-jet-label class="text-md">En Proceso:</x-jet-label>
+                    <div class="flex">
+
+                        <input readonly class="text-center border-gray-300 bg-amber-600 text-white font-bold text-lg focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" value="{{$ordered_quantity}}"/>
+
+                        <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
+                            {{$measurement_unit_edit}}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <x-jet-label class="text-md">Stock:</x-jet-label>
+                    <div class="flex">
+
+                        <input readonly class="text-center border-gray-300 bg-green-600 text-white font-bold text-lg focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="text" style="height:30px;width: 100%" value="{{$stock}}"/>
+
+                        <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
+                            {{$measurement_unit_edit}}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
             <div class="mb-4">
                 <x-jet-label class="text-md">Cantidad:</x-jet-label>
                 <div class="flex">
 
-                    <input class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" wire:model="quantity_edit"/>
+                    <input class="text-center border-gray-300 bg-red-600 text-white font-bold text-lg focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" wire:model="quantity_edit"/>
 
                     <x-jet-input-error for="quantity_edit"/>
-                    <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
-                        {{$measurement_unit_edit}}
-                    </span>
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <x-jet-label class="text-md">Pedida:</x-jet-label>
-                <div class="flex">
-
-                    <input readonly class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" value="{{$ordered_quantity}}"/>
-
-                    <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
-                        {{$measurement_unit_edit}}
-                    </span>
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <x-jet-label class="text-md">En Almacén:</x-jet-label>
-                <div class="flex">
-
-                    <input readonly class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="text" style="height:30px;width: 100%" value="{{$stock}}"/>
-
                     <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
                         {{$measurement_unit_edit}}
                     </span>
@@ -297,6 +299,15 @@
             </x-jet-secondary-button>
         </x-slot>
     </x-jet-dialog-modal>
+    <script>
+        document.addEventListener('livewire:load', function() {
+            $('.select2').select2();
+            $('#id_implemento').on('change', function() {
+                @this.set('id_implemento', this.value);
+            });
+        });
+
+    </script>
     @else
     <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
         <div class="text-center">

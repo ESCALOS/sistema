@@ -18,7 +18,7 @@ class ItemsImport implements ToModel, WithHeadingRow
     public function model(array $row)
     {
         return new Item([
-            'sku' => $row['sku'],
+            'sku' => $row['codigo'],
             'item' => $row['detalle'],
             'measurement_unit_id' => MeasurementUnit::where('abbreviation','like',$row['unidad_de_medida'])->first()->id,
             'estimated_price' => $row['precio'],
