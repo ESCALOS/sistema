@@ -208,6 +208,9 @@
   .grid-cols-3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+  .pl-10{
+    padding-left: 2.5rem;
+  }
 
 @media (min-width: 640px) {
   .sm\:grid-cols-4 {

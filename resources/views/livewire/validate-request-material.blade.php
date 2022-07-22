@@ -5,19 +5,7 @@
         <h1 class="font-bold text-2xl text-center">{{$fecha_pedido}} </h1>
     </div>
 <!-- Filtrar operarios que tienen pedidos por zona, sede y ubicación  -->
-    <div class="grid grid-cols-1 sm:grid-cols-{{$tsede > 0 ? '3' : ($tzone > 0 ? '2' : '1')}} gap-4">
-        <div>
-            <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
-                <x-jet-label>Zona:</x-jet-label>
-                <select class="form-select" style="width: 100%" wire:model='tzone'>
-                    <option value="0">Seleccione una zona</option>
-                @foreach ($zones as $zone)
-                    <option value="{{ $zone->id }}">{{ $zone->zone }}</option>
-                @endforeach
-                </select>
-            </div>
-        </div>
-        @if ($tzone != 0)
+    <div class="grid grid-cols-1 sm:grid-cols-{{$tsede > 0 ? '2' : '1'}} gap-4">
         <div>
             <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                 <x-jet-label>Sede:</x-jet-label>
@@ -27,9 +15,9 @@
                     <option value="{{ $sede->id }}">{{ $sede->sede }}</option>
                 @endforeach
                 </select>
-            </div>
+            </div> {{$sede_en_proceso_excluidos}}
         </div>
-            @if($tsede != 0)
+        @if($tsede != 0)
             <div>
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                     <x-jet-label>Ubicación:</x-jet-label>
@@ -41,7 +29,6 @@
                     </select>
                 </div>
             </div>
-            @endif
         @endif
     </div>
 <!-- Listar usuarios que tienen pedidos por validar  -->
@@ -298,14 +285,14 @@
                 </div>
         </x-slot>
         <x-slot name="footer">
-        @if($id_implemento > 0)
-            <button wire:loading.attr="disabled" wire:click="$emit('confirmarValidarSolicitudPedido',[{{$id_solicitud_pedido}},'{{$implemento}}',{{$monto_usado}},{{$cantidad_materiales_nuevos}}])" style="width: 200px" class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md">
-                Validar
-            </button>
-            <button wire:loading.attr="disabled" wire:click="$emit('confirmarRechazarSolicitudPedido','{{$implemento}}')" style="width: 200px" class="px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-md ml-2">
-                Rechazar
-            </button>
-        @endif
+            @if($id_implemento > 0)
+                <button wire:loading.attr="disabled" wire:click="$emit('confirmarValidarSolicitudPedido',[{{$id_solicitud_pedido}},'{{$implemento}}',{{$monto_usado}},{{$cantidad_materiales_nuevos}}])" style="width: 200px" class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md">
+                    Validar
+                </button>
+                <button wire:loading.attr="disabled" wire:click="$emit('confirmarRechazarSolicitudPedido','{{$implemento}}')" style="width: 200px" class="px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-md ml-2">
+                    Rechazar
+                </button>
+            @endif
             <x-jet-secondary-button wire:click="$set('open_validate_resquest',false)" class="ml-2">
                 Cancelar
             </x-jet-secondary-button>
@@ -521,6 +508,21 @@
         </x-slot>
     </x-jet-dialog-modal>
 <!---------------------MENSAJE CUANDO NO HAY PEDIDOS ABIERTOS-------------------------------------->
+    @elseif ($fecha_pedido_en_proceso != "")
+    <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
+        <h1 class="font-bold text-2xl text-center">{{$fecha_pedido_en_proceso}} </h1>
+    </div>
+    <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
+        <x-jet-label>Sede:</x-jet-label>
+        <select class="form-select" style="width: 100%" wire:model='tsede'>
+                <option value="0">Seleccione una zona</option>
+        @foreach ($sedes as $sede)
+            <option value="{{ $sede->id }}">{{ $sede->sede }}</option>
+        @endforeach
+        </select>
+    </div>
+
+
     @else
     <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
         <h1 class="font-bold text-4xl">NO HAY PEDIDOS PARA VALIDAR</h1>

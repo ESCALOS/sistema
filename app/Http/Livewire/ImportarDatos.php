@@ -11,7 +11,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class ImportarDatos extends Component
 {
     use WithFileUploads;
-    
+
     public $user;
     public $item;
 
@@ -20,13 +20,13 @@ class ImportarDatos extends Component
 
         $this->emit('alert');
     }
-    
+
     public function importarItems(){
         Excel::import(new ItemsImport, $this->item);
 
         $this->emit('alert');
     }
-    
+
     public function render()
     {
         return view('livewire.importar-datos');

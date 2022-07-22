@@ -15,7 +15,11 @@ class GeneralStockDetail extends Model
         return $this->belongsTo(Item::class);
     }
 
-    public function generalWarehouse(){
-        return $this->belongsTo(GeneralWarehouse::class);
+    public function orderDate(){
+        return $this->belongsTo(OrderDate::class);
+    }
+
+    public function sede(){
+        return $this->belongsTo(Sede::class);
     }
 }
