@@ -116,7 +116,7 @@
                                 </thead>
                                 <tbody class="text-gray-600 text-sm font-light">
                                     @foreach ($pre_stockpile_detail_operator as $request)
-                                        <tr wire:dblclick="mostrarModalValidarMaterial({{$request->id}})" class="border-b border-gray-200 unselected">
+                                        <tr wire:click="mostrarModalValidarMaterial({{$request->id}})" class="border-b border-gray-200 unselected">
                                             <td class="py-3 px-6 text-center">
                                                 <div>
                                                     <span class="font-medium">{{$request->item->sku}} </span>
@@ -165,7 +165,7 @@
                                 </thead>
                                 <tbody class="text-gray-600 text-sm font-light">
                                     @foreach ($pre_stockpile_detail_planner as $request)
-                                        <tr wire:dblclick="mostrarModalValidarMaterial({{$request->id}})" class="border-b border-gray-200 unselected">
+                                        <tr wire:click="mostrarModalValidarMaterial({{$request->id}})" class="border-b border-gray-200 unselected">
                                             <td class="py-3 px-6 text-center">
                                                 <div>
                                                     <span class="font-medium">{{$request->item->sku}} </span>
@@ -205,7 +205,7 @@
                             </thead>
                             <tbody class="text-gray-600 text-sm font-light">
                                 @foreach ($pre_stockpile_detail_rechazado as $request)
-                                    <tr wire:dblclick="$emit('confirmarReinsertarRechazado',[{{$request->id}},'{{$request->item->item}}'])" class="border-b border-gray-200 unselected">
+                                    <tr wire:click="$emit('confirmarReinsertarRechazado',[{{$request->id}},'{{$request->item->item}}'])" class="border-b border-gray-200 unselected">
                                         <td class="py-3 px-6 text-center">
                                             <div>
                                                 <span class="font-medium">{{$request->item->sku}} </span>

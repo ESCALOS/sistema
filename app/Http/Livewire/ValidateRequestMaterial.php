@@ -19,9 +19,11 @@ use Livewire\Component;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Livewire\WithPagination;
 
 class ValidateRequestMaterial extends Component
 {
+    use WithPagination;
 /*---------------------------VARIABLES PÚBLICAS-------------------*/
     public $validacion = "";
 /*------------------------Modal general--------------------------*/
@@ -46,9 +48,6 @@ class ValidateRequestMaterial extends Component
 /*------------------------Datos del pedido en curso----------------------*/
     public $fecha_pedido = "";
     public $fecha_pedido_llegada;
-/*---------------------Datos del pedido en proceso--------------------*/
-    public $fecha_pedido_en_proceso = "";
-    public $sede_en_proceso_excluidos = [1];
 /*--------------------Datos del operador-------------*/
         public $id_operador = 0;
         public $operador = "";
@@ -227,7 +226,7 @@ class ValidateRequestMaterial extends Component
                 }
             /*------------------------------------------------------------------------------------*/
                 $this->cantidad = floatval($material->quantity);
-                $this->precio = floatval($material->estimated_price);
+                $this->precio = floatval(Item::find($material->item_id)->estimated_price);
                 if($this->precioTotal > 0 && $this->cantidad > 0){
                     $this->precioTotal = floatval($this->precio) * floatval($this->cantidad);
                 }else{
@@ -337,65 +336,75 @@ class ValidateRequestMaterial extends Component
         $material_nuevo = OrderRequestNewItem::find($id);
         $this->id_material_nuevo = $id;
         /*-----------Datos para la vista del pedido del operador--------------*/
-        $this->material_nuevo_nombre = $material_nuevo->new_item;
-        $this->material_nuevo_cantidad = $material_nuevo->quantity;
-        $this->material_nuevo_unidad_medida = $material_nuevo->measurementUnit->abbreviation;
-        $this->material_nuevo_ficha_tecnica = $material_nuevo->datasheet;
-        $this->material_nuevo_imagen = $material_nuevo->image;
+            $this->material_nuevo_nombre = $material_nuevo->new_item;
+            $this->material_nuevo_cantidad = $material_nuevo->quantity;
+            $this->material_nuevo_unidad_medida = $material_nuevo->measurementUnit->abbreviation;
+            $this->material_nuevo_ficha_tecnica = $material_nuevo->datasheet;
+            $this->material_nuevo_imagen = $material_nuevo->image;
         /*-----------Datos para guardar el material nuevo-------------------------*/
-        $this->create_material_item = $material_nuevo->new_item;
-        $this->create_material_measurement_unit = $material_nuevo->measurement_unit_id;
-        $this->create_material_quantity = $material_nuevo->quantity;
+            $this->create_material_item = $material_nuevo->new_item;
+            $this->create_material_measurement_unit = $material_nuevo->measurement_unit_id;
+            $this->create_material_quantity = $material_nuevo->quantity;
         /*------Abrir modal----------------------------------------*/
-        $this->open_detail_new_material = true;
-        $this->validacion = "";
+            $this->open_detail_new_material = true;
+            $this->validacion = "";
     }
-    public function agregarMaterialNuevo(){
-        $this->validacion = 'NUEVO';
-        $this->validate();
+    /*---------------------Agregar Material nuevo-------------------------------------*/
+        public function agregarMaterialNuevo(){
+            $this->validacion = 'NUEVO';
+            $this->validate();
         /*----------------Crear el nuevo item---------------------------------*/
-        $nuevo_item = Item::create([
-            'sku' => $this->create_material_sku,
-            'item' => strtolower($this->create_material_item),
-            'measurement_unit_id' => $this->create_material_measurement_unit,
-            'estimated_price' => $this->create_material_estimated_price,
-            'type' => $this->create_material_type,
-        ]);/*-----------------Crear espejo para verificar si se aceptó o modificó----------*/
-        if($this->material_nuevo_cantidad == $this->create_material_quantity){
-            $estado_material_nuevo = "ACEPTADO";
-        }else{
-            $estado_material_nuevo = "MODIFICADO";
-        }
-        OrderRequestDetail::create([
-            'order_request_id' => $this->id_solicitud_pedido,
-            'item_id' => $nuevo_item->id,
-            'quantity' => $this->material_nuevo_cantidad,
-            'estimated_price' => $this->create_material_estimated_price,
-            'state' => $estado_material_nuevo,
-        ]);
+            $nuevo_item = Item::create([
+                'sku' => $this->create_material_sku,
+                'item' => strtolower($this->create_material_item),
+                'measurement_unit_id' => $this->create_material_measurement_unit,
+                'estimated_price' => $this->create_material_estimated_price,
+                'type' => $this->create_material_type,
+            ]);
+        /*-----------------Crear espejo para verificar si se aceptó o modificó----------*/
+            if($this->material_nuevo_cantidad == $this->create_material_quantity){
+                $estado_material_nuevo = "ACEPTADO";
+            }else{
+                $estado_material_nuevo = "MODIFICADO";
+            }
+            OrderRequestDetail::create([
+                'order_request_id' => $this->id_solicitud_pedido,
+                'item_id' => $nuevo_item->id,
+                'quantity' => $this->material_nuevo_cantidad,
+                'estimated_price' => $this->create_material_estimated_price,
+                'state' => $estado_material_nuevo,
+            ]);
         /*----------------Crear el detalle de solictud como validado--------------------*/
-        OrderRequestDetail::create([
-            'order_request_id' => $this->id_solicitud_pedido,
-            'item_id' => $nuevo_item->id,
-            'quantity' => $this->create_material_quantity,
-            'estimated_price' => $this->create_material_estimated_price,
-            'state' => 'VALIDADO',
-        ]);
+            OrderRequestDetail::create([
+                'order_request_id' => $this->id_solicitud_pedido,
+                'item_id' => $nuevo_item->id,
+                'quantity' => $this->create_material_quantity,
+                'estimated_price' => $this->create_material_estimated_price,
+                'state' => 'VALIDADO',
+            ]);
         /*---------Actualizar la solicitud de nuevo material a creado-----------------------*/
-        $item_creado = OrderRequestNewItem::find($this->id_material_nuevo);
-        $item_creado->state = 'CREADO';
-        $item_creado->item_id = $nuevo_item->id;
-        $item_creado->save();
+            $item_creado = OrderRequestNewItem::find($this->id_material_nuevo);
+            $item_creado->state = 'CREADO';
+            $item_creado->item_id = $nuevo_item->id;
+            $item_creado->save();
         /*--------Cerrar Modal---------------*/
-        $this->open_detail_new_material = false;
-    }
-    public function rechazarMaterialNuevo(){
-        $item_no_creado = OrderRequestNewItem::find($this->id_material_nuevo);
-        $item_no_creado->state = 'RECHAZADO';
-        $item_no_creado->save();
-        /*--------Cerrar Modal---------------*/
-        $this->open_detail_new_material = false;
-    }
+            $this->open_detail_new_material = false;
+        }
+    /*--------RECHAZAR MATERIAL NUEVO-----------------------*/
+        public function rechazarMaterialNuevo(){
+            $item_no_creado = OrderRequestNewItem::find($this->id_material_nuevo);
+            $item_no_creado->state = 'RECHAZADO';
+            $item_no_creado->save();
+            /*--------Cerrar Modal---------------*/
+            $this->open_detail_new_material = false;
+        }
+/*---------------------FUNCIONES PARA PROCESO-----------------------------*/
+    /*--------------DETALLE DE MATERIALES POR OPERADOR--------------------*/
+        public function operatorProcess($item_id){
+            //$item = Item::find($item_id);
+            $this->tsede = 2;
+            $this->open_en_proceso = true;
+        }
 /*----------------------RENDER--------------------------------------------*/
     public function render()
     {
@@ -404,41 +413,18 @@ class ValidateRequestMaterial extends Component
 
             if($order_date = OrderDate::where('state','ABIERTO')->exists()){
                 $order_date = OrderDate::where('state','ABIERTO')->first();
-                $this->fecha_pedido = "PEDIDO PARA ".strtoupper(strftime("%A %d de %B de %Y", strtotime($order_date->order_date)));
+                $this->fecha_pedido = strtoupper(strftime("%A %d de %B de %Y", strtotime($order_date->order_date)));
                 $this->fecha_pedido_llegada = $order_date->arrival_date;
 
 
             /*---------------------Mostrar sedes y ubicaciones--------------------*/
-
                 $sedes = Sede::where('zone_id',Auth::user()->location->sede->zone->id)->select('id','sede')->get();
 
                 $locations = Location::where('sede_id',$this->tsede)->select('id','location')->get();
             }else{
                 $this->fecha_pedido = "";
-                /*-----------Ver si el pedido está validado y falta marca en proceso---------------*/
-                    $zona_usuario = Auth::user()->location->sede->zone->id;
-                    $en_proceso = OrderRequest::join('order_dates',function($join){
-                        $join->on('order_dates.id','=','order_requests.order_date_id');
-                    })->join('implements',function($join){
-                        $join->on('implements.id','=','order_requests.implement_id');
-                    })->join('locations',function($join){
-                        $join->on('locations.id','implements.location_id');
-                    })->join('sedes',function($join){
-                        $join->on('sedes.id','=','locations.sede_id');
-                    })->join('zones',function($join){
-                        $join->on('zones.id','=','sedes.zone_id');
-                    })->where('order_requests.state',"VALIDADO")->where('zones.id',$zona_usuario);
-
-                    if($en_proceso->exists()){
-                        $order_date = $en_proceso->select('order_dates.order_date')->first();
-                        $this->fecha_pedido_en_proceso = "CONFIRMAR PEDIDO DE ".strtoupper(strftime("%A %d de %B de %Y", strtotime($order_date->order_date)));
-                        $sedes = $en_proceso->select('sedes.id','sedes.sede')->groupBy('sedes.id')->get();
-                        //$sedes = Sede::where('zone_id',$zona_usuario)->select('id','sede')->get();
-                    }else{
-                        $this->fecha_pedido_en_proceso = "";
-                        $sedes = NULL;
-                    }
-                    $locations = NULL;
+                $sedes = NULL;
+                $locations = NULL;
             }
 
 

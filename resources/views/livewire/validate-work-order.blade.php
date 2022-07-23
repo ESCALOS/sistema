@@ -53,7 +53,7 @@
                     <tbody class="text-gray-600 text-sm font-light">
                         @isset($componentes)
                         @foreach ($componentes as $request)
-                            <tr wire:dblclick="mostrarModalValidarMaterial({{$request->id}})" class="border-b border-gray-200 unselected">
+                            <tr wire:click="mostrarModalValidarMaterial({{$request->id}})" class="border-b border-gray-200 unselected">
                                 <td class="py-3 px-6 text-center">
                                     <div>
                                         <span class="font-medium">{{$request->componente}} </span>
@@ -83,7 +83,7 @@
                     <tbody class="text-gray-600 text-sm font-light">
                         @isset($piezas)
                         @foreach ($piezas as $request)
-                            <tr wire:dblclick="mostrarModalValidarMaterial({{$request->id}})" class="border-b border-gray-200 unselected">
+                            <tr wire:click="mostrarModalValidarMaterial({{$request->id}})" class="border-b border-gray-200 unselected">
                                 <td class="py-3 px-6 text-center">
                                     <div>
                                         <span class="font-medium">{{$request->componente}} </span>

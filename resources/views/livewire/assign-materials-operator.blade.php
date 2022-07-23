@@ -119,7 +119,7 @@
                                 </thead>
                                 <tbody class="text-gray-600 text-sm font-light">
                                     @foreach ($order_request_detail as $request)
-                                    <tr wire:dblclick="modalAsignarOperador({{$request->id}})" class="border-b border-gray-200 unselected">
+                                    <tr wire:click="modalAsignarOperador({{$request->id}})" class="border-b border-gray-200 unselected">
                                         <td class="py-3 px-6 text-center">
                                             <div>
                                                 <span class="font-medium">{{$request->item->sku}} </span>
@@ -166,7 +166,7 @@
                                 <tbody class="text-gray-600 text-sm font-light">
                                     @isset($operator_stock)
                                     @foreach ($operator_stock as $request)
-                                    <tr wire:dblclick="$emit('confirmarAnularAsignacionMaterial',[{{$request->id}},'{{$request->item->item}}'])" class="border-b border-gray-200 unselected">
+                                    <tr wire:click="$emit('confirmarAnularAsignacionMaterial',[{{$request->id}},'{{$request->item->item}}'])" class="border-b border-gray-200 unselected">
                                         <td class="py-3 px-6 text-center">
                                             <div>
                                                 <span class="font-medium">{{$request->item->sku}} </span>

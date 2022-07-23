@@ -2,7 +2,7 @@
     @if ($fecha_pedido != "")
 <!-- Fecha del pedido actual  -->
     <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
-        <h1 class="font-bold text-2xl text-center">{{$fecha_pedido}} </h1>
+        <h1 class="font-bold text-2xl text-center">PEDIDO PARA <br> {{$fecha_pedido}} </h1>
     </div>
 <!-- Filtrar operarios que tienen pedidos por zona, sede y ubicación  -->
     <div class="grid grid-cols-1 sm:grid-cols-{{$tsede > 0 ? '2' : '1'}} gap-4">
@@ -11,11 +11,11 @@
                 <x-jet-label>Sede:</x-jet-label>
                 <select class="form-select" style="width: 100%" wire:model='tsede'>
                     <option value="0">Seleccione una zona</option>
-                @foreach ($sedes as $sede)
-                    <option value="{{ $sede->id }}">{{ $sede->sede }}</option>
+                @foreach ($sedes as $request)
+                    <option value="{{ $request->id }}">{{ $request->sede }}</option>
                 @endforeach
                 </select>
-            </div> {{$sede_en_proceso_excluidos}}
+            </div>
         </div>
         @if($tsede != 0)
             <div>
@@ -122,7 +122,7 @@
                                 </thead>
                                 <tbody class="text-gray-600 text-sm font-light">
                                     @foreach ($order_request_detail_operator as $request)
-                                        <tr wire:dblclick="mostrarModalValidarMaterial({{$request->id}})" class="border-b border-gray-200 unselected">
+                                        <tr wire:click="mostrarModalValidarMaterial({{$request->id}})" class="border-b border-gray-200 unselected">
                                             <td class="py-3 px-6 text-center">
                                                 <div>
                                                     <span class="font-medium">{{$request->sku}} </span>
@@ -189,7 +189,7 @@
                                 </thead>
                                 <tbody class="text-gray-600 text-sm font-light">
                                     @foreach ($order_request_detail_planner as $request)
-                                        <tr wire:dblclick="mostrarModalValidarMaterial({{$request->id}})" class="border-b border-gray-200 unselected">
+                                        <tr wire:click="mostrarModalValidarMaterial({{$request->id}})" class="border-b border-gray-200 unselected">
                                             <td class="py-3 px-6 text-center">
                                                 <div>
                                                     <span class="font-medium">{{$request->sku}} </span>
@@ -249,7 +249,7 @@
                             </thead>
                             <tbody class="text-gray-600 text-sm font-light">
                                 @foreach ($order_request_detail_rechazado as $request)
-                                    <tr wire:dblclick="$emit('confirmarReinsertarRechazado',[{{$request->id}},'{{$request->item}}'])" class="border-b border-gray-200 unselected">
+                                    <tr wire:click="$emit('confirmarReinsertarRechazado',[{{$request->id}},'{{$request->item}}'])" class="border-b border-gray-200 unselected">
                                         <td class="py-3 px-6 text-center">
                                             <div>
                                                 <span class="font-medium">{{$request->sku}} </span>
@@ -342,12 +342,12 @@
                 <x-jet-input-error for="cantidad"/>
             </div>
             <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
-                <x-jet-label>Precio Unitario</span></x-jet-label>
+                <x-jet-label>Precio Unitario</x-jet-label>
                 <x-jet-input type="number" min="0" style="height:30px;width: 100%" class="text-center" wire:model="precio"/>
                 <x-jet-input-error for="precio"/>
             </div>
             <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
-                <x-jet-label>Precio Total</span></x-jet-label>
+                <x-jet-label>Precio Total</x-jet-label>
                 <x-jet-input type="number" min="0" disabled style="height:30px;width: 100%" class="text-center" value="{{$precioTotal}}"/>
 
             </div>
@@ -390,7 +390,7 @@
                     </thead>
                     <tbody class="text-gray-600 text-sm font-light">
                         @foreach ($order_request_new_materials as $request)
-                            <tr wire:dblclick="detalleMaterialNuevo({{$request->id}})" class="border-b border-gray-200 unselected">
+                            <tr wire:click="detalleMaterialNuevo({{$request->id}})" class="border-b border-gray-200 unselected">
                                 <td class="py-3 px-6 text-center">
                                     <div>
                                         <span class="font-medium">{{$request->new_item}} </span>
@@ -508,25 +508,9 @@
         </x-slot>
     </x-jet-dialog-modal>
 <!---------------------MENSAJE CUANDO NO HAY PEDIDOS ABIERTOS-------------------------------------->
-    @elseif ($fecha_pedido_en_proceso != "")
-    <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
-        <h1 class="font-bold text-2xl text-center">{{$fecha_pedido_en_proceso}} </h1>
-    </div>
-    <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
-        <x-jet-label>Sede:</x-jet-label>
-        <select class="form-select" style="width: 100%" wire:model='tsede'>
-                <option value="0">Seleccione una zona</option>
-        @foreach ($sedes as $sede)
-            <option value="{{ $sede->id }}">{{ $sede->sede }}</option>
-        @endforeach
-        </select>
-    </div>
-
-
     @else
-    <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
-        <h1 class="font-bold text-4xl">NO HAY PEDIDOS PARA VALIDAR</h1>
-    </div>
+        @livewire('order-for-proccess',['tsede' => $this->tsede])
     @endif
+
 <!---------------------------------------------------------------------------------------->
 </div>

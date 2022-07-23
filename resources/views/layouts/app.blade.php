@@ -28,7 +28,7 @@
             @livewire('navigation')
 
             <div>
-                <div class="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
+                <div class="max-w-7xl mx-auto pt-8 -4 sm:px-6 lg:px-8">
                     {{ $slot }}
                 </div>
             </div>
@@ -228,7 +228,31 @@
                             Livewire.emitTo('validate-request-material','rechazarMaterialNuevo');
 
                             Swal.fire(
-                                'Solicitud de pedido validado!',
+                                'Solicitud de pedido rechazado!',
+                                'El pedido se rechazó correctamente',
+                                'success'
+                            )
+                        }
+                    })
+            });
+        /*---------------------CONFIRMAR PROCESAR PEDIDO-----------------------------------------------*/
+            Livewire.on('procesarPedido', sede =>{
+                Swal.fire({
+                    title: 'Procesar pedido de la sede '+sede+'?',
+                    text: "Esta acción es irreversible",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, procesar!',
+                    cancelButtonText: 'No, cancelar!',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+
+                            Livewire.emitTo('validate-request-material','procesarPedido');
+
+                            Swal.fire(
+                                'Solicitud de pedido procesado!',
                                 'El pedido se validó correctamente',
                                 'success'
                             )

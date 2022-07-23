@@ -175,6 +175,7 @@
                 </div>
             </div>
             <div class="p-6">
+                <div>
                     @if ($tractorReports->count())
                         <table class="min-w-max w-full table-fixed overflow-x-scroll">
                             <thead>
@@ -245,7 +246,6 @@
                         <div class="px-4 py-4">
                             {{ $tractorReports->links() }}
                         </div>
-                    </div>
                 </div>
             </div>
         </div>
