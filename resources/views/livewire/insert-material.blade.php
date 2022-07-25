@@ -1,12 +1,12 @@
 <div>
-    
+
     <div class="px-6 py-4 text-center">
-        
+
         <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
         <!--------Boton para filtros------------>
             <div x-data="{ open:false }">
                 <button x-on:click="open = !open" id="dropdownSearchButton"  data-dropdown-toggle="dropdownSearch" class="inline-flex items-center py-2 px-4 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800" type="button">
-                    Dropdown search 
+                    Dropdown search
                     <svg class="ml-2 w-4 h-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
@@ -35,7 +35,7 @@
             </div>
         <!--------Boton para importar----------->
             <div>
-                <button class="inline-flex items-center py-2 px-4 text-sm font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700">
+                <button wire:click="$set('open_import_stock',true)" class="inline-flex items-center py-2 px-4 text-sm font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700">
                     <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 48 48" width="24px" height="24px">
                         <path fill="#169154" d="M29,6H15.744C14.781,6,14,6.781,14,7.744v7.259h15V6z"/><path fill="#18482a" d="M14,33.054v7.202C14,41.219,14.781,42,15.743,42H29v-8.946H14z"/><path fill="#0c8045" d="M14 15.003H29V24.005000000000003H14z"/><path fill="#17472a" d="M14 24.005H29V33.055H14z"/><g><path fill="#29c27f" d="M42.256,6H29v9.003h15V7.744C44,6.781,43.219,6,42.256,6z"/><path fill="#27663f" d="M29,33.054V42h13.257C43.219,42,44,41.219,44,40.257v-7.202H29z"/><path fill="#19ac65" d="M29 15.003H44V24.005000000000003H29z"/><path fill="#129652" d="M29 24.005H44V33.055H29z"/></g><path fill="#0c7238" d="M22.319,34H5.681C4.753,34,4,33.247,4,32.319V15.681C4,14.753,4.753,14,5.681,14h16.638 C23.247,14,24,14.753,24,15.681v16.638C24,33.247,23.247,34,22.319,34z"/><path fill="#fff" d="M9.807 19L12.193 19 14.129 22.754 16.175 19 18.404 19 15.333 24 18.474 29 16.123 29 14.013 25.07 11.912 29 9.526 29 12.719 23.982z"/>
                     </svg>
@@ -108,5 +108,47 @@
                 </div>
             </div>
         </div>
+        <x-jet-dialog-modal wire:model="open_import_stock">
+            <x-slot name="title">
+                Importar stock
+            </x-slot>
+            <x-slot name="content">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                    <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
+                        <x-jet-label>Pedidos: </x-jet-label>
+                        <select class="form-select" style="width: 100%" wire:model='fecha_pedido'>
+                            <option value="">Seleccione una opción</option>
+                            @foreach ($order_dates as $order_date)
+                                <option value="{{ $order_date->id }}">{{ $order_date->order_date }} </option>
+                            @endforeach
+                        </select>
+
+                        <x-jet-input-error for="fecha_pedido"/>
+
+                    </div>
+
+                    <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
+                        <x-jet-label>Excel:</x-jet-label>
+                        <input type="file"  id="upload{{$iteration}}" style="height:30px;width: 100%" wire:model="stock" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"/>
+
+                        <x-jet-input-error for="stock"/>
+
+                    </div>
+
+                </div>
+            </x-slot>
+            <x-slot name="footer">
+                <x-jet-button wire:loading.attr="disabled" wire:click="importarStock()">
+                    Importando
+                </x-jet-button>
+                <div wire:loading wire:target="actualizar_nuevo">
+                    Registrando...
+                </div>
+                <x-jet-secondary-button wire:loading.attr="disabled" wire:click="$set('open_import_stock',false)" class="ml-2">
+                    Cancelar
+                </x-jet-secondary-button>
+            </x-slot>
+        </x-jet-dialog-modal>
     </div>
 </div>

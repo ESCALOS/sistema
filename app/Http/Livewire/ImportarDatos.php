@@ -16,12 +16,16 @@ class ImportarDatos extends Component
     public $item;
 
     public function importarUsuarios(){
+
+        #$this->user->store('user');
         Excel::import(new UsersImport, $this->user);
 
         $this->emit('alert');
     }
 
     public function importarItems(){
+
+        #$this->item->store('item');
         Excel::import(new ItemsImport, $this->item);
 
         $this->emit('alert');

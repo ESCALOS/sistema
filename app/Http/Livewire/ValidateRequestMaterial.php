@@ -258,6 +258,7 @@ class ValidateRequestMaterial extends Component
                         'order_request_id' => $this->id_solicitud_pedido,
                         'item_id' => $material->item_id,
                         'quantity' => $this->cantidad,
+                        'quantity_to_use' => $this->cantidad,
                         'estimated_price' => $this->precio,
                         'state' => 'VALIDADO',
                     ]);
