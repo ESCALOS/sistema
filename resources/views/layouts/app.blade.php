@@ -236,7 +236,7 @@
                     })
             });
         /*---------------------CONFIRMAR PROCESAR PEDIDO-----------------------------------------------*/
-            Livewire.on('procesarPedido', sede =>{
+            Livewire.on('confirmarProcesarPedido', sede =>{
                 Swal.fire({
                     title: 'Procesar pedido de la sede '+sede+'?',
                     text: "Esta acción es irreversible",
@@ -249,7 +249,7 @@
                     }).then((result) => {
                         if (result.isConfirmed) {
 
-                            Livewire.emitTo('validate-request-material','procesarPedido');
+                            Livewire.emitTo('order-for-proccess','procesarPedido');
 
                             Swal.fire(
                                 'Solicitud de pedido procesado!',

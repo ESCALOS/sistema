@@ -2,8 +2,8 @@
 -- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
--- Servidor: localhost
--- Tiempo de generación: 23-07-2022 a las 21:21:07
+-- Servidor: 127.0.0.1
+-- Tiempo de generación: 25-07-2022 a las 07:13:09
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -1523,7 +1523,7 @@ CREATE TABLE `general_stocks` (
 --
 
 INSERT INTO `general_stocks` (`id`, `item_id`, `quantity`, `price`, `sede_id`, `created_at`, `updated_at`) VALUES
-(1, 1, '75.00', '345.00', 2, '2022-07-18 17:16:21', '2022-07-18 17:24:05'),
+(1, 1, '15.00', '75.00', 2, '2022-07-18 17:16:21', '2022-07-25 04:03:07'),
 (2, 1, '64.00', '238.00', 1, '2022-07-18 17:16:21', '2022-07-18 19:07:09'),
 (3, 3, '2.00', '28.00', 1, '2022-07-18 19:12:11', '2022-07-18 19:12:11'),
 (4, 57, '5.00', '17.50', 1, '2022-07-18 19:12:11', '2022-07-18 19:12:11'),
@@ -1554,10 +1554,9 @@ CREATE TABLE `general_stock_details` (
 --
 
 INSERT INTO `general_stock_details` (`id`, `item_id`, `movement`, `quantity`, `price`, `sede_id`, `is_canceled`, `order_date_id`, `created_at`, `updated_at`) VALUES
-(3, 1, 'INGRESO', '60.00', '4.50', 2, 1, NULL, '2022-07-18 17:16:21', '2022-07-18 17:18:02'),
 (4, 1, 'INGRESO', '20.00', '4.50', 1, 1, NULL, '2022-07-18 17:16:21', '2022-07-18 17:17:58'),
 (5, 1, 'INGRESO', '15.00', '5.00', 2, 1, NULL, '2022-07-18 17:16:46', '2022-07-18 17:17:52'),
-(6, 1, 'INGRESO', '60.00', '4.50', 2, 0, NULL, '2022-07-18 17:24:05', '2022-07-18 17:24:05'),
+(6, 1, 'INGRESO', '60.00', '4.50', 2, 0, NULL, '2022-07-18 17:24:05', '2022-07-25 04:26:11'),
 (7, 1, 'INGRESO', '15.00', '5.00', 2, 0, NULL, '2022-07-18 17:24:05', '2022-07-18 17:24:05'),
 (8, 1, 'INGRESO', '50.00', '3.50', 1, 0, NULL, '2022-07-18 19:06:44', '2022-07-18 19:06:44'),
 (9, 1, 'INGRESO', '14.00', '4.50', 1, 0, NULL, '2022-07-18 19:07:09', '2022-07-18 19:07:09'),
@@ -1571,8 +1570,7 @@ INSERT INTO `general_stock_details` (`id`, `item_id`, `movement`, `quantity`, `p
 --
 DELIMITER $$
 CREATE TRIGGER `actualizar_movimiento_stock_general` AFTER UPDATE ON `general_stock_details` FOR EACH ROW BEGIN
-	DECLARE last_price DECIMAL(8,2);
-	IF new.is_canceled THEN
+	IF new.is_canceled AND new.is_canceled <> old.is_canceled THEN
     	IF new.movement = "INGRESO" THEN
         	UPDATE general_stocks SET quantity = quantity - new.quantity, price = price - (new.price*new.quantity) WHERE item_id = new.item_id AND sede_id = new.sede_id;
         ELSE
@@ -1581,8 +1579,6 @@ CREATE TRIGGER `actualizar_movimiento_stock_general` AFTER UPDATE ON `general_st
     ELSE
     	IF new.movement = "INGRESO" THEN
         	UPDATE general_stocks SET quantity = quantity - old.quantity + new.quantity, price = price - (old.price - new.price)*quantity WHERE item_id = new.item_id AND sede_id = new.sede_id;
-            SELECT price INTO last_price FROM general_stock_details WHERE item_id = new.item_id AND sede_id = new.sede_id AND is_canceled = 0;
-            UPDATE items SET estimated_price = last_price WHERE id = new.item_id;
         ELSE
             UPDATE general_stocks SET quantity = quantity + old.quantity - new.quantity, price = price + (old.price - new.price)*quantity WHERE item_id = new.item_id AND sede_id = new.sede_id;
             END IF;
@@ -2373,14 +2369,14 @@ CREATE TABLE `order_requests` (
 --
 
 INSERT INTO `order_requests` (`id`, `user_id`, `implement_id`, `state`, `validated_by`, `is_canceled`, `order_date_id`, `created_at`, `updated_at`) VALUES
-(101, 1, 1, 'VALIDADO', 4, 0, 1, '2022-07-16 16:21:09', '2022-07-22 21:36:19'),
-(102, 2, 2, 'VALIDADO', 4, 0, 1, '2022-07-16 16:21:12', '2022-07-22 21:38:36'),
-(103, 3, 3, 'VALIDADO', 4, 0, 1, '2022-07-16 16:21:16', '2022-07-22 21:39:43'),
-(104, 4, 4, 'VALIDADO', 4, 0, 1, '2022-07-16 16:21:19', '2022-07-24 00:15:05'),
-(105, 5, 5, 'VALIDADO', 4, 0, 1, '2022-07-16 16:21:21', '2022-07-21 23:37:51'),
-(106, 6, 6, 'VALIDADO', 4, 0, 1, '2022-07-16 16:21:24', '2022-07-22 21:41:50'),
-(107, 7, 7, 'VALIDADO', 4, 0, 1, '2022-07-16 16:21:25', '2022-07-22 21:43:08'),
-(108, 8, 8, 'VALIDADO', 4, 0, 1, '2022-07-16 16:21:27', '2022-07-22 21:44:50'),
+(101, 1, 1, 'EN PROCESO', 4, 0, 1, '2022-07-16 16:21:09', '2022-07-25 07:53:22'),
+(102, 2, 2, 'EN PROCESO', 4, 0, 1, '2022-07-16 16:21:12', '2022-07-25 07:53:22'),
+(103, 3, 3, 'EN PROCESO', 4, 0, 1, '2022-07-16 16:21:16', '2022-07-25 07:53:22'),
+(104, 4, 4, 'EN PROCESO', 4, 0, 1, '2022-07-16 16:21:19', '2022-07-25 07:53:22'),
+(105, 5, 5, 'EN PROCESO', 4, 0, 1, '2022-07-16 16:21:21', '2022-07-25 07:53:17'),
+(106, 6, 6, 'EN PROCESO', 4, 0, 1, '2022-07-16 16:21:24', '2022-07-25 07:53:17'),
+(107, 7, 7, 'EN PROCESO', 4, 0, 1, '2022-07-16 16:21:25', '2022-07-25 07:53:17'),
+(108, 8, 8, 'EN PROCESO', 4, 0, 1, '2022-07-16 16:21:27', '2022-07-25 07:53:17'),
 (109, 9, 9, 'CERRADO', NULL, 0, 1, '2022-07-16 16:21:29', '2022-07-22 16:34:07'),
 (110, 10, 10, 'CERRADO', NULL, 0, 1, '2022-07-16 16:21:32', '2022-07-22 16:34:07'),
 (111, 11, 11, 'CERRADO', NULL, 0, 1, '2022-07-16 16:21:35', '2022-07-22 16:34:07'),
@@ -2563,60 +2559,60 @@ INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quant
 (229, 105, 42, '1.00', '497.07', 'ACEPTADO', '0.00', 'NO CONCLUIDO', '2022-07-21 23:32:00', '2022-07-21 23:34:58'),
 (230, 105, 5, '1.00', '45.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 23:33:24', '2022-07-21 23:36:56'),
 (231, 105, 9, '5.00', '27.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 23:33:56', '2022-07-21 23:36:49'),
-(232, 105, 52, '10.00', '15.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 23:34:03', '2022-07-21 23:34:09'),
-(233, 105, 57, '4.00', '71.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 23:34:25', '2022-07-21 23:36:38'),
+(232, 105, 52, '10.00', '150.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 23:34:03', '2022-07-25 00:20:42'),
+(233, 105, 57, '4.00', '35.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 23:34:25', '2022-07-25 00:16:10'),
 (234, 105, 42, '1.00', '75.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 23:34:57', '2022-07-21 23:36:33'),
 (235, 105, 4, '3.00', '35.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 23:36:22', '2022-07-21 23:36:22'),
 (236, 105, 44, '10.00', '45.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 23:37:03', '2022-07-21 23:37:03'),
-(237, 105, 3, '12.00', '80.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 23:37:16', '2022-07-21 23:37:26'),
+(237, 105, 3, '12.00', '65.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 23:37:16', '2022-07-24 23:41:17'),
 (238, 105, 24, '3.00', '40.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-21 23:37:39', '2022-07-21 23:37:39'),
-(239, 101, 52, '6.00', '200.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:34:29', '2022-07-22 21:34:29'),
+(239, 101, 52, '6.00', '150.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:34:29', '2022-07-25 00:20:42'),
 (240, 101, 44, '10.00', '10.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:34:37', '2022-07-22 21:34:37'),
 (241, 101, 21, '2.00', '50.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:34:46', '2022-07-22 21:34:46'),
-(242, 101, 9, '10.00', '14.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:34:54', '2022-07-22 21:36:09'),
+(242, 101, 9, '10.00', '27.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:34:54', '2022-07-24 23:44:09'),
 (243, 101, 1, '2.00', '450.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:35:04', '2022-07-22 21:35:04'),
-(244, 101, 57, '35.00', '30.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:35:12', '2022-07-22 21:36:16'),
+(244, 101, 57, '35.00', '35.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:35:12', '2022-07-25 00:16:10'),
 (245, 101, 24, '3.00', '450.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:35:20', '2022-07-22 21:35:20'),
-(246, 101, 3, '5.00', '74.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:35:42', '2022-07-22 21:35:42'),
-(247, 102, 52, '6.00', '214.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:36:29', '2022-07-22 21:38:25'),
+(246, 101, 3, '5.00', '65.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:35:42', '2022-07-24 23:41:17'),
+(247, 102, 52, '6.00', '150.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:36:29', '2022-07-25 00:20:42'),
 (248, 102, 44, '12.00', '54.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:36:35', '2022-07-22 21:38:18'),
-(249, 102, 9, '11.00', '74.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:36:43', '2022-07-22 21:38:32'),
+(249, 102, 9, '11.00', '27.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:36:43', '2022-07-24 23:44:09'),
 (250, 102, 21, '4.00', '54.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:36:53', '2022-07-22 21:36:53'),
-(251, 102, 3, '4.00', '54.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:37:01', '2022-07-22 21:37:01'),
-(252, 102, 57, '25.00', '9.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:37:09', '2022-07-22 21:38:00'),
+(251, 102, 3, '4.00', '65.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:37:01', '2022-07-24 23:41:17'),
+(252, 102, 57, '25.00', '35.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:37:09', '2022-07-25 00:16:10'),
 (253, 102, 24, '3.00', '52.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:37:23', '2022-07-22 21:37:23'),
-(254, 103, 52, '4.00', '200.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:38:51', '2022-07-22 21:38:51'),
+(254, 103, 52, '4.00', '150.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:38:51', '2022-07-25 00:20:42'),
 (255, 103, 44, '10.00', '45.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:38:58', '2022-07-22 21:38:58'),
-(256, 103, 9, '9.00', '36.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:39:03', '2022-07-22 21:39:03'),
+(256, 103, 9, '9.00', '27.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:39:03', '2022-07-24 23:44:09'),
 (257, 103, 21, '11.00', '41.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:39:10', '2022-07-22 21:39:10'),
-(258, 103, 57, '36.00', '50.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:39:16', '2022-07-22 21:39:16'),
+(258, 103, 57, '36.00', '35.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:39:16', '2022-07-25 00:16:10'),
 (259, 103, 24, '3.00', '36.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:39:22', '2022-07-22 21:39:22'),
-(260, 103, 3, '4.00', '50.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:39:38', '2022-07-22 21:39:38'),
+(260, 103, 3, '4.00', '65.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:39:38', '2022-07-24 23:41:17'),
 (262, 106, 44, '10.00', '143.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:40:46', '2022-07-22 21:40:46'),
-(263, 106, 3, '12.00', '69.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:40:52', '2022-07-22 21:40:52'),
-(264, 106, 52, '10.00', '25.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:40:59', '2022-07-22 21:40:59'),
-(265, 106, 9, '6.00', '54.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:41:04', '2022-07-22 21:41:04'),
-(266, 106, 57, '8.00', '45.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:41:09', '2022-07-22 21:41:35'),
+(263, 106, 3, '12.00', '65.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:40:52', '2022-07-24 23:41:17'),
+(264, 106, 52, '10.00', '150.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:40:59', '2022-07-25 00:20:42'),
+(265, 106, 9, '6.00', '27.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:41:04', '2022-07-24 23:44:09'),
+(266, 106, 57, '8.00', '35.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:41:09', '2022-07-25 00:16:10'),
 (267, 106, 4, '3.00', '45.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:41:13', '2022-07-22 21:41:13'),
 (268, 106, 24, '5.00', '50.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:41:20', '2022-07-22 21:41:26'),
 (269, 107, 44, '10.00', '90.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:42:01', '2022-07-22 21:42:01'),
-(270, 107, 3, '12.00', '69.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:42:06', '2022-07-22 21:42:06'),
+(270, 107, 3, '12.00', '65.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:42:06', '2022-07-24 23:41:17'),
 (271, 107, 4, '3.00', '450.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:42:13', '2022-07-22 21:42:13'),
 (272, 107, 24, '6.00', '72.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:42:18', '2022-07-22 21:42:18'),
-(273, 107, 52, '10.00', '10.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:42:24', '2022-07-22 21:42:56'),
-(274, 107, 57, '5.00', '65.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:42:29', '2022-07-22 21:43:04'),
-(275, 107, 9, '4.00', '30.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:42:35', '2022-07-22 21:42:35'),
+(273, 107, 52, '10.00', '150.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:42:24', '2022-07-25 00:20:42'),
+(274, 107, 57, '5.00', '35.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:42:29', '2022-07-25 00:16:10'),
+(275, 107, 9, '4.00', '27.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:42:35', '2022-07-24 23:44:09'),
 (276, 108, 44, '10.00', '120.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:43:23', '2022-07-22 21:43:23'),
-(277, 108, 3, '12.00', '75.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:43:30', '2022-07-22 21:43:30'),
+(277, 108, 3, '12.00', '65.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:43:30', '2022-07-24 23:41:17'),
 (278, 108, 24, '5.00', '58.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:43:38', '2022-07-22 21:43:38'),
 (279, 108, 4, '2.00', '41.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:43:44', '2022-07-22 21:43:44'),
-(280, 108, 52, '10.00', '22.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:43:51', '2022-07-22 21:44:40'),
-(281, 108, 9, '5.00', '45.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:44:02', '2022-07-22 21:44:02'),
-(282, 108, 57, '8.00', '278.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:44:10', '2022-07-22 21:44:47'),
-(284, 104, 52, '3.00', '25.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-23 23:45:31', '2022-07-23 23:45:31'),
+(280, 108, 52, '10.00', '150.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:43:51', '2022-07-25 00:20:42'),
+(281, 108, 9, '5.00', '27.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:44:02', '2022-07-24 23:44:09'),
+(282, 108, 57, '8.00', '35.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-22 21:44:10', '2022-07-25 00:16:10'),
+(284, 104, 52, '3.00', '150.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-23 23:45:31', '2022-07-25 00:20:42'),
 (285, 104, 44, '2.00', '121.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-24 00:14:23', '2022-07-24 00:14:23'),
-(286, 104, 57, '2.00', '280.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-24 00:14:30', '2022-07-24 00:14:30'),
-(287, 104, 9, '2.00', '45.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-24 00:14:36', '2022-07-24 00:14:36');
+(286, 104, 57, '2.00', '35.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-24 00:14:30', '2022-07-25 00:16:10'),
+(287, 104, 9, '2.00', '27.00', 'VALIDADO', '0.00', 'NO CONCLUIDO', '2022-07-24 00:14:36', '2022-07-24 23:44:09');
 
 -- --------------------------------------------------------
 
@@ -3053,7 +3049,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('w8TxokIGCMPAxkTbVWuc6xb0CER3ChirBNxR8W9j', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiaXhWZkx1NzNOMHRoWVg1Z2ZmOEdaakxNS05yZDFsUnpsQ1NTU05CTiI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjQzOiJodHRwOi8vc2lzdGVtYS50ZXN0L3BsYW5uZXIvdmFsaWRhci1wZWRpZG9zIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDt9', 1658604011);
+('qgZYOFIbNHtHV7sOjy6pZ39kIIEQlZXoGuYOi7SH', 4, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiWW1JbFc2Nzg0cjd0NkVjY2RiZTZTckh2Umw2OG1WT25zNmw3Y212YyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDY6Imh0dHA6Ly9zaXN0ZW1hLnRlc3QvcGxhbm5lci9pbnNlcnRhci1tYXRlcmlhbHMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aTo0O30=', 1658725973);
 
 -- --------------------------------------------------------
 
@@ -3704,7 +3700,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `lista_de_materiales_pedidos`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock`, `ord`.`state` AS `state` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) ORDER BY `ord`.`id` AS `DESCdesc` ASC  ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock`, `ord`.`state` AS `state` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) ORDER BY `ord`.`id` DESC;
 
 -- --------------------------------------------------------
 
@@ -3713,7 +3709,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `lista_de_materiales_pedidos_pendientes`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos_pendientes`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) WHERE `ord`.`state` = 'PENDIENTE' ORDER BY `ord`.`id` AS `DESCdesc` ASC  ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos_pendientes`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) WHERE `ord`.`state` = 'PENDIENTE' ORDER BY `ord`.`id` DESC;
 
 -- --------------------------------------------------------
 
@@ -3989,7 +3985,8 @@ ALTER TABLE `order_requests`
   ADD KEY `order_requests_user_id_foreign` (`user_id`),
   ADD KEY `order_requests_implement_id_foreign` (`implement_id`),
   ADD KEY `order_requests_validate_by_foreign` (`validated_by`),
-  ADD KEY `order_requests_order_date_id_foreign` (`order_date_id`);
+  ADD KEY `order_requests_order_date_id_foreign` (`order_date_id`),
+  ADD KEY `state` (`state`);
 
 --
 -- Indices de la tabla `order_request_details`
