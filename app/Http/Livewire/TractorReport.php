@@ -47,7 +47,7 @@ class TractorReport extends Component
         'lote' => 'required|exists:lotes,id',
         'correlative' => 'required',
         'date' => 'required|date|date_format:Y-m-d',
-        'shift' => 'required',
+        'shift' => 'required|in:MAÑANA,NOCHE',
         'user' => 'required|exists:users,id',
         'tractor' => 'required|exists:tractors,id',
         'labor' => 'required|exists:labors,id',
@@ -71,7 +71,8 @@ class TractorReport extends Component
         'implement.required' => 'Seleccione el implemento',
         'implement.exists' => 'El implemento no existe',
         'hour_meter_end.required' => 'Ingrese el horometro final',
-        'hour_meter_end.gt' => 'El horometro final debe ser mayor que el inicial'
+        'hour_meter_end.gt' => 'El horometro final debe ser mayor que el inicial',
+        'shift.in' => 'El turno no existe'
     ];
 
     protected $listeners = ['render'];

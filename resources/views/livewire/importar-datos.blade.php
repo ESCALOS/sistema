@@ -15,7 +15,7 @@
     <div>
         <ul>
         @foreach ($errores_item as $error)
-            <li>{{explode('"',serialize($error->errors()))[1]}} Nombre del item: {{explode('"',serialize($error->values()))[5]}}, en la fila {{serialize($error->row())[2]}}</li>
+            <li>{{explode('"',serialize($error->errors()))[1]}} en la fila {{serialize($error->row())[2]}}</li>
         @endforeach
         </ul>
     </div>

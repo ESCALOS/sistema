@@ -24,7 +24,7 @@
     <!---------------Modal de Items por operador-------------------------->
     <x-jet-dialog-modal wire:model="open_en_proceso">
         <x-slot name="title">
-            <h1>{{$detalle_item}}</h1>
+            <h1>{{$detalle_item}} - S/.{{$precio_item}} </h1>
         </x-slot>
         <x-slot name="content">
             @isset($items_por_operador)
@@ -45,10 +45,6 @@
                                             width="25">
                                     </th>
                                     <th class="py-3 text-center">
-                                        <span class="hidden sm:block">Precio Unitario</span>
-                                        <img class="sm:hidden flex mx-auto" src="/img/implement.png" alt="implement" width="25">
-                                    </th>
-                                    <th class="py-3 text-center">
                                         <span class="hidden sm:block">Precio Total</span>
                                         <img class="sm:hidden flex mx-auto" src="/img/date.svg" alt="date" width="28">
                                     </th>
@@ -65,11 +61,6 @@
                                         <td class="py-3 text-center">
                                             <div>
                                                 <span class="font-medium">{{ floatVal($request->quantity) }} {{ $request->abbreviation }}</span>
-                                            </div>
-                                        </td>
-                                        <td class="py-3 text-center">
-                                            <div>
-                                                <span class="font-medium">S./ {{ number_format($request->unit_price,2,".") }}</span>
                                             </div>
                                         </td>
                                         <td class="py-3 text-center">
@@ -202,6 +193,10 @@
                                         width="25">
                                 </th>
                                 <th class="py-3 text-center">
+                                    <span class="hidden sm:block">Precio Unitario</span>
+                                    <img class="sm:hidden flex mx-auto" src="/img/date.svg" alt="date" width="28">
+                                </th>
+                                <th class="py-3 text-center">
                                     <span class="hidden sm:block">Precio Total</span>
                                     <img class="sm:hidden flex mx-auto" src="/img/date.svg" alt="date" width="28">
                                 </th>
@@ -217,7 +212,7 @@
                                     </td>
                                     <td class="py-3 text-center">
                                         <div>
-                                            <span class="font-medium">{{ $request->item }}</span>
+                                            <span class="font-bold {{$request->type == "PIEZA" ? 'text-red-500' : ( $request->type == "COMPONENTE" ? 'text-green-500' : ($request->type == "COMPONENTE" ? 'text-green-500' : ($request->type == "FUNGIBLE" ? 'text-amber-500' : 'text-blue-500')))}} ">{{ strtoupper($request->item) }}</span>
                                         </div>
                                     </td>
                                     <td class="py-3 text-center">
@@ -227,7 +222,12 @@
                                     </td>
                                     <td class="py-3 text-center">
                                         <div>
-                                            <span class="font-medium">S./ {{ number_format($request->total_price,2,".") }}</span>
+                                            <span class="font-medium">S./ {{ number_format($request->unit_price,2,".") }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 text-center">
+                                        <div>
+                                            <span class="font-medium">S./ {{ number_format($request->unit_price*$request->quantity,2,".") }}</span>
                                         </div>
                                     </td>
                                 </tr>

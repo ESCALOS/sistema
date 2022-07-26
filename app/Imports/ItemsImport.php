@@ -4,9 +4,7 @@ namespace App\Imports;
 
 use App\Models\Item;
 use App\Models\MeasurementUnit;
-use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Concerns\SkipsOnError;
-use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
@@ -54,7 +52,17 @@ class ItemsImport implements ToModel, WithHeadingRow,WithValidation,WithBatchIns
         return [
             '*.codigo' => ['required','unique:items,sku'],
             '*.detalle' => ['required','unique:items,item'],
-            '*.unidad_de_medida' => ['required','exists:measurement_units,abbreviation']
+            '*.unidad_de_medida' => ['required','exists:measurement_units,abbreviation'],
+            '*.tipo' => ['required', 'in:COMPONENTE,PIEZA,FUNGIBLE,HERRAMIENTA']
+        ];
+    }
+
+    public function customValidationMessages(){
+        return[
+            'codigo.unique' => 'Código repetido',
+            'detalle.unique' => 'Detalle repetido',
+            'unidad_de_medida.exists' => 'No existe la unidad de medida',
+            'tipo.in' => 'El tipo no existe'
         ];
     }
 

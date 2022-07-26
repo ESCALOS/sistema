@@ -85,16 +85,16 @@
                                 </td>
                                 <td class="py-3 px-6 text-center">
                                     <div>
-                                        <span class="font-bold">{{floatVal($request->price)}} </span>
+                                        <span class="font-bold">S/. {{number_format($request->price,2,".")}} </span>
                                     </div>
                                 </td>
                                 <td class="py-3 px-6 text-center">
                                     <div>
                                         <span class="font-bold">
-                                            @if($request->order_date_id == "")
+                                            @if($request->order_date == "")
                                                 Stock Inicial
                                             @else
-                                                {{$request->order_date_id}}
+                                                {{$request->order_date}}
                                             @endif
                                         </span>
                                     </div>
@@ -135,6 +135,39 @@
                         <x-jet-input-error for="stock"/>
 
                     </div>
+
+                    @if (isset($errores_stock) && count($errores_stock))
+                    <div style="max-height:180px;overflow:auto;grid-column: 2 span/ 2 span;">
+                        <table class="min-w-max w-full">
+                            <thead>
+                                <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                    <th class="py-3 text-center">
+                                        <span>Error</span>
+                                    </th>
+                                    <th class="py-3 text-center">
+                                        <span>Fila</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-600 text-sm font-light">
+                                @foreach ($errores_stock as $error)
+                                    <tr class="border-b border-gray-200 unselected">
+                                        <td class="py-3 px-6 text-center">
+                                            <div>
+                                                <span class="font-medium">{{explode('"',serialize($error->errors()))[1]}} </span>
+                                            </div>
+                                        </td>
+                                        <td class="py-3 px-6 text-center">
+                                            <div>
+                                                <span class="font-medium">{{serialize($error->row())[2]}} </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @endif
 
                 </div>
             </x-slot>

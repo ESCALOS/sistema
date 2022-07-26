@@ -24,6 +24,7 @@ class OrderForProccess extends Component
 
     public $item_id = 0;
     public $detalle_item = "";
+    public $precio_item = 0;
 
     public $operador_id = 0;
     public $nombre_operador = "";
@@ -46,7 +47,9 @@ class OrderForProccess extends Component
 
     public function detalleOperador($item){
         $this->item_id = $item;
-        $this->detalle_item = Item::find($item)->item;
+        $material = Item::find($item);
+        $this->detalle_item = $material->item;
+        $this->precio_item = $material->estimated_price;
         $this->open_en_proceso = true;
     }
 
@@ -81,7 +84,7 @@ class OrderForProccess extends Component
     public function updatedTsede(){
         if($this->tsede > 0){
             $this->sede = Sede::select('sede')->find($this->tsede)->sede;
-            
+
         }else{
             $this->resetExcept('fecha_pedido_en_proceso','tsede');
         }
@@ -89,7 +92,7 @@ class OrderForProccess extends Component
 
     public function updatedOpenEnProceso(){
         if(!$this->open_en_proceso){
-            $this->reset('item_id','detalle_item');
+            $this->reset('item_id','detalle_item','precio_item');
         }
     }
 
@@ -195,7 +198,7 @@ class OrderForProccess extends Component
                 if($this->search != ""){
                     $solicitudes_en_proceso = $solicitudes_en_proceso->where('items.sku','like',$this->search.'%')->orWhere('items.item','like',$this->search.'%');
                 }
-                $solicitudes_en_proceso = $solicitudes_en_proceso->select(DB::raw('order_request_details.item_id,items.sku,items.item,SUM(order_request_details.quantity) as quantity,measurement_units.abbreviation,SUM(order_request_details.estimated_price*order_request_details.quantity) as total_price'))
+                $solicitudes_en_proceso = $solicitudes_en_proceso->select(DB::raw('order_request_details.item_id,items.sku,items.type,items.item,SUM(order_request_details.quantity) as quantity,measurement_units.abbreviation,order_request_details.estimated_price as unit_price'))
                                             ->groupBy('order_request_details.item_id')
                                             ->paginate(5);
             }else{

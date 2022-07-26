@@ -221,7 +221,7 @@
                 }
             })
         });
-    /*----------------------Confirmar recharzar nuevo material-------------------------------*/
+    /*----------------------Confirmar rechazar nuevo material-------------------------------*/
             Livewire.on('confirmarRechazarMaterialNuevo', nombre_material =>{
                 Swal.fire({
                     title: '¿Rechazar el material '+nombre_material+'?',
@@ -271,6 +271,11 @@
             });
 /*----------------------------------------------------------------------------------*/
         @endif
+/*--------------------ALERTA DE ANULACIÓN DE INGRESO DE STOCK--------------------------------------------------------------*/
+        @if(Route::is('planner.insert-materials'))
+
+        @endif
+/*----------------------------------------------------------------------------------*/
         @if(Route::is('planner.assign-materials-operator'))
 /*--------------ALERTA PARA CONFIRMACION DE ANULAR ASIGNACION DE MATERIAL---------------------------*/
         Livewire.on('confirmarAnularAsignacionMaterial', material =>{

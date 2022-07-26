@@ -20,10 +20,11 @@ class ImportarDatos extends Component
     public function importarUsuarios(){
         try{
             Excel::import(new UsersImport, $this->user);
+            $this->emit('alert');
         } catch(\Maatwebsite\Excel\Validators\ValidationException $e){
             $this->errores_user = $e->failures();
+            $this->emit('alert_error');
         }
-        $this->emit('alert');
     }
 
     public function importarItems(){

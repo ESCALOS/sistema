@@ -7,6 +7,7 @@ use App\Models\GeneralStockDetail;
 use App\Models\OrderDate;
 use App\Models\Sede;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 USE Livewire\WithFileUploads;
 use Livewire\WithPagination;
@@ -26,6 +27,8 @@ class InsertMaterial extends Component
     public $iteration = 0;
 
     public $fecha_pedido = 0;
+
+    public $errores_stock = [];
 
     protected function rules(){
         return [
@@ -47,16 +50,28 @@ class InsertMaterial extends Component
     public function updatedOpenImportStock(){
         if(!$this->open_import_stock){
             $this->iteration++;
+            $this->reset('fecha_pedido','errores_stock');
         }
     }
 
     public function importarStock(){
         $this->validate();
 
-        Excel::import(new GeneralStockImport, $this->stock);
-        $this->open_import_stock = false;
-        $this->emit('alert');
+        DB::table('importar_stock_log')->insert([
+            'user_id' => Auth::user()->id,
+            'order_date_id' => $this->fecha_pedido
+        ]);
 
+        try{
+            Excel::import(new GeneralStockImport, $this->stock);
+            $this->emit('alert');
+            $this->reset('fecha_pedido','errores_stock');
+            //$this->open_import_stock = false;
+        } catch(\Maatwebsite\Excel\Validators\ValidationException $e){
+            $this->errores_stock = $e->failures();
+            $this->emit('alert_error');
+        }
+        $this->iteration++;
     }
 
     public function render()
@@ -65,15 +80,19 @@ class InsertMaterial extends Component
 
         $general_stock_details = GeneralStockDetail::join('items',function($join){
             $join->on('items.id','general_stock_details.item_id');
+        })->join('measurement_units',function($join){
+            $join->on('measurement_units.id','items.measurement_unit_id');
         })->join('sedes',function($join){
             $join->on('sedes.id','general_stock_details.sede_id');
+        })->leftJoin('order_dates',function($join){
+            $join->on('order_dates.id','general_stock_details.order_date_id');
         })->where('general_stock_details.is_canceled',0);
 
         if(!empty($this->selectedSedes)){
             $general_stock_details = $general_stock_details->whereIn('sede_id',$this->selectedSedes);
         }
 
-        $general_stock_details = $general_stock_details->select('general_stock_details.id','items.item','items.type','general_stock_details.quantity','general_stock_details.price','sedes.sede','general_stock_details.order_date_id')
+        $general_stock_details = $general_stock_details->select('general_stock_details.id','items.item','items.type','measurement_units.abbreviation','general_stock_details.quantity','general_stock_details.price','sedes.sede','order_dates.order_date')
                                                         ->orderBy('id','DESC')
                                                         ->paginate(5);
 
