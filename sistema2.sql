@@ -2,8 +2,8 @@
 -- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
--- Servidor: localhost
--- Tiempo de generación: 25-07-2022 a las 21:24:22
+-- Servidor: 127.0.0.1
+-- Tiempo de generación: 26-07-2022 a las 06:34:12
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -1023,7 +1023,8 @@ INSERT INTO `components` (`id`, `item_id`, `component`, `system_id`, `is_part`, 
 (33, 57, 'peorviek', NULL, 1, '234.00', NULL, NULL),
 (34, 59, 'qvjzldtw', 3, 0, '2974.00', NULL, NULL),
 (37, 87, 'VÁLVULA', NULL, 0, '105.00', NULL, NULL),
-(38, 88, 'BUJIA', NULL, 1, '272.00', NULL, NULL);
+(38, 88, 'BUJIA', NULL, 1, '272.00', NULL, NULL),
+(40, 136, 'PERNO 1/2', NULL, 1, '494.00', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1891,7 +1892,10 @@ INSERT INTO `items` (`id`, `sku`, `item`, `measurement_unit_id`, `estimated_pric
 (89, '4577', 'PINTURA', 53, '36.00', 'FUNGIBLE', 1, '2022-07-21 08:36:11', '2022-07-21 08:36:11'),
 (90, '6352', 'CAL', 52, '52.00', 'FUNGIBLE', 1, '2022-07-21 08:36:11', '2022-07-21 08:36:11'),
 (91, '4588', 'GUANTES', 54, '8.50', 'FUNGIBLE', 1, '2022-07-21 08:36:11', '2022-07-21 08:36:11'),
-(92, '25336', 'arduino uno', 2, '10.00', 'FUNGIBLE', 1, '2022-07-21 19:08:04', '2022-07-21 19:08:13');
+(92, '25336', 'arduino uno', 2, '10.00', 'FUNGIBLE', 1, '2022-07-21 19:08:04', '2022-07-21 19:08:13'),
+(134, '3655', 'lilia', 52, '360.00', 'FUNGIBLE', 1, '2022-07-26 09:06:43', '2022-07-26 09:06:43'),
+(135, '23', 'liiaaa', 51, '150.00', 'HERRAMIENTA', 1, '2022-07-26 09:06:43', '2022-07-26 09:06:43'),
+(136, '252', 'PERNO 1/2', 53, '25.00', 'PIEZA', 1, '2022-07-26 09:06:43', '2022-07-26 09:06:43');
 
 --
 -- Disparadores `items`
@@ -3121,7 +3125,8 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('YDsjx8n3LBR1mzKFtIIpkKEGymaz96yVCmMczDnc', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 OPR/88.0.4412.40', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiSXl1SHF3MUtLb1FaSEtydHZpRzM5bWhrRnRDNWVrT3p1Umx1MUtSSCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjQyOiJodHRwOi8vc2lzdGVtYS50ZXN0L3BsYW5uZXIvaW1wb3J0YXItZGF0b3MiO31zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aTo0O30=', 1658776950);
+('FP580A1xIuxbgPrcQkwjEnZ8cqA0xds88xLshW0Z', 4, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiZFAwbUMzcFV1SldrRU9aSGNlSjJTVDIwZ1c3WmhGRFpwb2NrYWE2UCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjQyOiJodHRwOi8vc2lzdGVtYS50ZXN0L3BsYW5uZXIvaW1wb3J0YXItZGF0b3MiO31zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aTo0O30=', 1658810008),
+('KYiUMVAnFv6NmGE4l3KYCLkp6t8iS6Pmp86ToQ2K', NULL, '192.168.0.7', 'AVG Antivirus', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiZHUyVjlXZVdMVmhHMTREVnRXOVpqQ2hnb2hjWUVpdFh3U0ZrZkExSiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MTg6Imh0dHA6Ly8xOTIuMTY4LjAuNyI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1658805182);
 
 -- --------------------------------------------------------
 
@@ -3379,6 +3384,22 @@ INSERT INTO `task_required_materials` (`id`, `task_id`, `item_id`, `quantity`) V
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `tool_for_location`
+--
+
+CREATE TABLE `tool_for_location` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `item_id` bigint(20) UNSIGNED NOT NULL,
+  `location_id` bigint(20) UNSIGNED NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 0,
+  `state` enum('ACTIVO','PENDIENTE','OBSOLETO') NOT NULL DEFAULT 'ACTIVO',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `tractors`
 --
 
@@ -3602,7 +3623,8 @@ INSERT INTO `users` (`id`, `code`, `name`, `lastname`, `location_id`, `email`, `
 (35, '999999', 'CARLOS', 'ESCATE ROMÁN', 1, 'STORNBLOOD6969@GMAIL.COM', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, NULL, NULL, NULL, '2022-07-21 06:39:33', '2022-07-21 06:39:33'),
 (36, '888888', 'SEGIO', 'BERROCAL QUIÑONES', 4, 'SDD@GMAIL.COM', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, NULL, NULL, NULL, '2022-07-21 06:39:33', '2022-07-21 06:39:33'),
 (37, '777777', 'RAMÓN', 'AGUADO APAZA', 3, 'ASS@GMAIL.COM', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, NULL, NULL, NULL, '2022-07-21 06:39:33', '2022-07-21 06:39:33'),
-(38, '6666', 'LUCHO', 'ARANA PEREZ', 2, NULL, NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, NULL, NULL, NULL, '2022-07-21 06:39:33', '2022-07-21 06:39:33');
+(38, '6666', 'LUCHO', 'ARANA PEREZ', 2, NULL, NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, NULL, NULL, NULL, '2022-07-21 06:39:33', '2022-07-21 06:39:33'),
+(40, '4197385', 'Rodrigo', 'Escate Román', 1, '', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, NULL, NULL, NULL, '2022-07-26 06:51:33', '2022-07-26 06:51:33');
 
 -- --------------------------------------------------------
 
@@ -3772,7 +3794,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `lista_de_materiales_pedidos`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock`, `ord`.`state` AS `state` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) ORDER BY `ord`.`id` AS `DESCdesc` ASC  ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock`, `ord`.`state` AS `state` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) ORDER BY `ord`.`id` DESC;
 
 -- --------------------------------------------------------
 
@@ -3781,7 +3803,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `lista_de_materiales_pedidos_pendientes`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos_pendientes`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) WHERE `ord`.`state` = 'PENDIENTE' ORDER BY `ord`.`id` AS `DESCdesc` ASC  ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos_pendientes`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) WHERE `ord`.`state` = 'PENDIENTE' ORDER BY `ord`.`id` DESC;
 
 -- --------------------------------------------------------
 
@@ -4245,6 +4267,12 @@ ALTER TABLE `task_required_materials`
   ADD KEY `task_required_materials_item_id_foreign` (`item_id`);
 
 --
+-- Indices de la tabla `tool_for_location`
+--
+ALTER TABLE `tool_for_location`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indices de la tabla `tractors`
 --
 ALTER TABLE `tractors`
@@ -4360,7 +4388,7 @@ ALTER TABLE `ceco_details`
 -- AUTO_INCREMENT de la tabla `components`
 --
 ALTER TABLE `components`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT de la tabla `component_implement`
@@ -4456,7 +4484,7 @@ ALTER TABLE `implement_models`
 -- AUTO_INCREMENT de la tabla `items`
 --
 ALTER TABLE `items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=122;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=137;
 
 --
 -- AUTO_INCREMENT de la tabla `labors`
@@ -4639,6 +4667,12 @@ ALTER TABLE `task_required_materials`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
+-- AUTO_INCREMENT de la tabla `tool_for_location`
+--
+ALTER TABLE `tool_for_location`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `tractors`
 --
 ALTER TABLE `tractors`
@@ -4666,7 +4700,7 @@ ALTER TABLE `tractor_schedulings`
 -- AUTO_INCREMENT de la tabla `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT de la tabla `warehouses`
@@ -5691,6 +5725,7 @@ CREATE DEFINER=`root`@`localhost` EVENT `Listar_prereserva` ON SCHEDULE EVERY 1 
                                 IF componente_final = 1 THEN
                                     LEAVE bucle_componentes;
                                 END IF;
+
                                 /*--------------------OBTENER EL COMPONENTE DEL IMPLEMENTO-------------------------*/
                                 FETCH cursor_componentes INTO componente,precio_componente;
                                 /*----------------COMPROBAR SI EXISTE EL COMPONENTE CON SU IMPLEMENTO EN LA TABLA component_implement-------------*/

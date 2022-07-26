@@ -14,21 +14,28 @@ class ImportarDatos extends Component
 
     public $user;
     public $item;
+    public $errores_user;
+    public $errores_item;
 
     public function importarUsuarios(){
-
-        #$this->user->store('user');
-        Excel::import(new UsersImport, $this->user);
-
+        try{
+            Excel::import(new UsersImport, $this->user);
+        } catch(\Maatwebsite\Excel\Validators\ValidationException $e){
+            $this->errores_user = $e->failures();
+        }
         $this->emit('alert');
     }
 
     public function importarItems(){
 
-        #$this->item->store('item');
-        Excel::import(new ItemsImport, $this->item);
+        try{
+            Excel::import(new ItemsImport, $this->item);
+            $this->emit('alert');
+        } catch(\Maatwebsite\Excel\Validators\ValidationException $e){
+            $this->errores_item = $e->failures();
+            $this->emit('alert_error');
+        }
 
-        $this->emit('alert');
     }
 
     public function render()

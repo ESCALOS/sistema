@@ -11,15 +11,17 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class GeneralStockImport implements ToModel,WithHeadingRow
 {
-    /**
-     * @param array $row
-     *
-     */
+    private $item;
+
+    public function __construct() {
+        $this->item = Item::pluck('id','sku');
+    }
+
     public function model(array $row)
     {
-        if(!isset($row['item_id'])){
+        if(!isset($row['codigo'])){
             return new GeneralStockDetail([
-                'item_id' => Item::where('sku',$row['codigo'])->first()->id,
+                'item_id' => $this->item[$row['codigo']],
                 'quantity' => $row['cantidad'],
                 'price' => $row['precio'],
                 'sede_id' => Sede::where('code',$row['centro'])->first()->id,

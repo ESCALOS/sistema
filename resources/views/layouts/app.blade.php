@@ -55,6 +55,16 @@
                     timer: 1000
                 })
             });
+/*------Alerta para registro----------------------------------------------------*/
+            Livewire.on('alert_error', function(){
+                Swal.fire({
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'Ocurrió un inconveniente',
+                    showConfirmButton: false,
+                    timer: 1000
+                })
+            });
 /*---------------------------------------------------------------------------------------*/
         @if (Route::is('operator.request-materials'))
 /*--------------ALERTAS PARA LA CONFIRMACION DE CERRAR PEDIDO(OPERADOR) --------------------*/
