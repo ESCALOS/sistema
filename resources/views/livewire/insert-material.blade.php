@@ -136,6 +136,14 @@
 
                     </div>
 
+                    
+
+                @if ($fecha_pedido > 0)
+                    <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 2 span/ 2 span">
+                        <button wire:click="descargarPlantilla" class="p-6 w-full bg-green-500 hover:bg-green-700 rounded-md text-white text-lg">Descargar Plantilla</button>
+                    </div>
+                @endif
+
                     @if (isset($errores_stock) && count($errores_stock))
                     <div style="max-height:180px;overflow:auto;grid-column: 2 span/ 2 span;">
                         <table class="min-w-max w-full">

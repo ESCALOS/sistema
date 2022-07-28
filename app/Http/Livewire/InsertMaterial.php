@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire;
 
+use App\Exports\GeneralOrderRequestExport;
 use App\Imports\GeneralStockImport;
 use App\Models\GeneralStockDetail;
 use App\Models\OrderDate;
@@ -54,13 +55,12 @@ class InsertMaterial extends Component
         }
     }
 
+    public function descargarPlantilla(){
+        return Excel::download(new GeneralOrderRequestExport($this->fecha_pedido), 'formato-stock.xlsx');
+    }
+
     public function importarStock(){
         $this->validate();
-
-        DB::table('importar_stock_log')->insert([
-            'user_id' => Auth::user()->id,
-            'order_date_id' => $this->fecha_pedido
-        ]);
 
         try{
             Excel::import(new GeneralStockImport, $this->stock);

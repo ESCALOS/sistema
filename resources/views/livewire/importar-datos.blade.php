@@ -20,4 +20,13 @@
         </ul>
     </div>
     @endisset
+
+    <div>
+        <button wire:click='exportarUsuarios' class="p-6 text-center border-none rounded-md shadow-md bg-green-500 hover:bg-green-700 text-white font-black text-xl">Exportar Usuarios</button>
+    </div>
+
+    
+    <div>
+        <button wire:click='exportarFormatoStock' class="p-6 text-center border-none rounded-md shadow-md bg-green-500 hover:bg-green-700 text-white font-black text-xl">Exportar Usuarios</button>
+    </div>
 </div>

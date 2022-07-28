@@ -2,6 +2,8 @@
 
 namespace App\Http\Livewire;
 
+use App\Exports\GeneralOrderRequestExport;
+use App\Exports\UsersExport;
 use App\Imports\ItemsImport;
 use App\Imports\UsersImport;
 use Livewire\Component;
@@ -27,6 +29,11 @@ class ImportarDatos extends Component
         }
     }
 
+    public function exportarUsuarios()
+    {
+        return Excel::download(new UsersExport, 'users.xlsx');
+    }
+
     public function importarItems(){
 
         try{
@@ -37,6 +44,11 @@ class ImportarDatos extends Component
             $this->emit('alert_error');
         }
 
+    }
+
+    public function exportarFormatoStock()
+    {
+        return Excel::download(new GeneralOrderRequestExport(1), 'formato-stock.xlsx');
     }
 
     public function render()
