@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\GeneralOrderRequest;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -55,6 +56,6 @@ class GeneralOrderRequestExport implements FromCollection,ShouldAutoSize,WithHea
             $join->on('order_dates.id','general_order_requests.order_date_id');
         })->where('general_order_requests.order_date_id',$this->fecha_pedido)
         ->where('general_order_requests.quantity_to_arrive','>',0)
-        ->select('items.sku','items.item','sedes.code','general_order_requests.price','measurement_units.abbreviation','order_dates.order_date','general_order_requests.quantity_to_arrive')->get();
+        ->select('items.sku','items.item','sedes.code','general_order_requests.price','measurement_units.abbreviation','order_dates.order_date','general_order_requests.quantity_to_arrive',DB::raw('"0" as cantidad'))->get();
     }
 }

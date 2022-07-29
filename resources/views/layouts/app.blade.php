@@ -273,7 +273,29 @@
         @endif
 /*--------------------ALERTA DE ANULACIÓN DE INGRESO DE STOCK--------------------------------------------------------------*/
         @if(Route::is('planner.insert-materials'))
+            Livewire.on('confirmarAnularInsertarMateriales', request =>{
+                Swal.fire({
+                    title: '¿Está seguro de anular la inserción del material '+request[1]+'?',
+                    text: "Esta acción es irreversible",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, anular!',
+                    cancelButtonText: 'No, cancelar!',
+                }).then((result) => {
+                    if (result.isConfirmed) {
 
+                        Livewire.emit('anularInsertarMateriales',request[0]);
+
+                        Swal.fire(
+                            'Inserción Anulada!',
+                            'El material se anuló correctamente',
+                            'success'
+                        )
+                    }
+                })
+            });
         @endif
 /*----------------------------------------------------------------------------------*/
         @if(Route::is('planner.assign-materials-operator'))

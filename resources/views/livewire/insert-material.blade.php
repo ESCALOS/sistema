@@ -67,7 +67,7 @@
                     </thead>
                     <tbody class="text-gray-600 text-sm font-light">
                         @foreach ($general_stock_details as $request)
-                            <tr wire:click="editar({{$request->id}})" class="border-b border-gray-200 unselected">
+                            <tr wire:click="$emit('confirmarAnularInsertarMateriales',[{{$request->id}},'{{$request->item}}'])" class="border-b border-gray-200 unselected">
                                 <td class="py-3 px-6 text-center">
                                     <div>
                                         <span class="font-medium">{{$request->sede}} </span>

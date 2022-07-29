@@ -32,6 +32,8 @@ class InsertMaterial extends Component
 
     public $open_errores_importar = false;
 
+    protected $listeners = ['anularInsertarMateriales'];
+
     protected function rules(){
         return [
             'stock' => ['required','mimes:xlsx'],
@@ -65,6 +67,12 @@ class InsertMaterial extends Component
 
     public function descargarPlantilla(){
         return Excel::download(new GeneralOrderRequestExport($this->fecha_pedido), 'formato-stock.xlsx');
+    }
+
+    public function anularInsertarMateriales($id){
+        $stock = GeneralStockDetail::find($id);
+        $stock->is_canceled = 1;
+        $stock->save();
     }
 
     public function importarStock(){
