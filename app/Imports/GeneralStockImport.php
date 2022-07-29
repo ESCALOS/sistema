@@ -5,11 +5,8 @@ namespace App\Imports;
 use App\Models\GeneralStockDetail;
 use App\Models\Item;
 use App\Models\OrderDate;
-use App\Models\OrderRequestDetail;
 use App\Models\Sede;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Concerns\SkipsOnError;
+use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
@@ -18,27 +15,31 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 
 class GeneralStockImport implements ToModel,WithHeadingRow,WithValidation,WithBatchInserts,WithChunkReading
 {
+    use Importable;
+
     private $item;
     private $sede;
 
     public function __construct() {
         $this->item = Item::pluck('id','sku');
-        $this->precio = Item::pluck('estimated_price','sku');
         $this->sede = Sede::pluck('id','code');
         $this->order_date = OrderDate::pluck('id','order_date');
     }
 
     public function model(array $row)
     {
-        if(isset($row['codigo'])){
-            return new GeneralStockDetail([
-                'item_id' => $this->item[$row['codigo']],
-                'quantity' => $row['cantidad'],
-                'price' => $this->precio[$row['codigo']],
-                'sede_id' => $this->sede[$row['centro']],
-                'order_date_id' => $this->order_date[$row['pedido']],
-            ]);
+
+        if(!isset($row['cantidad']) || $row['cantidad'] == 0){
+            return null;
         }
+
+        return new GeneralStockDetail([
+            'item_id' => $this->item[$row['codigo']],
+            'quantity' => $row['cantidad'],
+            'price' => $row['precio'],
+            'sede_id' => $this->sede[$row['centro']],
+            'order_date_id' => $this->order_date[$row['pedido']],
+        ]);
     }
 
     public function batchSize(): int
@@ -53,10 +54,10 @@ class GeneralStockImport implements ToModel,WithHeadingRow,WithValidation,WithBa
 
     public function rules(): array
     {
-        return [
+        return [    
             '*.codigo' => ['required','exists:items,sku'],
-            '*.cantidad' => ['required','min:0.01'],
-            '*.precio' => ['required','min:0.01'],
+            '*.cantidad' => ['exclude_if:*.cantidad,,null|lte:*.pendiente'],
+            '*.precio' => ['numeric','min:0.01'],
             '*.centro' => ['required','exists:sedes,code'],
         ];
     }
@@ -64,7 +65,8 @@ class GeneralStockImport implements ToModel,WithHeadingRow,WithValidation,WithBa
     public function customValidationMessages(){
         return[
             'codigo.exists' => 'El item no existe',
-            'cantidad.min' => 'La cantidad debe ser mayor a 0',
+            'cantidad.required' => 'Ingrese 0 en la cantidad',
+            'cantidad.min' => 'Elimine la fila si no hay cantidad',
             'precio.min' => 'El precio debe ser mayor a 0',
             'centro.exists' => 'No existe el centro',
         ];

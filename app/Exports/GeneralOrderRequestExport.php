@@ -21,12 +21,12 @@ class GeneralOrderRequestExport implements FromCollection,ShouldAutoSize,WithHea
     {
         return [
             'codigo',
-            'Detalle',
+            'detalle',
             'centro',
             'precio',
-            'Unidad',
+            'unidad',
             'pedido',
-            'Pendiente',
+            'pendiente',
             'cantidad'
         ];
     }

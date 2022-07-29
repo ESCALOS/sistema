@@ -8,7 +8,6 @@ use App\Models\GeneralStockDetail;
 use App\Models\OrderDate;
 use App\Models\Sede;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 USE Livewire\WithFileUploads;
 use Livewire\WithPagination;
@@ -29,7 +28,9 @@ class InsertMaterial extends Component
 
     public $fecha_pedido = 0;
 
-    public $errores_stock = [];
+    public $errores_stock = NULL;
+
+    public $open_errores_importar = false;
 
     protected function rules(){
         return [
@@ -51,6 +52,13 @@ class InsertMaterial extends Component
     public function updatedOpenImportStock(){
         if(!$this->open_import_stock){
             $this->iteration++;
+            $this->reset('fecha_pedido');
+        }
+    }
+
+    public function updatedOpenErroresImportar(){
+        if(!$this->open_errores_importar){
+            $this->iteration++;
             $this->reset('fecha_pedido','errores_stock');
         }
     }
@@ -70,6 +78,7 @@ class InsertMaterial extends Component
         } catch(\Maatwebsite\Excel\Validators\ValidationException $e){
             $this->errores_stock = $e->failures();
             $this->emit('alert_error');
+            $this->open_errores_importar = true;
         }
         $this->iteration++;
     }

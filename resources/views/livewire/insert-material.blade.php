@@ -136,52 +136,17 @@
 
                     </div>
 
-                    
-
                 @if ($fecha_pedido > 0)
                     <div class="py-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 2 span/ 2 span">
                         <button wire:click="descargarPlantilla" class="p-6 w-full bg-green-500 hover:bg-green-700 rounded-md text-white text-lg">Descargar Plantilla</button>
                     </div>
                 @endif
 
-                    @if (isset($errores_stock) && count($errores_stock))
-                    <div style="max-height:180px;overflow:auto;grid-column: 2 span/ 2 span;">
-                        <table class="min-w-max w-full">
-                            <thead>
-                                <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                                    <th class="py-3 text-center">
-                                        <span>Error</span>
-                                    </th>
-                                    <th class="py-3 text-center">
-                                        <span>Fila</span>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-gray-600 text-sm font-light">
-                                @foreach ($errores_stock as $error)
-                                    <tr class="border-b border-gray-200 unselected">
-                                        <td class="py-3 px-6 text-center">
-                                            <div>
-                                                <span class="font-medium">{{explode('"',serialize($error->errors()))[1]}} </span>
-                                            </div>
-                                        </td>
-                                        <td class="py-3 px-6 text-center">
-                                            <div>
-                                                <span class="font-medium">{{serialize($error->row())[2]}} </span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    @endif
-
                 </div>
             </x-slot>
             <x-slot name="footer">
                 <x-jet-button wire:loading.attr="disabled" wire:click="importarStock()">
-                    Importando
+                    Importar
                 </x-jet-button>
                 <div wire:loading wire:target="actualizar_nuevo">
                     Registrando...
@@ -191,5 +156,58 @@
                 </x-jet-secondary-button>
             </x-slot>
         </x-jet-dialog-modal>
+
+    <x-jet-dialog-modal wire:model="open_errores_importar">
+        <x-slot name="title">
+            Detalle de errores
+        </x-slot>
+        <x-slot name="content">
+            @if (isset($errores_stock) && count($errores_stock))
+            <div style="max-height:180px;overflow:auto;grid-column: 2 span/ 2 span;">
+                <table class="min-w-max w-full">
+                    <thead>
+                        <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 text-center">
+                                <span>Error</span>
+                            </th>
+                            <th class="py-3 text-center">
+                                <span>Fila</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600 text-sm font-light">
+                        @foreach ($errores_stock as $error)
+                                <tr class="border-b border-gray-200 unselected">
+                                <td class="py-3 px-6 text-center">
+                                    <div>
+                                        <span class="font-medium">{{explode('"',serialize($error->errors()))[1]}} </span>
+                                    </div>
+                                </td>
+                                @php
+                                    $patrones = array();
+                                    $patrones[0] = '/i:/';
+                                    $patrones[1] = '/;/';
+                                    $sus = array();
+                                    $sus[0] = '';
+                                    $sus[1] = ''
+                                @endphp
+                                <td class="py-3 px-6 text-center">
+                                    <div>
+                                        <span class="font-medium">{{preg_replace($patrones,$sus,serialize($error->row()))}} </span>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @endif
+        </x-slot>
+        <x-slot name="footer">
+            <x-jet-secondary-button wire:loading.attr="disabled" wire:click="$set('open_errores_importar',false)" class="ml-2">
+                Cerrar
+            </x-jet-secondary-button>
+        </x-slot>
+    </x-jet-dialog-modal>
     </div>
 </div>
