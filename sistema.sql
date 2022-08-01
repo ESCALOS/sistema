@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 29-07-2022 a las 20:36:52
+-- Tiempo de generación: 01-08-2022 a las 06:40:37
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -785,6 +785,42 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_prereserva` ()   BEGIN
     END IF;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `mientras` (IN `nueva_cantidad` DECIMAL(8,2), IN `stock` DECIMAL(8,2), OUT `resto` DECIMAL(8,2), OUT `ciclo` INT)   BEGIN
+    DECLARE cantidad decimal(8,2) DEFAULT 0;
+    SET cantidad = nueva_cantidad;
+    SET ciclo = 0;
+    WHILE cantidad > 0 DO
+    	IF stock >= cantidad THEN
+        	SET resto = stock - cantidad;
+            SET cantidad = 0;
+        ELSE
+        	SET resto = 0;
+            SET cantidad = cantidad - stock;
+        	SET ciclo = ciclo + 1;
+        END IF;
+    END WHILE;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `mientras_hay_cantidad` (IN `item` INT, IN `nueva_cantidad` DECIMAL(8,2), IN `sede` INT, OUT `precio_total` DECIMAL(8,2))   BEGIN
+    DECLARE cantidad decimal(8,2) DEFAULT 0;
+    DECLARE stock decimal(8,2) DEFAULT 0;
+    DECLARE precio decimal(8,2) DEFAULT 0;
+    SET cantidad = nueva_cantidad;
+    SET precio_total = 0;
+    WHILE cantidad > 0 DO
+    	SELECT gsd.quantity_to_use,gsd.price INTO stock,precio FROM general_stock_details gsd WHERE gsd.item_id = item AND gsd.sede_id = sede AND gsd.quantity_to_use > 0 AND gsd.is_canceled = 0 ORDER BY id ASC LIMIT 1;
+    	IF stock >= cantidad THEN
+        	UPDATE general_stock_details gsd SET gsd.quantity_to_use = gsd.quantity_to_use - cantidad WHERE gsd.item_id = item AND gsd.sede_id = sede AND gsd.quantity_to_use > 0 AND gsd.is_canceled = 0 ORDER BY id ASC LIMIT 1;
+            SET cantidad = 0;
+            SET precio_total = precio_total + (precio*cantidad);
+        ELSE
+        	UPDATE general_stock_details gsd SET gsd.quantity_to_use = 0 WHERE gsd.item_id = item AND gsd.sede_id = sede AND gsd.quantity_to_use > 0 AND gsd.is_canceled = 0 ORDER BY id ASC LIMIT 1;
+            SET cantidad = cantidad - stock;
+            SET precio_total = precio_total + (precio*stock);
+        END IF;
+    END WHILE;
+END$$
+
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -1562,6 +1598,7 @@ CREATE TABLE `general_stocks` (
   `quantity` decimal(8,2) NOT NULL DEFAULT 0.00,
   `price` decimal(8,2) NOT NULL DEFAULT 0.00,
   `sede_id` bigint(20) UNSIGNED NOT NULL,
+  `quantity_to_reserve` decimal(8,2) NOT NULL DEFAULT 0.00,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -1570,31 +1607,31 @@ CREATE TABLE `general_stocks` (
 -- Volcado de datos para la tabla `general_stocks`
 --
 
-INSERT INTO `general_stocks` (`id`, `item_id`, `quantity`, `price`, `sede_id`, `created_at`, `updated_at`) VALUES
-(1, 1, '15.00', '75.00', 2, '2022-07-18 17:16:21', '2022-07-25 04:03:07'),
-(2, 1, '66.00', '1138.00', 1, '2022-07-18 17:16:21', '2022-07-29 10:12:11'),
-(3, 3, '25.00', '1523.00', 1, '2022-07-18 19:12:11', '2022-07-29 17:32:51'),
-(4, 57, '103.00', '3447.50', 1, '2022-07-18 19:12:11', '2022-07-29 17:32:51'),
-(6, 73, '2.00', '600.00', 1, '2022-07-21 14:50:13', '2022-07-21 14:50:13'),
-(7, 86, '100.00', '1200.00', 1, '2022-07-21 15:03:59', '2022-07-21 15:03:59'),
-(46, 52, '19.00', '2850.00', 1, '2022-07-26 13:18:34', '2022-07-29 17:32:51'),
-(47, 52, '39.00', '5850.00', 2, '2022-07-26 13:18:34', '2022-07-29 17:32:51'),
-(48, 5, '1.00', '45.00', 2, '2022-07-28 05:32:37', '2022-07-29 10:12:11'),
-(49, 9, '24.00', '648.00', 2, '2022-07-28 05:32:37', '2022-07-29 17:31:48'),
-(50, 57, '33.00', '1155.00', 2, '2022-07-28 05:32:37', '2022-07-29 17:32:51'),
-(51, 4, '11.00', '495.00', 2, '2022-07-28 05:32:37', '2022-07-29 17:32:51'),
-(52, 44, '40.00', '1800.00', 2, '2022-07-28 05:32:37', '2022-07-29 10:12:11'),
-(53, 3, '48.00', '3120.00', 2, '2022-07-28 05:32:37', '2022-07-29 10:12:11'),
-(54, 24, '27.00', '3510.00', 2, '2022-07-28 05:32:37', '2022-07-29 17:32:51'),
-(55, 44, '34.00', '1530.00', 1, '2022-07-28 05:32:37', '2022-07-29 10:12:11'),
-(56, 21, '17.00', '850.00', 1, '2022-07-28 05:32:37', '2022-07-29 10:12:11'),
-(57, 9, '34.00', '918.00', 1, '2022-07-28 05:32:37', '2022-07-29 17:31:48'),
-(58, 24, '13.00', '1690.00', 1, '2022-07-28 05:32:37', '2022-07-29 17:32:51'),
-(59, 65, '1.00', '260.00', 1, '2022-07-28 05:32:37', '2022-07-29 10:12:11'),
-(60, 5, '1.00', '45.00', 1, '2022-07-28 05:32:37', '2022-07-29 18:28:15'),
-(61, 42, '1.00', '75.00', 2, '2022-07-29 09:34:21', '2022-07-29 17:31:48'),
-(62, 51, '0.00', '0.00', 1, '2022-07-29 09:34:21', '2022-07-29 18:28:20'),
-(63, 7, '1.00', '500.00', 1, '2022-07-29 09:34:21', '2022-07-29 17:31:48');
+INSERT INTO `general_stocks` (`id`, `item_id`, `quantity`, `price`, `sede_id`, `quantity_to_reserve`, `created_at`, `updated_at`) VALUES
+(1, 1, '15.00', '75.00', 2, '15.00', '2022-07-18 17:16:21', '2022-07-31 01:45:08'),
+(2, 1, '66.00', '1138.00', 1, '66.00', '2022-07-18 17:16:21', '2022-07-31 01:45:08'),
+(3, 3, '25.00', '1523.00', 1, '25.00', '2022-07-18 19:12:11', '2022-07-31 01:45:08'),
+(4, 57, '103.00', '3447.50', 1, '103.00', '2022-07-18 19:12:11', '2022-07-31 01:45:08'),
+(6, 73, '2.00', '600.00', 1, '2.00', '2022-07-21 14:50:13', '2022-07-31 01:45:08'),
+(7, 86, '100.00', '1200.00', 1, '100.00', '2022-07-21 15:03:59', '2022-07-31 01:45:08'),
+(46, 52, '19.00', '2850.00', 1, '19.00', '2022-07-26 13:18:34', '2022-07-31 01:45:08'),
+(47, 52, '39.00', '5850.00', 2, '39.00', '2022-07-26 13:18:34', '2022-07-31 01:45:08'),
+(48, 5, '1.00', '45.00', 2, '1.00', '2022-07-28 05:32:37', '2022-07-31 01:45:08'),
+(49, 9, '24.00', '648.00', 2, '24.00', '2022-07-28 05:32:37', '2022-07-31 01:45:08'),
+(50, 57, '33.00', '1155.00', 2, '33.00', '2022-07-28 05:32:37', '2022-07-31 01:45:08'),
+(51, 4, '11.00', '495.00', 2, '11.00', '2022-07-28 05:32:37', '2022-07-31 01:45:08'),
+(52, 44, '40.00', '1800.00', 2, '40.00', '2022-07-28 05:32:37', '2022-07-31 01:45:08'),
+(53, 3, '48.00', '3120.00', 2, '48.00', '2022-07-28 05:32:37', '2022-07-31 01:45:08'),
+(54, 24, '27.00', '3510.00', 2, '27.00', '2022-07-28 05:32:37', '2022-07-31 01:45:08'),
+(55, 44, '34.00', '1530.00', 1, '34.00', '2022-07-28 05:32:37', '2022-07-31 01:45:08'),
+(56, 21, '17.00', '850.00', 1, '17.00', '2022-07-28 05:32:37', '2022-07-31 01:45:08'),
+(57, 9, '34.00', '918.00', 1, '34.00', '2022-07-28 05:32:37', '2022-07-31 01:45:08'),
+(58, 24, '13.00', '1690.00', 1, '13.00', '2022-07-28 05:32:37', '2022-07-31 01:45:08'),
+(59, 65, '1.00', '260.00', 1, '1.00', '2022-07-28 05:32:37', '2022-07-31 01:45:08'),
+(60, 5, '1.00', '45.00', 1, '1.00', '2022-07-28 05:32:37', '2022-07-31 01:45:08'),
+(61, 42, '1.00', '75.00', 2, '1.00', '2022-07-29 09:34:21', '2022-07-31 01:45:08'),
+(62, 51, '0.00', '0.00', 1, '0.00', '2022-07-29 09:34:21', '2022-07-29 18:28:20'),
+(63, 7, '1.00', '500.00', 1, '1.00', '2022-07-29 09:34:21', '2022-07-31 01:45:08');
 
 -- --------------------------------------------------------
 
@@ -1608,6 +1645,7 @@ CREATE TABLE `general_stock_details` (
   `movement` enum('INGRESO','SALIDA') NOT NULL DEFAULT 'INGRESO',
   `quantity` decimal(8,2) NOT NULL DEFAULT 0.00,
   `price` decimal(8,2) NOT NULL DEFAULT 0.00,
+  `quantity_to_use` decimal(8,2) NOT NULL DEFAULT 0.00,
   `sede_id` bigint(20) UNSIGNED NOT NULL,
   `is_canceled` tinyint(1) NOT NULL DEFAULT 0,
   `order_date_id` bigint(20) UNSIGNED DEFAULT NULL,
@@ -1619,55 +1657,55 @@ CREATE TABLE `general_stock_details` (
 -- Volcado de datos para la tabla `general_stock_details`
 --
 
-INSERT INTO `general_stock_details` (`id`, `item_id`, `movement`, `quantity`, `price`, `sede_id`, `is_canceled`, `order_date_id`, `created_at`, `updated_at`) VALUES
-(4, 1, 'INGRESO', '20.00', '4.50', 1, 1, NULL, '2022-07-18 17:16:21', '2022-07-18 17:17:58'),
-(5, 1, 'INGRESO', '15.00', '5.00', 2, 1, NULL, '2022-07-18 17:16:46', '2022-07-18 17:17:52'),
-(6, 1, 'INGRESO', '60.00', '4.50', 2, 0, NULL, '2022-07-18 17:24:05', '2022-07-25 04:26:11'),
-(7, 1, 'INGRESO', '15.00', '5.00', 2, 0, NULL, '2022-07-18 17:24:05', '2022-07-18 17:24:05'),
-(8, 1, 'INGRESO', '50.00', '3.50', 1, 0, NULL, '2022-07-18 19:06:44', '2022-07-18 19:06:44'),
-(9, 1, 'INGRESO', '14.00', '4.50', 1, 0, NULL, '2022-07-18 19:07:09', '2022-07-18 19:07:09'),
-(10, 3, 'INGRESO', '2.00', '14.00', 1, 0, NULL, '2022-07-18 19:12:11', '2022-07-18 19:12:11'),
-(11, 57, 'INGRESO', '5.00', '3.50', 1, 0, NULL, '2022-07-18 19:12:11', '2022-07-18 19:12:11'),
-(14, 73, 'INGRESO', '2.00', '300.00', 1, 0, NULL, '2022-07-21 14:50:13', '2022-07-21 14:50:13'),
-(15, 86, 'INGRESO', '100.00', '12.00', 1, 0, NULL, '2022-07-21 15:03:59', '2022-07-22 16:45:41'),
-(246, 5, 'INGRESO', '1.00', '45.00', 2, 0, 1, '2022-07-29 15:12:11', '2022-07-29 15:12:11'),
-(247, 9, 'INGRESO', '20.00', '27.00', 2, 0, 1, '2022-07-29 15:12:11', '2022-07-29 15:12:11'),
-(248, 52, 'INGRESO', '20.00', '150.00', 2, 0, 1, '2022-07-29 15:12:11', '2022-07-29 15:12:11'),
-(249, 57, 'INGRESO', '30.00', '35.00', 2, 0, 1, '2022-07-29 15:12:11', '2022-07-29 15:12:11'),
-(250, 44, 'INGRESO', '40.00', '45.00', 2, 0, 1, '2022-07-29 15:12:11', '2022-07-29 15:12:11'),
-(251, 3, 'INGRESO', '48.00', '65.00', 2, 0, 1, '2022-07-29 15:12:11', '2022-07-29 15:12:11'),
-(252, 24, 'INGRESO', '25.00', '130.00', 2, 0, 1, '2022-07-29 15:12:11', '2022-07-29 15:12:11'),
-(253, 52, 'INGRESO', '18.00', '150.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-29 15:12:11'),
-(254, 44, 'INGRESO', '34.00', '45.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-29 15:12:11'),
-(255, 21, 'INGRESO', '17.00', '50.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-29 15:12:11'),
-(256, 9, 'INGRESO', '30.00', '27.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-29 15:12:11'),
-(257, 1, 'INGRESO', '2.00', '450.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-29 15:12:11'),
-(258, 57, 'INGRESO', '90.00', '35.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-29 15:12:11'),
-(259, 24, 'INGRESO', '10.00', '130.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-29 15:12:11'),
-(260, 3, 'INGRESO', '20.00', '65.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-29 15:12:11'),
-(261, 65, 'INGRESO', '1.00', '260.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-29 15:12:11'),
-(262, 5, 'INGRESO', '1.00', '45.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-29 15:12:11'),
-(263, 9, 'INGRESO', '4.00', '27.00', 2, 0, 1, '2022-07-29 22:31:48', '2022-07-29 22:31:48'),
-(264, 52, 'INGRESO', '1.00', '150.00', 2, 0, 1, '2022-07-29 22:31:48', '2022-07-29 22:31:48'),
-(265, 57, 'INGRESO', '2.00', '35.00', 2, 0, 1, '2022-07-29 22:31:48', '2022-07-29 22:31:48'),
-(266, 42, 'INGRESO', '1.00', '75.00', 2, 0, 1, '2022-07-29 22:31:48', '2022-07-29 22:31:48'),
-(267, 4, 'INGRESO', '10.00', '45.00', 2, 0, 1, '2022-07-29 22:31:48', '2022-07-29 22:31:48'),
-(268, 24, 'INGRESO', '1.00', '130.00', 2, 0, 1, '2022-07-29 22:31:48', '2022-07-29 22:31:48'),
-(269, 9, 'INGRESO', '4.00', '27.00', 1, 0, 1, '2022-07-29 22:31:48', '2022-07-29 22:31:48'),
-(270, 57, 'INGRESO', '3.00', '35.00', 1, 0, 1, '2022-07-29 22:31:48', '2022-07-29 22:31:48'),
-(271, 24, 'INGRESO', '2.00', '130.00', 1, 0, 1, '2022-07-29 22:31:48', '2022-07-29 22:31:48'),
-(272, 3, 'INGRESO', '1.00', '65.00', 1, 0, 1, '2022-07-29 22:31:48', '2022-07-29 22:31:48'),
-(273, 7, 'INGRESO', '1.00', '500.00', 1, 0, 1, '2022-07-29 22:31:48', '2022-07-29 22:31:48'),
-(274, 52, 'INGRESO', '18.00', '150.00', 2, 0, 1, '2022-07-29 22:32:51', '2022-07-29 22:32:51'),
-(275, 57, 'INGRESO', '1.00', '35.00', 2, 0, 1, '2022-07-29 22:32:51', '2022-07-29 22:32:51'),
-(276, 4, 'INGRESO', '1.00', '45.00', 2, 0, 1, '2022-07-29 22:32:51', '2022-07-29 22:32:51'),
-(277, 24, 'INGRESO', '1.00', '130.00', 2, 0, 1, '2022-07-29 22:32:51', '2022-07-29 22:32:51'),
-(278, 52, 'INGRESO', '1.00', '150.00', 1, 0, 1, '2022-07-29 22:32:51', '2022-07-29 22:32:51'),
-(279, 57, 'INGRESO', '5.00', '35.00', 1, 0, 1, '2022-07-29 22:32:51', '2022-07-29 22:32:51'),
-(280, 24, 'INGRESO', '1.00', '130.00', 1, 0, 1, '2022-07-29 22:32:51', '2022-07-29 22:32:51'),
-(281, 3, 'INGRESO', '2.00', '65.00', 1, 0, 1, '2022-07-29 22:32:51', '2022-07-29 22:32:51'),
-(282, 51, 'INGRESO', '1.00', '200.00', 1, 1, 1, '2022-07-29 22:32:51', '2022-07-29 23:28:20'),
-(283, 5, 'INGRESO', '1.00', '45.00', 1, 1, 1, '2022-07-29 22:32:51', '2022-07-29 23:28:15');
+INSERT INTO `general_stock_details` (`id`, `item_id`, `movement`, `quantity`, `price`, `quantity_to_use`, `sede_id`, `is_canceled`, `order_date_id`, `created_at`, `updated_at`) VALUES
+(4, 1, 'INGRESO', '20.00', '4.50', '20.00', 1, 1, NULL, '2022-07-18 17:16:21', '2022-07-30 22:56:29'),
+(5, 1, 'INGRESO', '15.00', '5.00', '15.00', 2, 1, NULL, '2022-07-18 17:16:46', '2022-07-30 04:12:30'),
+(6, 1, 'INGRESO', '60.00', '4.50', '60.00', 2, 0, NULL, '2022-07-18 17:24:05', '2022-07-30 04:12:30'),
+(7, 1, 'INGRESO', '15.00', '5.00', '15.00', 2, 0, NULL, '2022-07-18 17:24:05', '2022-07-30 04:12:30'),
+(8, 1, 'INGRESO', '50.00', '3.50', '50.00', 1, 0, NULL, '2022-07-18 19:06:44', '2022-07-30 23:46:53'),
+(9, 1, 'INGRESO', '14.00', '4.50', '14.00', 1, 0, NULL, '2022-07-18 19:07:09', '2022-07-30 23:46:53'),
+(10, 3, 'INGRESO', '2.00', '14.00', '2.00', 1, 0, NULL, '2022-07-18 19:12:11', '2022-07-30 04:12:30'),
+(11, 57, 'INGRESO', '5.00', '3.50', '5.00', 1, 0, NULL, '2022-07-18 19:12:11', '2022-07-30 04:12:30'),
+(14, 73, 'INGRESO', '2.00', '300.00', '2.00', 1, 0, NULL, '2022-07-21 14:50:13', '2022-07-30 04:12:30'),
+(15, 86, 'INGRESO', '100.00', '12.00', '100.00', 1, 0, NULL, '2022-07-21 15:03:59', '2022-07-30 04:12:30'),
+(246, 5, 'INGRESO', '1.00', '45.00', '1.00', 2, 0, 1, '2022-07-29 15:12:11', '2022-07-30 04:12:30'),
+(247, 9, 'INGRESO', '20.00', '27.00', '20.00', 2, 0, 1, '2022-07-29 15:12:11', '2022-07-30 04:12:30'),
+(248, 52, 'INGRESO', '20.00', '150.00', '20.00', 2, 0, 1, '2022-07-29 15:12:11', '2022-07-30 04:12:30'),
+(249, 57, 'INGRESO', '30.00', '35.00', '30.00', 2, 0, 1, '2022-07-29 15:12:11', '2022-07-30 04:12:30'),
+(250, 44, 'INGRESO', '40.00', '45.00', '40.00', 2, 0, 1, '2022-07-29 15:12:11', '2022-07-30 04:12:30'),
+(251, 3, 'INGRESO', '48.00', '65.00', '48.00', 2, 0, 1, '2022-07-29 15:12:11', '2022-07-30 04:12:30'),
+(252, 24, 'INGRESO', '25.00', '130.00', '25.00', 2, 0, 1, '2022-07-29 15:12:11', '2022-07-30 04:12:30'),
+(253, 52, 'INGRESO', '18.00', '150.00', '18.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-30 04:12:30'),
+(254, 44, 'INGRESO', '34.00', '45.00', '34.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-30 04:12:30'),
+(255, 21, 'INGRESO', '17.00', '50.00', '17.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-30 04:12:30'),
+(256, 9, 'INGRESO', '30.00', '27.00', '30.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-30 04:12:30'),
+(257, 1, 'INGRESO', '2.00', '450.00', '2.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-30 08:14:29'),
+(258, 57, 'INGRESO', '90.00', '35.00', '90.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-30 04:12:30'),
+(259, 24, 'INGRESO', '10.00', '130.00', '10.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-30 04:12:30'),
+(260, 3, 'INGRESO', '20.00', '65.00', '20.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-30 04:12:30'),
+(261, 65, 'INGRESO', '1.00', '260.00', '1.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-30 04:12:30'),
+(262, 5, 'INGRESO', '1.00', '45.00', '1.00', 1, 0, 1, '2022-07-29 15:12:11', '2022-07-30 04:12:30'),
+(263, 9, 'INGRESO', '4.00', '27.00', '4.00', 2, 0, 1, '2022-07-29 22:31:48', '2022-07-30 04:12:30'),
+(264, 52, 'INGRESO', '1.00', '150.00', '1.00', 2, 0, 1, '2022-07-29 22:31:48', '2022-07-30 04:12:30'),
+(265, 57, 'INGRESO', '2.00', '35.00', '2.00', 2, 0, 1, '2022-07-29 22:31:48', '2022-07-30 04:12:30'),
+(266, 42, 'INGRESO', '1.00', '75.00', '1.00', 2, 0, 1, '2022-07-29 22:31:48', '2022-07-30 04:12:30'),
+(267, 4, 'INGRESO', '10.00', '45.00', '10.00', 2, 0, 1, '2022-07-29 22:31:48', '2022-07-30 04:12:30'),
+(268, 24, 'INGRESO', '1.00', '130.00', '1.00', 2, 0, 1, '2022-07-29 22:31:48', '2022-07-30 04:12:30'),
+(269, 9, 'INGRESO', '4.00', '27.00', '4.00', 1, 0, 1, '2022-07-29 22:31:48', '2022-07-30 04:12:30'),
+(270, 57, 'INGRESO', '3.00', '35.00', '3.00', 1, 0, 1, '2022-07-29 22:31:48', '2022-07-30 04:12:30'),
+(271, 24, 'INGRESO', '2.00', '130.00', '2.00', 1, 0, 1, '2022-07-29 22:31:48', '2022-07-30 04:12:30'),
+(272, 3, 'INGRESO', '1.00', '65.00', '1.00', 1, 0, 1, '2022-07-29 22:31:48', '2022-07-30 04:12:30'),
+(273, 7, 'INGRESO', '1.00', '500.00', '1.00', 1, 0, 1, '2022-07-29 22:31:48', '2022-07-30 04:12:30'),
+(274, 52, 'INGRESO', '18.00', '150.00', '18.00', 2, 0, 1, '2022-07-29 22:32:51', '2022-07-30 04:12:30'),
+(275, 57, 'INGRESO', '1.00', '35.00', '1.00', 2, 0, 1, '2022-07-29 22:32:51', '2022-07-30 04:12:30'),
+(276, 4, 'INGRESO', '1.00', '45.00', '1.00', 2, 0, 1, '2022-07-29 22:32:51', '2022-07-30 04:12:30'),
+(277, 24, 'INGRESO', '1.00', '130.00', '1.00', 2, 0, 1, '2022-07-29 22:32:51', '2022-07-30 04:12:30'),
+(278, 52, 'INGRESO', '1.00', '150.00', '1.00', 1, 0, 1, '2022-07-29 22:32:51', '2022-07-30 04:12:30'),
+(279, 57, 'INGRESO', '5.00', '35.00', '5.00', 1, 0, 1, '2022-07-29 22:32:51', '2022-07-30 04:12:30'),
+(280, 24, 'INGRESO', '1.00', '130.00', '1.00', 1, 0, 1, '2022-07-29 22:32:51', '2022-07-30 04:12:30'),
+(281, 3, 'INGRESO', '2.00', '65.00', '2.00', 1, 0, 1, '2022-07-29 22:32:51', '2022-07-30 04:12:30'),
+(282, 51, 'INGRESO', '1.00', '200.00', '1.00', 1, 1, 1, '2022-07-29 22:32:51', '2022-07-30 04:12:30'),
+(283, 5, 'INGRESO', '1.00', '45.00', '1.00', 1, 1, 1, '2022-07-29 22:32:51', '2022-07-30 04:12:30');
 
 --
 -- Disparadores `general_stock_details`
@@ -1838,20 +1876,6 @@ INSERT INTO `implement_models` (`id`, `implement_model`, `created_at`, `updated_
 (2, 'kcxjtxlcjk', '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
 (3, 'brjzqzjwps', '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
 (4, 'kohilrnrky', '2022-06-20 21:22:00', '2022-06-20 21:22:00');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `importar_stock_log`
---
-
-CREATE TABLE `importar_stock_log` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `user_id` bigint(20) UNSIGNED NOT NULL,
-  `order_date_id` bigint(20) UNSIGNED NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -2958,13 +2982,26 @@ CREATE TABLE `pre_stockpile_details` (
   `pre_stockpile_id` bigint(20) UNSIGNED NOT NULL,
   `item_id` bigint(20) UNSIGNED NOT NULL,
   `quantity` decimal(8,2) NOT NULL,
-  `price` decimal(8,2) NOT NULL,
   `state` enum('PENDIENTE','ACEPTADO','MODIFICADO','RECHAZADO','VALIDADO','INCOMPLETO','CONCLUIDO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
-  `used_quantity` decimal(8,2) NOT NULL DEFAULT 0.00,
-  `warehouse_id` bigint(20) UNSIGNED NOT NULL,
+  `quantity_to_use` decimal(8,2) NOT NULL DEFAULT 0.00,
+  `sede_id` bigint(20) UNSIGNED NOT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `pre_stockpile_price_details`
+--
+
+CREATE TABLE `pre_stockpile_price_details` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `general_stock_detail_id` bigint(20) UNSIGNED NOT NULL,
+  `quantity` decimal(8,2) NOT NULL DEFAULT 0.00,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -3190,6 +3227,8 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
+('9kKA7Y6vsAHR8YF1ZcK1sCCvWsisU9licbCuPOCg', NULL, '192.168.0.6', 'AVG Antivirus', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiSXlHVDhEU1l2dkFVWE5YQW9hZUhFQXhuNElLbGxENUxTOGV2U0tocyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MTg6Imh0dHA6Ly8xOTIuMTY4LjAuNiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1659164316),
+('hqzaRr1YRDfYJUmiVZbtAnzdxK6W0dl8bkbsHxTc', 4, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiV2FoTDJ2bklsUFhXUWxDOGZhRmU4d21iTTZ3bVBONFhNUEtQQkdZQSI7czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo0MDoiaHR0cDovL3Npc3RlbWEudGVzdC9vcGVyYXRvci9QcmUtcmVzZXJ2YSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1659128765),
 ('qHXKJoEn4knAivWbQeDOHDmfYeuSX5sye7dySlG7', 4, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoid0VaOVdkc3VmNVE3YzQxNzNaZEpNamJiRzJlcG4xSmgyWXpVR05jMCI7czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo0MDoiaHR0cDovL3Npc3RlbWEudGVzdC9vcGVyYXRvci9QcmUtcmVzZXJ2YSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6MjE6InBhc3N3b3JkX2hhc2hfc2FuY3R1bSI7czo2MDoiJDJ5JDEwJDkySVhVTnBrak8wck9RNWJ5TWkuWWU0b0tvRWEzUm85bGxDLy5vZy9hdDIudWhlV0cvaWdpIjt9', 1659119370);
 
 -- --------------------------------------------------------
@@ -4047,14 +4086,6 @@ ALTER TABLE `implement_models`
   ADD UNIQUE KEY `implement_models_implement_model_unique` (`implement_model`);
 
 --
--- Indices de la tabla `importar_stock_log`
---
-ALTER TABLE `importar_stock_log`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `order_date_id` (`order_date_id`);
-
---
 -- Indices de la tabla `items`
 --
 ALTER TABLE `items`
@@ -4231,7 +4262,14 @@ ALTER TABLE `pre_stockpile_details`
   ADD PRIMARY KEY (`id`),
   ADD KEY `pre_stockpile_details_pre_stockpile_foreign` (`pre_stockpile_id`),
   ADD KEY `pre_stockpile_details_item_id_foreign` (`item_id`),
-  ADD KEY `pre_stockpile_details_warehouse_id_foreign` (`warehouse_id`);
+  ADD KEY `pre_stockpile_details_warehouse_id_foreign` (`sede_id`);
+
+--
+-- Indices de la tabla `pre_stockpile_price_details`
+--
+ALTER TABLE `pre_stockpile_price_details`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `general_stock_price_details_general_stock_detail_id` (`general_stock_detail_id`);
 
 --
 -- Indices de la tabla `risks`
@@ -4553,12 +4591,6 @@ ALTER TABLE `implement_models`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
--- AUTO_INCREMENT de la tabla `importar_stock_log`
---
-ALTER TABLE `importar_stock_log`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
-
---
 -- AUTO_INCREMENT de la tabla `items`
 --
 ALTER TABLE `items`
@@ -4676,6 +4708,12 @@ ALTER TABLE `pre_stockpile_dates`
 -- AUTO_INCREMENT de la tabla `pre_stockpile_details`
 --
 ALTER TABLE `pre_stockpile_details`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `pre_stockpile_price_details`
+--
+ALTER TABLE `pre_stockpile_price_details`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -4925,13 +4963,6 @@ ALTER TABLE `implements`
   ADD CONSTRAINT `implements_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 --
--- Filtros para la tabla `importar_stock_log`
---
-ALTER TABLE `importar_stock_log`
-  ADD CONSTRAINT `importar_stock_log_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `importar_stock_log_ibfk_2` FOREIGN KEY (`order_date_id`) REFERENCES `order_dates` (`id`);
-
---
 -- Filtros para la tabla `items`
 --
 ALTER TABLE `items`
@@ -5035,7 +5066,13 @@ ALTER TABLE `pre_stockpiles`
 ALTER TABLE `pre_stockpile_details`
   ADD CONSTRAINT `pre_stockpile_details_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
   ADD CONSTRAINT `pre_stockpile_details_pre_stockpile_foreign` FOREIGN KEY (`pre_stockpile_id`) REFERENCES `pre_stockpiles` (`id`),
-  ADD CONSTRAINT `pre_stockpile_details_warehouse_id_foreign` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`id`);
+  ADD CONSTRAINT `pre_stockpile_details_sede_id_foreign` FOREIGN KEY (`sede_id`) REFERENCES `sedes` (`id`);
+
+--
+-- Filtros para la tabla `pre_stockpile_price_details`
+--
+ALTER TABLE `pre_stockpile_price_details`
+  ADD CONSTRAINT `general_stock_price_details_general_stock_detail_id` FOREIGN KEY (`general_stock_detail_id`) REFERENCES `general_stock_details` (`id`);
 
 --
 -- Filtros para la tabla `risk_task_order`

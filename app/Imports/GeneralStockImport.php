@@ -37,6 +37,7 @@ class GeneralStockImport implements ToModel,WithHeadingRow,WithValidation,WithBa
             'item_id' => $this->item[$row['codigo']],
             'quantity' => $row['cantidad'],
             'price' => $row['precio'],
+            'quantity_to_use' => $row['cantidad'],
             'sede_id' => $this->sede[$row['centro']],
             'order_date_id' => $this->order_date[$row['pedido']],
         ]);
