@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 01-08-2022 a las 06:40:37
+-- Tiempo de generación: 03-08-2022 a las 07:09:40
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -1714,11 +1714,14 @@ DELIMITER $$
 CREATE TRIGGER `actualizar_movimiento_stock_general` AFTER UPDATE ON `general_stock_details` FOR EACH ROW BEGIN
 	IF new.is_canceled AND new.is_canceled <> old.is_canceled THEN
     /*-------Descontar del stock general-----------------*/
-		UPDATE general_stocks SET quantity = quantity - new.quantity, price = price - (new.price*new.quantity) WHERE item_id = new.item_id AND sede_id = new.sede_id;
+		UPDATE general_stocks SET quantity = quantity - new.quantity, price = price - (new.price*new.quantity), quantity_to_reserve = quantity_to_reserve - new.quantity  WHERE item_id = new.item_id AND sede_id = new.sede_id;
     /*-------Aumentar en la cantidad por llegar------------*/
         IF (new.order_date_id IS NOT NULL) THEN
         	UPDATE general_order_requests SET quantity_to_arrive = quantity_to_arrive + new.quantity WHERE item_id = new.item_id AND sede_id = new.sede_id AND order_date_id = new.order_date_id LIMIT 1;
     	END IF;
+    ELSEIF new.quantity_to_use <> old.quantity_to_use THEN
+    /*-------Actualizar cantidad a reservada------------------*/
+    	UPDATE general_stocks SET quantity_to_reserve = quantity_to_reserve - old.quantity_to_use + new.quantity_to_use, price = price - new.price*(old.quantity_to_use - new.quantity_to_use) WHERE item_id = new.item_id AND sede_id = new.sede_id;
     END IF;
 END
 $$
@@ -1726,9 +1729,9 @@ DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER `insertar_movimiento_stock_general` AFTER INSERT ON `general_stock_details` FOR EACH ROW BEGIN
 	IF EXISTS(SELECT * FROM general_stocks WHERE item_id = new.item_id AND sede_id = new.sede_id) THEN
-        UPDATE general_stocks SET quantity = quantity + new.quantity, price = price + (new.price*new.quantity) WHERE item_id = new.item_id AND sede_id = new.sede_id;
+        UPDATE general_stocks SET quantity = quantity + new.quantity, price = price + (new.price*new.quantity), quantity_to_reserve = quantity_to_reserve + new.quantity WHERE item_id = new.item_id AND sede_id = new.sede_id;
 	ELSE
-    	INSERT INTO general_stocks (item_id, quantity, price, sede_id) VALUES (new.item_id, new.quantity, new.price*new.quantity, new.sede_id);
+    	INSERT INTO general_stocks (item_id, quantity, price, sede_id,quantity_to_reserve) VALUES (new.item_id, new.quantity, new.price*new.quantity, new.sede_id,new.quantity);
     END IF;
     IF (new.order_date_id IS NOT NULL) THEN
         	UPDATE general_order_requests SET quantity_to_arrive = quantity_to_arrive - new.quantity WHERE item_id = new.item_id AND sede_id = new.sede_id AND order_date_id = new.order_date_id LIMIT 1;
@@ -1736,31 +1739,6 @@ CREATE TRIGGER `insertar_movimiento_stock_general` AFTER INSERT ON `general_stoc
 END
 $$
 DELIMITER ;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `general_warehouses`
---
-
-CREATE TABLE `general_warehouses` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `code` varchar(20) NOT NULL,
-  `general_warehouse` varchar(255) NOT NULL,
-  `sede_id` bigint(20) UNSIGNED NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---
--- Volcado de datos para la tabla `general_warehouses`
---
-
-INSERT INTO `general_warehouses` (`id`, `code`, `general_warehouse`, `sede_id`, `created_at`, `updated_at`) VALUES
-(1, '001', 'ALMACEN GENERAL ICA', 1, '2022-07-15 18:38:28', '2022-07-15 18:38:57'),
-(2, '002', 'ALMACEN GENERAL CHINCHA', 2, '2022-07-15 18:38:28', '2022-07-15 18:38:57'),
-(3, '003', 'ALMACEN GENERAL', 3, '2022-07-15 18:38:28', '2022-07-15 18:38:28'),
-(4, '004', 'ALMACEN GENERAL', 4, '2022-07-15 18:38:28', '2022-07-15 18:38:28');
 
 -- --------------------------------------------------------
 
@@ -2982,12 +2960,62 @@ CREATE TABLE `pre_stockpile_details` (
   `pre_stockpile_id` bigint(20) UNSIGNED NOT NULL,
   `item_id` bigint(20) UNSIGNED NOT NULL,
   `quantity` decimal(8,2) NOT NULL,
-  `state` enum('PENDIENTE','ACEPTADO','MODIFICADO','RECHAZADO','VALIDADO','INCOMPLETO','CONCLUIDO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
+  `state` enum('PENDIENTE','VALIDADO','RECHAZADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
   `quantity_to_use` decimal(8,2) NOT NULL DEFAULT 0.00,
   `sede_id` bigint(20) UNSIGNED NOT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Disparadores `pre_stockpile_details`
+--
+DELIMITER $$
+CREATE TRIGGER `reducir_cantidad_almacen` AFTER INSERT ON `pre_stockpile_details` FOR EACH ROW BEGIN
+    DECLARE cantidad decimal(8,2) DEFAULT 0;
+    DECLARE stock decimal(8,2) DEFAULT 0;
+    DECLARE id_stock_detalle INT;
+    SET cantidad = new.quantity;
+    WHILE cantidad > 0 DO
+    	SELECT gsd.id,gsd.quantity_to_use INTO id_stock_detalle,stock FROM general_stock_details gsd WHERE gsd.item_id = item AND gsd.sede_id = sede AND gsd.quantity_to_use > 0 AND gsd.is_canceled = 0 ORDER BY id ASC LIMIT 1;
+    	IF stock >= cantidad THEN
+        	UPDATE general_stock_details gsd SET gsd.quantity_to_use = gsd.quantity_to_use - cantidad WHERE gsd.item_id = item AND gsd.sede_id = sede AND gsd.quantity_to_use > 0 AND gsd.is_canceled = 0 ORDER BY id ASC LIMIT 1;
+            INSERT INTO pre_stockpile_price_details(pre_stockpile_detail_id, general_stock_detail_id, quantity) VALUES (new.id, id_stock_detalle, cantidad);
+            SET cantidad = 0;
+        ELSE
+        	UPDATE general_stock_details gsd SET gsd.quantity_to_use = 0 WHERE gsd.item_id = item AND gsd.sede_id = sede AND gsd.quantity_to_use > 0 AND gsd.is_canceled = 0 ORDER BY id ASC LIMIT 1;
+            INSERT INTO pre_stockpile_price_details(pre_stockpile_detail_id, general_stock_detail_id, quantity) VALUES (new.id,id_stock_detalle,stock);
+            SET cantidad = cantidad - stock;
+        END IF;
+    END WHILE;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `regresar_cantidad_reservada` AFTER UPDATE ON `pre_stockpile_details` FOR EACH ROW BEGIN
+	IF new.state = "RECHAZADO" AND new.state <> old.state THEN
+    	BEGIN
+        	DECLARE detalle_stock INT;
+            DECLARE cantidad DECIMAL(8,2);
+            DECLARE precio DECIMAL(8,2);
+        	DECLARE detalle_fin INT DEFAULT 0;
+        	DECLARE cursor_detalle CURSOR FOR SELECT general_stock_detail_id, quantity FROM pre_stockpile_price_details WHERE pre_stockpile_detail_id  = new.id;
+            DECLARE CONTINUE HANDLER FOR NOT FOUND SET detalle_fin = 1;
+            OPEN cursor_detalle;
+           		bucle_detalle:LOOP
+                	IF detalle_fin = 1 THEN
+                   		LEAVE bucle_detalle;
+                    END IF;
+                    FETCH cursor_detalle INTO detalle_stock, cantidad;
+                    	SELECT gsd.price INTO precio FROM general_stock_details gsd WHERE gsd.id = detalle_stock;
+                    	UPDATE general_stock_details gsd SET gsd.quantity_to_use = gsd.quantity_to_use + cantidad, gsd.price = gsd.price + (precio*cantidad) WHERE gsd.id = detalle_stock;
+                END LOOP bucle_detalle; 
+            CLOSE cursor_detalle;
+        END;
+    END IF;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -2997,6 +3025,7 @@ CREATE TABLE `pre_stockpile_details` (
 
 CREATE TABLE `pre_stockpile_price_details` (
   `id` bigint(20) UNSIGNED NOT NULL,
+  `pre_stockpile_detail_id` bigint(20) UNSIGNED NOT NULL,
   `general_stock_detail_id` bigint(20) UNSIGNED NOT NULL,
   `quantity` decimal(8,2) NOT NULL DEFAULT 0.00,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -4062,13 +4091,6 @@ ALTER TABLE `general_stock_details`
   ADD KEY `general_stock_details_item_id_foreign` (`item_id`);
 
 --
--- Indices de la tabla `general_warehouses`
---
-ALTER TABLE `general_warehouses`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `genereal_warehouses_sede_id_foreign` (`sede_id`);
-
---
 -- Indices de la tabla `implements`
 --
 ALTER TABLE `implements`
@@ -4269,7 +4291,8 @@ ALTER TABLE `pre_stockpile_details`
 --
 ALTER TABLE `pre_stockpile_price_details`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `general_stock_price_details_general_stock_detail_id` (`general_stock_detail_id`);
+  ADD KEY `general_stock_price_details_general_stock_detail_id` (`general_stock_detail_id`),
+  ADD KEY `general_stock_price_details_pre_stockpile_detail_id` (`pre_stockpile_detail_id`);
 
 --
 -- Indices de la tabla `risks`
@@ -4571,12 +4594,6 @@ ALTER TABLE `general_stocks`
 --
 ALTER TABLE `general_stock_details`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=284;
-
---
--- AUTO_INCREMENT de la tabla `general_warehouses`
---
-ALTER TABLE `general_warehouses`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `implements`
@@ -4948,12 +4965,6 @@ ALTER TABLE `general_stock_details`
   ADD CONSTRAINT `general_stock_details_sede_id_foreign` FOREIGN KEY (`sede_id`) REFERENCES `sedes` (`id`);
 
 --
--- Filtros para la tabla `general_warehouses`
---
-ALTER TABLE `general_warehouses`
-  ADD CONSTRAINT `genereal_warehouses_sede_id_foreign` FOREIGN KEY (`sede_id`) REFERENCES `sedes` (`id`);
-
---
 -- Filtros para la tabla `implements`
 --
 ALTER TABLE `implements`
@@ -5072,7 +5083,8 @@ ALTER TABLE `pre_stockpile_details`
 -- Filtros para la tabla `pre_stockpile_price_details`
 --
 ALTER TABLE `pre_stockpile_price_details`
-  ADD CONSTRAINT `general_stock_price_details_general_stock_detail_id` FOREIGN KEY (`general_stock_detail_id`) REFERENCES `general_stock_details` (`id`);
+  ADD CONSTRAINT `general_stock_price_details_general_stock_detail_id` FOREIGN KEY (`general_stock_detail_id`) REFERENCES `general_stock_details` (`id`),
+  ADD CONSTRAINT `general_stock_price_details_pre_stockpile_detail_id` FOREIGN KEY (`pre_stockpile_detail_id`) REFERENCES `pre_stockpile_details` (`id`);
 
 --
 -- Filtros para la tabla `risk_task_order`
