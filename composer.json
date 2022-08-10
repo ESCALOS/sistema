@@ -16,6 +16,7 @@
         "livewire/livewire": "^2.5",
         "maatwebsite/excel": "^3.1",
         "nesbot/carbon": "^2.58",
+        "phpoffice/phpspreadsheet": "^1.24",
         "psr/simple-cache": "2.0",
         "spatie/laravel-permission": "^5.5"
     },

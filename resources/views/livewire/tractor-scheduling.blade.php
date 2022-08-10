@@ -154,7 +154,7 @@
             </div>
             <div class="p-6">
                 @if ($tractorSchedulings->count())
-                <table class="min-w-max w-full table-fixed overflow-x-scroll">
+                <table class="min-w-max w-full md:table-fixed overflow-x-scroll">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                             <th class="py-3 text-center">
