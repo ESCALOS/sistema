@@ -29,7 +29,7 @@ BEGIN
                     DECLARE tiempo_vida_componente DECIMAL(8,2);
                     DECLARE cantidad_componente_recambio DECIMAL(8,2);
                     DECLARE cantidad_componente_preventivo DECIMAL(8,2);
-                    DECLARE item_componente DECIMAL(8,2);
+                    DECLARE item_componente INT;
                     DECLARE frecuencia_componente DECIMAL(8,2);
                     DECLARE horas_ultimo_mantenimiento_componente DECIMAL(8,2);
                     DECLARE tarea_componente INT;
@@ -39,7 +39,7 @@ BEGIN
                     DECLARE tiempo_vida_pieza DECIMAL(8,2);
                     DECLARE cantidad_pieza_recambio DECIMAL(8,2);
                     DECLARE cantidad_pieza_preventivo DECIMAL(8,2);
-                    DECLARE item_pieza DECIMAL(8,2);
+                    DECLARE item_pieza INT;
                     DECLARE frecuencia_pieza DECIMAL(8,2);
                     DECLARE horas_ultimo_mantenimiento_pieza DECIMAL(8,2);
                     DECLARE tarea_pieza INT;
@@ -212,14 +212,14 @@ BEGIN
                                                                             /*---------OBTENER ID Y HORAS DE LA PIEZA DEL COMPONENTE------------------------------------------*/
                                                                                 SELECT id,hours INTO pieza_del_componente,horas_pieza FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE";
                                                                             /*---------OBTENER EL TIEMPO DE VIDA Y EL ID DEL ALMACEN DE LA PIEZA------------------------------*/
-                                                                                SELECT c.lifespan,c.item_id,i.estimated_price INTO tiempo_vida_pieza,item_pieza,precio_pieza FROM components c INNER JOIN items i ON i.id = c.item_id WHERE c.id = pieza;
+                                                                                SELECT lifespan,item_id INTO tiempo_vida_pieza,item_pieza FROM components WHERE id = pieza;
                                                                             /*---------HACER SI EL TIEMPO DE VIDA SUPERA A LAS HORAS DE LA PIEZA------------------------------*/
                                                                                 IF horas_pieza >= tiempo_vida_pieza THEN
                                                                                     /*---------PONER EL TIEMPO DE VIDA COMO EL TOTAL DE HORAS----------*/
                                                                                         SELECT tiempo_vida_pieza INTO horas_pieza;
                                                                                 END IF;
                                                                             /*---------CALCULAR SI NECESITA RECAMBIO DENTRO DE 2 MESES----------------------------------------*/
-                                                                                SELECT FLOOR((horas_pieza+336)/tiempo_vida_pieza) INTO cantidad_pieza_recambio;
+                                                                                SELECT FLOOR((horas_pieza+168)/tiempo_vida_pieza) INTO cantidad_pieza_recambio;
                                                                             /*---------OBTENER FRECUENCIA DE MANTENIMIENTO PREVENTIVO DE LA PIEZA-----------------------------*/
                                                                                 SELECT frequency INTO frecuencia_pieza FROM preventive_maintenance_frequencies WHERE component_id = pieza;
                                                                             /*---------OBTENER HORAS DEL ÚLTIMO MATENIMIENTO DE LA PIEZA EN CASO HUBIERA----------------------*/
@@ -260,7 +260,7 @@ BEGIN
                                                                                                                                     IF NOT EXISTS(SELECT * FROM pre_stockpile_details WHERE item_id = item_pieza AND pre_stockpile_id = pre_reserva) THEN
                                                                                                                                         INSERT INTO pre_stockpile_details(pre_stockpile_id,item_id,quantity,quantity_to_use) VALUES (pre_reserva,item_pieza,cantidad_pieza_recambio,cantidad_pieza_recambio);
                                                                                                                                     ELSE
-                                                                                                                                        UPDATE pre_stockpile_details SET quantity = quantity + cantidad_pieza_recambio, quantity_to_use = quantity_to_use + cantidad_pieza_recambio WHERE order_request_id = solicitud_pedido AND item_id = item_pieza;
+                                                                                                                                        UPDATE pre_stockpile_details SET quantity = quantity + cantidad_pieza_recambio, quantity_to_use = quantity_to_use + cantidad_pieza_recambio WHERE pre_stockpile_id = pre_reserva AND item_id = item_pieza;
                                                                                                                                     END IF;
                                                                                                                             END LOOP bucle_materiales;
                                                                                                                         CLOSE cursor_materiales_recambio;
@@ -274,7 +274,7 @@ BEGIN
                                                                                             END;
                                                                                 END IF;
                                                                             /*---------CALCULAR MANTENIMIENTO PREVENTIVOS-----------------------------------------------------*/
-                                                                                SELECT (FLOOR((horas_ultimo_mantenimiento_pieza+336)/frecuencia_pieza) - cantidad_pieza_recambio) INTO cantidad_pieza_preventivo;
+                                                                                SELECT (FLOOR((horas_ultimo_mantenimiento_pieza+168)/frecuencia_pieza) - cantidad_pieza_recambio) INTO cantidad_pieza_preventivo;
                                                                             /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS----------------------*/
                                                                                 IF cantidad_pieza_preventivo > 0 THEN
                                                                                     /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL MANTENIMIENTO PREVENTIVO DE LA PIEZA-------------------------*/

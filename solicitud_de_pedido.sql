@@ -28,7 +28,7 @@ BEGIN
                     DECLARE tiempo_vida_componente DECIMAL(8,2);
                     DECLARE cantidad_componente_recambio DECIMAL(8,2);
                     DECLARE cantidad_componente_preventivo DECIMAL(8,2);
-                    DECLARE item_componente DECIMAL(8,2);
+                    DECLARE item_componente INT;
                     DECLARE precio_componente DECIMAL(8,2);
                     DECLARE frecuencia_componente DECIMAL(8,2);
                     DECLARE horas_ultimo_mantenimiento_componente DECIMAL(8,2);
@@ -39,7 +39,7 @@ BEGIN
                     DECLARE tiempo_vida_pieza DECIMAL(8,2);
                     DECLARE cantidad_pieza_recambio DECIMAL(8,2);
                     DECLARE cantidad_pieza_preventivo DECIMAL(8,2);
-                    DECLARE item_pieza DECIMAL(8,2);
+                    DECLARE item_pieza INT;
                     DECLARE precio_pieza DECIMAL(8,2);
                     DECLARE frecuencia_pieza DECIMAL(8,2);
                     DECLARE horas_ultimo_mantenimiento_pieza DECIMAL(8,2);
@@ -133,7 +133,7 @@ BEGIN
                                                                                                             IF NOT EXISTS(SELECT * FROM order_request_details WHERE item_id = item_componente AND order_request_id = solicitud_pedido) THEN
                                                                                                                 INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price,quantity_to_use) VALUES (solicitud_pedido,item_componente,cantidad_componente_recambio,precio_componente,cantidad_componente_recambio);
                                                                                                             ELSE
-                                                                                                                UPDATE order_request_details SET quantity = quantity + cantidad_componente_recambio, quantity_to_use = quantity_to_use + cantidad_componente_recambio,  WHERE order_request_id = solicitud_pedido AND item_id = item_componente;
+                                                                                                                UPDATE order_request_details SET quantity = quantity + cantidad_componente_recambio, quantity_to_use = quantity_to_use + cantidad_componente_recambio WHERE order_request_id = solicitud_pedido AND item_id = item_componente;
                                                                                                             END IF;
                                                                                                     END LOOP bucle_materiales;
                                                                                                 CLOSE cursor_materiales_recambio;
