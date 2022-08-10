@@ -2,10 +2,10 @@
 -- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
--- Servidor: 127.0.0.1
--- Tiempo de generación: 03-08-2022 a las 07:09:40
--- Versión del servidor: 10.4.24-MariaDB
--- Versión de PHP: 8.1.6
+-- Servidor: localhost
+-- Tiempo de generación: 10-08-2022 a las 17:15:41
+-- Versión del servidor: 10.8.3-MariaDB
+-- Versión de PHP: 8.1.8
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -2962,7 +2962,6 @@ CREATE TABLE `pre_stockpile_details` (
   `quantity` decimal(8,2) NOT NULL,
   `state` enum('PENDIENTE','VALIDADO','RECHAZADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
   `quantity_to_use` decimal(8,2) NOT NULL DEFAULT 0.00,
-  `sede_id` bigint(20) UNSIGNED NOT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -3256,9 +3255,8 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('9kKA7Y6vsAHR8YF1ZcK1sCCvWsisU9licbCuPOCg', NULL, '192.168.0.6', 'AVG Antivirus', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiSXlHVDhEU1l2dkFVWE5YQW9hZUhFQXhuNElLbGxENUxTOGV2U0tocyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MTg6Imh0dHA6Ly8xOTIuMTY4LjAuNiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1659164316),
-('hqzaRr1YRDfYJUmiVZbtAnzdxK6W0dl8bkbsHxTc', 4, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiV2FoTDJ2bklsUFhXUWxDOGZhRmU4d21iTTZ3bVBONFhNUEtQQkdZQSI7czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo0MDoiaHR0cDovL3Npc3RlbWEudGVzdC9vcGVyYXRvci9QcmUtcmVzZXJ2YSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1659128765),
-('qHXKJoEn4knAivWbQeDOHDmfYeuSX5sye7dySlG7', 4, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoid0VaOVdkc3VmNVE3YzQxNzNaZEpNamJiRzJlcG4xSmgyWXpVR05jMCI7czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDtzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo0MDoiaHR0cDovL3Npc3RlbWEudGVzdC9vcGVyYXRvci9QcmUtcmVzZXJ2YSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6MjE6InBhc3N3b3JkX2hhc2hfc2FuY3R1bSI7czo2MDoiJDJ5JDEwJDkySVhVTnBrak8wck9RNWJ5TWkuWWU0b0tvRWEzUm85bGxDLy5vZy9hdDIudWhlV0cvaWdpIjt9', 1659119370);
+('LAthuh05JZuxRgZ0HFRHuHO7ZZLldz42S913RQp1', NULL, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiS3l5MzlBVzhMOG1MbXVrSXBBWng0RVpDN01jcU1sckFLSVhZVUtUQSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mzk6Imh0dHA6Ly9sb2NhbGhvc3Qvfm5hbm9rYS9zaXN0ZW1hL3B1YmxpYyI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1660139263),
+('YL4LueQ7q60CR15kBa9rQVdTZFy4jZyGIX4vyfSn', 5, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiTjA1OTRETDA1TjRHWUw1eEdNeVpFTkxnd0lZdXV4a0JHYzRmNGVSOCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTg6Imh0dHA6Ly9zaXN0ZW1hLnRlc3Qvc3VwZXJ2aXNvci9PcmRlbi1kZS1UcmFiYWpvLVBlbmRpZW50ZXMiO31zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aTo1O30=', 1660145282);
 
 -- --------------------------------------------------------
 
@@ -3703,7 +3701,9 @@ INSERT INTO `tractor_schedulings` (`id`, `user_id`, `labor_id`, `tractor_id`, `i
 (19, 5, 3, 6, 5, '2022-07-16', 'NOCHE', 6, 0, '2022-07-16 00:01:04', '2022-07-16 00:01:04'),
 (20, 8, 1, 7, 7, '2022-07-22', 'MAÑANA', 7, 0, '2022-07-21 23:10:10', '2022-07-21 23:10:10'),
 (21, 37, 4, 5, 5, '2022-07-22', 'MAÑANA', 5, 0, '2022-07-22 00:15:34', '2022-07-22 00:15:34'),
-(22, 6, 3, 6, 6, '2022-07-22', 'MAÑANA', 5, 0, '2022-07-22 00:15:53', '2022-07-22 00:15:53');
+(22, 6, 3, 6, 6, '2022-07-22', 'MAÑANA', 5, 0, '2022-07-22 00:15:53', '2022-07-22 00:15:53'),
+(23, 36, 3, 7, 7, '2022-08-11', 'MAÑANA', 7, 0, '2022-08-10 20:05:18', '2022-08-10 20:05:18'),
+(24, 7, 3, 8, 8, '2022-08-11', 'MAÑANA', 7, 0, '2022-08-10 20:05:26', '2022-08-10 20:05:26');
 
 -- --------------------------------------------------------
 
@@ -3736,7 +3736,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `code`, `name`, `lastname`, `location_id`, `email`, `email_verified_at`, `password`, `two_factor_secret`, `two_factor_recovery_codes`, `two_factor_confirmed_at`, `is_admin`, `remember_token`, `current_team_id`, `profile_photo_path`, `created_at`, `updated_at`) VALUES
-(1, '777269', 'Mr. Ford Vandervort', 'Kunze', 1, 'roob.brianne@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'nFhY4qi4tZD0LCwogwnPuqxUUqdv6dKDOgtKw2AIE9H35lHtvlCCwZ5Tnmiw', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
+(1, '777269', 'Mr. Ford Vandervort', 'Kunze', 1, 'roob.brianne@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '2noe1vOCyXt3GuOXrx8K2ucYaplPAnjaQqdNvq5Hl2uOuvGBhxY0NWi1UADO', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
 (2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'CH5a14s3lYlYb4FhejjGVMjThqJqwEipakGBMIwD5doNHUluQ2dgFRakvM7k', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
 (3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'tT4wc3FGZMgNxvTJCyrWeyYHkHPxt9RchcpUiGo6RyoInl1gQLZ96iS18V1R', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'alSU5kxHYDaT98MIF94AkLK3UueerQuNtJTvSx3TOaQ3YKAuaxnUAPr1UbVJ', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
@@ -3926,7 +3926,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `lista_de_materiales_pedidos`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock`, `ord`.`state` AS `state` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) ORDER BY `ord`.`id` DESC;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock`, `ord`.`state` AS `state` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) ORDER BY `ord`.`id` AS `DESCdesc` ASC  ;
 
 -- --------------------------------------------------------
 
@@ -3935,7 +3935,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `lista_de_materiales_pedidos_pendientes`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos_pendientes`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) WHERE `ord`.`state` = 'PENDIENTE' ORDER BY `ord`.`id` DESC;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos_pendientes`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) WHERE `ord`.`state` = 'PENDIENTE' ORDER BY `ord`.`id` AS `DESCdesc` ASC  ;
 
 -- --------------------------------------------------------
 
@@ -4283,8 +4283,7 @@ ALTER TABLE `pre_stockpile_dates`
 ALTER TABLE `pre_stockpile_details`
   ADD PRIMARY KEY (`id`),
   ADD KEY `pre_stockpile_details_pre_stockpile_foreign` (`pre_stockpile_id`),
-  ADD KEY `pre_stockpile_details_item_id_foreign` (`item_id`),
-  ADD KEY `pre_stockpile_details_warehouse_id_foreign` (`sede_id`);
+  ADD KEY `pre_stockpile_details_item_id_foreign` (`item_id`);
 
 --
 -- Indices de la tabla `pre_stockpile_price_details`
@@ -4827,7 +4826,7 @@ ALTER TABLE `tractor_reports`
 -- AUTO_INCREMENT de la tabla `tractor_schedulings`
 --
 ALTER TABLE `tractor_schedulings`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT de la tabla `users`
@@ -5076,8 +5075,7 @@ ALTER TABLE `pre_stockpiles`
 --
 ALTER TABLE `pre_stockpile_details`
   ADD CONSTRAINT `pre_stockpile_details_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
-  ADD CONSTRAINT `pre_stockpile_details_pre_stockpile_foreign` FOREIGN KEY (`pre_stockpile_id`) REFERENCES `pre_stockpiles` (`id`),
-  ADD CONSTRAINT `pre_stockpile_details_sede_id_foreign` FOREIGN KEY (`sede_id`) REFERENCES `sedes` (`id`);
+  ADD CONSTRAINT `pre_stockpile_details_pre_stockpile_foreign` FOREIGN KEY (`pre_stockpile_id`) REFERENCES `pre_stockpiles` (`id`);
 
 --
 -- Filtros para la tabla `pre_stockpile_price_details`
@@ -5426,6 +5424,7 @@ CREATE DEFINER=`root`@`localhost` EVENT `Listar_materiales_pedido` ON SCHEDULE E
                                                                                 END IF;
                                                                             /*---------OBTENER LOS DATOS DE LA PIEZA DEL CICLO------------------------------------------------*/
                                                                                 FETCH cursor_piezas INTO pieza;
+
                                                                             /*---------HACER EN CASO NO EXISTA REGISTRO DE HORAS DE LA PIEZA DEL COMPONENTE DEL IMPLEMENTO----*/
                                                                                 IF NOT EXISTS(SELECT * FROM component_part WHERE component_implement_id  = componente_del_implemento AND part = pieza AND state = "PENDIENTE") THEN
                                                                                     INSERT INTO component_part (component_implement_id,part) VALUES (componente_del_implemento,pieza);
