@@ -55,7 +55,7 @@ class PreReserva extends Component
         $this->material_measurement_edit = $material->item->measurementUnit->abbreviation;
         $prereserva = PreStockpile::find($material->pre_stockpile_id);
         $stock = OperatorStock::where('item_id',$material->item_id)->where('user_id',$prereserva->user_id)->first();
-        $this->material_stock_edit = floatval($stock->quantity);
+        $this->material_stock_edit = floatval($stock->used_quantity);
         $this->open_edit = true;
     }
 
@@ -114,7 +114,7 @@ class PreReserva extends Component
         }
     /*---------Obtener el detalle de los materiales pedidos---------------------------------*/
         $pre_stockpile_details = PreStockpileDetail::join('pre_stockpiles',function($join){
-            $join->on('pre_stockpile_details.pre_stockpile_id','=','pre_stockpiles.id');
+            $join->on('pre_stockpile_details.pre_stockpile_id','pre_stockpiles.id');
         })->join('items',function($join){
             $join->on('pre_stockpile_details.item_id','=','items.id');
         })->join('measurement_units',function($join){
@@ -137,10 +137,14 @@ class PreReserva extends Component
                                                     $join->on('pre_stockpiles.id','=','pre_stockpile_details.pre_stockpile_id');
                                                 })->join('implements', function ($join){
                                                     $join->on('implements.id','=','pre_stockpiles.implement_id');
+                                                })->join('pre_stockpile_price_details',function($join){
+                                                    $join->on('pre_stockpile_price_details.pre_stockpile_detail_id','pre_stockpile_details.id');
+                                                })->join('general_stock_details',function($join){
+                                                    $join->on('general_stock_details.id','pre_stockpile_price_details.general_stock_detail_id');
                                                 })->where('implements.ceco_id','=',$implement->ceco_id)
                                                   ->where('pre_stockpile_details.state','=','PENDIENTE')
                                                   ->where('pre_stockpile_details.quantity','<>',0)
-                                                  ->selectRaw('SUM(pre_stockpile_details.price*pre_stockpile_details.quantity) AS total')
+                                                  ->selectRaw('SUM(general_stock_details.price*pre_stockpile_price_details.quantity) AS total')
                                                   ->value('total');
 
     } else {

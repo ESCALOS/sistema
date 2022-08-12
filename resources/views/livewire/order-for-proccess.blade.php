@@ -31,7 +31,7 @@
             <div class="p-6">
                 <div style="max-height:400px;overflow:auto">
                     @if ($items_por_operador->count())
-                        <table class="min-w-max w-full table-fixed">
+                        <table class="min-w-max w-full">
                             <thead>
                                 <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                                     <th class="py-3 text-center">
@@ -97,7 +97,7 @@
             <div class="p-6">
                 <div>
                     @if ($items_por_implemento->count())
-                        <table class="min-w-max w-full table-fixed">
+                        <table class="min-w-max w-full">
                             <thead>
                                 <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                                     <th class="py-3 text-center">
@@ -174,7 +174,7 @@
         <div class="p-6">
             <div>
                 @if ($solicitudes_en_proceso->count())
-                    <table class="min-w-max w-full table-fixed overflow-x-scroll">
+                    <table class="min-w-max w-full overflow-x-scroll">
                         <thead>
                             <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                                 <th class="py-3 text-center">

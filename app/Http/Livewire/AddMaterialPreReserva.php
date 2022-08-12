@@ -51,7 +51,7 @@ class AddMaterialPreReserva extends Component
         if($this->material_for_add > 0){
             if(OperatorStock::where('item_id',$this->material_for_add)->where('user_id',Auth::user()->id)->exists()){
                 $asignado = OperatorStock::where('item_id',$this->material_for_add)->where('user_id',Auth::user()->id)->first();
-                $this->stock_material_for_add = $asignado->quantity;
+                $this->stock_material_for_add = floatval($asignado->used_quantity);
             }else{
                 $this->stock_material_for_add = 0;
             }

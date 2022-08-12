@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 12-08-2022 a las 19:22:16
+-- Tiempo de generación: 12-08-2022 a las 15:37:26
 -- Versión del servidor: 10.8.3-MariaDB
 -- Versión de PHP: 8.1.8
 
@@ -448,189 +448,188 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_materiales_pedido` ()   BEGI
                                                                         /*--------RESETEAR CONTADOR DE TAREAS----------------------------------------------*/
                                                                             SELECT 0 INTO tarea_final;
                                                                     END;
-                                                            ELSE
-                                                                /*---------CALCULAR MANTENIMIENTO PREVENTIVOS----------------------------------------------------------*/
-                                                                    SELECT (FLOOR((horas_ultimo_mantenimiento_componente+336)/frecuencia_componente) - cantidad_componente_recambio) INTO cantidad_componente_preventivo;
-                                                                /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS---------------------------*/
-                                                                    IF cantidad_componente_preventivo > 0 THEN
-                                                                        /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL MANTENIMIENTO PREVENTIVO DEL COMPONENTE-------------------------*/
-                                                                            BEGIN
-                                                                                DECLARE cursor_componente_tareas_preventivo CURSOR FOR SELECT id FROM tasks WHERE component_id = componente AND type = "PREVENTIVO";
-                                                                                DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
-                                                                                /*--------ABRIR CURSOR DE LAS TAREAS DE RECAMBIO PARA LOS COMPONENTES------------------------*/
-                                                                                    OPEN cursor_componente_tareas_preventivo;
-                                                                                        bucle_componente_tareas_preventino:LOOP
-                                                                                            /*-----DETENER EL CICLO CUANDO NO ENCUENTRE MAS TAREAS----------------*/
-                                                                                                IF tarea_final = 1 THEN
-                                                                                                    LEAVE bucle_componente_tareas_preventino;
-                                                                                                END IF;
-                                                                                            /*----------OBTENER LA TAREA DEL COMPONENTE-------------------------------*/
-                                                                                                FETCH cursor_componente_tareas_preventivo INTO tarea_componente;
-                                                                                            /*----------CURSOR PARA ITERAR LOS MATERIALES DE DICHA TAREA--------------*/
-                                                                                                BEGIN
-                                                                                                    DECLARE cursor_materiales_preventivo CURSOR FOR SELECT item_id,quantity FROM task_required_materials WHERE task_id = tarea_componente;
-                                                                                                    DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
-                                                                                                    /*----------ABRIR CURSOR DE MATERIALES-------------------------------*/
-                                                                                                        OPEN cursor_materiales_preventivo;
-                                                                                                            bucle_materiales:LOOP
-                                                                                                                /*----------DETENER CICLO CUANDO NO SE ENCUENTREN MAS MATERIALES-----------------*/
-                                                                                                                    IF material_final = 1 THEN
-                                                                                                                        LEAVE bucle_materiales;
-                                                                                                                    END IF;
-                                                                                                                /*----------OBTENER EL MATERIAL DE LA TAREA-----------------------------*/
-                                                                                                                    FETCH cursor_materiales_preventivo INTO item_componente,cantidad_componente_preventivo;
-                                                                                                                /*----------PONER MATERIALES PARA PEDIDO------------------------------*/
-                                                                                                                    IF NOT EXISTS(SELECT * FROM order_request_details WHERE item_id = item_componente AND order_request_id = solicitud_pedido) THEN
-                                                                                                                        INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price,quantity_to_use) VALUES (solicitud_pedido,item_componente,cantidad_componente_preventivo,precio_componente,cantidad_componente_preventivo);
-                                                                                                                    ELSE
-                                                                                                                        UPDATE order_request_details SET quantity = quantity + cantidad_componente_preventivo, quantity_to_use = quantity_to_use + cantidad_componente_preventivo WHERE order_request_id = solicitud_pedido AND item_id = item_componente;
-                                                                                                                    END IF;
-                                                                                                            END LOOP bucle_materiales;
-                                                                                                        CLOSE cursor_materiales_preventivo;
-                                                                                                    /*------RESERTEAR CONTADOR MATERIALES---------------------------------------*/
-                                                                                                        SELECT 0 INTO material_final;
-                                                                                                END;
-                                                                                        END LOOP bucle_componente_tareas_preventino;
-                                                                                    CLOSE cursor_componente_tareas_preventivo;
-                                                                                /*--------RESETEAR CONTADOR TAREAS-----------------------------------------------------------*/
-                                                                                    SELECT 0 INTO tarea_final;
-                                                                            END;
-                                                                    END IF;
-                                                                /*---------CURSOR PARA ITERAR CADA PIEZA DEL COMPONENTE-------------------------------------------------*/
+                                                            END IF;
+                                                        /*---------CALCULAR MANTENIMIENTO PREVENTIVOS----------------------------------------------------------*/
+                                                            SELECT (FLOOR((horas_ultimo_mantenimiento_componente+336)/frecuencia_componente) - cantidad_componente_recambio) INTO cantidad_componente_preventivo;
+                                                        /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS---------------------------*/
+                                                            IF cantidad_componente_preventivo > 0 THEN
+                                                                /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL MANTENIMIENTO PREVENTIVO DEL COMPONENTE-------------------------*/
                                                                     BEGIN
-                                                                        DECLARE cursor_piezas CURSOR FOR SELECT part FROM component_part_model WHERE component = componente;
-                                                                        DECLARE CONTINUE HANDLER FOR NOT FOUND SET pieza_final = 1;
-                                                                        /*---------ABRIR CURSOR PARA LAS PIEZAS--------------------------------------------------*/
-                                                                            OPEN cursor_piezas;
-                                                                                bucle_piezas:LOOP
-                                                                                    /*---------DETENER CICLO CUANDO NO SE ENCUENTREN MAS PIEZAS---------------------------------------*/
-                                                                                        IF pieza_final = 1 THEN
-                                                                                            LEAVE bucle_piezas;
+                                                                        DECLARE cursor_componente_tareas_preventivo CURSOR FOR SELECT id FROM tasks WHERE component_id = componente AND type = "PREVENTIVO";
+                                                                        DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
+                                                                        /*--------ABRIR CURSOR DE LAS TAREAS DE RECAMBIO PARA LOS COMPONENTES------------------------*/
+                                                                            OPEN cursor_componente_tareas_preventivo;
+                                                                                bucle_componente_tareas_preventino:LOOP
+                                                                                    /*-----DETENER EL CICLO CUANDO NO ENCUENTRE MAS TAREAS----------------*/
+                                                                                        IF tarea_final = 1 THEN
+                                                                                            LEAVE bucle_componente_tareas_preventino;
                                                                                         END IF;
-                                                                                    /*---------OBTENER LOS DATOS DE LA PIEZA DEL CICLO------------------------------------------------*/
-                                                                                        FETCH cursor_piezas INTO pieza;
-                                                                                    /*---------HACER EN CASO NO EXISTA REGISTRO DE HORAS DE LA PIEZA DEL COMPONENTE DEL IMPLEMENTO----*/
-                                                                                        IF NOT EXISTS(SELECT * FROM component_part WHERE component_implement_id  = componente_del_implemento AND part = pieza AND state = "PENDIENTE") THEN
-                                                                                            INSERT INTO component_part (component_implement_id,part) VALUES (componente_del_implemento,pieza);
-                                                                                        END IF;
-                                                                                    /*---------OBTENER ID Y HORAS DE LA PIEZA DEL COMPONENTE------------------------------------------*/
-                                                                                        SELECT id,hours INTO pieza_del_componente,horas_pieza FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE";
-                                                                                    /*---------OBTENER EL TIEMPO DE VIDA Y EL ID DEL ALMACEN DE LA PIEZA------------------------------*/
-                                                                                        SELECT c.lifespan,c.item_id,i.estimated_price INTO tiempo_vida_pieza,item_pieza,precio_pieza FROM components c INNER JOIN items i ON i.id = c.item_id WHERE c.id = pieza;
-                                                                                    /*---------HACER SI EL TIEMPO DE VIDA SUPERA A LAS HORAS DE LA PIEZA------------------------------*/
-                                                                                        IF horas_pieza >= tiempo_vida_pieza THEN
-                                                                                            /*---------PONER EL TIEMPO DE VIDA COMO EL TOTAL DE HORAS----------*/
-                                                                                                SELECT tiempo_vida_pieza INTO horas_pieza;
-                                                                                        END IF;
-                                                                                    /*---------CALCULAR SI NECESITA RECAMBIO DENTRO DE 2 MESES----------------------------------------*/
-                                                                                        SELECT FLOOR((horas_pieza+336)/tiempo_vida_pieza) INTO cantidad_pieza_recambio;
-                                                                                    /*---------OBTENER FRECUENCIA DE MANTENIMIENTO PREVENTIVO DE LA PIEZA-----------------------------*/
-                                                                                        SELECT frequency INTO frecuencia_pieza FROM preventive_maintenance_frequencies WHERE component_id = pieza;
-                                                                                    /*---------OBTENER HORAS DEL ÚLTIMO MATENIMIENTO DE LA PIEZA EN CASO HUBIERA----------------------*/
-                                                                                        IF EXISTS(SELECT * FROM work_order_details wod INNER JOIN tasks t ON t.id = wod.task_id WHERE wod.component_part_id = pieza_del_componente AND t.type = "PREVENTIVO" AND is_checked = 1) THEN
-                                                                                                SELECT wod.component_hours INTO horas_ultimo_mantenimiento_pieza FROM work_order_details wod INNER JOIN tasks t ON t.id = wod.task_id WHERE wod.component_part_id = pieza_del_componente AND t.type = "PREVENTIVO" AND is_checked = 1 ORDER BY id DESC LIMIT 1;
-                                                                                            ELSE
-                                                                                                SELECT 0 INTO horas_ultimo_mantenimiento_pieza;
-                                                                                            END IF;
-                                                                                    /*---------HACER EN CASO NECESITE RECAMBIO--------------------------------------------------------*/
-                                                                                        IF(cantidad_pieza_recambio > 0) THEN
-                                                                                                /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL RECAMBIO DEL COMPONENTE-----------------------*/
-                                                                                                    BEGIN
-                                                                                                        DECLARE cursor_pieza_tareas_recambio CURSOR FOR SELECT id FROM tasks WHERE component_id = pieza AND type = "RECAMBIO";
-                                                                                                        DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
-                                                                                                        /*--------ABRIR CURSOR DE LAS TAREAS DE RECAMBIO PARA LOS COMPONENTES------------------------*/
-                                                                                                            OPEN cursor_pieza_tareas_recambio;
-                                                                                                                bucle_pieza_tareas_recambio:LOOP
-                                                                                                                    /*----------DETENER EL CICLO CUANDO NO ENCUENTRE MAS TAREAS----------------*/
-                                                                                                                        IF tarea_final = 1 THEN
-                                                                                                                            LEAVE bucle_pieza_tareas_recambio;
-                                                                                                                        END IF;
-                                                                                                                    /*----------OBTENER LA TAREA DE LA PIEZA--------------------------------*/
-                                                                                                                        FETCH cursor_pieza_tareas_recambio INTO tarea_pieza;
-                                                                                                                    /*----------CURSOR PARA ITERAR LOS MATERIALES DE DICHA TAREA---------------*/
-                                                                                                                        BEGIN
-                                                                                                                            DECLARE cursor_materiales_recambio CURSOR FOR SELECT item_id,quantity FROM task_required_materials WHERE task_id = tarea_pieza;
-                                                                                                                            DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
-                                                                                                                            /*----------ABRIR CURSOR DE MATERIALES-------------------------------*/
-                                                                                                                                OPEN cursor_materiales_recambio;
-                                                                                                                                    bucle_materiales:LOOP
-                                                                                                                                        /*----------DETENER CICLO CUANDO NO SE ENCUENTREN MAS MATERIALES-----------------*/
-                                                                                                                                            IF material_final = 1 THEN
-                                                                                                                                                LEAVE bucle_materiales;
-                                                                                                                                            END IF;
-                                                                                                                                        /*----------OBTENER EL MATERIAL DE LA TAREA-------------------------------------*/
-                                                                                                                                            FETCH cursor_materiales_recambio INTO item_pieza,cantidad_pieza_recambio;
-                                                                                                                                        /*----------PONER MATERIALES PARA PEDIDO----------------------------------------*/
-                                                                                                                                            IF NOT EXISTS(SELECT * FROM order_request_details WHERE item_id = item_pieza AND order_request_id = solicitud_pedido) THEN
-                                                                                                                                                INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price,quantity_to_use) VALUES (solicitud_pedido,item_pieza,cantidad_pieza_recambio,precio_pieza,cantidad_pieza_recambio);
-                                                                                                                                            ELSE
-                                                                                                                                                UPDATE order_request_details SET quantity = quantity + cantidad_pieza_recambio, quantity_to_use = quantity_to_use + cantidad_pieza_recambio WHERE order_request_id = solicitud_pedido AND item_id = item_pieza;
-                                                                                                                                            END IF;
-                                                                                                                                    END LOOP bucle_materiales;
-                                                                                                                                CLOSE cursor_materiales_recambio;
-                                                                                                                            /*---------RESETEAR CONTADOR DE MATERIALES-------------------------*/
-                                                                                                                                SELECT 0 INTO material_final;
-                                                                                                                        END;
-                                                                                                                END LOOP bucle_pieza_tareas_recambio;
-                                                                                                            CLOSE cursor_pieza_tareas_recambio;
-                                                                                                        /*----------RESETEAR CONTADOR DE TAREAS----------------------------*/
-                                                                                                            SELECT 0 INTO tarea_final;
-                                                                                                    END;
-                                                                                        END IF;
-                                                                                    /*---------CALCULAR MANTENIMIENTO PREVENTIVOS-----------------------------------------------------*/
-                                                                                        SELECT (FLOOR((horas_ultimo_mantenimiento_pieza+336)/frecuencia_pieza) - cantidad_pieza_recambio) INTO cantidad_pieza_preventivo;
-                                                                                    /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS----------------------*/
-                                                                                        IF cantidad_pieza_preventivo > 0 THEN
-                                                                                            /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL MANTENIMIENTO PREVENTIVO DE LA PIEZA-------------------------*/
-                                                                                                BEGIN
-                                                                                                    DECLARE cursor_pieza_tareas_preventivo CURSOR FOR SELECT id FROM tasks WHERE component_id = pieza AND type = "PREVENTIVO";
-                                                                                                    DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
-                                                                                                    /*--------ABRIR CURSOR DE LAS TAREAS DE RECAMBIO PARA LAS PIEZAS------------------------*/
-                                                                                                        OPEN cursor_pieza_tareas_preventivo;
-                                                                                                            bucle_pieza_tareas_preventivo:LOOP
-                                                                                                                /*-----DETENER EL CICLO CUANDO NO ENCUENTRE MAS TAREAS----------------*/
-                                                                                                                    IF tarea_final = 1 THEN
-                                                                                                                        LEAVE bucle_pieza_tareas_preventivo;
-                                                                                                                    END IF;
-                                                                                                                /*----------OBTENER LA TAREA DEL COMPONENTE-------------------------------*/
-                                                                                                                    FETCH cursor_pieza_tareas_preventivo INTO tarea_pieza;
-                                                                                                                /*----------CURSOR PARA ITERAR LOS MATERIALES DE DICHA TAREA--------------*/
-                                                                                                                    BEGIN
-                                                                                                                        DECLARE cursor_materiales_preventivo CURSOR FOR SELECT item_id,quantity FROM task_required_materials WHERE task_id = tarea_pieza;
-                                                                                                                        DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
-                                                                                                                        /*----------ABRIR CURSOR DE MATERIALES-------------------------------*/
-                                                                                                                            OPEN cursor_materiales_preventivo;
-                                                                                                                                bucle_materiales:LOOP
-                                                                                                                                    /*----------DETENER CICLO CUANDO NO SE ENCUENTREN MAS MATERIALES-----------------*/
-                                                                                                                                        IF material_final = 1 THEN
-                                                                                                                                            LEAVE bucle_materiales;
-                                                                                                                                        END IF;
-                                                                                                                                    /*----------OBTENER EL MATERIAL DE LA TAREA---------------------------*/
-                                                                                                                                        FETCH cursor_materiales_preventivo INTO item_pieza,cantidad_pieza_preventivo;
-                                                                                                                                    /*----------PONER MATERIALES PARA PEDIDO------------------------------*/
-                                                                                                                                        IF NOT EXISTS(SELECT * FROM order_request_details WHERE item_id = item_pieza AND order_request_id = solicitud_pedido) THEN
-                                                                                                                                            INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price,quantity_to_use) VALUES (solicitud_pedido,item_pieza,cantidad_pieza_preventivo,precio_pieza,cantidad_pieza_preventivo);
-                                                                                                                                        ELSE
-                                                                                                                                            UPDATE order_request_details SET quantity = quantity + cantidad_pieza_preventivo, quantity_to_use = quantity_to_use + cantidad_pieza_preventivo WHERE order_request_id = solicitud_pedido AND item_id = item_pieza;
-                                                                                                                                        END IF;
-                                                                                                                                END LOOP bucle_materiales;
-                                                                                                                            CLOSE cursor_materiales_preventivo;
-                                                                                                                        /*------RESERTEAR CONTADOR MATERIALES---------------------------------------*/
-                                                                                                                            SELECT 0 INTO material_final;
-                                                                                                                    END;
-                                                                                                            END LOOP bucle_pieza_tareas_preventivo;
-                                                                                                        CLOSE cursor_pieza_tareas_preventivo;
-                                                                                                    /*----------------RESETEAR CONTADOR TAREAS----------------------------------------------*/
-                                                                                                        SELECT 0 INTO tarea_final;
-                                                                                                END;
-                                                                                        END IF;
-                                                                                END LOOP bucle_piezas;
-                                                                            CLOSE cursor_piezas;
-                                                                            /*--------RESETEAR CONTADOR DE PIEZAS-------------------------*/
-                                                                                SELECT 0 INTO pieza_final;
+                                                                                    /*----------OBTENER LA TAREA DEL COMPONENTE-------------------------------*/
+                                                                                        FETCH cursor_componente_tareas_preventivo INTO tarea_componente;
+                                                                                    /*----------CURSOR PARA ITERAR LOS MATERIALES DE DICHA TAREA--------------*/
+                                                                                        BEGIN
+                                                                                            DECLARE cursor_materiales_preventivo CURSOR FOR SELECT item_id,quantity FROM task_required_materials WHERE task_id = tarea_componente;
+                                                                                            DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
+                                                                                            /*----------ABRIR CURSOR DE MATERIALES-------------------------------*/
+                                                                                                OPEN cursor_materiales_preventivo;
+                                                                                                    bucle_materiales:LOOP
+                                                                                                        /*----------DETENER CICLO CUANDO NO SE ENCUENTREN MAS MATERIALES-----------------*/
+                                                                                                            IF material_final = 1 THEN
+                                                                                                                LEAVE bucle_materiales;
+                                                                                                            END IF;
+                                                                                                        /*----------OBTENER EL MATERIAL DE LA TAREA-----------------------------*/
+                                                                                                            FETCH cursor_materiales_preventivo INTO item_componente,cantidad_componente_preventivo;
+                                                                                                        /*----------PONER MATERIALES PARA PEDIDO------------------------------*/
+                                                                                                            IF NOT EXISTS(SELECT * FROM order_request_details WHERE item_id = item_componente AND order_request_id = solicitud_pedido) THEN
+                                                                                                                INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price,quantity_to_use) VALUES (solicitud_pedido,item_componente,cantidad_componente_preventivo,precio_componente,cantidad_componente_preventivo);
+                                                                                                            ELSE
+                                                                                                                UPDATE order_request_details SET quantity = quantity + cantidad_componente_preventivo, quantity_to_use = quantity_to_use + cantidad_componente_preventivo WHERE order_request_id = solicitud_pedido AND item_id = item_componente;
+                                                                                                            END IF;
+                                                                                                    END LOOP bucle_materiales;
+                                                                                                CLOSE cursor_materiales_preventivo;
+                                                                                            /*------RESERTEAR CONTADOR MATERIALES---------------------------------------*/
+                                                                                                SELECT 0 INTO material_final;
+                                                                                        END;
+                                                                                END LOOP bucle_componente_tareas_preventino;
+                                                                            CLOSE cursor_componente_tareas_preventivo;
+                                                                        /*--------RESETEAR CONTADOR TAREAS-----------------------------------------------------------*/
+                                                                            SELECT 0 INTO tarea_final;
                                                                     END;
                                                             END IF;
-                                                        END LOOP bucle_componentes;
+                                                        /*---------CURSOR PARA ITERAR CADA PIEZA DEL COMPONENTE-------------------------------------------------*/
+                                                            BEGIN
+                                                                DECLARE cursor_piezas CURSOR FOR SELECT part FROM component_part_model WHERE component = componente;
+                                                                DECLARE CONTINUE HANDLER FOR NOT FOUND SET pieza_final = 1;
+                                                                /*---------ABRIR CURSOR PARA LAS PIEZAS--------------------------------------------------*/
+                                                                    OPEN cursor_piezas;
+                                                                        bucle_piezas:LOOP
+                                                                            /*---------DETENER CICLO CUANDO NO SE ENCUENTREN MAS PIEZAS---------------------------------------*/
+                                                                                IF pieza_final = 1 THEN
+                                                                                    LEAVE bucle_piezas;
+                                                                                END IF;
+                                                                            /*---------OBTENER LOS DATOS DE LA PIEZA DEL CICLO------------------------------------------------*/
+                                                                                FETCH cursor_piezas INTO pieza;
+                                                                            /*---------HACER EN CASO NO EXISTA REGISTRO DE HORAS DE LA PIEZA DEL COMPONENTE DEL IMPLEMENTO----*/
+                                                                                IF NOT EXISTS(SELECT * FROM component_part WHERE component_implement_id  = componente_del_implemento AND part = pieza AND state = "PENDIENTE") THEN
+                                                                                    INSERT INTO component_part (component_implement_id,part) VALUES (componente_del_implemento,pieza);
+                                                                                END IF;
+                                                                            /*---------OBTENER ID Y HORAS DE LA PIEZA DEL COMPONENTE------------------------------------------*/
+                                                                                SELECT id,hours INTO pieza_del_componente,horas_pieza FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE";
+                                                                            /*---------OBTENER EL TIEMPO DE VIDA Y EL ID DEL ALMACEN DE LA PIEZA------------------------------*/
+                                                                                SELECT c.lifespan,c.item_id,i.estimated_price INTO tiempo_vida_pieza,item_pieza,precio_pieza FROM components c INNER JOIN items i ON i.id = c.item_id WHERE c.id = pieza;
+                                                                            /*---------HACER SI EL TIEMPO DE VIDA SUPERA A LAS HORAS DE LA PIEZA------------------------------*/
+                                                                                IF horas_pieza >= tiempo_vida_pieza THEN
+                                                                                    /*---------PONER EL TIEMPO DE VIDA COMO EL TOTAL DE HORAS----------*/
+                                                                                        SELECT tiempo_vida_pieza INTO horas_pieza;
+                                                                                END IF;
+                                                                            /*---------CALCULAR SI NECESITA RECAMBIO DENTRO DE 2 MESES----------------------------------------*/
+                                                                                SELECT FLOOR((horas_pieza+336)/tiempo_vida_pieza) INTO cantidad_pieza_recambio;
+                                                                            /*---------OBTENER FRECUENCIA DE MANTENIMIENTO PREVENTIVO DE LA PIEZA-----------------------------*/
+                                                                                SELECT frequency INTO frecuencia_pieza FROM preventive_maintenance_frequencies WHERE component_id = pieza;
+                                                                            /*---------OBTENER HORAS DEL ÚLTIMO MATENIMIENTO DE LA PIEZA EN CASO HUBIERA----------------------*/
+                                                                                IF EXISTS(SELECT * FROM work_order_details wod INNER JOIN tasks t ON t.id = wod.task_id WHERE wod.component_part_id = pieza_del_componente AND t.type = "PREVENTIVO" AND is_checked = 1) THEN
+                                                                                        SELECT wod.component_hours INTO horas_ultimo_mantenimiento_pieza FROM work_order_details wod INNER JOIN tasks t ON t.id = wod.task_id WHERE wod.component_part_id = pieza_del_componente AND t.type = "PREVENTIVO" AND is_checked = 1 ORDER BY id DESC LIMIT 1;
+                                                                                    ELSE
+                                                                                        SELECT 0 INTO horas_ultimo_mantenimiento_pieza;
+                                                                                    END IF;
+                                                                            /*---------HACER EN CASO NECESITE RECAMBIO--------------------------------------------------------*/
+                                                                                IF(cantidad_pieza_recambio > 0) THEN
+                                                                                        /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL RECAMBIO DEL COMPONENTE-----------------------*/
+                                                                                            BEGIN
+                                                                                                DECLARE cursor_pieza_tareas_recambio CURSOR FOR SELECT id FROM tasks WHERE component_id = pieza AND type = "RECAMBIO";
+                                                                                                DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
+                                                                                                /*--------ABRIR CURSOR DE LAS TAREAS DE RECAMBIO PARA LOS COMPONENTES------------------------*/
+                                                                                                    OPEN cursor_pieza_tareas_recambio;
+                                                                                                        bucle_pieza_tareas_recambio:LOOP
+                                                                                                            /*----------DETENER EL CICLO CUANDO NO ENCUENTRE MAS TAREAS----------------*/
+                                                                                                                IF tarea_final = 1 THEN
+                                                                                                                    LEAVE bucle_pieza_tareas_recambio;
+                                                                                                                END IF;
+                                                                                                            /*----------OBTENER LA TAREA DE LA PIEZA--------------------------------*/
+                                                                                                                FETCH cursor_pieza_tareas_recambio INTO tarea_pieza;
+                                                                                                            /*----------CURSOR PARA ITERAR LOS MATERIALES DE DICHA TAREA---------------*/
+                                                                                                                BEGIN
+                                                                                                                    DECLARE cursor_materiales_recambio CURSOR FOR SELECT item_id,quantity FROM task_required_materials WHERE task_id = tarea_pieza;
+                                                                                                                    DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
+                                                                                                                    /*----------ABRIR CURSOR DE MATERIALES-------------------------------*/
+                                                                                                                        OPEN cursor_materiales_recambio;
+                                                                                                                            bucle_materiales:LOOP
+                                                                                                                                /*----------DETENER CICLO CUANDO NO SE ENCUENTREN MAS MATERIALES-----------------*/
+                                                                                                                                    IF material_final = 1 THEN
+                                                                                                                                        LEAVE bucle_materiales;
+                                                                                                                                    END IF;
+                                                                                                                                /*----------OBTENER EL MATERIAL DE LA TAREA-------------------------------------*/
+                                                                                                                                    FETCH cursor_materiales_recambio INTO item_pieza,cantidad_pieza_recambio;
+                                                                                                                                /*----------PONER MATERIALES PARA PEDIDO----------------------------------------*/
+                                                                                                                                    IF NOT EXISTS(SELECT * FROM order_request_details WHERE item_id = item_pieza AND order_request_id = solicitud_pedido) THEN
+                                                                                                                                        INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price,quantity_to_use) VALUES (solicitud_pedido,item_pieza,cantidad_pieza_recambio,precio_pieza,cantidad_pieza_recambio);
+                                                                                                                                    ELSE
+                                                                                                                                        UPDATE order_request_details SET quantity = quantity + cantidad_pieza_recambio, quantity_to_use = quantity_to_use + cantidad_pieza_recambio WHERE order_request_id = solicitud_pedido AND item_id = item_pieza;
+                                                                                                                                    END IF;
+                                                                                                                            END LOOP bucle_materiales;
+                                                                                                                        CLOSE cursor_materiales_recambio;
+                                                                                                                    /*---------RESETEAR CONTADOR DE MATERIALES-------------------------*/
+                                                                                                                        SELECT 0 INTO material_final;
+                                                                                                                END;
+                                                                                                        END LOOP bucle_pieza_tareas_recambio;
+                                                                                                    CLOSE cursor_pieza_tareas_recambio;
+                                                                                                /*----------RESETEAR CONTADOR DE TAREAS----------------------------*/
+                                                                                                    SELECT 0 INTO tarea_final;
+                                                                                            END;
+                                                                                END IF;
+                                                                            /*---------CALCULAR MANTENIMIENTO PREVENTIVOS-----------------------------------------------------*/
+                                                                                SELECT (FLOOR((horas_ultimo_mantenimiento_pieza+336)/frecuencia_pieza) - cantidad_pieza_recambio) INTO cantidad_pieza_preventivo;
+                                                                            /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS----------------------*/
+                                                                                IF cantidad_pieza_preventivo > 0 THEN
+                                                                                    /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL MANTENIMIENTO PREVENTIVO DE LA PIEZA-------------------------*/
+                                                                                        BEGIN
+                                                                                            DECLARE cursor_pieza_tareas_preventivo CURSOR FOR SELECT id FROM tasks WHERE component_id = pieza AND type = "PREVENTIVO";
+                                                                                            DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
+                                                                                            /*--------ABRIR CURSOR DE LAS TAREAS DE RECAMBIO PARA LAS PIEZAS------------------------*/
+                                                                                                OPEN cursor_pieza_tareas_preventivo;
+                                                                                                    bucle_pieza_tareas_preventivo:LOOP
+                                                                                                        /*-----DETENER EL CICLO CUANDO NO ENCUENTRE MAS TAREAS----------------*/
+                                                                                                            IF tarea_final = 1 THEN
+                                                                                                                LEAVE bucle_pieza_tareas_preventivo;
+                                                                                                            END IF;
+                                                                                                        /*----------OBTENER LA TAREA DEL COMPONENTE-------------------------------*/
+                                                                                                            FETCH cursor_pieza_tareas_preventivo INTO tarea_pieza;
+                                                                                                        /*----------CURSOR PARA ITERAR LOS MATERIALES DE DICHA TAREA--------------*/
+                                                                                                            BEGIN
+                                                                                                                DECLARE cursor_materiales_preventivo CURSOR FOR SELECT item_id,quantity FROM task_required_materials WHERE task_id = tarea_pieza;
+                                                                                                                DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
+                                                                                                                /*----------ABRIR CURSOR DE MATERIALES-------------------------------*/
+                                                                                                                    OPEN cursor_materiales_preventivo;
+                                                                                                                        bucle_materiales:LOOP
+                                                                                                                            /*----------DETENER CICLO CUANDO NO SE ENCUENTREN MAS MATERIALES-----------------*/
+                                                                                                                                IF material_final = 1 THEN
+                                                                                                                                    LEAVE bucle_materiales;
+                                                                                                                                END IF;
+                                                                                                                            /*----------OBTENER EL MATERIAL DE LA TAREA---------------------------*/
+                                                                                                                                FETCH cursor_materiales_preventivo INTO item_pieza,cantidad_pieza_preventivo;
+                                                                                                                            /*----------PONER MATERIALES PARA PEDIDO------------------------------*/
+                                                                                                                                IF NOT EXISTS(SELECT * FROM order_request_details WHERE item_id = item_pieza AND order_request_id = solicitud_pedido) THEN
+                                                                                                                                    INSERT INTO order_request_details(order_request_id,item_id,quantity,estimated_price,quantity_to_use) VALUES (solicitud_pedido,item_pieza,cantidad_pieza_preventivo,precio_pieza,cantidad_pieza_preventivo);
+                                                                                                                                ELSE
+                                                                                                                                    UPDATE order_request_details SET quantity = quantity + cantidad_pieza_preventivo, quantity_to_use = quantity_to_use + cantidad_pieza_preventivo WHERE order_request_id = solicitud_pedido AND item_id = item_pieza;
+                                                                                                                                END IF;
+                                                                                                                        END LOOP bucle_materiales;
+                                                                                                                    CLOSE cursor_materiales_preventivo;
+                                                                                                                /*------RESERTEAR CONTADOR MATERIALES---------------------------------------*/
+                                                                                                                    SELECT 0 INTO material_final;
+                                                                                                            END;
+                                                                                                    END LOOP bucle_pieza_tareas_preventivo;
+                                                                                                CLOSE cursor_pieza_tareas_preventivo;
+                                                                                            /*----------------RESETEAR CONTADOR TAREAS----------------------------------------------*/
+                                                                                                SELECT 0 INTO tarea_final;
+                                                                                        END;
+                                                                                END IF;
+                                                                        END LOOP bucle_piezas;
+                                                                    CLOSE cursor_piezas;
+                                                                    /*--------RESETEAR CONTADOR DE PIEZAS-------------------------*/
+                                                                        SELECT 0 INTO pieza_final;
+                                                            END;
+                                                    END LOOP bucle_componentes;
                                                 CLOSE cursor_componentes;
                                             /*------------RESETEAR CONTADOR COMPONENTES-------------------*/
                                                 SELECT 0 INTO componente_final;
@@ -661,10 +660,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_prereserva` ()   BEGIN
                     DECLARE pieza_final INT DEFAULT 0;
                     DECLARE tarea_final INT DEFAULT 0;
                     DECLARE material_final INT DEFAULT 0;
-                /*-----------VARIABLES PARA LA CABECERA DE LA PRE-RESERVA-------------------*/
+                /*-----------VARIABLES PARA LA CABECERA DE LA PRE-RESERVA-----------*/
                     DECLARE implemento INT;
                     DECLARE responsable INT;
-                /*-----------VARIABLES PARA EL DETALLE DE LA PRE-RESERVA--------------------*/
+                /*-----------VARIABLES PARA EL DETALLE DE LA PRE-RESERVA-----------*/
                     DECLARE pre_reserva INT;
                     DECLARE componente_del_implemento INT;
                     DECLARE pieza_del_componente INT;
@@ -690,7 +689,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_prereserva` ()   BEGIN
                     DECLARE frecuencia_pieza DECIMAL(8,2);
                     DECLARE horas_ultimo_mantenimiento_pieza DECIMAL(8,2);
                     DECLARE tarea_pieza INT;
-                /*-----------VARIABLES PARA MATERIAL----------------------------------------*/
+                /*-----------VARIABLES PARA MATERIAL-----------------------*/
                     DECLARE material INT;
                 /*-----------CURSOR PARA ITERAR CADA IMPLEMENTO-----------------------------*/
                     DECLARE cursor_implementos CURSOR FOR SELECT id,implement_model_id,user_id FROM implements;
@@ -731,7 +730,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_prereserva` ()   BEGIN
                                                         /*---------OBTENER EL ID Y HORAS DEL COMPONENTE DEL IMPLEMENTO ----------------------------------------*/
                                                             SELECT id,hours INTO componente_del_implemento,horas_componente FROM component_implement WHERE component_id = componente AND implement_id = implemento AND state = "PENDIENTE";
                                                         /*---------OBTENER TIEMPO DE VIDA Y EL ID DEL ITEM DEL COMPONENTE -------------------------------------*/
-                                                            SELECT lifespan, item_id INTO tiempo_vida_componente,item_componente FROM components WHERE id = componente;
+                                                            SELECT lifespan,item_id INTO tiempo_vida_componente,item_componente FROM components WHERE id = componente;
                                                         /*---------HACER SI EL TIEMPO DE VIDA SUPERA A LAS HORAS DEL COMPONENTE--------------------------------*/
                                                             IF horas_componente > tiempo_vida_componente THEN
                                                                 /*-----------PONER EL TIEMPO DE VIDA COMO EL TOTAL DE HORAS-----------------------------------*/
@@ -793,7 +792,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_prereserva` ()   BEGIN
                                                                     END;
                                                             END IF;
                                                         /*---------CALCULAR MANTENIMIENTO PREVENTIVOS----------------------------------------------------------*/
-                                                            SELECT (FLOOR((horas_ultimo_mantenimiento_componente+336)/frecuencia_componente) - cantidad_componente_recambio) INTO cantidad_componente_preventivo;
+                                                            SELECT (FLOOR((horas_ultimo_mantenimiento_componente+168)/frecuencia_componente) - cantidad_componente_recambio) INTO cantidad_componente_preventivo;
                                                         /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS---------------------------*/
                                                             IF cantidad_componente_preventivo > 0 THEN
                                                                 /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL MANTENIMIENTO PREVENTIVO DEL COMPONENTE-------------------------*/
@@ -802,10 +801,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_prereserva` ()   BEGIN
                                                                         DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
                                                                         /*--------ABRIR CURSOR DE LAS TAREAS DE RECAMBIO PARA LOS COMPONENTES------------------------*/
                                                                             OPEN cursor_componente_tareas_preventivo;
-                                                                                bucle_componente_tareas_preventino:LOOP
+                                                                                bucle_componente_tareas_preventivo:LOOP
                                                                                     /*-----DETENER EL CICLO CUANDO NO ENCUENTRE MAS TAREAS----------------*/
                                                                                         IF tarea_final = 1 THEN
-                                                                                            LEAVE bucle_componente_tareas_preventino;
+                                                                                            LEAVE bucle_componente_tareas_preventivo;
                                                                                         END IF;
                                                                                     /*----------OBTENER LA TAREA DEL COMPONENTE-------------------------------*/
                                                                                         FETCH cursor_componente_tareas_preventivo INTO tarea_componente;
@@ -833,7 +832,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_prereserva` ()   BEGIN
                                                                                             /*------RESERTEAR CONTADOR MATERIALES---------------------------------------*/
                                                                                                 SELECT 0 INTO material_final;
                                                                                         END;
-                                                                                END LOOP bucle_componente_tareas_preventino;
+                                                                                END LOOP bucle_componente_tareas_preventivo;
                                                                             CLOSE cursor_componente_tareas_preventivo;
                                                                         /*--------RESETEAR CONTADOR TAREAS-----------------------------------------------------------*/
                                                                             SELECT 0 INTO tarea_final;
@@ -853,20 +852,20 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_prereserva` ()   BEGIN
                                                                             /*---------OBTENER LOS DATOS DE LA PIEZA DEL CICLO------------------------------------------------*/
                                                                                 FETCH cursor_piezas INTO pieza;
                                                                             /*---------HACER EN CASO NO EXISTA REGISTRO DE HORAS DE LA PIEZA DEL COMPONENTE DEL IMPLEMENTO----*/
-                                                                                IF NOT EXISTS(SELECT * FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE") THEN
+                                                                                IF NOT EXISTS(SELECT * FROM component_part WHERE component_implement_id  = componente_del_implemento AND part = pieza AND state = "PENDIENTE") THEN
                                                                                     INSERT INTO component_part (component_implement_id,part) VALUES (componente_del_implemento,pieza);
                                                                                 END IF;
                                                                             /*---------OBTENER ID Y HORAS DE LA PIEZA DEL COMPONENTE------------------------------------------*/
                                                                                 SELECT id,hours INTO pieza_del_componente,horas_pieza FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE";
                                                                             /*---------OBTENER EL TIEMPO DE VIDA Y EL ID DEL ALMACEN DE LA PIEZA------------------------------*/
-                                                                                SELECT lifespan, item_id INTO tiempo_vida_pieza,item_pieza FROM components WHERE id = pieza;
+                                                                                SELECT lifespan,item_id INTO tiempo_vida_pieza,item_pieza FROM components WHERE id = pieza;
                                                                             /*---------HACER SI EL TIEMPO DE VIDA SUPERA A LAS HORAS DE LA PIEZA------------------------------*/
                                                                                 IF horas_pieza >= tiempo_vida_pieza THEN
                                                                                     /*---------PONER EL TIEMPO DE VIDA COMO EL TOTAL DE HORAS----------*/
                                                                                         SELECT tiempo_vida_pieza INTO horas_pieza;
                                                                                 END IF;
                                                                             /*---------CALCULAR SI NECESITA RECAMBIO DENTRO DE 2 MESES----------------------------------------*/
-                                                                                SELECT FLOOR((horas_pieza+336)/tiempo_vida_pieza) INTO cantidad_pieza_recambio;
+                                                                                SELECT FLOOR((horas_pieza+168)/tiempo_vida_pieza) INTO cantidad_pieza_recambio;
                                                                             /*---------OBTENER FRECUENCIA DE MANTENIMIENTO PREVENTIVO DE LA PIEZA-----------------------------*/
                                                                                 SELECT frequency INTO frecuencia_pieza FROM preventive_maintenance_frequencies WHERE component_id = pieza;
                                                                             /*---------OBTENER HORAS DEL ÚLTIMO MATENIMIENTO DE LA PIEZA EN CASO HUBIERA----------------------*/
@@ -903,7 +902,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_prereserva` ()   BEGIN
                                                                                                                                     END IF;
                                                                                                                                 /*----------OBTENER EL MATERIAL DE LA TAREA-------------------------------------*/
                                                                                                                                     FETCH cursor_materiales_recambio INTO item_pieza,cantidad_pieza_recambio;
-                                                                                                                                /*----------PONER MATERIALES PARA PRE-RESERVA----------------------------------------*/
+                                                                                                                                /*----------PONER MATERIALES PARA PEDIDO----------------------------------------*/
                                                                                                                                     IF NOT EXISTS(SELECT * FROM pre_stockpile_details WHERE item_id = item_pieza AND pre_stockpile_id = pre_reserva) THEN
                                                                                                                                         INSERT INTO pre_stockpile_details(pre_stockpile_id,item_id,quantity,quantity_to_use) VALUES (pre_reserva,item_pieza,cantidad_pieza_recambio,cantidad_pieza_recambio);
                                                                                                                                     ELSE
@@ -919,55 +918,57 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_prereserva` ()   BEGIN
                                                                                                 /*----------RESETEAR CONTADOR DE TAREAS----------------------------*/
                                                                                                     SELECT 0 INTO tarea_final;
                                                                                             END;
+                                                                                ELSE
+                                                                                    /*---------CALCULAR MANTENIMIENTO PREVENTIVOS-----------------------------------------------------*/
+                                                                                        SELECT (FLOOR((horas_ultimo_mantenimiento_pieza+168)/frecuencia_pieza) - cantidad_pieza_recambio) INTO cantidad_pieza_preventivo;
+                                                                                    /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS----------------------*/
+                                                                                        IF cantidad_pieza_preventivo > 0 THEN
+                                                                                            /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL MANTENIMIENTO PREVENTIVO DE LA PIEZA-------------------------*/
+                                                                                                BEGIN
+                                                                                                    DECLARE cursor_pieza_tareas_preventivo CURSOR FOR SELECT id FROM tasks WHERE component_id = pieza AND type = "PREVENTIVO";
+                                                                                                    DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
+                                                                                                    /*--------ABRIR CURSOR DE LAS TAREAS DE RECAMBIO PARA LAS PIEZAS------------------------*/
+                                                                                                        OPEN cursor_pieza_tareas_preventivo;
+                                                                                                            bucle_pieza_tareas_preventivo:LOOP
+                                                                                                                /*-----DETENER EL CICLO CUANDO NO ENCUENTRE MAS TAREAS----------------*/
+                                                                                                                    IF tarea_final = 1 THEN
+                                                                                                                        LEAVE bucle_pieza_tareas_preventivo;
+                                                                                                                    END IF;
+                                                                                                                /*----------OBTENER LA TAREA DEL COMPONENTE-------------------------------*/
+                                                                                                                    FETCH cursor_pieza_tareas_preventivo INTO tarea_pieza;
+                                                                                                                /*----------CURSOR PARA ITERAR LOS MATERIALES DE DICHA TAREA--------------*/
+                                                                                                                    BEGIN
+                                                                                                                        DECLARE cursor_materiales_preventivo CURSOR FOR SELECT item_id,quantity FROM task_required_materials WHERE task_id = tarea_pieza;
+                                                                                                                        DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
+                                                                                                                        /*----------ABRIR CURSOR DE MATERIALES-------------------------------*/
+                                                                                                                            OPEN cursor_materiales_preventivo;
+                                                                                                                                bucle_materiales:LOOP
+                                                                                                                                    /*----------DETENER CICLO CUANDO NO SE ENCUENTREN MAS MATERIALES-----------------*/
+                                                                                                                                        IF material_final = 1 THEN
+                                                                                                                                            LEAVE bucle_materiales;
+                                                                                                                                        END IF;
+                                                                                                                                    /*----------OBTENER EL MATERIAL DE LA TAREA---------------------------*/
+                                                                                                                                        FETCH cursor_materiales_preventivo INTO item_pieza,cantidad_pieza_preventivo;
+                                                                                                                                    /*----------PONER MATERIALES PARA PEDIDO------------------------------*/
+                                                                                                                                        IF NOT EXISTS(SELECT * FROM pre_stockpile_details WHERE item_id = item_pieza AND pre_stockpile_id = pre_reserva) THEN
+                                                                                                                                            INSERT INTO pre_stockpile_details(pre_stockpile_id,item_id,quantity,quantity_to_use) VALUES (pre_reserva,item_pieza,cantidad_pieza_preventivo,cantidad_pieza_preventivo);
+                                                                                                                                        ELSE
+                                                                                                                                            UPDATE pre_stockpile_details SET quantity = quantity + cantidad_pieza_preventivo, quantity_to_use = quantity_to_use + cantidad_pieza_preventivo WHERE pre_stockpile_id = pre_reserva AND item_id = item_pieza;
+                                                                                                                                        END IF;
+                                                                                                                                END LOOP bucle_materiales;
+                                                                                                                            CLOSE cursor_materiales_preventivo;
+                                                                                                                        /*------RESERTEAR CONTADOR MATERIALES---------------------------------------*/
+                                                                                                                            SELECT 0 INTO material_final;
+                                                                                                                    END;
+                                                                                                            END LOOP bucle_pieza_tareas_preventivo;
+                                                                                                        CLOSE cursor_pieza_tareas_preventivo;
+                                                                                                    /*----------------RESETEAR CONTADOR TAREAS----------------------------------------------*/
+                                                                                                        SELECT 0 INTO tarea_final;
+                                                                                                END;
+                                                                                        END IF;
+                                                                        
                                                                                 END IF;
-                                                                            /*---------CALCULAR MANTENIMIENTO PREVENTIVOS-----------------------------------------------------*/
-                                                                                SELECT (FLOOR((horas_ultimo_mantenimiento_pieza+336)/frecuencia_pieza) - cantidad_pieza_recambio) INTO cantidad_pieza_preventivo;
-                                                                            /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS----------------------*/
-                                                                                IF cantidad_pieza_preventivo > 0 THEN
-                                                                                    /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL MANTENIMIENTO PREVENTIVO DE LA PIEZA-------------------------*/
-                                                                                        BEGIN
-                                                                                            DECLARE cursor_pieza_tareas_preventivo CURSOR FOR SELECT id FROM tasks WHERE component_id = pieza AND type = "PREVENTIVO";
-                                                                                            DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
-                                                                                            /*--------ABRIR CURSOR DE LAS TAREAS DE RECAMBIO PARA LAS PIEZAS------------------------*/
-                                                                                                OPEN cursor_pieza_tareas_preventivo;
-                                                                                                    bucle_pieza_tareas_preventivo:LOOP
-                                                                                                        /*-----DETENER EL CICLO CUANDO NO ENCUENTRE MAS TAREAS----------------*/
-                                                                                                            IF tarea_final = 1 THEN
-                                                                                                                LEAVE bucle_pieza_tareas_preventivo;
-                                                                                                            END IF;
-                                                                                                        /*----------OBTENER LA TAREA DEL COMPONENTE-------------------------------*/
-                                                                                                            FETCH cursor_pieza_tareas_preventivo INTO tarea_pieza;
-                                                                                                        /*----------CURSOR PARA ITERAR LOS MATERIALES DE DICHA TAREA--------------*/
-                                                                                                            BEGIN
-                                                                                                                DECLARE cursor_materiales_preventivo CURSOR FOR SELECT item_id,quantity FROM task_required_materials WHERE task_id = tarea_pieza;
-                                                                                                                DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
-                                                                                                                /*----------ABRIR CURSOR DE MATERIALES-------------------------------*/
-                                                                                                                    OPEN cursor_materiales_preventivo;
-                                                                                                                        bucle_materiales:LOOP
-                                                                                                                            /*----------DETENER CICLO CUANDO NO SE ENCUENTREN MAS MATERIALES-----------------*/
-                                                                                                                                IF material_final = 1 THEN
-                                                                                                                                    LEAVE bucle_materiales;
-                                                                                                                                END IF;
-                                                                                                                            /*----------OBTENER EL MATERIAL DE LA TAREA---------------------------*/
-                                                                                                                                FETCH cursor_materiales_preventivo INTO item_pieza,cantidad_pieza_preventivo;
-                                                                                                                            /*----------PONER MATERIALES PARA PRE-RESERVA------------------------------*/
-                                                                                                                                IF NOT EXISTS(SELECT * FROM pre_stockpile_details WHERE item_id = item_pieza AND pre_stockpile_id = pre_reserva) THEN
-                                                                                                                                    INSERT INTO pre_stockpile_details(pre_stockpile_id,item_id,quantity,quantity_to_use) VALUES (pre_reserva,item_pieza,cantidad_pieza_preventivo,cantidad_pieza_preventivo);
-                                                                                                                                ELSE
-                                                                                                                                    UPDATE pre_stockpile_details SET quantity = quantity + cantidad_pieza_preventivo, quantity_to_use = quantity_to_use + cantidad_pieza_preventivo WHERE pre_stockpile_id = pre_reserva AND item_id = item_pieza;
-                                                                                                                                END IF;
-                                                                                                                        END LOOP bucle_materiales;
-                                                                                                                    CLOSE cursor_materiales_preventivo;
-                                                                                                                /*------RESERTEAR CONTADOR MATERIALES---------------------------------------*/
-                                                                                                                    SELECT 0 INTO material_final;
-                                                                                                            END;
-                                                                                                    END LOOP bucle_pieza_tareas_preventivo;
-                                                                                                CLOSE cursor_pieza_tareas_preventivo;
-                                                                                            /*----------------RESETEAR CONTADOR TAREAS----------------------------------------------*/
-                                                                                                SELECT 0 INTO tarea_final;
-                                                                                        END;
-                                                                                END IF;
-                                                                        END LOOP bucle_piezas;
+                                                                            END LOOP bucle_piezas;
                                                                     CLOSE cursor_piezas;
                                                                     /*--------RESETEAR CONTADOR DE PIEZAS-------------------------*/
                                                                         SELECT 0 INTO pieza_final;
@@ -982,7 +983,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_prereserva` ()   BEGIN
                     CLOSE cursor_implementos;
                 /*---------RESETEAR CONTADOR IMPLEMENTOS---------------*/
                     SELECT 0 INTO implemento_final;
-                /*---------ABRIR PRE-RESERVA-------------------*/
+                /*---------ABRIR SOLICITUD DE PEDIDO-------------------*/
                     UPDATE pre_stockpile_dates SET state = "ABIERTO" WHERE id = fecha_pre_reserva;
             END;
         END IF;
@@ -1289,30 +1290,54 @@ CREATE TABLE `component_implement` (
 --
 
 INSERT INTO `component_implement` (`id`, `component_id`, `implement_id`, `hours`, `state`, `work_order_id`, `created_at`, `updated_at`) VALUES
-(145, 28, 1, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:01', '2022-08-12 16:20:01'),
-(146, 8, 1, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(147, 20, 1, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(148, 28, 2, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(149, 8, 2, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(150, 20, 2, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(151, 28, 3, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(152, 8, 3, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(153, 20, 3, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(154, 28, 4, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(155, 8, 4, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(156, 20, 4, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(157, 20, 5, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(158, 19, 5, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(159, 22, 5, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(160, 20, 6, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(161, 19, 6, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(162, 22, 6, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(163, 20, 7, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(164, 19, 7, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(165, 22, 7, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(166, 20, 8, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(167, 19, 8, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(168, 22, 8, '0.00', 'PENDIENTE', NULL, '2022-08-12 16:20:05', '2022-08-12 16:20:05');
+(97, 28, 3, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:03:09', '2022-07-15 16:13:53'),
+(98, 8, 3, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:03:09', '2022-07-15 16:13:53'),
+(99, 20, 3, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:03:09', '2022-07-15 16:13:53'),
+(100, 28, 4, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:04:02', '2022-07-15 16:13:53'),
+(101, 8, 4, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:04:02', '2022-07-15 16:13:53'),
+(102, 20, 4, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:04:02', '2022-07-15 16:13:53'),
+(103, 28, 1, '254.15', 'PENDIENTE', NULL, '2022-07-09 15:05:56', '2022-07-21 19:26:53'),
+(104, 8, 1, '254.15', 'PENDIENTE', NULL, '2022-07-09 15:42:07', '2022-07-21 19:26:53'),
+(105, 20, 1, '254.15', 'PENDIENTE', NULL, '2022-07-09 15:42:08', '2022-07-21 19:26:53'),
+(106, 28, 2, '1071.00', 'PENDIENTE', NULL, '2022-07-09 15:42:08', '2022-07-21 19:26:17'),
+(107, 8, 2, '1071.00', 'PENDIENTE', NULL, '2022-07-09 15:42:09', '2022-07-21 19:26:17'),
+(108, 20, 2, '1071.00', 'PENDIENTE', NULL, '2022-07-09 15:42:09', '2022-07-21 19:26:17'),
+(109, 20, 5, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
+(110, 19, 5, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
+(111, 22, 5, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(112, 20, 6, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(113, 19, 6, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(114, 22, 6, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:14', '2022-07-09 15:42:14'),
+(115, 20, 7, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:14', '2022-07-09 15:42:14'),
+(116, 19, 7, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(117, 22, 7, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(118, 20, 8, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(119, 19, 8, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:16', '2022-07-09 15:42:16'),
+(120, 22, 8, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:16', '2022-07-09 15:42:16'),
+(121, 10, 9, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(122, 5, 9, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(123, 21, 9, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(124, 10, 10, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(125, 5, 10, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(126, 21, 10, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(127, 10, 11, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:19', '2022-07-09 15:42:19'),
+(128, 5, 11, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:19', '2022-07-09 15:42:19'),
+(129, 21, 11, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:20', '2022-07-09 15:42:20'),
+(130, 10, 12, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:20', '2022-07-09 15:42:20'),
+(131, 5, 12, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:21', '2022-07-09 15:42:21'),
+(132, 21, 12, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:21', '2022-07-09 15:42:21'),
+(133, 28, 13, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:22', '2022-07-09 15:42:22'),
+(134, 27, 13, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:22', '2022-07-09 15:42:22'),
+(135, 22, 13, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:23', '2022-07-09 15:42:23'),
+(136, 28, 14, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:24', '2022-07-09 15:42:24'),
+(137, 27, 14, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:24', '2022-07-09 15:42:24'),
+(138, 22, 14, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:25', '2022-07-09 15:42:25'),
+(139, 28, 15, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:25', '2022-07-09 15:42:25'),
+(140, 27, 15, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(141, 22, 15, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(142, 28, 16, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:27', '2022-07-09 15:42:27'),
+(143, 27, 16, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:27', '2022-07-09 15:42:27'),
+(144, 22, 16, '0.00', 'PENDIENTE', NULL, '2022-07-09 15:42:28', '2022-07-09 15:42:28');
 
 -- --------------------------------------------------------
 
@@ -1365,78 +1390,150 @@ CREATE TABLE `component_part` (
 --
 
 INSERT INTO `component_part` (`id`, `component_implement_id`, `part`, `hours`, `state`, `created_at`, `updated_at`) VALUES
-(289, 145, 2, '0.00', 'PENDIENTE', '2022-08-12 16:20:01', '2022-08-12 16:20:01'),
-(290, 145, 13, '0.00', 'PENDIENTE', '2022-08-12 16:20:01', '2022-08-12 16:20:01'),
-(291, 145, 33, '0.00', 'PENDIENTE', '2022-08-12 16:20:01', '2022-08-12 16:20:01'),
-(292, 146, 4, '0.00', 'PENDIENTE', '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(293, 146, 11, '0.00', 'PENDIENTE', '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(294, 146, 23, '0.00', 'PENDIENTE', '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(295, 147, 4, '0.00', 'PENDIENTE', '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(296, 147, 29, '0.00', 'PENDIENTE', '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(297, 147, 33, '0.00', 'PENDIENTE', '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(298, 148, 2, '0.00', 'PENDIENTE', '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(299, 148, 13, '0.00', 'PENDIENTE', '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(300, 148, 33, '0.00', 'PENDIENTE', '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(301, 149, 4, '0.00', 'PENDIENTE', '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(302, 149, 11, '0.00', 'PENDIENTE', '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(303, 149, 23, '0.00', 'PENDIENTE', '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(304, 150, 4, '0.00', 'PENDIENTE', '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(305, 150, 29, '0.00', 'PENDIENTE', '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(306, 150, 33, '0.00', 'PENDIENTE', '2022-08-12 16:20:02', '2022-08-12 16:20:02'),
-(307, 151, 2, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(308, 151, 13, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(309, 151, 33, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(310, 152, 4, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(311, 152, 11, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(312, 152, 23, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(313, 153, 4, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(314, 153, 29, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(315, 153, 33, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(316, 154, 2, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(317, 154, 13, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(318, 154, 33, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(319, 155, 4, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(320, 155, 11, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(321, 155, 23, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(322, 156, 4, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(323, 156, 29, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(324, 156, 33, '0.00', 'PENDIENTE', '2022-08-12 16:20:03', '2022-08-12 16:20:03'),
-(325, 157, 4, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(326, 157, 29, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(327, 157, 33, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(328, 158, 3, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(329, 158, 4, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(330, 158, 13, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(331, 159, 2, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(332, 159, 23, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(333, 159, 29, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(334, 160, 4, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(335, 160, 29, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(336, 160, 33, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(337, 161, 3, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(338, 161, 4, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(339, 161, 13, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(340, 162, 2, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(341, 162, 23, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(342, 162, 29, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(343, 163, 4, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(344, 163, 29, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(345, 163, 33, '0.00', 'PENDIENTE', '2022-08-12 16:20:04', '2022-08-12 16:20:04'),
-(346, 164, 3, '0.00', 'PENDIENTE', '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(347, 164, 4, '0.00', 'PENDIENTE', '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(348, 164, 13, '0.00', 'PENDIENTE', '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(349, 165, 2, '0.00', 'PENDIENTE', '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(350, 165, 23, '0.00', 'PENDIENTE', '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(351, 165, 29, '0.00', 'PENDIENTE', '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(352, 166, 4, '0.00', 'PENDIENTE', '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(353, 166, 29, '0.00', 'PENDIENTE', '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(354, 166, 33, '0.00', 'PENDIENTE', '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(355, 167, 3, '0.00', 'PENDIENTE', '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(356, 167, 4, '0.00', 'PENDIENTE', '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(357, 167, 13, '0.00', 'PENDIENTE', '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(358, 168, 2, '0.00', 'PENDIENTE', '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(359, 168, 23, '0.00', 'PENDIENTE', '2022-08-12 16:20:05', '2022-08-12 16:20:05'),
-(360, 168, 29, '0.00', 'PENDIENTE', '2022-08-12 16:20:05', '2022-08-12 16:20:05');
+(145, 97, 2, '0.00', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-15 16:14:27'),
+(146, 97, 13, '0.00', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-15 16:14:27'),
+(147, 97, 33, '0.00', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-15 16:14:27'),
+(148, 98, 4, '0.00', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-15 16:14:27'),
+(149, 98, 11, '0.00', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-15 16:14:27'),
+(150, 98, 23, '0.00', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-15 16:14:27'),
+(151, 99, 4, '0.00', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-15 16:14:27'),
+(152, 99, 29, '0.00', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-15 16:14:27'),
+(153, 99, 33, '0.00', 'PENDIENTE', '2022-07-09 15:03:09', '2022-07-15 16:14:27'),
+(154, 100, 2, '0.00', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-15 16:14:27'),
+(155, 100, 13, '0.00', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-15 16:14:27'),
+(156, 100, 33, '0.00', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-15 16:14:27'),
+(157, 101, 4, '0.00', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-15 16:14:27'),
+(158, 101, 11, '0.00', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-15 16:14:27'),
+(159, 101, 23, '0.00', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-15 16:14:27'),
+(160, 102, 4, '0.00', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-15 16:14:27'),
+(161, 102, 29, '0.00', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-15 16:14:27'),
+(162, 102, 33, '0.00', 'PENDIENTE', '2022-07-09 15:04:02', '2022-07-15 16:14:27'),
+(163, 103, 2, '254.15', 'PENDIENTE', '2022-07-09 15:05:56', '2022-07-21 19:26:53'),
+(164, 103, 13, '254.15', 'PENDIENTE', '2022-07-09 15:42:07', '2022-07-21 19:26:53'),
+(165, 103, 33, '254.15', 'PENDIENTE', '2022-07-09 15:42:07', '2022-07-21 19:26:53'),
+(166, 104, 4, '254.15', 'PENDIENTE', '2022-07-09 15:42:07', '2022-07-21 19:26:53'),
+(167, 104, 11, '254.15', 'PENDIENTE', '2022-07-09 15:42:07', '2022-07-21 19:26:53'),
+(168, 104, 23, '254.15', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-21 19:26:53'),
+(169, 105, 4, '254.15', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-21 19:26:53'),
+(170, 105, 29, '254.15', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-21 19:26:53'),
+(171, 105, 33, '254.15', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-21 19:26:53'),
+(172, 106, 2, '1071.00', 'PENDIENTE', '2022-07-09 15:42:08', '2022-07-21 19:26:17'),
+(173, 106, 13, '1071.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-21 19:26:17'),
+(174, 106, 33, '1071.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-21 19:26:17'),
+(175, 107, 4, '1071.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-21 19:26:17'),
+(176, 107, 11, '1071.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-21 19:26:17'),
+(177, 107, 23, '1071.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-21 19:26:17'),
+(178, 108, 4, '1071.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-21 19:26:17'),
+(179, 108, 29, '1071.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-21 19:26:17'),
+(180, 108, 33, '1071.00', 'PENDIENTE', '2022-07-09 15:42:09', '2022-07-21 19:26:17'),
+(181, 109, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
+(182, 109, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
+(183, 109, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
+(184, 110, 3, '0.00', 'PENDIENTE', '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
+(185, 110, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
+(186, 110, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:12', '2022-07-09 15:42:12'),
+(187, 111, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(188, 111, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(189, 111, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(190, 112, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(191, 112, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(192, 112, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(193, 113, 3, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(194, 113, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(195, 113, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:13', '2022-07-09 15:42:13'),
+(196, 114, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:14', '2022-07-09 15:42:14'),
+(197, 114, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:14', '2022-07-09 15:42:14'),
+(198, 114, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:14', '2022-07-09 15:42:14'),
+(199, 115, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:14', '2022-07-09 15:42:14'),
+(200, 115, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:14', '2022-07-09 15:42:14'),
+(201, 115, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:14', '2022-07-09 15:42:14'),
+(202, 116, 3, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(203, 116, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(204, 116, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(205, 117, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(206, 117, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(207, 117, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(208, 118, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(209, 118, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(210, 118, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:15', '2022-07-09 15:42:15'),
+(211, 119, 3, '0.00', 'PENDIENTE', '2022-07-09 15:42:16', '2022-07-09 15:42:16'),
+(212, 119, 4, '0.00', 'PENDIENTE', '2022-07-09 15:42:16', '2022-07-09 15:42:16'),
+(213, 119, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:16', '2022-07-09 15:42:16'),
+(214, 120, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:16', '2022-07-09 15:42:16'),
+(215, 120, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:16', '2022-07-09 15:42:16'),
+(216, 120, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:16', '2022-07-09 15:42:16'),
+(217, 121, 7, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(218, 121, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(219, 121, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(220, 122, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(221, 122, 7, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(222, 122, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(223, 123, 3, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(224, 123, 17, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(225, 123, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:17', '2022-07-09 15:42:17'),
+(226, 124, 7, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(227, 124, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(228, 124, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(229, 125, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(230, 125, 7, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(231, 125, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(232, 126, 3, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(233, 126, 17, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(234, 126, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:18', '2022-07-09 15:42:18'),
+(235, 127, 7, '0.00', 'PENDIENTE', '2022-07-09 15:42:19', '2022-07-09 15:42:19'),
+(236, 127, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:19', '2022-07-09 15:42:19'),
+(237, 127, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:19', '2022-07-09 15:42:19'),
+(238, 128, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:19', '2022-07-09 15:42:19'),
+(239, 128, 7, '0.00', 'PENDIENTE', '2022-07-09 15:42:19', '2022-07-09 15:42:19'),
+(240, 128, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:19', '2022-07-09 15:42:19'),
+(241, 129, 3, '0.00', 'PENDIENTE', '2022-07-09 15:42:20', '2022-07-09 15:42:20'),
+(242, 129, 17, '0.00', 'PENDIENTE', '2022-07-09 15:42:20', '2022-07-09 15:42:20'),
+(243, 129, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:20', '2022-07-09 15:42:20'),
+(244, 130, 7, '0.00', 'PENDIENTE', '2022-07-09 15:42:20', '2022-07-09 15:42:20'),
+(245, 130, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:20', '2022-07-09 15:42:20'),
+(246, 130, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:20', '2022-07-09 15:42:20'),
+(247, 131, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:21', '2022-07-09 15:42:21'),
+(248, 131, 7, '0.00', 'PENDIENTE', '2022-07-09 15:42:21', '2022-07-09 15:42:21'),
+(249, 131, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:21', '2022-07-09 15:42:21'),
+(250, 132, 3, '0.00', 'PENDIENTE', '2022-07-09 15:42:21', '2022-07-09 15:42:21'),
+(251, 132, 17, '0.00', 'PENDIENTE', '2022-07-09 15:42:21', '2022-07-09 15:42:21'),
+(252, 132, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:22', '2022-07-09 15:42:22'),
+(253, 133, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:22', '2022-07-09 15:42:22'),
+(254, 133, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:22', '2022-07-09 15:42:22'),
+(255, 133, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:22', '2022-07-09 15:42:22'),
+(256, 134, 11, '0.00', 'PENDIENTE', '2022-07-09 15:42:22', '2022-07-09 15:42:22'),
+(257, 134, 30, '0.00', 'PENDIENTE', '2022-07-09 15:42:22', '2022-07-09 15:42:22'),
+(258, 134, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:23', '2022-07-09 15:42:23'),
+(259, 135, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:23', '2022-07-09 15:42:23'),
+(260, 135, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:23', '2022-07-09 15:42:23'),
+(261, 135, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:23', '2022-07-09 15:42:23'),
+(262, 136, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:24', '2022-07-09 15:42:24'),
+(263, 136, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:24', '2022-07-09 15:42:24'),
+(264, 136, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:24', '2022-07-09 15:42:24'),
+(265, 137, 11, '0.00', 'PENDIENTE', '2022-07-09 15:42:24', '2022-07-09 15:42:24'),
+(266, 137, 30, '0.00', 'PENDIENTE', '2022-07-09 15:42:24', '2022-07-09 15:42:24'),
+(267, 137, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:24', '2022-07-09 15:42:24'),
+(268, 138, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:25', '2022-07-09 15:42:25'),
+(269, 138, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:25', '2022-07-09 15:42:25'),
+(270, 138, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:25', '2022-07-09 15:42:25'),
+(271, 139, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:25', '2022-07-09 15:42:25'),
+(272, 139, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(273, 139, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(274, 140, 11, '0.00', 'PENDIENTE', '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(275, 140, 30, '0.00', 'PENDIENTE', '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(276, 140, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(277, 141, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(278, 141, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:26', '2022-07-09 15:42:26'),
+(279, 141, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:27', '2022-07-09 15:42:27'),
+(280, 142, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:27', '2022-07-09 15:42:27'),
+(281, 142, 13, '0.00', 'PENDIENTE', '2022-07-09 15:42:27', '2022-07-09 15:42:27'),
+(282, 142, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:27', '2022-07-09 15:42:27'),
+(283, 143, 11, '0.00', 'PENDIENTE', '2022-07-09 15:42:27', '2022-07-09 15:42:27'),
+(284, 143, 30, '0.00', 'PENDIENTE', '2022-07-09 15:42:28', '2022-07-09 15:42:28'),
+(285, 143, 33, '0.00', 'PENDIENTE', '2022-07-09 15:42:28', '2022-07-09 15:42:28'),
+(286, 144, 2, '0.00', 'PENDIENTE', '2022-07-09 15:42:28', '2022-07-09 15:42:28'),
+(287, 144, 23, '0.00', 'PENDIENTE', '2022-07-09 15:42:28', '2022-07-09 15:42:28'),
+(288, 144, 29, '0.00', 'PENDIENTE', '2022-07-09 15:42:29', '2022-07-09 15:42:29');
 
 -- --------------------------------------------------------
 
@@ -1666,30 +1763,6 @@ CREATE TABLE `general_order_requests` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
---
--- Volcado de datos para la tabla `general_order_requests`
---
-
-INSERT INTO `general_order_requests` (`id`, `item_id`, `quantity`, `quantity_to_arrive`, `price`, `sede_id`, `order_date_id`, `created_at`, `updated_at`) VALUES
-(64, 44, '41.00', '0.00', '1545.00', 1, 2, '2022-08-12 17:00:38', '2022-08-12 17:05:24'),
-(65, 52, '21.00', '1.00', '2600.00', 1, 2, '2022-08-12 17:00:38', '2022-08-12 17:04:32'),
-(66, 57, '142.00', '0.00', '2130.00', 1, 2, '2022-08-12 17:00:38', '2022-08-12 17:04:32'),
-(67, 24, '15.00', '0.00', '1950.00', 1, 2, '2022-08-12 17:00:38', '2022-08-12 17:04:32'),
-(68, 9, '37.00', '0.00', '979.00', 1, 2, '2022-08-12 17:00:38', '2022-08-12 17:04:32'),
-(69, 21, '45.00', '5.00', '1950.00', 1, 2, '2022-08-12 17:00:38', '2022-08-12 17:04:32'),
-(70, 1, '26.00', '0.00', '11700.00', 1, 2, '2022-08-12 17:00:38', '2022-08-12 17:04:32'),
-(71, 3, '24.00', '0.00', '1200.00', 1, 2, '2022-08-12 17:00:38', '2022-08-12 17:04:32'),
-(72, 137, '2.00', '0.00', '50.00', 1, 2, '2022-08-12 17:00:38', '2022-08-12 17:04:32'),
-(73, 138, '2.00', '0.00', '132.00', 1, 2, '2022-08-12 17:00:38', '2022-08-12 17:04:32'),
-(74, 139, '2.00', '0.00', '62.00', 2, 2, '2022-08-12 17:00:57', '2022-08-12 17:04:32'),
-(75, 44, '40.00', '0.00', '1800.00', 2, 2, '2022-08-12 17:00:57', '2022-08-12 17:04:32'),
-(76, 3, '48.00', '0.00', '2400.00', 2, 2, '2022-08-12 17:00:57', '2022-08-12 17:04:32'),
-(77, 4, '12.00', '0.00', '540.00', 2, 2, '2022-08-12 17:00:57', '2022-08-12 17:05:24'),
-(78, 57, '48.00', '1.00', '720.00', 2, 2, '2022-08-12 17:00:57', '2022-08-12 17:05:24'),
-(79, 24, '24.00', '2.00', '3120.00', 2, 2, '2022-08-12 17:00:57', '2022-08-12 17:05:24'),
-(80, 9, '42.00', '1.00', '1050.00', 2, 2, '2022-08-12 17:00:57', '2022-08-12 17:04:32'),
-(81, 52, '50.00', '18.00', '6000.00', 2, 2, '2022-08-12 17:00:57', '2022-08-12 17:05:24');
-
 -- --------------------------------------------------------
 
 --
@@ -1706,30 +1779,6 @@ CREATE TABLE `general_stocks` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---
--- Volcado de datos para la tabla `general_stocks`
---
-
-INSERT INTO `general_stocks` (`id`, `item_id`, `quantity`, `price`, `sede_id`, `quantity_to_reserve`, `created_at`, `updated_at`) VALUES
-(64, 44, '41.00', '63345.00', 1, '41.00', '2022-08-12 17:04:32', '2022-08-12 17:05:24'),
-(65, 52, '20.00', '52000.00', 1, '20.00', '2022-08-12 17:04:32', '2022-08-12 17:04:32'),
-(66, 57, '142.00', '302460.00', 1, '142.00', '2022-08-12 17:04:32', '2022-08-12 17:04:32'),
-(67, 24, '15.00', '29250.00', 1, '15.00', '2022-08-12 17:04:32', '2022-08-12 17:04:32'),
-(68, 9, '37.00', '36223.00', 1, '37.00', '2022-08-12 17:04:32', '2022-08-12 17:04:32'),
-(69, 21, '40.00', '78000.00', 1, '40.00', '2022-08-12 17:04:32', '2022-08-12 17:04:32'),
-(70, 1, '26.00', '304200.00', 1, '26.00', '2022-08-12 17:04:32', '2022-08-12 17:04:32'),
-(71, 3, '24.00', '28800.00', 1, '24.00', '2022-08-12 17:04:32', '2022-08-12 17:04:32'),
-(72, 137, '2.00', '100.00', 1, '2.00', '2022-08-12 17:04:32', '2022-08-12 17:04:32'),
-(73, 138, '2.00', '264.00', 1, '2.00', '2022-08-12 17:04:32', '2022-08-12 17:04:32'),
-(74, 139, '2.00', '124.00', 2, '2.00', '2022-08-12 17:04:32', '2022-08-12 17:04:32'),
-(75, 44, '40.00', '72000.00', 2, '40.00', '2022-08-12 17:04:32', '2022-08-12 17:04:32'),
-(76, 3, '48.00', '115200.00', 2, '48.00', '2022-08-12 17:04:32', '2022-08-12 17:04:32'),
-(77, 4, '12.00', '6480.00', 2, '12.00', '2022-08-12 17:04:32', '2022-08-12 17:05:24'),
-(78, 57, '47.00', '33840.00', 2, '47.00', '2022-08-12 17:04:32', '2022-08-12 17:05:24'),
-(79, 24, '22.00', '68640.00', 2, '22.00', '2022-08-12 17:04:32', '2022-08-12 17:05:24'),
-(80, 9, '41.00', '43050.00', 2, '41.00', '2022-08-12 17:04:32', '2022-08-12 17:04:32'),
-(81, 52, '32.00', '192000.00', 2, '32.00', '2022-08-12 17:05:24', '2022-08-12 17:05:24');
 
 -- --------------------------------------------------------
 
@@ -1750,34 +1799,6 @@ CREATE TABLE `general_stock_details` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---
--- Volcado de datos para la tabla `general_stock_details`
---
-
-INSERT INTO `general_stock_details` (`id`, `item_id`, `movement`, `quantity`, `price`, `quantity_to_use`, `sede_id`, `is_canceled`, `order_date_id`, `created_at`, `updated_at`) VALUES
-(284, 44, 'INGRESO', '40.00', '1545.00', '40.00', 1, 0, 2, '2022-08-12 22:04:32', '2022-08-12 22:04:32'),
-(285, 52, 'INGRESO', '20.00', '2600.00', '20.00', 1, 0, 2, '2022-08-12 22:04:32', '2022-08-12 22:04:32'),
-(286, 57, 'INGRESO', '142.00', '2130.00', '142.00', 1, 0, 2, '2022-08-12 22:04:32', '2022-08-12 22:04:32'),
-(287, 24, 'INGRESO', '15.00', '1950.00', '15.00', 1, 0, 2, '2022-08-12 22:04:32', '2022-08-12 22:04:32'),
-(288, 9, 'INGRESO', '37.00', '979.00', '37.00', 1, 0, 2, '2022-08-12 22:04:32', '2022-08-12 22:04:32'),
-(289, 21, 'INGRESO', '40.00', '1950.00', '40.00', 1, 0, 2, '2022-08-12 22:04:32', '2022-08-12 22:04:32'),
-(290, 1, 'INGRESO', '26.00', '11700.00', '26.00', 1, 0, 2, '2022-08-12 22:04:32', '2022-08-12 22:04:32'),
-(291, 3, 'INGRESO', '24.00', '1200.00', '24.00', 1, 0, 2, '2022-08-12 22:04:32', '2022-08-12 22:04:32'),
-(292, 137, 'INGRESO', '2.00', '50.00', '2.00', 1, 0, 2, '2022-08-12 22:04:32', '2022-08-12 22:04:32'),
-(293, 138, 'INGRESO', '2.00', '132.00', '2.00', 1, 0, 2, '2022-08-12 22:04:32', '2022-08-12 22:04:32'),
-(294, 139, 'INGRESO', '2.00', '62.00', '2.00', 2, 0, 2, '2022-08-12 22:04:32', '2022-08-12 22:04:32'),
-(295, 44, 'INGRESO', '40.00', '1800.00', '40.00', 2, 0, 2, '2022-08-12 22:04:32', '2022-08-12 22:04:32'),
-(296, 3, 'INGRESO', '48.00', '2400.00', '48.00', 2, 0, 2, '2022-08-12 22:04:32', '2022-08-12 22:04:32'),
-(297, 4, 'INGRESO', '11.00', '540.00', '11.00', 2, 0, 2, '2022-08-12 22:04:32', '2022-08-12 22:04:32'),
-(298, 57, 'INGRESO', '45.00', '720.00', '45.00', 2, 0, 2, '2022-08-12 22:04:32', '2022-08-12 22:04:32'),
-(299, 24, 'INGRESO', '20.00', '3120.00', '20.00', 2, 0, 2, '2022-08-12 22:04:32', '2022-08-12 22:04:32'),
-(300, 9, 'INGRESO', '41.00', '1050.00', '41.00', 2, 0, 2, '2022-08-12 22:04:32', '2022-08-12 22:04:32'),
-(301, 4, 'INGRESO', '1.00', '540.00', '1.00', 2, 0, 2, '2022-08-12 22:05:24', '2022-08-12 22:05:24'),
-(302, 57, 'INGRESO', '2.00', '720.00', '2.00', 2, 0, 2, '2022-08-12 22:05:24', '2022-08-12 22:05:24'),
-(303, 24, 'INGRESO', '2.00', '3120.00', '2.00', 2, 0, 2, '2022-08-12 22:05:24', '2022-08-12 22:05:24'),
-(304, 52, 'INGRESO', '32.00', '6000.00', '32.00', 2, 0, 2, '2022-08-12 22:05:24', '2022-08-12 22:05:24'),
-(305, 44, 'INGRESO', '1.00', '1545.00', '1.00', 1, 0, 2, '2022-08-12 22:05:24', '2022-08-12 22:05:24');
 
 --
 -- Disparadores `general_stock_details`
@@ -1842,7 +1863,15 @@ INSERT INTO `implements` (`id`, `implement_model_id`, `implement_number`, `hours
 (5, 2, '3513', '43.59', 5, 3, 5, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
 (6, 2, '6295', '21.92', 6, 3, 6, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
 (7, 2, '4375', '91.21', 7, 4, 7, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
-(8, 2, '6477', '28.34', 8, 4, 8, '2022-06-20 21:21:59', '2022-06-20 21:21:59');
+(8, 2, '6477', '28.34', 8, 4, 8, '2022-06-20 21:21:59', '2022-06-20 21:21:59'),
+(9, 3, '0082', '69.10', 9, 5, 9, '2022-06-20 21:22:00', '2022-06-20 21:22:00'),
+(10, 3, '4653', '29.19', 10, 5, 10, '2022-06-20 21:22:00', '2022-06-20 21:22:00'),
+(11, 3, '9503', '41.07', 11, 6, 11, '2022-06-20 21:22:00', '2022-06-20 21:22:00'),
+(12, 3, '0022', '91.73', 12, 6, 12, '2022-06-20 21:22:00', '2022-06-20 21:22:00'),
+(13, 4, '4470', '23.98', 13, 7, 13, '2022-06-20 21:22:00', '2022-06-20 21:22:00'),
+(14, 4, '2101', '80.32', 14, 7, 14, '2022-06-20 21:22:00', '2022-06-20 21:22:00'),
+(15, 4, '7047', '76.49', 15, 8, 15, '2022-06-20 21:22:00', '2022-06-20 21:22:00'),
+(16, 4, '5378', '20.66', 16, 8, 16, '2022-06-20 21:22:00', '2022-06-20 21:22:00');
 
 --
 -- Disparadores `implements`
@@ -1942,15 +1971,15 @@ CREATE TABLE `items` (
 --
 
 INSERT INTO `items` (`id`, `sku`, `item`, `measurement_unit_id`, `estimated_price`, `type`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, '55268423', 'emibwyfg', 1, '450.00', 'FUNGIBLE', 0, '2022-06-20 21:21:55', '2022-08-12 21:55:22'),
+(1, '55268423', 'emibwyfg', 1, '450.00', 'FUNGIBLE', 0, '2022-06-20 21:21:55', '2022-07-22 21:35:04'),
 (2, '93430686', 'fenphxjv', 8, '328.66', 'COMPONENTE', 0, '2022-06-20 21:21:55', '2022-06-20 21:21:55'),
-(3, '80410193', 'uodoiizm', 15, '50.00', 'PIEZA', 1, '2022-06-20 21:21:55', '2022-08-12 21:57:44'),
-(4, '32172961', 'inqxlhvr', 25, '45.00', 'PIEZA', 0, '2022-06-20 21:21:55', '2022-08-12 21:57:46'),
+(3, '80410193', 'uodoiizm', 15, '65.00', 'PIEZA', 1, '2022-06-20 21:21:55', '2022-07-22 21:43:30'),
+(4, '32172961', 'inqxlhvr', 25, '45.00', 'PIEZA', 0, '2022-06-20 21:21:55', '2022-07-22 21:43:44'),
 (5, '24557228', 'ajshyciq', 35, '45.00', 'FUNGIBLE', 0, '2022-06-20 21:21:55', '2022-07-24 00:14:50'),
 (6, '54017263', 'lsbacktu', 6, '353.62', 'FUNGIBLE', 0, '2022-06-20 21:21:55', '2022-06-20 21:21:55'),
 (7, '88284457', 'kuvozafk', 12, '500.00', 'HERRAMIENTA', 0, '2022-06-20 21:21:55', '2022-07-21 22:57:15'),
 (8, '44888932', 'hlfqhqzs', 36, '563.25', 'HERRAMIENTA', 0, '2022-06-20 21:21:55', '2022-06-20 21:21:55'),
-(9, '63566827', 'ynxsloty', 13, '25.00', 'PIEZA', 1, '2022-06-20 21:21:55', '2022-08-12 21:57:51'),
+(9, '63566827', 'ynxsloty', 13, '27.00', 'PIEZA', 1, '2022-06-20 21:21:55', '2022-07-24 00:14:36'),
 (10, '76748747', 'vdmjztzo', 46, '255.15', 'COMPONENTE', 0, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
 (11, '56684879', 'exitexcs', 7, '405.08', 'FUNGIBLE', 0, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
 (12, '79831941', 'vgldtuea', 1, '289.01', 'HERRAMIENTA', 0, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
@@ -1962,10 +1991,10 @@ INSERT INTO `items` (`id`, `sku`, `item`, `measurement_unit_id`, `estimated_pric
 (18, '06619500', 'jrnuwort', 2, '276.26', 'COMPONENTE', 0, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
 (19, '21102998', 'glqsvril', 7, '488.01', 'COMPONENTE', 0, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
 (20, '47215073', 'avpaglsu', 24, '642.75', 'HERRAMIENTA', 1, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
-(21, '81323780', 'qrrmsgax', 15, '25.00', 'PIEZA', 0, '2022-06-20 21:21:56', '2022-08-12 21:55:14'),
+(21, '81323780', 'qrrmsgax', 15, '50.00', 'PIEZA', 0, '2022-06-20 21:21:56', '2022-07-22 21:39:11'),
 (22, '39157590', 'ybyvnshl', 2, '391.84', 'FUNGIBLE', 0, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
 (23, '98004376', 'tqgvkyjd', 12, '973.03', 'COMPONENTE', 1, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
-(24, '36059421', 'hnvixqmu', 47, '130.00', 'PIEZA', 0, '2022-06-20 21:21:56', '2022-08-12 21:57:47'),
+(24, '36059421', 'hnvixqmu', 47, '130.00', 'PIEZA', 0, '2022-06-20 21:21:56', '2022-07-22 21:43:38'),
 (25, '95868526', 'nnxqjpih', 25, '289.79', 'PIEZA', 0, '2022-06-20 21:21:56', '2022-06-20 21:21:56'),
 (26, '48468841', 'ztypliaa', 13, '228.07', 'PIEZA', 0, '2022-06-20 21:21:57', '2022-06-20 21:21:57'),
 (27, '42247040', 'uufgzlwz', 29, '888.74', 'COMPONENTE', 1, '2022-06-20 21:21:57', '2022-06-20 21:21:57'),
@@ -1985,7 +2014,7 @@ INSERT INTO `items` (`id`, `sku`, `item`, `measurement_unit_id`, `estimated_pric
 (41, '55132606', 'sxuwykmm', 40, '803.68', 'HERRAMIENTA', 1, '2022-06-20 21:21:57', '2022-06-20 21:21:57'),
 (42, '19702921', 'ytqwfjkt', 13, '75.00', 'HERRAMIENTA', 1, '2022-06-20 21:21:57', '2022-07-21 23:36:33'),
 (43, '91153538', 'pvphmrrt', 13, '984.46', 'COMPONENTE', 0, '2022-06-20 21:21:57', '2022-06-20 21:21:57'),
-(44, '88209620', 'odzxmwyq', 3, '45.00', 'PIEZA', 1, '2022-06-20 21:21:58', '2022-08-12 21:57:43'),
+(44, '88209620', 'odzxmwyq', 3, '45.00', 'PIEZA', 1, '2022-06-20 21:21:58', '2022-07-24 00:14:23'),
 (45, '23261667', 'spnpzerr', 22, '894.30', 'COMPONENTE', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (46, '01253032', 'abqkzfka', 14, '697.98', 'COMPONENTE', 1, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (47, '10226033', 'tdtlgqur', 32, '245.22', 'COMPONENTE', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
@@ -1993,12 +2022,12 @@ INSERT INTO `items` (`id`, `sku`, `item`, `measurement_unit_id`, `estimated_pric
 (49, '42080919', 'tkszkird', 34, '945.11', 'HERRAMIENTA', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (50, '20962715', 'sncjkzkm', 10, '846.80', 'FUNGIBLE', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (51, '35177831', 'igkjtofr', 11, '200.00', 'COMPONENTE', 0, '2022-06-20 21:21:58', '2022-07-21 22:56:38'),
-(52, '13254575', 'lxlrfbxf', 2, '120.00', 'PIEZA', 0, '2022-06-20 21:21:58', '2022-08-12 21:57:48'),
+(52, '13254575', 'lxlrfbxf', 2, '150.00', 'PIEZA', 0, '2022-06-20 21:21:58', '2022-07-23 23:45:31'),
 (53, '34323256', 'tjhhvizw', 13, '952.16', 'PIEZA', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (54, '36718680', 'fubvgxmw', 16, '675.23', 'PIEZA', 1, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (55, '01411861', 'upvgdrsm', 29, '586.61', 'COMPONENTE', 1, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (56, '63768263', 'uezoavoy', 1, '918.22', 'HERRAMIENTA', 1, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
-(57, '66196453', 'peorviek', 46, '15.00', 'PIEZA', 1, '2022-06-20 21:21:58', '2022-08-12 21:57:49'),
+(57, '66196453', 'peorviek', 46, '35.00', 'PIEZA', 1, '2022-06-20 21:21:58', '2022-07-24 00:14:30'),
 (58, '85923667', 'qwieldov', 1, '483.13', 'HERRAMIENTA', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (59, '55183394', 'qvjzldtw', 50, '375.49', 'COMPONENTE', 1, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
 (60, '88387187', 'ouenaesm', 25, '473.77', 'FUNGIBLE', 0, '2022-06-20 21:21:58', '2022-06-20 21:21:58'),
@@ -2026,10 +2055,7 @@ INSERT INTO `items` (`id`, `sku`, `item`, `measurement_unit_id`, `estimated_pric
 (92, '25336', 'arduino uno', 2, '10.00', 'FUNGIBLE', 1, '2022-07-21 19:08:04', '2022-07-21 19:08:13'),
 (134, '3655', 'lilia', 52, '360.00', 'FUNGIBLE', 1, '2022-07-26 09:06:43', '2022-07-26 09:06:43'),
 (135, '23', 'liiaaa', 51, '150.00', 'HERRAMIENTA', 1, '2022-07-26 09:06:43', '2022-07-26 09:06:43'),
-(136, '252', 'PERNO 1/2', 53, '25.00', 'PIEZA', 1, '2022-07-26 09:06:43', '2022-07-26 09:06:43'),
-(137, '362252', 'kotori 2.1', 6, '25.00', 'FUNGIBLE', 1, '2022-08-12 21:46:23', '2022-08-12 21:46:23'),
-(138, '1145225', 'void', 51, '66.00', 'FUNGIBLE', 1, '2022-08-12 21:51:48', '2022-08-12 21:55:09'),
-(139, '336224', 'tsukasa', 3, '31.00', 'FUNGIBLE', 1, '2022-08-12 21:55:52', '2022-08-12 21:55:52');
+(136, '252', 'PERNO 1/2', 53, '25.00', 'PIEZA', 1, '2022-07-26 09:06:43', '2022-07-26 09:06:43');
 
 --
 -- Disparadores `items`
@@ -2488,75 +2514,6 @@ CREATE TABLE `operator_stocks` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
---
--- Volcado de datos para la tabla `operator_stocks`
---
-
-INSERT INTO `operator_stocks` (`id`, `user_id`, `item_id`, `ordered_quantity`, `used_quantity`, `created_at`, `updated_at`) VALUES
-(71, 1, 44, '10.00', '10.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(72, 1, 52, '4.00', '4.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(73, 1, 57, '36.00', '36.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(74, 1, 24, '3.00', '3.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(75, 1, 9, '9.00', '9.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(76, 1, 21, '11.00', '11.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(77, 1, 1, '4.00', '4.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(78, 1, 3, '6.00', '6.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(79, 1, 137, '2.00', '2.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(80, 2, 52, '4.00', '4.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(81, 2, 44, '10.00', '10.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(82, 2, 21, '11.00', '11.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(83, 2, 9, '9.00', '9.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(84, 2, 57, '36.00', '36.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(85, 2, 3, '6.00', '6.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(86, 2, 24, '5.00', '5.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(87, 2, 1, '10.00', '10.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(88, 3, 44, '10.00', '10.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(89, 3, 1, '4.00', '4.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(90, 3, 3, '6.00', '6.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(91, 3, 24, '3.00', '3.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(92, 3, 57, '36.00', '36.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(93, 3, 21, '11.00', '11.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(94, 3, 9, '9.00', '9.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(95, 3, 52, '8.00', '8.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(96, 4, 138, '2.00', '2.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(97, 4, 52, '5.00', '5.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(98, 4, 44, '11.00', '11.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(99, 4, 21, '12.00', '12.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(100, 4, 9, '10.00', '10.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(101, 4, 57, '34.00', '34.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(102, 4, 24, '4.00', '4.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(103, 4, 3, '6.00', '6.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(104, 4, 1, '8.00', '8.00', '2022-08-12 19:00:28', '2022-08-12 19:00:28'),
-(105, 5, 139, '2.00', '2.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(106, 5, 44, '10.00', '10.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(107, 5, 3, '12.00', '12.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(108, 5, 4, '3.00', '3.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(109, 5, 57, '12.00', '12.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(110, 5, 24, '6.00', '6.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(111, 5, 9, '6.00', '6.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(112, 5, 52, '20.00', '20.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(113, 6, 44, '10.00', '10.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(114, 6, 3, '12.00', '12.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(115, 6, 24, '6.00', '6.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(116, 6, 4, '3.00', '3.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(117, 6, 57, '12.00', '12.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(118, 6, 52, '10.00', '10.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(119, 6, 9, '12.00', '12.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(120, 7, 44, '10.00', '10.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(121, 7, 3, '12.00', '12.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(122, 7, 24, '6.00', '6.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(123, 7, 4, '3.00', '3.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(124, 7, 57, '12.00', '12.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(125, 7, 52, '10.00', '10.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(126, 7, 9, '12.00', '12.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(127, 8, 44, '10.00', '10.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(128, 8, 3, '12.00', '12.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(129, 8, 4, '3.00', '3.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(130, 8, 24, '6.00', '6.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(131, 8, 52, '10.00', '10.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(132, 8, 57, '12.00', '12.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32'),
-(133, 8, 9, '12.00', '12.00', '2022-08-12 19:00:32', '2022-08-12 19:00:32');
-
 -- --------------------------------------------------------
 
 --
@@ -2581,7 +2538,7 @@ CREATE TABLE `order_dates` (
 
 INSERT INTO `order_dates` (`id`, `open_request`, `close_request`, `order_date`, `arrival_date`, `state`, `month_request`, `created_at`, `updated_at`) VALUES
 (1, '2022-04-25', '2022-04-28', '2022-05-02', '2022-07-01', 'CERRADO', 'MAYO', '2022-06-20 22:22:55', '2022-07-23 19:15:21'),
-(2, '2022-06-27', '2022-06-30', '2022-07-04', '2022-09-01', 'CERRADO', 'JULIO', '2022-06-20 22:22:55', '2022-08-12 19:00:22'),
+(2, '2022-06-27', '2022-06-30', '2022-07-04', '2022-09-01', 'PENDIENTE', 'JULIO', '2022-06-20 22:22:55', '2022-08-12 15:33:14'),
 (3, '2022-08-29', '2022-09-01', '2022-09-05', '2022-11-01', 'PENDIENTE', 'SETIEMBRE', '2022-06-20 22:22:55', '2022-07-22 15:44:13'),
 (4, '2022-10-31', '2022-11-03', '2022-11-07', '2023-01-01', 'PENDIENTE', 'NOVIEMBRE', '2022-06-20 22:22:56', '2022-07-22 15:44:13');
 
@@ -2602,20 +2559,6 @@ CREATE TABLE `order_requests` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Volcado de datos para la tabla `order_requests`
---
-
-INSERT INTO `order_requests` (`id`, `user_id`, `implement_id`, `state`, `validated_by`, `is_canceled`, `order_date_id`, `created_at`, `updated_at`) VALUES
-(150, 1, 1, 'EN PROCESO', 4, 0, 2, '2022-08-12 16:20:01', '2022-08-13 00:00:28'),
-(151, 2, 2, 'EN PROCESO', 4, 0, 2, '2022-08-12 16:20:02', '2022-08-13 00:00:28'),
-(152, 3, 3, 'EN PROCESO', 4, 0, 2, '2022-08-12 16:20:02', '2022-08-13 00:00:28'),
-(153, 4, 4, 'EN PROCESO', 4, 0, 2, '2022-08-12 16:20:03', '2022-08-13 00:00:28'),
-(154, 5, 5, 'EN PROCESO', 4, 0, 2, '2022-08-12 16:20:04', '2022-08-13 00:00:32'),
-(155, 6, 6, 'EN PROCESO', 4, 0, 2, '2022-08-12 16:20:04', '2022-08-13 00:00:32'),
-(156, 7, 7, 'EN PROCESO', 4, 0, 2, '2022-08-12 16:20:04', '2022-08-13 00:00:32'),
-(157, 8, 8, 'EN PROCESO', 4, 0, 2, '2022-08-12 16:20:05', '2022-08-13 00:00:32');
 
 --
 -- Disparadores `order_requests`
@@ -2649,11 +2592,6 @@ ELSEIF(new.state = "EN PROCESO" AND new.state <> old.state) THEN
                     ELSE
                         UPDATE general_order_requests SET quantity = quantity + cantidad, quantity_to_arrive = quantity_to_arrive + cantidad, price = price + (precio*cantidad) WHERE item_id = material AND sede_id = sede AND order_date_id = new.order_date_id;
                     END IF;
-                    IF NOT EXISTS(SELECT * FROM operator_stocks WHERE user_id = new.user_id AND item_id = material) THEN
-                 		INSERT INTO operator_stocks(user_id, item_id, ordered_quantity, used_quantity) VALUES (new.user_id,material,cantidad,cantidad);
-                    ELSE
-                    	UPDATE operator_stocks SET ordered_quantity = ordered_quantity + cantidad, used_quantity = used_quantity + cantidad WHERE user_id = new.user_id AND item_id = material;
-                    END IF;
                 END LOOP bucle;
             CLOSE cursor_item;
         END;
@@ -2681,138 +2619,6 @@ CREATE TABLE `order_request_details` (
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Volcado de datos para la tabla `order_request_details`
---
-
-INSERT INTO `order_request_details` (`id`, `order_request_id`, `item_id`, `quantity`, `estimated_price`, `state`, `quantity_to_use`, `created_at`, `updated_at`) VALUES
-(532, 150, 1, '4.00', '200.00', 'ACEPTADO', '4.00', '2022-08-12 16:20:01', '2022-08-12 21:45:55'),
-(533, 150, 3, '6.00', '65.00', 'ACEPTADO', '6.00', '2022-08-12 16:20:01', '2022-08-12 21:45:57'),
-(534, 150, 24, '3.00', '130.00', 'ACEPTADO', '3.00', '2022-08-12 16:20:01', '2022-08-12 21:45:50'),
-(535, 150, 57, '36.00', '35.00', 'ACEPTADO', '36.00', '2022-08-12 16:20:01', '2022-08-12 21:45:49'),
-(536, 150, 9, '9.00', '27.00', 'ACEPTADO', '9.00', '2022-08-12 16:20:02', '2022-08-12 21:45:52'),
-(537, 150, 21, '11.00', '50.00', 'ACEPTADO', '11.00', '2022-08-12 16:20:02', '2022-08-12 21:45:54'),
-(538, 150, 44, '10.00', '45.00', 'ACEPTADO', '10.00', '2022-08-12 16:20:02', '2022-08-12 21:45:38'),
-(539, 150, 52, '4.00', '150.00', 'ACEPTADO', '4.00', '2022-08-12 16:20:02', '2022-08-12 21:45:47'),
-(540, 151, 1, '5.00', '200.00', 'ACEPTADO', '4.00', '2022-08-12 16:20:02', '2022-08-12 21:47:45'),
-(541, 151, 3, '6.00', '65.00', 'ACEPTADO', '6.00', '2022-08-12 16:20:02', '2022-08-12 21:47:42'),
-(542, 151, 24, '5.00', '130.00', 'ACEPTADO', '3.00', '2022-08-12 16:20:02', '2022-08-12 21:47:43'),
-(543, 151, 57, '36.00', '35.00', 'ACEPTADO', '36.00', '2022-08-12 16:20:02', '2022-08-12 21:47:40'),
-(544, 151, 9, '9.00', '27.00', 'ACEPTADO', '9.00', '2022-08-12 16:20:02', '2022-08-12 21:47:39'),
-(545, 151, 21, '11.00', '50.00', 'ACEPTADO', '11.00', '2022-08-12 16:20:02', '2022-08-12 21:47:37'),
-(546, 151, 44, '10.00', '45.00', 'ACEPTADO', '10.00', '2022-08-12 16:20:02', '2022-08-12 21:47:36'),
-(547, 151, 52, '4.00', '150.00', 'ACEPTADO', '4.00', '2022-08-12 16:20:02', '2022-08-12 21:47:33'),
-(548, 152, 1, '4.00', '200.00', 'ACEPTADO', '4.00', '2022-08-12 16:20:03', '2022-08-12 21:49:05'),
-(549, 152, 3, '6.00', '65.00', 'ACEPTADO', '6.00', '2022-08-12 16:20:03', '2022-08-12 21:49:06'),
-(550, 152, 24, '3.00', '130.00', 'ACEPTADO', '3.00', '2022-08-12 16:20:03', '2022-08-12 21:49:08'),
-(551, 152, 57, '36.00', '35.00', 'ACEPTADO', '36.00', '2022-08-12 16:20:03', '2022-08-12 21:49:09'),
-(552, 152, 9, '9.00', '27.00', 'ACEPTADO', '9.00', '2022-08-12 16:20:03', '2022-08-12 21:49:13'),
-(553, 152, 21, '11.00', '50.00', 'ACEPTADO', '11.00', '2022-08-12 16:20:03', '2022-08-12 21:49:11'),
-(554, 152, 44, '10.00', '45.00', 'ACEPTADO', '10.00', '2022-08-12 16:20:03', '2022-08-12 21:48:50'),
-(555, 152, 52, '4.00', '150.00', 'ACEPTADO', '4.00', '2022-08-12 16:20:03', '2022-08-12 21:49:14'),
-(556, 153, 1, '4.00', '200.00', 'ACEPTADO', '4.00', '2022-08-12 16:20:03', '2022-08-12 21:55:22'),
-(557, 153, 3, '6.00', '65.00', 'ACEPTADO', '6.00', '2022-08-12 16:20:03', '2022-08-12 21:55:20'),
-(558, 153, 24, '4.00', '130.00', 'ACEPTADO', '3.00', '2022-08-12 16:20:03', '2022-08-12 21:55:18'),
-(559, 153, 57, '34.00', '35.00', 'ACEPTADO', '36.00', '2022-08-12 16:20:03', '2022-08-12 21:55:17'),
-(560, 153, 9, '10.00', '27.00', 'ACEPTADO', '9.00', '2022-08-12 16:20:03', '2022-08-12 21:55:15'),
-(561, 153, 21, '12.00', '50.00', 'ACEPTADO', '11.00', '2022-08-12 16:20:03', '2022-08-12 21:55:14'),
-(562, 153, 44, '11.00', '45.00', 'ACEPTADO', '10.00', '2022-08-12 16:20:03', '2022-08-12 21:55:12'),
-(563, 153, 52, '5.00', '150.00', 'ACEPTADO', '4.00', '2022-08-12 16:20:03', '2022-08-12 21:55:11'),
-(564, 154, 9, '6.00', '27.00', 'ACEPTADO', '6.00', '2022-08-12 16:20:04', '2022-08-12 21:56:24'),
-(565, 154, 52, '10.00', '150.00', 'ACEPTADO', '10.00', '2022-08-12 16:20:04', '2022-08-12 21:56:26'),
-(566, 154, 57, '12.00', '35.00', 'ACEPTADO', '12.00', '2022-08-12 16:20:04', '2022-08-12 21:56:21'),
-(567, 154, 4, '3.00', '45.00', 'ACEPTADO', '3.00', '2022-08-12 16:20:04', '2022-08-12 21:56:20'),
-(568, 154, 24, '6.00', '130.00', 'ACEPTADO', '6.00', '2022-08-12 16:20:04', '2022-08-12 21:56:22'),
-(569, 154, 3, '12.00', '65.00', 'ACEPTADO', '12.00', '2022-08-12 16:20:04', '2022-08-12 21:56:18'),
-(570, 154, 44, '10.00', '45.00', 'ACEPTADO', '10.00', '2022-08-12 16:20:04', '2022-08-12 21:56:16'),
-(571, 155, 9, '6.00', '27.00', 'ACEPTADO', '6.00', '2022-08-12 16:20:04', '2022-08-12 21:56:44'),
-(572, 155, 52, '10.00', '150.00', 'ACEPTADO', '10.00', '2022-08-12 16:20:04', '2022-08-12 21:56:42'),
-(573, 155, 57, '12.00', '35.00', 'ACEPTADO', '12.00', '2022-08-12 16:20:04', '2022-08-12 21:56:41'),
-(574, 155, 4, '3.00', '45.00', 'ACEPTADO', '3.00', '2022-08-12 16:20:04', '2022-08-12 21:56:39'),
-(575, 155, 24, '6.00', '130.00', 'ACEPTADO', '6.00', '2022-08-12 16:20:04', '2022-08-12 21:56:38'),
-(576, 155, 3, '12.00', '65.00', 'ACEPTADO', '12.00', '2022-08-12 16:20:04', '2022-08-12 21:56:37'),
-(577, 155, 44, '10.00', '45.00', 'ACEPTADO', '10.00', '2022-08-12 16:20:04', '2022-08-12 21:56:36'),
-(578, 156, 9, '6.00', '27.00', 'ACEPTADO', '6.00', '2022-08-12 16:20:04', '2022-08-12 21:57:32'),
-(579, 156, 52, '10.00', '150.00', 'ACEPTADO', '10.00', '2022-08-12 16:20:04', '2022-08-12 21:57:31'),
-(580, 156, 57, '12.00', '35.00', 'ACEPTADO', '12.00', '2022-08-12 16:20:04', '2022-08-12 21:57:29'),
-(581, 156, 4, '3.00', '45.00', 'ACEPTADO', '3.00', '2022-08-12 16:20:05', '2022-08-12 21:57:28'),
-(582, 156, 24, '6.00', '130.00', 'ACEPTADO', '6.00', '2022-08-12 16:20:05', '2022-08-12 21:57:26'),
-(583, 156, 3, '12.00', '65.00', 'ACEPTADO', '12.00', '2022-08-12 16:20:05', '2022-08-12 21:57:25'),
-(584, 156, 44, '10.00', '45.00', 'ACEPTADO', '10.00', '2022-08-12 16:20:05', '2022-08-12 21:57:23'),
-(585, 157, 9, '6.00', '27.00', 'ACEPTADO', '6.00', '2022-08-12 16:20:05', '2022-08-12 21:57:51'),
-(586, 157, 52, '10.00', '150.00', 'ACEPTADO', '10.00', '2022-08-12 16:20:05', '2022-08-12 21:57:48'),
-(587, 157, 57, '12.00', '35.00', 'ACEPTADO', '12.00', '2022-08-12 16:20:05', '2022-08-12 21:57:49'),
-(588, 157, 4, '3.00', '45.00', 'ACEPTADO', '3.00', '2022-08-12 16:20:05', '2022-08-12 21:57:46'),
-(589, 157, 24, '6.00', '130.00', 'ACEPTADO', '6.00', '2022-08-12 16:20:05', '2022-08-12 21:57:47'),
-(590, 157, 3, '12.00', '65.00', 'ACEPTADO', '12.00', '2022-08-12 16:20:05', '2022-08-12 21:57:44'),
-(591, 157, 44, '10.00', '45.00', 'ACEPTADO', '10.00', '2022-08-12 16:20:05', '2022-08-12 21:57:43'),
-(592, 150, 44, '10.00', '30.00', 'VALIDADO', '10.00', '2022-08-12 21:45:38', '2022-08-12 21:47:18'),
-(593, 150, 52, '4.00', '140.00', 'VALIDADO', '4.00', '2022-08-12 21:45:47', '2022-08-12 21:46:48'),
-(594, 150, 57, '36.00', '15.00', 'VALIDADO', '36.00', '2022-08-12 21:45:49', '2022-08-12 21:47:03'),
-(595, 150, 24, '3.00', '130.00', 'VALIDADO', '3.00', '2022-08-12 21:45:50', '2022-08-12 21:45:50'),
-(596, 150, 9, '9.00', '27.00', 'VALIDADO', '9.00', '2022-08-12 21:45:52', '2022-08-12 21:45:52'),
-(597, 150, 21, '11.00', '50.00', 'VALIDADO', '11.00', '2022-08-12 21:45:54', '2022-08-12 21:45:54'),
-(598, 150, 1, '4.00', '450.00', 'VALIDADO', '4.00', '2022-08-12 21:45:55', '2022-08-12 21:45:55'),
-(599, 150, 3, '6.00', '50.00', 'VALIDADO', '6.00', '2022-08-12 21:45:57', '2022-08-12 21:47:11'),
-(600, 150, 137, '1.00', '25.00', 'ACEPTADO', '0.00', '2022-08-12 21:46:23', '2022-08-12 21:46:23'),
-(601, 150, 137, '1.00', '25.00', 'VALIDADO', '0.00', '2022-08-12 21:46:23', '2022-08-12 21:46:23'),
-(602, 151, 52, '4.00', '120.00', 'VALIDADO', '4.00', '2022-08-12 21:47:33', '2022-08-12 21:47:33'),
-(603, 151, 44, '10.00', '30.00', 'VALIDADO', '10.00', '2022-08-12 21:47:35', '2022-08-12 21:47:35'),
-(604, 151, 21, '11.00', '50.00', 'VALIDADO', '11.00', '2022-08-12 21:47:37', '2022-08-12 21:47:37'),
-(605, 151, 9, '9.00', '27.00', 'VALIDADO', '9.00', '2022-08-12 21:47:39', '2022-08-12 21:47:39'),
-(606, 151, 57, '36.00', '15.00', 'VALIDADO', '36.00', '2022-08-12 21:47:40', '2022-08-12 21:47:40'),
-(607, 151, 3, '6.00', '50.00', 'VALIDADO', '6.00', '2022-08-12 21:47:42', '2022-08-12 21:47:42'),
-(608, 151, 24, '5.00', '130.00', 'VALIDADO', '5.00', '2022-08-12 21:47:43', '2022-08-12 21:47:43'),
-(609, 151, 1, '5.00', '450.00', 'VALIDADO', '5.00', '2022-08-12 21:47:45', '2022-08-12 21:47:45'),
-(610, 152, 44, '10.00', '45.00', 'VALIDADO', '10.00', '2022-08-12 21:48:50', '2022-08-12 21:49:02'),
-(611, 152, 1, '4.00', '450.00', 'VALIDADO', '4.00', '2022-08-12 21:49:05', '2022-08-12 21:49:05'),
-(612, 152, 3, '6.00', '50.00', 'VALIDADO', '6.00', '2022-08-12 21:49:06', '2022-08-12 21:49:06'),
-(613, 152, 24, '3.00', '130.00', 'VALIDADO', '3.00', '2022-08-12 21:49:08', '2022-08-12 21:49:08'),
-(614, 152, 57, '36.00', '15.00', 'VALIDADO', '36.00', '2022-08-12 21:49:09', '2022-08-12 21:49:09'),
-(615, 152, 21, '11.00', '50.00', 'VALIDADO', '11.00', '2022-08-12 21:49:11', '2022-08-12 21:49:11'),
-(616, 152, 9, '9.00', '27.00', 'VALIDADO', '9.00', '2022-08-12 21:49:13', '2022-08-12 21:49:13'),
-(617, 152, 52, '4.00', '120.00', 'VALIDADO', '4.00', '2022-08-12 21:49:14', '2022-08-12 21:49:14'),
-(626, 153, 138, '2.00', '66.00', 'ACEPTADO', '0.00', '2022-08-12 21:51:48', '2022-08-12 21:55:09'),
-(628, 153, 138, '2.00', '66.00', 'VALIDADO', '2.00', '2022-08-12 21:55:09', '2022-08-12 21:55:09'),
-(629, 153, 52, '5.00', '120.00', 'VALIDADO', '5.00', '2022-08-12 21:55:11', '2022-08-12 21:55:11'),
-(630, 153, 44, '11.00', '45.00', 'VALIDADO', '11.00', '2022-08-12 21:55:12', '2022-08-12 21:55:12'),
-(631, 153, 21, '12.00', '25.00', 'VALIDADO', '12.00', '2022-08-12 21:55:14', '2022-08-12 21:55:14'),
-(632, 153, 9, '10.00', '25.00', 'VALIDADO', '10.00', '2022-08-12 21:55:15', '2022-08-12 21:55:15'),
-(633, 153, 57, '34.00', '15.00', 'VALIDADO', '34.00', '2022-08-12 21:55:17', '2022-08-12 21:55:17'),
-(634, 153, 24, '4.00', '130.00', 'VALIDADO', '4.00', '2022-08-12 21:55:18', '2022-08-12 21:55:18'),
-(635, 153, 3, '6.00', '50.00', 'VALIDADO', '6.00', '2022-08-12 21:55:20', '2022-08-12 21:55:20'),
-(636, 153, 1, '4.00', '450.00', 'VALIDADO', '4.00', '2022-08-12 21:55:22', '2022-08-12 21:55:22'),
-(637, 154, 139, '2.00', '31.00', 'ACEPTADO', '0.00', '2022-08-12 21:55:52', '2022-08-12 21:55:52'),
-(638, 154, 139, '2.00', '31.00', 'VALIDADO', '0.00', '2022-08-12 21:55:52', '2022-08-12 21:55:52'),
-(639, 154, 44, '10.00', '45.00', 'VALIDADO', '10.00', '2022-08-12 21:56:16', '2022-08-12 21:56:16'),
-(640, 154, 3, '12.00', '50.00', 'VALIDADO', '12.00', '2022-08-12 21:56:18', '2022-08-12 21:56:18'),
-(641, 154, 4, '3.00', '45.00', 'VALIDADO', '3.00', '2022-08-12 21:56:20', '2022-08-12 21:56:20'),
-(642, 154, 57, '12.00', '15.00', 'VALIDADO', '12.00', '2022-08-12 21:56:21', '2022-08-12 21:56:21'),
-(643, 154, 24, '6.00', '130.00', 'VALIDADO', '6.00', '2022-08-12 21:56:22', '2022-08-12 21:56:22'),
-(644, 154, 9, '6.00', '25.00', 'VALIDADO', '6.00', '2022-08-12 21:56:24', '2022-08-12 21:56:24'),
-(645, 154, 52, '10.00', '120.00', 'VALIDADO', '10.00', '2022-08-12 21:56:26', '2022-08-12 21:56:26'),
-(646, 155, 44, '10.00', '45.00', 'VALIDADO', '10.00', '2022-08-12 21:56:36', '2022-08-12 21:56:36'),
-(647, 155, 3, '12.00', '50.00', 'VALIDADO', '12.00', '2022-08-12 21:56:37', '2022-08-12 21:56:37'),
-(648, 155, 24, '6.00', '130.00', 'VALIDADO', '6.00', '2022-08-12 21:56:38', '2022-08-12 21:56:38'),
-(649, 155, 4, '3.00', '45.00', 'VALIDADO', '3.00', '2022-08-12 21:56:39', '2022-08-12 21:56:39'),
-(650, 155, 57, '12.00', '15.00', 'VALIDADO', '12.00', '2022-08-12 21:56:41', '2022-08-12 21:56:41'),
-(651, 155, 52, '10.00', '120.00', 'VALIDADO', '10.00', '2022-08-12 21:56:42', '2022-08-12 21:56:42'),
-(652, 155, 9, '6.00', '25.00', 'VALIDADO', '6.00', '2022-08-12 21:56:44', '2022-08-12 21:56:44'),
-(653, 156, 44, '10.00', '45.00', 'VALIDADO', '10.00', '2022-08-12 21:57:23', '2022-08-12 21:57:23'),
-(654, 156, 3, '12.00', '50.00', 'VALIDADO', '12.00', '2022-08-12 21:57:25', '2022-08-12 21:57:25'),
-(655, 156, 24, '6.00', '130.00', 'VALIDADO', '6.00', '2022-08-12 21:57:26', '2022-08-12 21:57:26'),
-(656, 156, 4, '3.00', '45.00', 'VALIDADO', '3.00', '2022-08-12 21:57:28', '2022-08-12 21:57:28'),
-(657, 156, 57, '12.00', '15.00', 'VALIDADO', '12.00', '2022-08-12 21:57:29', '2022-08-12 21:57:29'),
-(658, 156, 52, '10.00', '120.00', 'VALIDADO', '10.00', '2022-08-12 21:57:31', '2022-08-12 21:57:31'),
-(659, 156, 9, '6.00', '25.00', 'VALIDADO', '6.00', '2022-08-12 21:57:32', '2022-08-12 21:57:32'),
-(660, 157, 44, '10.00', '45.00', 'VALIDADO', '10.00', '2022-08-12 21:57:43', '2022-08-12 21:57:43'),
-(661, 157, 3, '12.00', '50.00', 'VALIDADO', '12.00', '2022-08-12 21:57:44', '2022-08-12 21:57:44'),
-(662, 157, 4, '3.00', '45.00', 'VALIDADO', '3.00', '2022-08-12 21:57:46', '2022-08-12 21:57:46'),
-(663, 157, 24, '6.00', '130.00', 'VALIDADO', '6.00', '2022-08-12 21:57:47', '2022-08-12 21:57:47'),
-(664, 157, 52, '10.00', '120.00', 'VALIDADO', '10.00', '2022-08-12 21:57:48', '2022-08-12 21:57:48'),
-(665, 157, 57, '12.00', '15.00', 'VALIDADO', '12.00', '2022-08-12 21:57:49', '2022-08-12 21:57:49'),
-(666, 157, 9, '6.00', '25.00', 'VALIDADO', '6.00', '2022-08-12 21:57:51', '2022-08-12 21:57:51');
-
 -- --------------------------------------------------------
 
 --
@@ -2833,18 +2639,6 @@ CREATE TABLE `order_request_new_items` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Volcado de datos para la tabla `order_request_new_items`
---
-
-INSERT INTO `order_request_new_items` (`id`, `order_request_id`, `new_item`, `quantity`, `measurement_unit_id`, `datasheet`, `image`, `state`, `item_id`, `observation`, `created_at`, `updated_at`) VALUES
-(6, 153, 'ARDUINO UNO', '2.00', 51, '-ARDUINO UNO\n-.2 NUCLEOS', 'public/newMaterials/uM1tCBi5kR5FnUAecJUi2T83HpX5dF5iUg3hKi1j.jpg', 'CREADO', 138, '', '2022-08-12 21:26:39', '2022-08-12 21:51:48'),
-(8, 151, 'dasdsad', '2.00', 6, 'sdsa\nasd\nasd\nasd', 'public/newMaterials/HenLnnlD860kteJD4rZq4n1sfRLhDlpYQo0yHJV3.jpg', 'RECHAZADO', NULL, '', '2022-08-12 21:39:01', '2022-08-12 21:47:51'),
-(9, 150, 'KOTORI', '1.00', 6, 'WE\nAS\nSS', 'public/newMaterials/ifNXoNg6takz73y89MwbVzrThvYSqYWJ0JhhCsHE.jpg', 'CREADO', 137, '', '2022-08-12 21:40:18', '2022-08-12 21:46:23'),
-(10, 154, 'TSUKASA', '2.00', 3, '213', 'public/newMaterials/wdnpmYucNbr28xNPjtlEWclKq9NsK5WrfmOQq3zU.jpg', 'CREADO', 139, '', '2022-08-12 21:41:45', '2022-08-12 21:55:52'),
-(11, 154, 'REM', '1.00', 6, 'ASD\nXZC', 'public/newMaterials/sujxrriAWZT9oofz9UyZwHP5kaRUhicBoYDwMyyn.jpg', 'RECHAZADO', NULL, '', '2022-08-12 21:42:02', '2022-08-12 21:56:06'),
-(12, 155, 'YUKINA', '3.00', 3, 'AS\n\nSD', 'public/newMaterials/23Gkx9W4vpx0900GfqO8N4r3W5MXiNf3m9HzYyRE.jpg', 'RECHAZADO', NULL, '', '2022-08-12 21:43:02', '2022-08-12 21:57:05');
 
 -- --------------------------------------------------------
 
@@ -2983,20 +2777,6 @@ CREATE TABLE `pre_stockpiles` (
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Volcado de datos para la tabla `pre_stockpiles`
---
-
-INSERT INTO `pre_stockpiles` (`id`, `user_id`, `implement_id`, `state`, `validated_by`, `pre_stockpile_date_id`, `created_at`, `updated_at`) VALUES
-(26, 1, 1, 'PENDIENTE', NULL, 1, '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(27, 2, 2, 'PENDIENTE', NULL, 1, '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(28, 3, 3, 'PENDIENTE', NULL, 1, '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(29, 4, 4, 'PENDIENTE', NULL, 1, '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(30, 5, 5, 'PENDIENTE', NULL, 1, '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(31, 6, 6, 'PENDIENTE', NULL, 1, '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(32, 7, 7, 'PENDIENTE', NULL, 1, '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(33, 8, 8, 'PENDIENTE', NULL, 1, '2022-08-12 18:40:46', '2022-08-12 18:40:46');
-
 -- --------------------------------------------------------
 
 --
@@ -3018,7 +2798,7 @@ CREATE TABLE `pre_stockpile_dates` (
 --
 
 INSERT INTO `pre_stockpile_dates` (`id`, `open_pre_stockpile`, `close_pre_stockpile`, `pre_stockpile_date`, `state`, `created_at`, `updated_at`) VALUES
-(1, '2022-07-09', '2022-07-10', '2022-07-01', 'ABIERTO', '2022-07-09 18:04:44', '2022-08-12 18:40:46'),
+(1, '2022-07-09', '2022-07-10', '2022-07-01', 'PENDIENTE', '2022-07-09 18:04:44', '2022-08-12 15:32:13'),
 (2, '2022-08-08', '2022-08-09', '2022-08-01', 'PENDIENTE', '2022-07-09 18:04:44', '2022-07-11 00:05:52');
 
 -- --------------------------------------------------------
@@ -3039,74 +2819,31 @@ CREATE TABLE `pre_stockpile_details` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Volcado de datos para la tabla `pre_stockpile_details`
---
-
-INSERT INTO `pre_stockpile_details` (`id`, `pre_stockpile_id`, `item_id`, `quantity`, `state`, `quantity_to_use`, `created_at`, `updated_at`) VALUES
-(126, 26, 1, '4.00', 'PENDIENTE', '4.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(127, 26, 3, '6.00', 'PENDIENTE', '6.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(128, 26, 24, '3.00', 'PENDIENTE', '3.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(129, 26, 57, '36.00', 'PENDIENTE', '36.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(130, 26, 9, '9.00', 'PENDIENTE', '9.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(131, 26, 21, '11.00', 'PENDIENTE', '11.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(132, 26, 44, '10.00', 'PENDIENTE', '10.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(133, 26, 52, '4.00', 'PENDIENTE', '4.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(134, 27, 1, '4.00', 'PENDIENTE', '4.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(135, 27, 3, '6.00', 'PENDIENTE', '6.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(136, 27, 24, '3.00', 'PENDIENTE', '3.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(137, 27, 57, '36.00', 'PENDIENTE', '36.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(138, 27, 9, '9.00', 'PENDIENTE', '9.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(139, 27, 21, '11.00', 'PENDIENTE', '11.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(140, 27, 44, '10.00', 'PENDIENTE', '10.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(141, 27, 52, '4.00', 'PENDIENTE', '4.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(142, 28, 1, '4.00', 'PENDIENTE', '4.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(143, 28, 3, '6.00', 'PENDIENTE', '6.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(144, 28, 24, '3.00', 'PENDIENTE', '3.00', '2022-08-12 18:40:44', '2022-08-12 18:40:44'),
-(145, 28, 57, '36.00', 'PENDIENTE', '36.00', '2022-08-12 18:40:44', '2022-08-12 18:40:45'),
-(146, 28, 9, '9.00', 'PENDIENTE', '9.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(147, 28, 21, '11.00', 'PENDIENTE', '11.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(148, 28, 44, '10.00', 'PENDIENTE', '10.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(149, 28, 52, '4.00', 'PENDIENTE', '4.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(150, 29, 1, '4.00', 'PENDIENTE', '4.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(151, 29, 3, '6.00', 'PENDIENTE', '6.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(152, 29, 24, '3.00', 'PENDIENTE', '3.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(153, 29, 57, '36.00', 'PENDIENTE', '36.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(154, 29, 9, '9.00', 'PENDIENTE', '9.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(155, 29, 21, '11.00', 'PENDIENTE', '11.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(156, 29, 44, '10.00', 'PENDIENTE', '10.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(157, 29, 52, '4.00', 'PENDIENTE', '4.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(158, 30, 9, '6.00', 'PENDIENTE', '6.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(159, 30, 52, '10.00', 'PENDIENTE', '10.00', '2022-08-12 18:40:45', '2022-08-12 18:40:46'),
-(160, 30, 57, '12.00', 'PENDIENTE', '12.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(161, 30, 4, '3.00', 'PENDIENTE', '3.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(162, 30, 24, '6.00', 'PENDIENTE', '6.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(163, 30, 3, '12.00', 'PENDIENTE', '12.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(164, 30, 44, '10.00', 'PENDIENTE', '10.00', '2022-08-12 18:40:45', '2022-08-12 18:40:45'),
-(165, 31, 9, '6.00', 'PENDIENTE', '6.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(166, 31, 52, '10.00', 'PENDIENTE', '10.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(167, 31, 57, '12.00', 'PENDIENTE', '12.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(168, 31, 4, '3.00', 'PENDIENTE', '3.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(169, 31, 24, '6.00', 'PENDIENTE', '6.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(170, 31, 3, '12.00', 'PENDIENTE', '12.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(171, 31, 44, '10.00', 'PENDIENTE', '10.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(172, 32, 9, '6.00', 'PENDIENTE', '6.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(173, 32, 52, '10.00', 'PENDIENTE', '10.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(174, 32, 57, '12.00', 'PENDIENTE', '12.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(175, 32, 4, '3.00', 'PENDIENTE', '3.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(176, 32, 24, '6.00', 'PENDIENTE', '6.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(177, 32, 3, '12.00', 'PENDIENTE', '12.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(178, 32, 44, '10.00', 'PENDIENTE', '10.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(179, 33, 9, '6.00', 'PENDIENTE', '6.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(180, 33, 52, '10.00', 'PENDIENTE', '10.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(181, 33, 57, '12.00', 'PENDIENTE', '12.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(182, 33, 4, '3.00', 'PENDIENTE', '3.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(183, 33, 24, '6.00', 'PENDIENTE', '6.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(184, 33, 3, '12.00', 'PENDIENTE', '12.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46'),
-(185, 33, 44, '10.00', 'PENDIENTE', '10.00', '2022-08-12 18:40:46', '2022-08-12 18:40:46');
-
---
 -- Disparadores `pre_stockpile_details`
 --
+DELIMITER $$
+CREATE TRIGGER `reducir_cantidad_almacen` AFTER INSERT ON `pre_stockpile_details` FOR EACH ROW BEGIN
+    DECLARE cantidad decimal(8,2) DEFAULT 0;
+    DECLARE stock decimal(8,2) DEFAULT 0;
+    DECLARE id_stock_detalle INT;
+    DECLARE sede INT;
+    SET cantidad = new.quantity;
+    SELECT l.sede_id INTO sede FROM pre_stockpiles p INNER JOIN implements i ON i.id = p.implement_id INNER JOIN locations l ON l.id = i.location_id WHERE p.id = new.pre_stockpile_id;
+    WHILE cantidad > 0 DO
+    	SELECT gsd.id,gsd.quantity_to_use INTO id_stock_detalle,stock FROM general_stock_details gsd WHERE gsd.item_id = new.item_id AND gsd.sede_id = sede AND gsd.quantity_to_use > 0 AND gsd.is_canceled = 0 ORDER BY id ASC LIMIT 1;
+    	IF stock >= cantidad THEN
+        	UPDATE general_stock_details gsd SET gsd.quantity_to_use = gsd.quantity_to_use - cantidad WHERE gsd.item_id = new.item_id AND gsd.sede_id = sede AND gsd.quantity_to_use > 0 AND gsd.is_canceled = 0 ORDER BY id ASC LIMIT 1;
+            INSERT INTO pre_stockpile_price_details(pre_stockpile_detail_id, general_stock_detail_id, quantity) VALUES (new.id, id_stock_detalle, cantidad);
+            SET cantidad = 0;
+        ELSE
+        	UPDATE general_stock_details gsd SET gsd.quantity_to_use = 0 WHERE gsd.item_id = new.item_id AND gsd.sede_id = sede AND gsd.quantity_to_use > 0 AND gsd.is_canceled = 0 ORDER BY id ASC LIMIT 1;
+            INSERT INTO pre_stockpile_price_details(pre_stockpile_detail_id, general_stock_detail_id, quantity) VALUES (new.id,id_stock_detalle,stock);
+            SET cantidad = cantidad - stock;
+        END IF;
+    END WHILE;
+END
+$$
+DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER `regresar_cantidad_reservada` AFTER UPDATE ON `pre_stockpile_details` FOR EACH ROW BEGIN
 	IF new.state = "RECHAZADO" AND new.state <> old.state THEN
@@ -3128,27 +2865,6 @@ CREATE TRIGGER `regresar_cantidad_reservada` AFTER UPDATE ON `pre_stockpile_deta
                 END LOOP bucle_detalle; 
             CLOSE cursor_detalle;
         END;
-    ELSEIF new.state = "RESERVADO" AND new.state <> old.state THEN
-    	BEGIN
-    DECLARE cantidad decimal(8,2) DEFAULT 0;
-    DECLARE stock decimal(8,2) DEFAULT 0;
-    DECLARE id_stock_detalle INT;
-    DECLARE sede INT;
-    SET cantidad = new.quantity;
-    SELECT l.sede_id INTO sede FROM pre_stockpiles p INNER JOIN implements i ON i.id = p.implement_id INNER JOIN locations l ON l.id = i.location_id WHERE p.id = new.pre_stockpile_id;
-    WHILE cantidad > 0 DO
-    	SELECT gsd.id,gsd.quantity_to_use INTO id_stock_detalle,stock FROM general_stock_details gsd WHERE gsd.item_id = new.item_id AND gsd.sede_id = sede AND gsd.quantity_to_use > 0 AND gsd.is_canceled = 0 ORDER BY id ASC LIMIT 1;
-    	IF stock >= cantidad THEN
-        	UPDATE general_stock_details gsd SET gsd.quantity_to_use = gsd.quantity_to_use - cantidad WHERE gsd.item_id = new.item_id AND gsd.sede_id = sede AND gsd.quantity_to_use > 0 AND gsd.is_canceled = 0 ORDER BY id ASC LIMIT 1;
-            INSERT INTO pre_stockpile_price_details(pre_stockpile_detail_id, general_stock_detail_id, quantity) VALUES (new.id, id_stock_detalle, cantidad);
-            SET cantidad = 0;
-        ELSE
-        	UPDATE general_stock_details gsd SET gsd.quantity_to_use = 0 WHERE gsd.item_id = new.item_id AND gsd.sede_id = sede AND gsd.quantity_to_use > 0 AND gsd.is_canceled = 0 ORDER BY id ASC LIMIT 1;
-            INSERT INTO pre_stockpile_price_details(pre_stockpile_detail_id, general_stock_detail_id, quantity) VALUES (new.id,id_stock_detalle,stock);
-            SET cantidad = cantidad - stock;
-        END IF;
-    END WHILE;
-END;
     END IF;
 END
 $$
@@ -3393,7 +3109,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('9nXmaj1rWtBsoS1braZMyDX1P7JW9vbj5EvxPCtm', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiQmdwbkI3enpOc002eXBIcG1CUlZSZ1hlWFpTRFh0SGdLN2k0cjJRayI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDA6Imh0dHA6Ly9zaXN0ZW1hLnRlc3Qvb3BlcmF0b3IvUHJlLXJlc2VydmEiO31zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aTo0O30=', 1660332058);
+('SfD0cTPrsp3UAwQAK20pT6lsmN3yAhkxhEzydZDe', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiVjRsZW9mb0p6bkpTU0tuZzNyVEp5WjlnYzRwTWJGN0JEb1JDZzl6RCI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjQwOiJodHRwOi8vc2lzdGVtYS50ZXN0L29wZXJhdG9yL1ByZS1yZXNlcnZhIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDt9', 1660317171);
 
 -- --------------------------------------------------------
 
@@ -3836,14 +3552,14 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `code`, `name`, `lastname`, `location_id`, `email`, `email_verified_at`, `password`, `two_factor_secret`, `two_factor_recovery_codes`, `two_factor_confirmed_at`, `is_admin`, `remember_token`, `current_team_id`, `profile_photo_path`, `created_at`, `updated_at`) VALUES
-(1, '777269', 'Mr. Ford Vandervort', 'Kunze', 1, 'roob.brianne@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'RPE3bWTf65wmfuBhwEPhZCNyOzuWTk95GotzhIczoLi1Vz6PPfHuFWfWmvKw', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
-(2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'dcKNvx1UWtdEPo7cNp2bN5n7fu2EHRTBGA0RaMqjaRHqvwZOsa8CvPT8ULv8', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
-(3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'VM5kk6DtLcDhBMAGbRAr6z1U4z33q35apShmTsqgs19fBQpCxHN6IJ2Cq4U9', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '7rUuohAREtwv5fLjTGrqzH95NcUg8KuJ3ogXewbOhRbuOEdMjibfJT7hU8oE', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '4M6bpSv9jxnN5yJm6bZ5NOTDnhATRpGhWgP6tR5dj0gSfkOrqtPbAoAsGFIa', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(6, '502387', 'Bella Block', 'Bashirian', 3, 'sibyl08@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'ipsRXPIy1MfGkt8F2XfcL8QOCaXloHCVy57i6ukoe8QpzktY0zUPMQV0V0BS', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(7, '981787', 'Jaylon Prosacco', 'Langosh', 4, 'pleuschke@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'MflwirwVe3Uay3rSGdI5ZxwIGbGniND7YK6qwS8PnUD8j7ejzGT222EqEJ7b', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
-(8, '588440', 'Irving Strosin', 'Langosh', 4, 'mercedes57@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'pGsKJLBGlRah9qCYS0IJXh0hC4D4mTp8HYmDF3GucwPjFCRCsytnT5Nshfgw', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
+(1, '777269', 'Mr. Ford Vandervort', 'Kunze', 1, 'roob.brianne@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '2noe1vOCyXt3GuOXrx8K2ucYaplPAnjaQqdNvq5Hl2uOuvGBhxY0NWi1UADO', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
+(2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'CH5a14s3lYlYb4FhejjGVMjThqJqwEipakGBMIwD5doNHUluQ2dgFRakvM7k', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
+(3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'tT4wc3FGZMgNxvTJCyrWeyYHkHPxt9RchcpUiGo6RyoInl1gQLZ96iS18V1R', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'alSU5kxHYDaT98MIF94AkLK3UueerQuNtJTvSx3TOaQ3YKAuaxnUAPr1UbVJ', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '4u8bw36nvC7ffMvuxeftBuP7iCLvrZf9KDBEgDlam2g6H7FkSQjedZ5oFkh3', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(6, '502387', 'Bella Block', 'Bashirian', 3, 'sibyl08@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 't8VQpufqTQEItViWigGiub9AmOKor3cORWTzCXVOiCEQnBRWrdVlwqBfJovy', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(7, '981787', 'Jaylon Prosacco', 'Langosh', 4, 'pleuschke@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'rc7GJRvdk8Hja3W1jLepIOIhBPkUfcaM2TtoYLw1sJTXXmjxVBy2kQtGm8t1', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
+(8, '588440', 'Irving Strosin', 'Langosh', 4, 'mercedes57@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'Xz2S4RCr9v6EVwxQhozRejcp04TFyIs2GCHh2Tfl34GSok2M0yzbvy4gDfuv', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
 (9, '454006', 'Margarett Heller', 'Cruickshank', 5, 'oconner.sydnie@example.org', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'yy14ZVjsNaQLhhKXXAGP6fxeGY28MwPWIQgy3S7RDNGLs8JAxhpa1ugk64fO', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
 (10, '916293', 'Dr. Ryder Gutmann V', 'McLaughlin', 5, 'dprice@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, '6asVBO6pjosFw4Qqz0y2G3EHNAZQ0jmscpsuYiXp9fVcAZzNuufoavxUkN0w', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
 (11, '985395', 'Eldora Considine DVM', 'Bashirian', 6, 'dedric.herman@example.net', '2022-06-20 21:21:40', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'mm9bEziZrO', NULL, NULL, '2022-06-20 21:21:40', '2022-06-20 21:21:40'),
@@ -4026,7 +3742,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `lista_de_materiales_pedidos`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock`, `ord`.`state` AS `state` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) ORDER BY `ord`.`id` AS `DESCdesc` ASC  ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock`, `ord`.`state` AS `state` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) ORDER BY `ord`.`id` DESC;
 
 -- --------------------------------------------------------
 
@@ -4035,7 +3751,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `lista_de_materiales_pedidos_pendientes`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos_pendientes`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) WHERE `ord`.`state` = 'PENDIENTE' ORDER BY `ord`.`id` AS `DESCdesc` ASC  ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos_pendientes`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) WHERE `ord`.`state` = 'PENDIENTE' ORDER BY `ord`.`id` DESC;
 
 -- --------------------------------------------------------
 
@@ -4626,7 +4342,7 @@ ALTER TABLE `components`
 -- AUTO_INCREMENT de la tabla `component_implement`
 --
 ALTER TABLE `component_implement`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=169;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=145;
 
 --
 -- AUTO_INCREMENT de la tabla `component_implement_model`
@@ -4638,7 +4354,7 @@ ALTER TABLE `component_implement_model`
 -- AUTO_INCREMENT de la tabla `component_part`
 --
 ALTER TABLE `component_part`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=361;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=289;
 
 --
 -- AUTO_INCREMENT de la tabla `component_part_model`
@@ -4680,19 +4396,19 @@ ALTER TABLE `failed_jobs`
 -- AUTO_INCREMENT de la tabla `general_order_requests`
 --
 ALTER TABLE `general_order_requests`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
 
 --
 -- AUTO_INCREMENT de la tabla `general_stocks`
 --
 ALTER TABLE `general_stocks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
 
 --
 -- AUTO_INCREMENT de la tabla `general_stock_details`
 --
 ALTER TABLE `general_stock_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=306;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=284;
 
 --
 -- AUTO_INCREMENT de la tabla `implements`
@@ -4710,7 +4426,7 @@ ALTER TABLE `implement_models`
 -- AUTO_INCREMENT de la tabla `items`
 --
 ALTER TABLE `items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=140;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=137;
 
 --
 -- AUTO_INCREMENT de la tabla `labors`
@@ -4764,7 +4480,7 @@ ALTER TABLE `min_stock_details`
 -- AUTO_INCREMENT de la tabla `operator_stocks`
 --
 ALTER TABLE `operator_stocks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=134;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `order_dates`
@@ -4776,19 +4492,19 @@ ALTER TABLE `order_dates`
 -- AUTO_INCREMENT de la tabla `order_requests`
 --
 ALTER TABLE `order_requests`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=158;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=134;
 
 --
 -- AUTO_INCREMENT de la tabla `order_request_details`
 --
 ALTER TABLE `order_request_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=667;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=411;
 
 --
 -- AUTO_INCREMENT de la tabla `order_request_new_items`
 --
 ALTER TABLE `order_request_new_items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `permissions`
@@ -4812,7 +4528,7 @@ ALTER TABLE `preventive_maintenance_frequencies`
 -- AUTO_INCREMENT de la tabla `pre_stockpiles`
 --
 ALTER TABLE `pre_stockpiles`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT de la tabla `pre_stockpile_dates`
@@ -4824,7 +4540,7 @@ ALTER TABLE `pre_stockpile_dates`
 -- AUTO_INCREMENT de la tabla `pre_stockpile_details`
 --
 ALTER TABLE `pre_stockpile_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=186;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
 
 --
 -- AUTO_INCREMENT de la tabla `pre_stockpile_price_details`

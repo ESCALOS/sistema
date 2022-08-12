@@ -7,6 +7,8 @@
                     PEDIDO DEL MES DE {{strtoupper(strftime("%B de %Y", strtotime($fecha_pre_reserva)))}}
                 </h1>
             </div>
+
+            {{$monto_usado}} - {{$monto_asignado}}
             @if ($monto_usado > $monto_asignado)
                 <div class="mt-4 mx-6 px-6 cursor-default" title="Este monto es calculado de todos las solicitudes del ceco" >
                     <div class="w-full p-4 text-white text-center text-2xl font-black bg-red-600 rounded-lg">
@@ -63,13 +65,14 @@
                                 <span>Componentes</span>
                             </th>
                             <th class="py-3 text-center">
-                                <span>Requedio</span>
+                                <span>Requerido</span>
                             </th>
                             <th class="py-3 text-center">
                                 <span>Stock</span>
                             </th>
                         </tr>
                     </thead>
+                    @if ($pre_stockpile_details->count() > 0)
                     <tbody class="text-gray-600 text-sm font-light">
                         @foreach ($pre_stockpile_details as $request)
                             <tr wire:click="editar({{$request->id}})" class="border-b border-gray-200 unselected">
@@ -90,12 +93,13 @@
                                 </td>
                                 <td class="py-3 px-6 text-center">
                                     <div>
-                                        <span class="font-medium">{{$request->ordered_quantity - $request->used_quantity}} {{$request->abbreviation}}</span>
+                                        <span class="font-medium">{{$request->used_quantity}} {{$request->abbreviation}}</span>
                                     </div>
                                 </td>
                             </tr>
                         @endforeach
                     </tbody>
+                    @endif
                 </table>
             </div>
         </div>

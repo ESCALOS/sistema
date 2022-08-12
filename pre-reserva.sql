@@ -83,11 +83,11 @@ BEGIN
                                                         /*---------OBTENER EL ID Y HORAS DEL COMPONENTE DEL IMPLEMENTO ----------------------------------------*/
                                                             SELECT id,hours INTO componente_del_implemento,horas_componente FROM component_implement WHERE component_id = componente AND implement_id = implemento AND state = "PENDIENTE";
                                                         /*---------OBTENER TIEMPO DE VIDA Y EL ID DEL ITEM DEL COMPONENTE -------------------------------------*/
-                                                            SELECT lifespan,item_id INTO tiempo_vida_componente,item_componente FROM components WHERE id = componente;
+                                                            SELECT lifespan, item_id INTO tiempo_vida_componente,item_componente FROM components WHERE id = componente;
                                                         /*---------HACER SI EL TIEMPO DE VIDA SUPERA A LAS HORAS DEL COMPONENTE--------------------------------*/
                                                             IF horas_componente > tiempo_vida_componente THEN
                                                                 /*-----------PONER EL TIEMPO DE VIDA COMO EL TOTAL DE HORAS-----------------------------------*/
-                                                                    SELECT tiempo_vida_componente INTO horas_componente;
+                                                                SELECT tiempo_vida_componente INTO horas_componente;
                                                             END IF;
                                                         /*---------CALCULAR CANTIDAD DE RECAMBIOS DENTRO DE 2 MESES--------------------------------------------*/
                                                             SELECT FLOOR((horas_componente+168)/tiempo_vida_componente) INTO cantidad_componente_recambio;
@@ -145,7 +145,7 @@ BEGIN
                                                                     END;
                                                             END IF;
                                                         /*---------CALCULAR MANTENIMIENTO PREVENTIVOS----------------------------------------------------------*/
-                                                            SELECT (FLOOR((horas_ultimo_mantenimiento_componente+168)/frecuencia_componente) - cantidad_componente_recambio) INTO cantidad_componente_preventivo;
+                                                            SELECT (FLOOR((horas_ultimo_mantenimiento_componente+336)/frecuencia_componente) - cantidad_componente_recambio) INTO cantidad_componente_preventivo;
                                                         /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS---------------------------*/
                                                             IF cantidad_componente_preventivo > 0 THEN
                                                                 /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL MANTENIMIENTO PREVENTIVO DEL COMPONENTE-------------------------*/
@@ -154,10 +154,10 @@ BEGIN
                                                                         DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
                                                                         /*--------ABRIR CURSOR DE LAS TAREAS DE RECAMBIO PARA LOS COMPONENTES------------------------*/
                                                                             OPEN cursor_componente_tareas_preventivo;
-                                                                                bucle_componente_tareas_preventivo:LOOP
+                                                                                bucle_componente_tareas_preventino:LOOP
                                                                                     /*-----DETENER EL CICLO CUANDO NO ENCUENTRE MAS TAREAS----------------*/
                                                                                         IF tarea_final = 1 THEN
-                                                                                            LEAVE bucle_componente_tareas_preventivo;
+                                                                                            LEAVE bucle_componente_tareas_preventino;
                                                                                         END IF;
                                                                                     /*----------OBTENER LA TAREA DEL COMPONENTE-------------------------------*/
                                                                                         FETCH cursor_componente_tareas_preventivo INTO tarea_componente;
@@ -185,7 +185,7 @@ BEGIN
                                                                                             /*------RESERTEAR CONTADOR MATERIALES---------------------------------------*/
                                                                                                 SELECT 0 INTO material_final;
                                                                                         END;
-                                                                                END LOOP bucle_componente_tareas_preventivo;
+                                                                                END LOOP bucle_componente_tareas_preventino;
                                                                             CLOSE cursor_componente_tareas_preventivo;
                                                                         /*--------RESETEAR CONTADOR TAREAS-----------------------------------------------------------*/
                                                                             SELECT 0 INTO tarea_final;
@@ -205,20 +205,20 @@ BEGIN
                                                                             /*---------OBTENER LOS DATOS DE LA PIEZA DEL CICLO------------------------------------------------*/
                                                                                 FETCH cursor_piezas INTO pieza;
                                                                             /*---------HACER EN CASO NO EXISTA REGISTRO DE HORAS DE LA PIEZA DEL COMPONENTE DEL IMPLEMENTO----*/
-                                                                                IF NOT EXISTS(SELECT * FROM component_part WHERE component_implement_id  = componente_del_implemento AND part = pieza AND state = "PENDIENTE") THEN
+                                                                                IF NOT EXISTS(SELECT * FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE") THEN
                                                                                     INSERT INTO component_part (component_implement_id,part) VALUES (componente_del_implemento,pieza);
                                                                                 END IF;
                                                                             /*---------OBTENER ID Y HORAS DE LA PIEZA DEL COMPONENTE------------------------------------------*/
                                                                                 SELECT id,hours INTO pieza_del_componente,horas_pieza FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE";
                                                                             /*---------OBTENER EL TIEMPO DE VIDA Y EL ID DEL ALMACEN DE LA PIEZA------------------------------*/
-                                                                                SELECT lifespan,item_id INTO tiempo_vida_pieza,item_pieza FROM components WHERE id = pieza;
+                                                                                SELECT lifespan, item_id INTO tiempo_vida_pieza,item_pieza FROM components WHERE id = pieza;
                                                                             /*---------HACER SI EL TIEMPO DE VIDA SUPERA A LAS HORAS DE LA PIEZA------------------------------*/
                                                                                 IF horas_pieza >= tiempo_vida_pieza THEN
                                                                                     /*---------PONER EL TIEMPO DE VIDA COMO EL TOTAL DE HORAS----------*/
                                                                                         SELECT tiempo_vida_pieza INTO horas_pieza;
                                                                                 END IF;
                                                                             /*---------CALCULAR SI NECESITA RECAMBIO DENTRO DE 2 MESES----------------------------------------*/
-                                                                                SELECT FLOOR((horas_pieza+168)/tiempo_vida_pieza) INTO cantidad_pieza_recambio;
+                                                                                SELECT FLOOR((horas_pieza+336)/tiempo_vida_pieza) INTO cantidad_pieza_recambio;
                                                                             /*---------OBTENER FRECUENCIA DE MANTENIMIENTO PREVENTIVO DE LA PIEZA-----------------------------*/
                                                                                 SELECT frequency INTO frecuencia_pieza FROM preventive_maintenance_frequencies WHERE component_id = pieza;
                                                                             /*---------OBTENER HORAS DEL ÚLTIMO MATENIMIENTO DE LA PIEZA EN CASO HUBIERA----------------------*/
@@ -255,7 +255,7 @@ BEGIN
                                                                                                                                     END IF;
                                                                                                                                 /*----------OBTENER EL MATERIAL DE LA TAREA-------------------------------------*/
                                                                                                                                     FETCH cursor_materiales_recambio INTO item_pieza,cantidad_pieza_recambio;
-                                                                                                                                /*----------PONER MATERIALES PARA PEDIDO----------------------------------------*/
+                                                                                                                                /*----------PONER MATERIALES PARA PRE-RESERVA----------------------------------------*/
                                                                                                                                     IF NOT EXISTS(SELECT * FROM pre_stockpile_details WHERE item_id = item_pieza AND pre_stockpile_id = pre_reserva) THEN
                                                                                                                                         INSERT INTO pre_stockpile_details(pre_stockpile_id,item_id,quantity,quantity_to_use) VALUES (pre_reserva,item_pieza,cantidad_pieza_recambio,cantidad_pieza_recambio);
                                                                                                                                     ELSE
@@ -271,57 +271,55 @@ BEGIN
                                                                                                 /*----------RESETEAR CONTADOR DE TAREAS----------------------------*/
                                                                                                     SELECT 0 INTO tarea_final;
                                                                                             END;
-                                                                                ELSE
-                                                                                    /*---------CALCULAR MANTENIMIENTO PREVENTIVOS-----------------------------------------------------*/
-                                                                                        SELECT (FLOOR((horas_ultimo_mantenimiento_pieza+168)/frecuencia_pieza) - cantidad_pieza_recambio) INTO cantidad_pieza_preventivo;
-                                                                                    /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS----------------------*/
-                                                                                        IF cantidad_pieza_preventivo > 0 THEN
-                                                                                            /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL MANTENIMIENTO PREVENTIVO DE LA PIEZA-------------------------*/
-                                                                                                BEGIN
-                                                                                                    DECLARE cursor_pieza_tareas_preventivo CURSOR FOR SELECT id FROM tasks WHERE component_id = pieza AND type = "PREVENTIVO";
-                                                                                                    DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
-                                                                                                    /*--------ABRIR CURSOR DE LAS TAREAS DE RECAMBIO PARA LAS PIEZAS------------------------*/
-                                                                                                        OPEN cursor_pieza_tareas_preventivo;
-                                                                                                            bucle_pieza_tareas_preventivo:LOOP
-                                                                                                                /*-----DETENER EL CICLO CUANDO NO ENCUENTRE MAS TAREAS----------------*/
-                                                                                                                    IF tarea_final = 1 THEN
-                                                                                                                        LEAVE bucle_pieza_tareas_preventivo;
-                                                                                                                    END IF;
-                                                                                                                /*----------OBTENER LA TAREA DEL COMPONENTE-------------------------------*/
-                                                                                                                    FETCH cursor_pieza_tareas_preventivo INTO tarea_pieza;
-                                                                                                                /*----------CURSOR PARA ITERAR LOS MATERIALES DE DICHA TAREA--------------*/
-                                                                                                                    BEGIN
-                                                                                                                        DECLARE cursor_materiales_preventivo CURSOR FOR SELECT item_id,quantity FROM task_required_materials WHERE task_id = tarea_pieza;
-                                                                                                                        DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
-                                                                                                                        /*----------ABRIR CURSOR DE MATERIALES-------------------------------*/
-                                                                                                                            OPEN cursor_materiales_preventivo;
-                                                                                                                                bucle_materiales:LOOP
-                                                                                                                                    /*----------DETENER CICLO CUANDO NO SE ENCUENTREN MAS MATERIALES-----------------*/
-                                                                                                                                        IF material_final = 1 THEN
-                                                                                                                                            LEAVE bucle_materiales;
-                                                                                                                                        END IF;
-                                                                                                                                    /*----------OBTENER EL MATERIAL DE LA TAREA---------------------------*/
-                                                                                                                                        FETCH cursor_materiales_preventivo INTO item_pieza,cantidad_pieza_preventivo;
-                                                                                                                                    /*----------PONER MATERIALES PARA PEDIDO------------------------------*/
-                                                                                                                                        IF NOT EXISTS(SELECT * FROM pre_stockpile_details WHERE item_id = item_pieza AND pre_stockpile_id = pre_reserva) THEN
-                                                                                                                                            INSERT INTO pre_stockpile_details(pre_stockpile_id,item_id,quantity,quantity_to_use) VALUES (pre_reserva,item_pieza,cantidad_pieza_preventivo,cantidad_pieza_preventivo);
-                                                                                                                                        ELSE
-                                                                                                                                            UPDATE pre_stockpile_details SET quantity = quantity + cantidad_pieza_preventivo, quantity_to_use = quantity_to_use + cantidad_pieza_preventivo WHERE pre_stockpile_id = pre_reserva AND item_id = item_pieza;
-                                                                                                                                        END IF;
-                                                                                                                                END LOOP bucle_materiales;
-                                                                                                                            CLOSE cursor_materiales_preventivo;
-                                                                                                                        /*------RESERTEAR CONTADOR MATERIALES---------------------------------------*/
-                                                                                                                            SELECT 0 INTO material_final;
-                                                                                                                    END;
-                                                                                                            END LOOP bucle_pieza_tareas_preventivo;
-                                                                                                        CLOSE cursor_pieza_tareas_preventivo;
-                                                                                                    /*----------------RESETEAR CONTADOR TAREAS----------------------------------------------*/
-                                                                                                        SELECT 0 INTO tarea_final;
-                                                                                                END;
-                                                                                        END IF;
-                                                                        
                                                                                 END IF;
-                                                                            END LOOP bucle_piezas;
+                                                                            /*---------CALCULAR MANTENIMIENTO PREVENTIVOS-----------------------------------------------------*/
+                                                                                SELECT (FLOOR((horas_ultimo_mantenimiento_pieza+336)/frecuencia_pieza) - cantidad_pieza_recambio) INTO cantidad_pieza_preventivo;
+                                                                            /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS----------------------*/
+                                                                                IF cantidad_pieza_preventivo > 0 THEN
+                                                                                    /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL MANTENIMIENTO PREVENTIVO DE LA PIEZA-------------------------*/
+                                                                                        BEGIN
+                                                                                            DECLARE cursor_pieza_tareas_preventivo CURSOR FOR SELECT id FROM tasks WHERE component_id = pieza AND type = "PREVENTIVO";
+                                                                                            DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
+                                                                                            /*--------ABRIR CURSOR DE LAS TAREAS DE RECAMBIO PARA LAS PIEZAS------------------------*/
+                                                                                                OPEN cursor_pieza_tareas_preventivo;
+                                                                                                    bucle_pieza_tareas_preventivo:LOOP
+                                                                                                        /*-----DETENER EL CICLO CUANDO NO ENCUENTRE MAS TAREAS----------------*/
+                                                                                                            IF tarea_final = 1 THEN
+                                                                                                                LEAVE bucle_pieza_tareas_preventivo;
+                                                                                                            END IF;
+                                                                                                        /*----------OBTENER LA TAREA DEL COMPONENTE-------------------------------*/
+                                                                                                            FETCH cursor_pieza_tareas_preventivo INTO tarea_pieza;
+                                                                                                        /*----------CURSOR PARA ITERAR LOS MATERIALES DE DICHA TAREA--------------*/
+                                                                                                            BEGIN
+                                                                                                                DECLARE cursor_materiales_preventivo CURSOR FOR SELECT item_id,quantity FROM task_required_materials WHERE task_id = tarea_pieza;
+                                                                                                                DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
+                                                                                                                /*----------ABRIR CURSOR DE MATERIALES-------------------------------*/
+                                                                                                                    OPEN cursor_materiales_preventivo;
+                                                                                                                        bucle_materiales:LOOP
+                                                                                                                            /*----------DETENER CICLO CUANDO NO SE ENCUENTREN MAS MATERIALES-----------------*/
+                                                                                                                                IF material_final = 1 THEN
+                                                                                                                                    LEAVE bucle_materiales;
+                                                                                                                                END IF;
+                                                                                                                            /*----------OBTENER EL MATERIAL DE LA TAREA---------------------------*/
+                                                                                                                                FETCH cursor_materiales_preventivo INTO item_pieza,cantidad_pieza_preventivo;
+                                                                                                                            /*----------PONER MATERIALES PARA PRE-RESERVA------------------------------*/
+                                                                                                                                IF NOT EXISTS(SELECT * FROM pre_stockpile_details WHERE item_id = item_pieza AND pre_stockpile_id = pre_reserva) THEN
+                                                                                                                                    INSERT INTO pre_stockpile_details(pre_stockpile_id,item_id,quantity,quantity_to_use) VALUES (pre_reserva,item_pieza,cantidad_pieza_preventivo,cantidad_pieza_preventivo);
+                                                                                                                                ELSE
+                                                                                                                                    UPDATE pre_stockpile_details SET quantity = quantity + cantidad_pieza_preventivo, quantity_to_use = quantity_to_use + cantidad_pieza_preventivo WHERE pre_stockpile_id = pre_reserva AND item_id = item_pieza;
+                                                                                                                                END IF;
+                                                                                                                        END LOOP bucle_materiales;
+                                                                                                                    CLOSE cursor_materiales_preventivo;
+                                                                                                                /*------RESERTEAR CONTADOR MATERIALES---------------------------------------*/
+                                                                                                                    SELECT 0 INTO material_final;
+                                                                                                            END;
+                                                                                                    END LOOP bucle_pieza_tareas_preventivo;
+                                                                                                CLOSE cursor_pieza_tareas_preventivo;
+                                                                                            /*----------------RESETEAR CONTADOR TAREAS----------------------------------------------*/
+                                                                                                SELECT 0 INTO tarea_final;
+                                                                                        END;
+                                                                                END IF;
+                                                                        END LOOP bucle_piezas;
                                                                     CLOSE cursor_piezas;
                                                                     /*--------RESETEAR CONTADOR DE PIEZAS-------------------------*/
                                                                         SELECT 0 INTO pieza_final;
@@ -334,9 +332,9 @@ BEGIN
                                 END IF;
                         END LOOP bucle_implementos;
                     CLOSE cursor_implementos;
-                /*-----------RESETEAR CONTADOR IMPLEMENTOS----------------------------------*/
+                /*---------RESETEAR CONTADOR IMPLEMENTOS---------------*/
                     SELECT 0 INTO implemento_final;
-                /*-----------ABRIR SOLICITUD DE PEDIDO--------------------------------------*/
+                /*---------ABRIR PRE-RESERVA-------------------*/
                     UPDATE pre_stockpile_dates SET state = "ABIERTO" WHERE id = fecha_pre_reserva;
             END;
         END IF;

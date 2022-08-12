@@ -45,7 +45,7 @@
         </div>
         <div>
             <div>
-                <table class="min-w-max w-full table-fixed overflow-x-scroll">
+                <table class="min-w-max w-full overflow-x-scroll">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                             <th class="py-3 text-center">
