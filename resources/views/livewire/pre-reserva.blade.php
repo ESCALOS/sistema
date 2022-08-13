@@ -68,6 +68,9 @@
                                 <span>Requerido</span>
                             </th>
                             <th class="py-3 text-center">
+                                <span>Pedido</span>
+                            </th>
+                            <th class="py-3 text-center">
                                 <span>Stock</span>
                             </th>
                         </tr>
@@ -75,7 +78,7 @@
                     @if ($pre_stockpile_details->count() > 0)
                     <tbody class="text-gray-600 text-sm font-light">
                         @foreach ($pre_stockpile_details as $request)
-                            <tr wire:click="editar({{$request->id}})" class="border-b border-gray-200 unselected">
+                            <tr wire:click="editar({{$request->id}})" class="border-b border-gray-200 {{$request->state == "RESERVADO" ? 'bg-green-200' : ($request->quantity > $request->used_quantity ? 'bg-red-200' : 'bg-yellow-200')}} unselected">
                                 <td class="py-3 px-6 text-center">
                                     <div>
                                         <span class="font-medium">{{$request->sku}} </span>
@@ -94,6 +97,12 @@
                                 <td class="py-3 px-6 text-center">
                                     <div>
                                         <span class="font-medium">{{$request->used_quantity}} {{$request->abbreviation}}</span>
+                                    </div>
+                                </td>
+
+                                <td class="py-3 px-6 text-center">
+                                    <div>
+                                        <span class="font-medium">{{$request->quantity_to_reserve}} {{$request->abbreviation}}</span>
                                     </div>
                                 </td>
                             </tr>
@@ -127,6 +136,19 @@
                 </div>
 
                 <x-jet-input-error for="material_edit_quantity"/>
+            </div>
+
+            <div class="mb-2">
+                <x-jet-label class="text-md">Pedido:</x-jet-label>
+                <div class="flex" style="padding-left: 1rem; padding-right:1rem;">
+
+                    <input readonly class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" wire:model="material_ordered_edit" />
+
+                    <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
+                        {{$material_measurement_edit}}
+                    </span>
+                </div>
+                <x-jet-input-error for="material_stock_edit"/>
             </div>
 
             <div class="mb-2">

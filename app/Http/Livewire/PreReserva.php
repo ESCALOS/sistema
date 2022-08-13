@@ -3,13 +3,14 @@
 namespace App\Http\Livewire;
 
 use App\Models\CecoAllocationAmount;
+use App\Models\GeneralStock;
 use App\Models\Implement;
 use App\Models\MeasurementUnit;
 use App\Models\OperatorStock;
 use App\Models\PreStockpile;
 use App\Models\PreStockpileDate;
 use App\Models\PreStockpileDetail;
-
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class PreReserva extends Component
@@ -33,18 +34,19 @@ class PreReserva extends Component
     public $material_edit_quantity = 0;
     public $material_measurement_edit = "";
     public $material_stock_edit = 0;
+    public $material_ordered_edit = 0;
 
     public $open_edit = false;
 
     protected $listeners = ['render','cerrarPreReserva'];
 
     protected $rules = [
-        'material_edit_quantity' => 'required|lte:material_stock_edit'
+        'material_edit_quantity' => 'required|lte:material_stock_edit|lte:material_ordered_edit'
     ];
 
     protected $messages = [
         'material_edit_quantity.required' => 'Ingrese una cantidad',
-        'material_edit_quantity.lte' => 'No hay suficiente en el almacen'
+        'material_edit_quantity.lte' => 'No hay suficiente material'
     ];
 
     public function editar($id){
@@ -54,18 +56,24 @@ class PreReserva extends Component
         $this->material_edit_quantity = floatval($material->quantity);
         $this->material_measurement_edit = $material->item->measurementUnit->abbreviation;
         $prereserva = PreStockpile::find($material->pre_stockpile_id);
-        $stock = OperatorStock::where('item_id',$material->item_id)->where('user_id',$prereserva->user_id)->first();
-        $this->material_stock_edit = floatval($stock->used_quantity);
+        $pedido = OperatorStock::where('item_id',$material->item_id)->where('user_id',$prereserva->user_id)->first(); 
+        $this->material_ordered_edit = floatval($pedido->used_quantity);
+        $stock = GeneralStock::where('item_id',$material->item_id)->where('sede_id',$material->preStockpile->implement->location->sede_id)->first();
+        $this->material_stock_edit = floatval($stock->quantity_to_reserve);
         $this->open_edit = true;
     }
 
     public function actualizar(){
         $this->validate();
         $material = PreStockpileDetail::find($this->id_material);
-        $material->quantity = $this->material_edit_quantity;
-        $material->save();
-        $this->open_edit = false;
-        $this->render();
+        if(floatval($this->material_edit_quantity) <= $this->material_ordered_edit && floatval($this->material_edit_quantity) <= floatval($this->material_stock_edit)){
+            //Si hay en stock
+            $material->state = "RESERVADO";
+            $material->quantity = $this->material_edit_quantity;
+            $material->save();
+            $this->open_edit = false;
+            $this->emit('alert');
+        }
     }
 
     public function updatedIdImplemento(){
@@ -74,11 +82,16 @@ class PreReserva extends Component
 
     public function cerrarPreReserva(){
         $prereserva = PreStockpile::find($this->id_pre_reserva);
-        $prereserva->state = 'CERRADO';
-        $prereserva->save();
-        $this->id_pre_reserva = 0;
-        $this->id_implemento = 0;
-        $this->render();
+        if(PreStockpileDetail::where('state','PENDIENTE')->doesntExist()) {
+            $prereserva->state = 'CERRADO';
+            $prereserva->save();
+            $this->id_pre_reserva = 0;
+            $this->id_implemento = 0;
+            $this->emit('alert');
+        }else{
+            $this->emit('alert_error');
+        }
+        
     }
 
     public function render()
@@ -115,13 +128,19 @@ class PreReserva extends Component
     /*---------Obtener el detalle de los materiales pedidos---------------------------------*/
         $pre_stockpile_details = PreStockpileDetail::join('pre_stockpiles',function($join){
             $join->on('pre_stockpile_details.pre_stockpile_id','pre_stockpiles.id');
+        })->join('implements',function($join){
+            $join->on('implements.id','pre_stockpiles.implement_id');
+        })->join('locations',function($join){
+            $join->on('implements.location_id','locations.id');
         })->join('items',function($join){
             $join->on('pre_stockpile_details.item_id','=','items.id');
         })->join('measurement_units',function($join){
             $join->on('items.measurement_unit_id','=','measurement_units.id');
         })->join('operator_stocks',function($join){
             $join->on('pre_stockpiles.user_id','operator_stocks.user_id')->on('pre_stockpile_details.item_id','operator_stocks.item_id');
-        })->select('pre_stockpile_details.id','items.type','pre_stockpile_details.quantity','measurement_units.abbreviation','operator_stocks.ordered_quantity', 'operator_stocks.used_quantity','items.sku','items.item')
+        })->join('general_stocks',function($join){
+            $join->on('pre_stockpile_details.item_id','general_stocks.item_id')->on('locations.sede_id','general_stocks.sede_id');
+        })->select('pre_stockpile_details.id','items.type','pre_stockpile_details.state','general_stocks.quantity_to_reserve','pre_stockpile_details.quantity','measurement_units.abbreviation','operator_stocks.ordered_quantity', 'operator_stocks.used_quantity','items.sku','items.item')
         ->where('pre_stockpile_details.pre_stockpile_id',$this->id_pre_reserva)->get();
 
     /*--------------Obtener los datos del implemento y su ceco respectivo----------------------------*/
