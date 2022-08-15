@@ -32,6 +32,15 @@
 
                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
 
+                    <x-jet-label>Pedido:</x-jet-label>
+                    <x-jet-input type="number" readonly min="0" class="text-center" style="height:30px;width: 100%" wire:model="ordered_material_for_add" />
+
+                    <x-jet-input-error for="ordered_material_for_add"/>
+
+                </div>
+
+                <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
+
                     <x-jet-label>Stock:</x-jet-label>
                     <x-jet-input type="number" readonly min="0" class="text-center" style="height:30px;width: 100%" wire:model="stock_material_for_add" />
 

@@ -59,12 +59,17 @@ class PreReserva extends Component
         $material = PreStockpileDetail::find($id);
         $this->material_edit_name = $material->item->item;
         $this->material_edit_quantity = floatval($material->quantity);
+        if($material->state == 'PENDIENTE') {
+            $reservado = 0;
+        } else{
+            $reservado = floatval($material->quantity);
+        }
         $this->material_measurement_edit = $material->item->measurementUnit->abbreviation;
         $prereserva = PreStockpile::find($material->pre_stockpile_id);
         $pedido = OperatorStock::where('item_id',$material->item_id)->where('user_id',$prereserva->user_id)->first(); 
-        $this->material_ordered_edit = floatval($pedido->ordered_quantity);
-        $stock = GeneralStock::where('item_id',$material->item_id)->where('sede_id',$material->preStockpile->implement->location->sede_id)->first();
-        $this->material_stock_edit = floatval($stock->quantity_to_reserve);
+        $this->material_ordered_edit = floatval($pedido->used_quantity + $reservado);
+        $stock = GeneralStock::where('item_id',$material->item_id)->where('sede_id',Auth::user()->location->sede_id)->first();
+        $this->material_stock_edit = floatval($stock->quantity_to_reserve + $reservado);
         $this->open_edit = true;
     }
 
@@ -78,6 +83,7 @@ class PreReserva extends Component
             //Si hay en stock
             $material->state = "RESERVADO";
             $material->quantity = $this->material_edit_quantity;
+            $material->quantity_to_use = $this->material_edit_quantity;
             $material->save();
             $this->open_edit = false;
             $this->alerta('Se actualizó correctamente','top-end','success');
@@ -86,6 +92,15 @@ class PreReserva extends Component
 
     public function updatedIdImplemento(){
         $this->emit('cambioImplemento', $this->id_implemento);
+        /*--------------Obtener los datos de la cabecera de la solicitud de pedido---------------------*/
+        if ($this->id_implemento > 0) {
+            $pre_stockpile = PreStockpile::where('implement_id', $this->id_implemento)->where('state', 'PENDIENTE')->first();
+            if ($pre_stockpile != null) {
+                $this->id_pre_reserva = $pre_stockpile->id;
+            } else {
+                $this->id_pre_reserva = 0;
+            }
+        }
     }
 
     /**
@@ -93,7 +108,7 @@ class PreReserva extends Component
      */
     public function cerrarPreReserva(){
         $prereserva = PreStockpile::find($this->id_pre_reserva);
-        if(PreStockpileDetail::where('state','PENDIENTE')->doesntExist()) {
+        if(PreStockpileDetail::where('state','PENDIENTE')->where('pre_stockpile_id',$this->id_pre_reserva)->doesntExist()) {
             $prereserva->state = 'CERRADO';
             $prereserva->save();
             $this->id_pre_reserva = 0;
@@ -136,15 +151,7 @@ class PreReserva extends Component
         /*----Obtener las unidades de medida-----------------------------------*/
         $measurement_units = MeasurementUnit::all();
 
-        /*--------------Obtener los datos de la cabecera de la solicitud de pedido---------------------*/
-        if ($this->id_implemento > 0) {
-            $pre_stockpile = PreStockpile::where('implement_id', $this->id_implemento)->where('state', 'PENDIENTE')->first();
-            if ($pre_stockpile != null) {
-                $this->id_pre_reserva = $pre_stockpile->id;
-            } else {
-                $this->id_pre_reserva = 0;
-            }
-        }
+        
     /*---------Obtener el detalle de los materiales pedidos---------------------------------*/
         $pre_stockpile_details = PreStockpileDetail::join('pre_stockpiles',function($join){
             $join->on('pre_stockpile_details.pre_stockpile_id','pre_stockpiles.id');
@@ -172,7 +179,15 @@ class PreReserva extends Component
         $this->monto_asignado = CecoAllocationAmount::where('ceco_id',$implement->ceco_id)->whereDate('date',$this->fecha_pre_reserva)->sum('allocation_amount');
 
         /*-------------------Obtener el monto usado por el ceco en total-------------------------------------------*/
-        $this->monto_usado = PreStockpileDetail::join('pre_stockpiles', function ($join){
+        $this->monto_usado = PreStockpileDetail::join('pre_stockpile_price_details', function ($join){
+            $join->on('pre_stockpile_details.id','=','pre_stockpile_price_details.pre_stockpile_detail_id');
+        })->join('general_stock_details',function($join){
+            $join->on('general_stock_details.id','pre_stockpile_price_details.general_stock_detail_id');
+        })->where('pre_stockpile_details.quantity','>',0)
+          ->where('pre_stockpile_details.pre_stockpile_id',$this->id_pre_reserva)
+          ->selectRaw('SUM(general_stock_details.price*pre_stockpile_price_details.quantity) AS total')
+          ->value('total');
+        /*$this->monto_usado = PreStockpileDetail::join('pre_stockpiles', function ($join){
                                                     $join->on('pre_stockpiles.id','=','pre_stockpile_details.pre_stockpile_id');
                                                 })->join('implements', function ($join){
                                                     $join->on('implements.id','=','pre_stockpiles.implement_id');
@@ -184,7 +199,7 @@ class PreReserva extends Component
                                                   ->where('pre_stockpile_details.state','=','PENDIENTE')
                                                   ->where('pre_stockpile_details.quantity','<>',0)
                                                   ->selectRaw('SUM(general_stock_details.price*pre_stockpile_price_details.quantity) AS total')
-                                                  ->value('total');
+                                                  ->value('total');*/
 
     } else {
         $this->monto_asignado = 0;
