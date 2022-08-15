@@ -41,6 +41,11 @@ class InsertMaterial extends Component
         ];
     }
 
+    /**
+     * Filtra el detalle de ingreso de materiales por sedes(puede ser más de una)
+     * 
+     * @param int $sede_id ID de la sede
+     */
     public function addSedeFilter($sede_id){
         $indice = array_search($sede_id,$this->selectedSedes,true);
         if($indice != "" && $indice >= 0){
@@ -51,6 +56,9 @@ class InsertMaterial extends Component
         $this->resetPage();
     }
 
+    /**
+     * Actualiza los campos al abrir el modal para importar el stock
+     */
     public function updatedOpenImportStock(){
         if(!$this->open_import_stock){
             $this->iteration++;
@@ -58,6 +66,9 @@ class InsertMaterial extends Component
         }
     }
 
+    /**
+     * Actualiza los errores del modal de errores al importar
+     */
     public function updatedOpenErroresImportar(){
         if(!$this->open_errores_importar){
             $this->iteration++;
@@ -65,30 +76,49 @@ class InsertMaterial extends Component
         }
     }
 
+    /**
+     * Descarga la plantilla con los materiales por llegar
+     */
     public function descargarPlantilla(){
         return Excel::download(new GeneralOrderRequestExport($this->fecha_pedido), 'formato-stock.xlsx');
     }
 
+    /**
+     * Anula la inserción del material
+     */
     public function anularInsertarMateriales($id){
         $stock = GeneralStockDetail::find($id);
         $stock->is_canceled = 1;
         $stock->save();
     }
-
+    /**
+     * Importa el stock mediante Excel
+     */
     public function importarStock(){
         $this->validate();
 
         try{
             Excel::import(new GeneralStockImport, $this->stock);
-            $this->emit('alert');
+            $this->alerta();
             $this->reset('fecha_pedido','errores_stock');
             //$this->open_import_stock = false;
         } catch(\Maatwebsite\Excel\Validators\ValidationException $e){
             $this->errores_stock = $e->failures();
-            $this->emit('alert_error');
+            $this->alerta('Corrija los errores y vuelva a descargar la plantilla para importar');
             $this->open_errores_importar = true;
         }
         $this->iteration++;
+    }
+
+    /**
+     * Esta función se usa para mostrar el mensaje de sweetalert
+     * 
+     * @param string $mensaje Mensaje a mostrar
+     * @param string $posicion Posicion de la alerta
+     * @param string $icono Icono de la alerta
+     */
+    public function alerta($mensaje = "Se registró correctamente", $posicion = 'middle', $icono = 'success'){
+        $this->emit('alert',[$posicion,$icono,$mensaje]);
     }
 
     public function render()

@@ -39,6 +39,12 @@ class AddToolPreReserva extends Component
     public function updatedOpenHerramienta(){
         $this->reset(['tool_for_add','quantity_tool_for_add','stock_tool_for_add']);
     }
+    
+    /**
+     * Se usar para obtener el nuevo implemento seleccionado de la pre-reserva
+     * 
+     * @param object $implemento  Instancia del modelo Implement
+     */
 
     public function cambioImplemento(Implement $implemento){
         $this->id_implemento = $implemento->id;
@@ -88,7 +94,18 @@ class AddToolPreReserva extends Component
         $this->reset(['tool_for_add','quantity_tool_for_add','stock_tool_for_add']);
         $this->open_herramienta = false;
         $this->emit('render',$this->id_pre_reserva);
-        $this->emit('alert');
+        $this->alerta();
+    }
+    
+    /**
+     * Esta función se usa para mostrar el mensaje de sweetalert
+     * 
+     * @param string $mensaje Mensaje a mostrar
+     * @param string $posicion Posicion de la alerta
+     * @param string $icono Icono de la alerta
+     */
+    public function alerta($mensaje = "Se registró correctamente", $posicion = 'middle', $icono = 'success'){
+        $this->emit('alert',[$posicion,$icono,$mensaje]);
     }
 
     public function render()

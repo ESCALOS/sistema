@@ -65,10 +65,10 @@
                                 <span>Componentes</span>
                             </th>
                             <th class="py-3 text-center">
-                                <span>Requerido</span>
+                                <span>Reservado</span>
                             </th>
                             <th class="py-3 text-center">
-                                <span>Pedido</span>
+                                <span>Por reservar</span>
                             </th>
                             <th class="py-3 text-center">
                                 <span>Stock</span>

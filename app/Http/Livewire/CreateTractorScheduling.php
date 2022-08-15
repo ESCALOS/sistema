@@ -64,6 +64,9 @@ class CreateTractorScheduling extends Component
         ];
     }
 
+    /**
+     * Registra la programación de tractores
+     */
     public function store()
     {
         $this->validate();
@@ -80,7 +83,7 @@ class CreateTractorScheduling extends Component
         $this->resetExcept(['open','location','lote','date','shift']);
 
         $this->emit('render');
-        $this->emit('alert');
+        $this->alerta();
     }
 
     public function updatedLocation(){
@@ -103,6 +106,17 @@ class CreateTractorScheduling extends Component
 
     public function updatedShift(){
         $this->reset('usuarios_usados','tractores_usados','implementos_usados');
+    }
+    
+    /**
+     * Esta función se usa para mostrar el mensaje de sweetalert
+     * 
+     * @param string $mensaje Mensaje a mostrar
+     * @param string $posicion Posicion de la alerta
+     * @param string $icono Icono de la alerta
+     */
+    public function alerta($mensaje = "Se registró correctamente", $posicion = 'middle', $icono = 'success'){
+        $this->emit('alert',[$posicion,$icono,$mensaje]);
     }
 
     public function render()

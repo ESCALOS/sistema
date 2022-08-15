@@ -40,6 +40,11 @@ class AddMaterial extends Component
 
     protected $listeners = ['cambioImplemento'=>'cambioImplemento'];
 
+    /**
+     * Se usar para obtener el nuevo implemento seleccionado de la solicitud de pedido
+     * 
+     * @param object $id_implemento  Instancia del modelo Implement
+     */
     public function cambioImplemento(Implement $id_implemento)
     {
         $this->id_implemento = $id_implemento->id;
@@ -105,7 +110,18 @@ class AddMaterial extends Component
         $this->reset(['material_for_add','quantity_material_for_add']);
         $this->open_material = false;
         $this->emit('render');
-        $this->emit('alert');
+        $this->alerta();
+    }
+    
+    /**
+     * Esta función se usa para mostrar el mensaje de sweetalert
+     * 
+     * @param string $mensaje Mensaje a mostrar
+     * @param string $posicion Posicion de la alerta
+     * @param string $icono Icono de la alerta
+     */
+    public function alerta($mensaje = "Se registró correctamente", $posicion = 'middle', $icono = 'success'){
+        $this->emit('alert',[$posicion,$icono,$mensaje]);
     }
 
     public function render()

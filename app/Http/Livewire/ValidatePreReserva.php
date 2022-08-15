@@ -121,6 +121,11 @@ class ValidatePreReserva extends Component
                 }
             }
     /*---------MODAL PARA LA VALIDACIÓN O RECHAZO DE MATERIALES--------------------------*/
+        /**
+         * Obtener datos del detalle de la pre-reserva y abrir el modal.
+         * 
+         * @param int $id ID del detalle de la pre-reserva
+         */
         public function mostrarModalValidarMaterial($id){
             /*--------------Almacenar el id del detalle de la pre-reserva-------------*/
                 $this->id_material = $id;

@@ -98,6 +98,9 @@ class RequestMaterial extends Component
         'quantity_edit.gte' => 'Debe ser 0 para rechazar o mayor'
     ];
 
+    /**
+     * Validar formatos de la imagen para pre-visualizar
+     */
     public function updatedMaterialNewEditImage(){
         $nombre_de_imagen = $this->material_new_edit_image->getClientOriginalName();
         if(!preg_match('/.jpg$/i',$nombre_de_imagen)
@@ -116,11 +119,18 @@ class RequestMaterial extends Component
         $this->reset('material_new_edit_name','material_new_edit_quantity','material_new_edit_measurement_unit','material_new_edit_datasheet','material_new_edit_image','material_new_edit_image_old');
         $this->iteration++;
     }
-
+    /**
+     * Obtener el id del item nuevo a solcitado por el operario
+     * 
+     * @param int $id ID del item nuevo
+     */
     public function seleccionar($id){
         $this->material_new_edit = $id;
     }
 
+    /**
+     * Obtener los datos del item nuevo
+     */
     public function editar_nuevo(){
         if($this->material_new_edit != 0){
             $material = OrderRequestNewItem::find($this->material_new_edit);
@@ -134,6 +144,9 @@ class RequestMaterial extends Component
         }
     }
 
+    /**
+     * Actualizar los datos del item nuevo
+     */
     public function actualizar_nuevo(){
         $this->validate();
         if($this->material_new_edit_image != ""){
@@ -154,6 +167,9 @@ class RequestMaterial extends Component
         $this->iteration++;
     }
 
+    /**
+     * Eliminar el item nuevo solicitado
+     */
     public function eliminar_nuevo(){
         $material = OrderRequestNewItem::find($this->material_new_edit);
         Storage::delete($material->image);
@@ -162,6 +178,11 @@ class RequestMaterial extends Component
         $this->material_new_edit = 0;
     }
 
+    /**
+     * Obtener los datos del detalle de la solicitud de pedido
+     * 
+     * @param int $id ID del detalle de la solicitud de pedido
+     */
     public function editar($id){
         $this->material_edit = $id;
         $material = OrderRequestDetail::find($id);
@@ -188,6 +209,9 @@ class RequestMaterial extends Component
         $this->open_edit = true;
     }
 
+    /**
+     * Actualizr los datos de la solicitud de pedido
+     */
     public function actualizar(){
         $this->validate();
         $material = OrderRequestDetail::find($this->material_edit);
@@ -201,6 +225,9 @@ class RequestMaterial extends Component
         $this->emit('cambioImplemento', $this->id_implemento);
     }
 
+    /**
+     * Cerrar la solicitud de pedido
+     */
     public function cerrarPedido(){
         $request = OrderRequest::find($this->id_request);
         $request->state = 'CERRADO';

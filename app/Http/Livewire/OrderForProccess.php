@@ -45,6 +45,11 @@ class OrderForProccess extends Component
         $this->resetPage();
     }
 
+    /**
+     * Obtiene el detalle de las cantidades del item de la solicitud de pedido desglosado por operador y abre el modal para mostrarlo
+     * 
+     * @param int $item ID del item
+     */
     public function detalleOperador($item){
         $this->item_id = $item;
         $material = Item::find($item);
@@ -53,6 +58,11 @@ class OrderForProccess extends Component
         $this->open_en_proceso = true;
     }
 
+    /**
+     * Obtiene el detaille de las cantidades del item de la solicitud de pedido desglosado por implemento según operador
+     * 
+     * @param int $operador_id ID del operador
+     */
     public function detalleImplemento($operador_id){
         $this->operador_id = $operador_id;
         $operador = User::select('name','lastname')->find($operador_id);

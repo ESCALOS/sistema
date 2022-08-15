@@ -76,11 +76,19 @@ class TractorScheduling extends Component
         ];
     }
 
+    /**
+     * Obtener el id de la programación de tractores al clickear
+     * 
+     * @param int $id ID de la programación del tractor
+     */
     public function seleccionar($id){
         $this->idSchedule = $id;
         $this->emit('capturar',$this->idSchedule);
     }
 
+    /**
+     * Anula la programación del tractor
+     */
     public function anular(){
         $scheduling = ModelsTractorScheduling::find($this->idSchedule);
         $scheduling->is_canceled = 1;
@@ -89,6 +97,9 @@ class TractorScheduling extends Component
         $this->render();
     }
 
+    /**
+     * Obtener los datos de la programación del tractor
+     */
     public function editar(){
         $scheduling = ModelsTractorScheduling::find($this->idSchedule);
         $this->location = $scheduling->lote->location->id;
@@ -104,6 +115,9 @@ class TractorScheduling extends Component
         $this->open_edit = true;
     }
 
+    /**
+     * Actualizar la programaciòn del tractor
+     */
     public function actualizar(){
         $this->validate();
         $scheduling = ModelsTractorScheduling::find($this->idSchedule);
@@ -117,7 +131,7 @@ class TractorScheduling extends Component
         $scheduling->save();
         $this->open_edit = false;
         $this->render();
-        $this->emit('alert');
+        $this->alerta();
     }
 
     public function updatedLocation(){
@@ -141,6 +155,17 @@ class TractorScheduling extends Component
 
     public function updatedShift(){
         $this->reset('usuarios_usados','tractores_usados','implementos_usados');
+    }
+    
+    /**
+     * Esta función se usa para mostrar el mensaje de sweetalert
+     * 
+     * @param string $mensaje Mensaje a mostrar
+     * @param string $posicion Posicion de la alerta
+     * @param string $icono Icono de la alerta
+     */
+    public function alerta($mensaje = "Se registró correctamente", $posicion = 'middle', $icono = 'success'){
+        $this->emit('alert',[$posicion,$icono,$mensaje]);
     }
 
     public function render()

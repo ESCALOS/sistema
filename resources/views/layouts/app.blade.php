@@ -46,21 +46,11 @@
                 $('.select2').select2();
             });
 /*------Alerta para registro----------------------------------------------------*/
-            Livewire.on('alert', function(){
+            Livewire.on('alert', data =>{
                 Swal.fire({
-                    position: 'top-end',
-                    icon: 'success',
-                    title: 'Registrado correctamente',
-                    showConfirmButton: false,
-                    timer: 1000
-                })
-            });
-/*------Alerta para registro----------------------------------------------------*/
-            Livewire.on('alert_error', function(){
-                Swal.fire({
-                    position: 'top-end',
-                    icon: 'error',
-                    title: 'Ocurrió un inconveniente',
+                    position: data[0],
+                    icon: data[1],
+                    title: data[2],
                     showConfirmButton: false,
                     timer: 1000
                 })
@@ -84,11 +74,6 @@
 
                         Livewire.emitTo('request-material', 'cerrarPedido');
 
-                        Swal.fire(
-                            'Pedido Cerrado!',
-                            'Se procesó el pedido',
-                            'success'
-                        )
                     }
                 })
             });
@@ -114,11 +99,6 @@
 
                         Livewire.emitTo('pre-reserva', 'cerrarPreReserva');
 
-                        Swal.fire(
-                            'Pre-reserva Cerrado!',
-                            'Se procesó la Pre-reserva',
-                            'success'
-                        )
                     }
                 })
             });

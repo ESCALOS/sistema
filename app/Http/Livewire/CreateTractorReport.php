@@ -67,6 +67,9 @@ class CreateTractorReport extends Component
         'hour_meter_end.gt' => 'El horometro final debe ser mayor que el inicial'
     ];
 
+    /**
+     * Registra el reporte de tractores
+     */
     public function store(){
         $this->validate();
 
@@ -90,7 +93,18 @@ class CreateTractorReport extends Component
         $this->resetExcept(['open','location','lote','date','shift']);
 
         $this->emit('render');
-        $this->emit('alert');
+        $this->alerta();
+    }
+    
+    /**
+     * Esta función se usa para mostrar el mensaje de sweetalert
+     * 
+     * @param string $mensaje Mensaje a mostrar
+     * @param string $posicion Posicion de la alerta
+     * @param string $icono Icono de la alerta
+     */
+    public function alerta($mensaje = "Se registró correctamente", $posicion = 'middle', $icono = 'success'){
+        $this->emit('alert',[$posicion,$icono,$mensaje]);
     }
 
     public function updatedLocation(){

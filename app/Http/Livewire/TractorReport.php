@@ -77,9 +77,18 @@ class TractorReport extends Component
 
     protected $listeners = ['render'];
 
+    /**
+     * Obtener el id del reporte de tractor al clickear
+     * 
+     * @param int $id ID del reporte del tractor
+     */
     public function seleccionar($id){
         $this->idReporte = $id;
     }
+
+    /**
+     * Anular el reporte del tractor
+     */
     public function anular(){
         $reporte = ModelsTractorReport::find($this->idReporte);
         $reporte->is_canceled = 1;
@@ -88,6 +97,9 @@ class TractorReport extends Component
         $this->render();
     }
 
+    /**
+     * Obtener los datos del reporte del tractor
+     */
     public function editar(){
         $reporte = ModelsTractorReport::find($this->idReporte);
         $this->location = $reporte->lote->location->id;
@@ -107,6 +119,9 @@ class TractorReport extends Component
         $this->open_edit = true;
     }
 
+    /**
+     * Actualizar los datos del reporte del tractor
+     */
     public function actualizar(){
         $this->validate();
         $reporte = ModelsTractorReport::find($this->idReporte);

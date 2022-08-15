@@ -105,6 +105,11 @@ class AssignMaterialsOperator extends Component
         $this->open_request_list = true;
     }
 /*--------------MODAL PARA ASIGNAR AL OPERADOR------------------*/
+    /**
+     * Obtiene los datos del item la solicitud de pedido y abre el modal.
+     * 
+     * @param int $id ID de la solicitud de pedido
+     */
     public function modalAsignarOperador($id){
         $this->id_detalle_pedido = $id;
         $detalle_pedido = OrderRequestDetail::find($id);

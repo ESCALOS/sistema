@@ -20,6 +20,11 @@ class PendingMaintenanceList extends Component
 
     public $ubicacion = 0;
 
+    /**
+     * Muestra las tareas por implemento
+     * 
+     * @param int $id ID de la orden de trabajo
+     */
     public function mostrarTareas($id){
         $this->orden_trabajo = $id;
         $work_order = WorkOrder::find($id);

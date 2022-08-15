@@ -64,7 +64,12 @@ class AddPartPreReserva extends Component
             $this->stock_part_for_add = 0;
         }
     }
-
+    
+    /**
+     * Se usar para obtener el nuevo implemento seleccionado de la pre-reserva
+     * 
+     * @param object $implemento  Instancia del modelo Implement
+     */
     public function cambioImplemento(Implement $implemento){
         $this->id_implemento = $implemento->id;
         $this->id_ceco = $implemento->ceco_id;
@@ -100,7 +105,18 @@ class AddPartPreReserva extends Component
         $this->reset(['part_for_add','quantity_part_for_add','stock_part_for_add']);
         $this->open_pieza = false;
         $this->emit('render',$this->id_pre_reserva);
-        $this->emit('alert');
+        $this->alerta();
+    }
+    
+    /**
+     * Esta función se usa para mostrar el mensaje de sweetalert
+     * 
+     * @param string $mensaje Mensaje a mostrar
+     * @param string $posicion Posicion de la alerta
+     * @param string $icono Icono de la alerta
+     */
+    public function alerta($mensaje = "Se registró correctamente", $posicion = 'middle', $icono = 'success'){
+        $this->emit('alert',[$posicion,$icono,$mensaje]);
     }
 
     public function render()

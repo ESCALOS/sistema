@@ -28,6 +28,11 @@ class ValidateWorkOrder extends Component
         }
     }
 
+    /**
+     * Obtener los componentes para recambio y mostrar el modal
+     * 
+     * @param int $id ID de la orden de trabajo
+     */
     public function mostrarComponentesRecambio($id){
         $this->orden_trabajo = $id;
         $work_order = WorkOrder::find($id);
@@ -41,6 +46,9 @@ class ValidateWorkOrder extends Component
         $this->open_validate_work_order = true;
     }
 
+    /**
+     * Validar el recambio
+     */
     public function validarRecambio(){
         WorkOrderDetail::where('work_order_id',$this->orden_trabajo)
                         ->where('state','RECOMENDADO')
@@ -55,6 +63,9 @@ class ValidateWorkOrder extends Component
         $this->open_validate_work_order = false;
     }
 
+    /**
+     * Rechazar el recambio
+     */
     public function rechazarRecambio(){
         WorkOrderDetail::where('work_order_id',$this->orden_trabajo)
                         ->where('state','RECOMENDADO')

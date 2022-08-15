@@ -196,6 +196,11 @@ class ValidateRequestMaterial extends Component
     }
 /*----------------VALIDAR O RECHAZAR MATERIALES---------------------------------------------*/
     /*----------Mostrar modal------------------------------------------*/
+        /**
+         * Obtener los datos del detalle de la solicitud de pedido y abrir su modal.
+         * 
+         * @param int $id ID del detalle de la solicitud de pedido
+         */
         public function mostrarModalValidarMaterial($id){
             $this->id_material = $id;
             $material = OrderRequestDetail::find($id);
@@ -237,6 +242,12 @@ class ValidateRequestMaterial extends Component
                 $this->open_validate_material = true;
         }
     /*-------------------Verificar estado del pedido--------------------------------*/
+        /**
+         * Verificar si el estado del pedido fue aceptado en su totalidad o fue modificado
+         * 
+         * @param float $solicitada Cantidad solicitada por el operador
+         * @param float $validada Cantidad validada por el planner
+         */
         private function estadoPedido($solicitada,$validada){
             if($solicitada == $validada){
                 return "ACEPTADO";
@@ -245,6 +256,9 @@ class ValidateRequestMaterial extends Component
             }
         }
     /*---------------------Validar materiales----------------------------------------------*/
+        /**
+         * Validar el material y la cantidad pedida
+         */
         public function validarMaterial(){
             $this->validacion = "MATERIAL";
             $this->validate();
@@ -301,6 +315,9 @@ class ValidateRequestMaterial extends Component
             $this->validacion = "";
         }
     /*-----------------Reinsertar Rechazados --------------------------------------------------------*/
+        /**
+         * Reinsertar el material rechazado
+         */
         public function reinsertarRechazado($id){
             $material = OrderRequestDetail::find($id);
             $material->state = "PENDIENTE";
@@ -308,11 +325,22 @@ class ValidateRequestMaterial extends Component
         }
 /*-------------------------VALIDAR SOLICITUD DEL OPERADOR--------------------------------------------------*/
     /*-----------Mostrar modal de solicitudes-----------------------------*/
+    /**
+     * Obtener los datos del operador y abrir el modal para validar la solicitud de pedido
+     * 
+     * @param int $id ID del operador
+     * @param string $name Nombre del operador
+     * @param string $lastname Apellido del operador
+     */
     public function mostrarPedidos($id,$name,$lastname){
         $this->id_operador = $id;
         $this->operador = $name.' '.$lastname;
         $this->open_validate_resquest = true;
     }
+
+    /**
+     * Validar la solicitud de pedido
+     */
     public function validarSolicitudPedido(){
         /*---------------------Verificar si no existe ningún material existente y nuevo pendiente en validar-----*/
         if(OrderRequestDetail::where('order_request_id',$this->id_solicitud_pedido)->where('quantity','>',0)->where('state','PENDIENTE')->doesntExist() &&
@@ -325,6 +353,9 @@ class ValidateRequestMaterial extends Component
             $this->render();
         }
     }
+    /**
+     * Rechazar la solicitud de pedido
+     */
     public function rechazarSolicitudPedido(){
         $order_request = OrderRequest::find($this->id_solicitud_pedido);
         $order_request->state = "RECHAZADO";
@@ -333,6 +364,11 @@ class ValidateRequestMaterial extends Component
         $this->render();
     }
 /*---------------------------MATERIALES NUEVOS--------------------------------------------------------------*/
+    /**
+     * Obtener los datos del material nuevo solicitado y abrir el modal
+     * 
+     * @param int $id ID del material nuevo solicitado
+     */
     public function detalleMaterialNuevo($id){
         $material_nuevo = OrderRequestNewItem::find($id);
         $this->id_material_nuevo = $id;
@@ -351,6 +387,9 @@ class ValidateRequestMaterial extends Component
             $this->validacion = "";
     }
     /*---------------------Agregar Material nuevo-------------------------------------*/
+        /**
+         * Agregar el material nuevo a la solicitud de pedido
+         */
         public function agregarMaterialNuevo(){
             $this->validacion = 'NUEVO';
             $this->validate();
@@ -392,19 +431,15 @@ class ValidateRequestMaterial extends Component
             $this->open_detail_new_material = false;
         }
     /*--------RECHAZAR MATERIAL NUEVO-----------------------*/
+        /**
+         * Rechazar el material nuevo solicitado
+         */
         public function rechazarMaterialNuevo(){
             $item_no_creado = OrderRequestNewItem::find($this->id_material_nuevo);
             $item_no_creado->state = 'RECHAZADO';
             $item_no_creado->save();
             /*--------Cerrar Modal---------------*/
             $this->open_detail_new_material = false;
-        }
-/*---------------------FUNCIONES PARA PROCESO-----------------------------*/
-    /*--------------DETALLE DE MATERIALES POR OPERADOR--------------------*/
-        public function operatorProcess($item_id){
-            //$item = Item::find($item_id);
-            $this->tsede = 2;
-            $this->open_en_proceso = true;
         }
 /*----------------------RENDER--------------------------------------------*/
     public function render()

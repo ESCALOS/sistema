@@ -49,6 +49,11 @@ class PreReserva extends Component
         'material_edit_quantity.lte' => 'No hay suficiente material'
     ];
 
+    /**
+     * Edita la cantidad para reservada por el operador
+     * 
+     * @param int $id ID del detalle de pre-reserva
+     */
     public function editar($id){
         $this->id_material = $id;
         $material = PreStockpileDetail::find($id);
@@ -57,12 +62,15 @@ class PreReserva extends Component
         $this->material_measurement_edit = $material->item->measurementUnit->abbreviation;
         $prereserva = PreStockpile::find($material->pre_stockpile_id);
         $pedido = OperatorStock::where('item_id',$material->item_id)->where('user_id',$prereserva->user_id)->first(); 
-        $this->material_ordered_edit = floatval($pedido->used_quantity);
+        $this->material_ordered_edit = floatval($pedido->ordered_quantity);
         $stock = GeneralStock::where('item_id',$material->item_id)->where('sede_id',$material->preStockpile->implement->location->sede_id)->first();
         $this->material_stock_edit = floatval($stock->quantity_to_reserve);
         $this->open_edit = true;
     }
 
+    /**
+     * Actualiza la cantidad reservada
+     */
     public function actualizar(){
         $this->validate();
         $material = PreStockpileDetail::find($this->id_material);
@@ -72,7 +80,7 @@ class PreReserva extends Component
             $material->quantity = $this->material_edit_quantity;
             $material->save();
             $this->open_edit = false;
-            $this->emit('alert');
+            $this->alerta('Se actualizó correctamente','top-end','success');
         }
     }
 
@@ -80,6 +88,9 @@ class PreReserva extends Component
         $this->emit('cambioImplemento', $this->id_implemento);
     }
 
+    /**
+     * Cierra la reserva siempre y cuando se hayan reservado todos los items
+     */
     public function cerrarPreReserva(){
         $prereserva = PreStockpile::find($this->id_pre_reserva);
         if(PreStockpileDetail::where('state','PENDIENTE')->doesntExist()) {
@@ -87,11 +98,20 @@ class PreReserva extends Component
             $prereserva->save();
             $this->id_pre_reserva = 0;
             $this->id_implemento = 0;
-            $this->emit('alert');
+            $this->alerta('Se cerró correctamente','top-end','success',);
         }else{
-            $this->emit('alert_error');
+            $this->alerta('Aún quedan materiales no reservados','middle','error');
         }
-        
+    }
+    /**
+     * Esta función se usa para mostrar el mensaje de sweetalert
+     * 
+     * @param string $mensaje Mensaje a mostrar
+     * @param string $posicion Posicion de la alerta
+     * @param string $icono Icono de la alerta
+     */
+    public function alerta($mensaje = "Se registró correctamente", $posicion = 'middle', $icono = 'success'){
+        $this->emit('alert',[$posicion,$icono,$mensaje]);
     }
 
     public function render()

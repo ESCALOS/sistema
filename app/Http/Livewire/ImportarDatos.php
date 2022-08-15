@@ -19,21 +19,30 @@ class ImportarDatos extends Component
     public $errores_user;
     public $errores_item;
 
+    /**
+     * Importa usuarios por Excel
+     */
     public function importarUsuarios(){
         try{
             Excel::import(new UsersImport, $this->user);
-            $this->emit('alert');
+            $this->alerta();
         } catch(\Maatwebsite\Excel\Validators\ValidationException $e){
             $this->errores_user = $e->failures();
-            $this->emit('alert_error');
+            $this->alerta('Corrija los errroes y descague el formato nuevamente','middle','error');
         }
     }
 
+    /**
+     * Exporta un excel con los datos de los usuarios
+     */
     public function exportarUsuarios()
     {
         return Excel::download(new UsersExport, 'users.xlsx');
     }
 
+    /**
+     * Importa los items por excel
+     */
     public function importarItems(){
 
         try{
@@ -45,10 +54,23 @@ class ImportarDatos extends Component
         }
 
     }
-
+    /**
+     * Exporta el formato para registrar el stock
+     */
     public function exportarFormatoStock()
     {
         return Excel::download(new GeneralOrderRequestExport(1), 'formato-stock.xlsx');
+    }
+    
+    /**
+     * Esta función se usa para mostrar el mensaje de sweetalert
+     * 
+     * @param string $mensaje Mensaje a mostrar
+     * @param string $posicion Posicion de la alerta
+     * @param string $icono Icono de la alerta
+     */
+    public function alerta($mensaje = "Se registró correctamente", $posicion = 'middle', $icono = 'success'){
+        $this->emit('alert',[$posicion,$icono,$mensaje]);
     }
 
     public function render()
