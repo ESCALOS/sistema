@@ -5,19 +5,7 @@
         <h1 class="font-bold text-2xl">{{"PRE-RESERVA PARA EL MES DE ". strtoupper(strftime("%B de %Y", strtotime($fecha_pre_reserva)))}} </h1>
     </div>
 <!-- Filtrar operarios que tienen pedidos por zona, sede y ubicación  -->
-    <div class="grid grid-cols-1 sm:grid-cols-{{$tsede > 0 ? '3' : ($tzone > 0 ? '2' : '1')}} gap-4">
-        <div>
-            <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
-                <x-jet-label>Zona:</x-jet-label>
-                <select class="form-select" style="width: 100%" wire:model='tzone'>
-                    <option value="0">Seleccione una zona</option>
-                @foreach ($zones as $zone)
-                    <option value="{{ $zone->id }}">{{ $zone->zone }}</option>
-                @endforeach
-                </select>
-            </div>
-        </div>
-        @if ($tzone != 0)
+    <div class="grid grid-cols-1 sm:grid-cols-{{$tsede > 0 ? '2' : '1'}} gap-4">
         <div>
             <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                 <x-jet-label>Sede:</x-jet-label>
@@ -42,7 +30,6 @@
                 </div>
             </div>
             @endif
-        @endif
     </div>
 <!-- Listar usuarios que tienen pedidos por validar  -->
     @if ($tlocation != 0 && $users->count())
@@ -84,22 +71,23 @@
                 </div>
 
                 <div class="p-6">
-                    <h1 class="text-lg font-bold text-blue-500">Monto Asignado: S/.{{$monto_asignado}}</h1>
+                    <h1 class="text-lg font-bold text-blue-500">Monto Disponible: S/.{{$monto_asignado}} - {{$monto_usado}}</h1>
                 </div>
             </div>
         <!-------------------------------------------TABLA DE LOS MATERIALES ------------------------------------------------- -->
                 <div class="grid grid-cols-1 sm:grid-cols-1 gap-4 mt-4">
         <!------------------------ INICIO DE TABLAS --------------------------------------->
             <!------------------------ TABLA DE MATERIALES POR VALIDAR --------------------------------------->
+                    @if(count($pre_stockpile_detail_operator))
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4  rounded-md bg-yellow-200 shadow-md py-4">
                             <div>
                                 <h1 class="text-lg font-bold">Materiales No Validados</h1>
                             </div>
                             <div>
-                                <h1 class="text-lg font-bold {{$monto_usado > $monto_asignado ? 'text-red-500' : 'text-green-500'}}">Precio Estimado: S/.{{number_format($monto_usado,2)}}</h1>
+                                <h1 class="text-lg font-bold {{$monto_pre_reservado > $monto_asignado ? 'text-red-500' : 'text-green-500'}}">Precio Estimado: S/.{{number_format($monto_pre_reservado,2)}}</h1>
                             </div>
                         </div>
-                        <div style="height:180px;overflow:auto">
+                        <div style="max-height:180px;overflow:auto">
                             <table class="min-w-max w-full">
                                 <thead>
                                     <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -139,7 +127,9 @@
                                 </tbody>
                             </table>
                         </div>
+                    @endif
             <!----------------------- TABLA DE MATERIALES VALIDADOS -------------------------------------------->
+                    @if(count($pre_stockpile_detail_planner))
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-md bg-yellow-200 shadow-md py-4">
                             <div>
                                 <h1 class="text-lg font-bold">Materiales Validados</h1>
@@ -148,7 +138,7 @@
                                 <h1 class="text-lg font-bold {{$monto_real > $monto_asignado ? 'text-red-500' : 'text-green-500'}} ">Precio Real: S/.{{number_format($monto_real,2)}}</h1>
                             </div>
                         </div>
-                        <div style="height:180px;overflow:auto">
+                        <div style="max-height:180px;overflow:auto">
                             <table class="min-w-max w-full">
                                 <thead>
                                     <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -186,46 +176,51 @@
                                 </tbody>
                             </table>
                         </div>
+                    @endif
             <!-- ------------------------ TABLA DE MATERIALES RECHAZADOS ---------------------------------------  -->
-                    <h1 class="text-lg font-bold">Materiales Rechazados</h1>
-                    <div style="height:180px;overflow:auto">
-                        <table class="min-w-max w-full">
-                            <thead>
-                                <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                                    <th class="py-3 text-center">
-                                        <span>Código</span>
-                                    </th>
-                                    <th class="py-3 text-center">
-                                        <span>Componentes</span>
-                                    </th>
-                                    <th class="py-3 text-center">
-                                        <span>Cantidad</span>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-gray-600 text-sm font-light">
-                                @foreach ($pre_stockpile_detail_rechazado as $request)
-                                    <tr wire:click="$emit('confirmarReinsertarRechazado',[{{$request->id}},'{{$request->item->item}}'])" class="border-b border-gray-200 unselected">
-                                        <td class="py-3 px-6 text-center">
-                                            <div>
-                                                <span class="font-medium">{{$request->item->sku}} </span>
-                                            </div>
-                                        </td>
-                                        <td class="py-3 px-6 text-center">
-                                            <div>
-                                                <span class="font-bold {{$request->item->type == "PIEZA" ? 'text-red-500' : ( $request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "FUNGIBLE" ? 'text-amber-500' : 'text-blue-500')))}} ">{{ strtoupper($request->item->item) }}</span>
-                                            </div>
-                                        </td>
-                                        <td class="py-3 px-6 text-center">
-                                            <div>
-                                                <span class="font-medium">{{$request->quantity}} {{$request->item->measurementUnit->abbreviation}}</span>
-                                            </div>
-                                        </td>
+                    @if(count($pre_stockpile_detail_rechazado))
+                        <div class="rounded-md bg-yellow-200 shadow-md py-4">
+                            <h1 class="text-lg font-bold">Materiales Rechazados</h1>
+                        </div>
+                        <div style="max-height:180px;overflow:auto">
+                            <table class="min-w-max w-full">
+                                <thead>
+                                    <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                        <th class="py-3 text-center">
+                                            <span>Código</span>
+                                        </th>
+                                        <th class="py-3 text-center">
+                                            <span>Componentes</span>
+                                        </th>
+                                        <th class="py-3 text-center">
+                                            <span>Cantidad</span>
+                                        </th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody class="text-gray-600 text-sm font-light">
+                                    @foreach ($pre_stockpile_detail_rechazado as $request)
+                                        <tr wire:click="$emit('confirmarReinsertarRechazado',[{{$request->id}},'{{$request->item->item}}'])" class="border-b border-gray-200 unselected">
+                                            <td class="py-3 px-6 text-center">
+                                                <div>
+                                                    <span class="font-medium">{{$request->item->sku}} </span>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 px-6 text-center">
+                                                <div>
+                                                    <span class="font-bold {{$request->item->type == "PIEZA" ? 'text-red-500' : ( $request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "COMPONENTE" ? 'text-green-500' : ($request->item->type == "FUNGIBLE" ? 'text-amber-500' : 'text-blue-500')))}} ">{{ strtoupper($request->item->item) }}</span>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 px-6 text-center">
+                                                <div>
+                                                    <span class="font-medium">{{$request->quantity}} {{$request->item->measurementUnit->abbreviation}}</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
         <!------------------------ FIN DE TABLAS --------------------------------------->
                 </div>
         </x-slot>
@@ -260,15 +255,31 @@
                     </div>
                 <x-jet-input-error for="cantidad"/>
             </div>
-            <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
-                <x-jet-label>Precio Unitario</span></x-jet-label>
-                <x-jet-input type="number" min="0" style="height:30px;width: 100%" class="text-center" wire:model="precio"/>
-                <x-jet-input-error for="precio"/>
-            </div>
-            <div class="py-2" style="padding-left: 1rem; padding-right:1rem;">
-                <x-jet-label>Precio Total</span></x-jet-label>
-                <x-jet-input type="number" min="0" disabled style="height:30px;width: 100%" class="text-center" value="{{$precioTotal}}"/>
 
+            <div class="mb-2">
+                <x-jet-label class="text-md">Cantidad Pedida:</x-jet-label>
+                <div class="flex" style="padding-left: 1rem; padding-right:1rem;">
+
+                    <input readonly class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" wire:model="cantidad_pedida" />
+
+                    <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
+                        {{$measurement_unit}}
+                    </span>
+                </div>
+                <x-jet-input-error for="cantidad_pedida"/>
+            </div>
+
+            <div class="mb-2">
+                <x-jet-label class="text-md">Stock:</x-jet-label>
+                <div class="flex" style="padding-left: 1rem; padding-right:1rem;">
+
+                    <input readonly class="text-center border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-l-md shadow-sm" type="number" min="0" style="height:30px;width: 100%" wire:model="cantidad_stock" />
+
+                    <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-r-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
+                        {{$measurement_unit}}
+                    </span>
+                </div>
+                <x-jet-input-error for="cantidad_stock"/>
             </div>
         </x-slot>
         <x-slot name="footer">

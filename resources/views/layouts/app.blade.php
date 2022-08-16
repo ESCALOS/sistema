@@ -332,7 +332,7 @@
                 })
             });
     /*----------Confirmación para cerrar solicitud de pedido-----------------*/
-        /*-------[0] => id   --  [1] => Nombre Implemento -- [2] => Monto Usado--  [3] => Cantidad de materiales nuevos pendientes -----------*/
+        /*-------[0] => id   --  [1] => Nombre Implemento -- [2] => Monto Usado -----------*/
             Livewire.on('confirmarValidarPreReserva', solicitud =>{
                 if(solicitud[0] <= 0){
                     Swal.fire(
@@ -343,12 +343,6 @@
                 }else if(solicitud[2] > 0){
                     Swal.fire(
                                 'Hay pedidos pendientes a validar',
-                                'Valide o rechace los pedidos',
-                                'info'
-                            )
-                }else if(solicitud[3] > 0){
-                    Swal.fire(
-                                'Hay ' + solicitud[3] + ' materiales nuevos por validar',
                                 'Valide o rechace los pedidos',
                                 'info'
                             )

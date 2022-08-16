@@ -8,7 +8,6 @@
                 </h1>
             </div>
 
-            {{$monto_usado}} - {{$monto_asignado}}
             @if ($monto_usado > $monto_asignado)
                 <div class="mt-4 mx-6 px-6 cursor-default" title="Este monto es calculado de todos las solicitudes del ceco" >
                     <div class="w-full p-4 text-white text-center text-2xl font-black bg-red-600 rounded-lg">
@@ -54,7 +53,7 @@
                 </div>
             </div>
             <!-------TABLA DE MATERIALES PEDIDOS YA EXISTENTES -->
-            <div style="height:240px;overflow:auto">
+            <div style="max-height:240px;overflow:auto">
                 <table class="min-w-max w-full">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
