@@ -1,0 +1,2 @@
+VISTA ADICIONAL PARA SUPERVISOR - RUTINARIO
+Crear evento para generar rutinarios según programación
