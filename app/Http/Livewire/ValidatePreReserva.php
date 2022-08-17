@@ -107,36 +107,26 @@ class ValidatePreReserva extends Component
             /*--------------Obtener el nombre del material----------------------------*/
                 $this->material = strtoupper($material->item->item);
             /*--------------Obtener la cantidad pedida del usuario en caso ya esté validado con otra cantidad---------------------------*/
-                if($material->state == 'VALIDADO'){
-                    $pre_stockpile_validate = PreStockpileDetail::where('pre_stockpile_id',$this->id_pre_reserva)
-                                                                ->where('item_id',$material->item_id)
-                                                                ->orderBy('id','ASC')->first();
-                    $this->cantidad_pedida = floatval($pre_stockpile_validate->quantity);
-                }else{
-                    $this->cantidad_pedida = floatval($material->quantity);
-                }
+                $this->cantidad_pedida = floatval($material->quantity);
 
                 $stock = GeneralStock::where('item_id',$material->item_id)
-                                        ->where('sede_id',Auth::user()->location->sede_id)
+                                        ->where('sede_id',$material->preStockpile->user->location->sede_id)
                                         ->first();
 
                 $this->cantidad_stock = floatval($stock->quantity_to_reserve + $this->cantidad_pedida);
 
             /*-------------Obtener cantidad del planner---------------------------------*/
+            if($material->state == 'VALIDADO'){
+                $this->cantidad = floatval($material->validated_quantity);
+            }else{
                 $this->cantidad = floatval($material->quantity);
+            }
+                
 
             /*-----------Obtener demás datos del detalle de la pre-reserva--------------------------*/
                 $this->estado_pre_reserva = $material->state;
                 $this->measurement_unit = $material->item->measurementUnit->abbreviation;
                 $this->open_validate_material = true;
-        }
-    /*---------CALCULAR ESTADO DE LA PRE-RESERVA ENTRE LA CANTIDAD SOLICITADA Y VALIDADA--------------------------------------------------------------------*/
-        public function estadoPreReserva($solicitada,$validada){
-            if($solicitada == $validada){
-                return "ACEPTADO";
-            }else{
-                return "MODIFICADO";
-            }
         }
     /*-------------------VALIDAR MATERIAL ------------------------------------*/
         public function validarMaterial(){
@@ -147,49 +137,35 @@ class ValidatePreReserva extends Component
                 if($this->estado_pre_reserva == "RESERVADO"){
                     /*-----------Verificar si se validó la pre-reserva-------*/
                         if($this->cantidad > 0){
-                            /*------Crear el detalle de la pre-reserva validado por el planner---------------*/
-                                PreStockpileDetail::create([
-                                    'pre_stockpile_id' => $this->id_pre_reserva,
-                                    'item_id' => $material->item_id,
-                                    'quantity' => $this->cantidad,
-                                    'state' => 'VALIDADO',
-                                    'quantity_to_use' => $this->cantidad,
-                                ]);
+                            /*------Actualizar la cantidad definida por el planner---------------*/
+                                $material->state = "VALIDADO";
+                                $material->validated_quantity  = $this->cantidad;
+                                $material->quantity_to_use = $this->cantidad;
                             /*------Poner estado en Aceptado o Modificado según la cantidad-------------------*/
-                                $material->state = $this->estadoPreReserva($this->cantidad_pedida,$this->cantidad);
                         }else{
                             /*------Rechazar la pre-reserva----------------------------------------------------*/
                                 $material->state = 'RECHAZADO';
                         }
             /*---------------------Pedidos Validados-------------------------------------------------------------*/
                 }elseif($this->estado_pre_reserva == "VALIDADO"){
-                    /*-----------Obtener pre-reserva del operador--------------*/
-                        $pre_stockpile_validate = PreStockpileDetail::where('pre_stockpile_id',$this->id_pre_reserva)->where('item_id',$material->item_id)->orderBy('id','ASC')->first();
                     /*-----------Editar cantidad-------------------------------------------------------------------------------*/
                     if($this->cantidad > 0){
-                        $material->quantity = $this->cantidad;
+                        $material->validated_quantity = $this->cantidad;
                         $material->quantity_to_use = $this->cantidad;
-                        $pre_stockpile_validate->state = $this->estadoPreReserva($this->cantidad_pedida,$this->cantidad);
                     }else{
-                        /*---------------------Poner pre-reserva ya validada como pendiente en validar----------------------*/
-                            $pre_stockpile_validate->state = "RESERVADO";
+                        /*---------------------Poner pre-reserva en reservado----------------------*/
+                        $material->validated_quantity = NULL;
+                        $material->quantity_to_use = $material->quantity;
+                        $material->state = "RESERVADO";
                     }
-                    $pre_stockpile_validate->save();
                 }
-            /*------Hacer en caso la pre-reserva este pendiente o validada----------*/
-                if($this->estado_pre_reserva == "RESERVADO" || $this->estado_pre_reserva == "VALIDADO"){
-                    /*------Eliminar validación en caso sea 0---------------------*/
-                        if($this->estado_pre_reserva == "VALIDADO" && $this->cantidad <= 0){
-                            $material->delete();
-                    /*------Guardar cambios en caso no rechace el pedido-----------*/
-                        }else{
-                            $material->save();
-                        }
-                    /*-------Cerrar el modal de materiales--------------------*/
-                        $this->open_validate_material = false;
-                    /*-------Resetear campos----------------------------------*/
-                    $this->reset('id_material','material','cantidad','cantidad_pedida');
-                }
+            /*------Guardar el registro----------*/
+                $material->save();
+            /*--------Cerrar modal---------------*/
+                $this->open_validate_material = false;
+            /*-------Resetear campos----------------------------------*/
+                $this->reset('id_material','material','cantidad','cantidad_pedida');
+            /*------Mostrar alerta---------------------------*/
                 $this->alerta();
         }
     /*--------------REINSERTAR RECHAZADOS------------------------*/
@@ -233,7 +209,7 @@ class ValidatePreReserva extends Component
          * @param string $posicion Posicion de la alerta
          * @param string $icono Icono de la alerta
          */        
-        public function alerta($mensaje = "Se registró correctamente", $posicion = 'middle', $icono = 'success'){
+        public function alerta($mensaje = "Se registró correctamente", $posicion = 'center', $icono = 'success'){
                 $this->emit('alert',[$posicion,$icono,$mensaje]);
             }
     /*------------RENDERIZAR VISTA------------------------------------------------------------------------*/
@@ -260,39 +236,34 @@ class ValidatePreReserva extends Component
                     /*---------------------Obtener el monto Asignado para los meses de llegada del pedido-------------*/
                         $this->monto_asignado = CecoAllocationAmount::where('ceco_id',$implement->ceco_id)->whereDate('date',$this->fecha_pre_reserva)->sum('allocation_amount');
                     /*-------------------Obtener el monto usado por el ceco en total-------------------------------------------*/
-                        $this->monto_usado = PreStockpileDetail::join('pre_stockpile_details as psd',function($join){
-                                                                    $join->on('psd.pre_stockpile_id','pre_stockpile_details.pre_stockpile_id')->on('psd.item_id','pre_stockpile_details.item_id');                                        
-                                                                })->join('pre_stockpiles',function($join){
+                        $this->monto_usado = PreStockpileDetail::join('pre_stockpiles',function($join){
                                                                     $join->on('pre_stockpiles.id','pre_stockpile_details.pre_stockpile_id');
                                                                 })->join('pre_stockpile_price_details',function($join){
-                                                                    $join->on('pre_stockpile_price_details.pre_stockpile_detail_id','psd.id');
+                                                                    $join->on('pre_stockpile_price_details.pre_stockpile_detail_id','pre_stockpile_details.id');
                                                                 })->join('general_stock_details',function($join){
                                                                     $join->on('general_stock_details.id','pre_stockpile_price_details.general_stock_detail_id');
                                                                 })->join('implements',function($join){
                                                                     $join->on('implements.id','pre_stockpiles.implement_id');
                                                                 })->where('pre_stockpile_details.state','VALIDADO')
-                                                                ->where('psd.state','ACEPTADO')
-                                                                ->orWhere('psd.state','MODIFICADO')
-                                                                ->where('implements.ceco_id',$implement->ceco_id)
-                                                                ->selectRaw('SUM(general_stock_details.price*pre_stockpile_price_details.quantity) AS total')
-                                                                ->value('total');
+                                                                  ->where('implements.ceco_id',$implement->ceco_id)
+                                                                  ->selectRaw('SUM(general_stock_details.price*pre_stockpile_price_details.quantity) AS total')
+                                                                  ->value('total');
                     /*-------------------Obtener el monto pre_reservado en total-------------------------------------------*/
                         $this->monto_pre_reservado = PreStockpileDetail::join('pre_stockpile_price_details',function($join){
-                                                $join->on('pre_stockpile_price_details.pre_stockpile_detail_id','pre_stockpile_details.id');
-                                            })->join('general_stock_details',function($join){
-                                                $join->on('general_stock_details.id','pre_stockpile_price_details.general_stock_detail_id');
-                                            })->where('pre_stockpile_details.state','RESERVADO')
-                                              ->where('pre_stockpile_details.pre_stockpile_id',$this->id_pre_reserva)
-                                              ->selectRaw('SUM(general_stock_details.price*pre_stockpile_price_details.quantity) AS total')
-                                              ->value('total');
+                                                                            $join->on('pre_stockpile_price_details.pre_stockpile_detail_id','pre_stockpile_details.id');
+                                                                        })->join('general_stock_details',function($join){
+                                                                            $join->on('general_stock_details.id','pre_stockpile_price_details.general_stock_detail_id');
+                                                                        })->where('pre_stockpile_details.state','RESERVADO')
+                                                                          ->where('pre_stockpile_details.pre_stockpile_id',$this->id_pre_reserva)
+                                                                          ->selectRaw('SUM(general_stock_details.price*pre_stockpile_price_details.quantity) AS total')
+                                                                          ->value('total');
 
                     /*-------------------Obtener el monto real por de la pre_reserva en total-------------------------------------------*/
                         $this->monto_real = PreStockpileDetail::join('pre_stockpile_price_details',function($join){
                                                 $join->on('pre_stockpile_price_details.pre_stockpile_detail_id','pre_stockpile_details.id');
                                             })->join('general_stock_details',function($join){
                                                 $join->on('general_stock_details.id','pre_stockpile_price_details.general_stock_detail_id');
-                                            })->where('pre_stockpile_details.state','ACEPTADO')
-                                              ->orWhere('pre_stockpile_details.state','MODIFICADO')
+                                            })->where('pre_stockpile_details.state','VALIDADO')
                                               ->where('pre_stockpile_details.pre_stockpile_id',$this->id_pre_reserva)
                                               ->selectRaw('SUM(general_stock_details.price*pre_stockpile_price_details.quantity) AS total')
                                               ->value('total');
@@ -320,14 +291,23 @@ class ValidatePreReserva extends Component
                         $join->on('implement_models.id','implements.implement_model_id');
                     })->where('pre_stockpiles.user_id',$this->id_operador)->select('implements.*','implement_models.implement_model')->get();
 
-                    $pre_stockpile_detail_operator = PreStockpileDetail::where('pre_stockpile_id',$this->id_pre_reserva)->where('quantity','>',0)->where('state','RESERVADO')->get();
+                    $pre_stockpile_detail_operator = PreStockpileDetail::where('pre_stockpile_id',$this->id_pre_reserva)
+                                                                        ->where('quantity','>',0)
+                                                                        ->where('state','RESERVADO')
+                                                                        ->select('id','item_id','quantity')
+                                                                        ->get();
 
                     $pre_stockpile_detail_planner = PreStockpileDetail::where('pre_stockpile_id',$this->id_pre_reserva)
-                                                                        ->where('quantity','>',0)->where(function ($query){
-                                                                            $query->where('state','VALIDADO');
-                                                                        })->get();
+                                                                        ->where('quantity','>',0)
+                                                                        ->where('state','VALIDADO')
+                                                                        ->select('id','item_id','validated_quantity as quantity')
+                                                                        ->get();
 
-                    $pre_stockpile_detail_rechazado = PreStockpileDetail::where('pre_stockpile_id',$this->id_pre_reserva)->where('quantity','>',0)->where('state','RECHAZADO')->get();
+                    $pre_stockpile_detail_rechazado = PreStockpileDetail::where('pre_stockpile_id',$this->id_pre_reserva)
+                                                                        ->where('quantity','>',0)
+                                                                        ->where('state','RECHAZADO')
+                                                                        ->select('id','item_id','quantity')
+                                                                        ->get();
 
             return view('livewire.validate-pre-reserva',compact('sedes','locations','users','implements','pre_stockpile_detail_operator','pre_stockpile_detail_planner','pre_stockpile_detail_rechazado'));
         }

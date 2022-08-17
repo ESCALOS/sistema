@@ -18,7 +18,4 @@ class PreStockpile extends Model
     public function user(){
         return $this->belongsTo(User::class);
     }
-    public function ceco(){
-        return $this->belongsTo(Ceco::class);
-    }
 }

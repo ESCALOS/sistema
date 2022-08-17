@@ -71,7 +71,7 @@
                 </div>
 
                 <div class="p-6">
-                    <h1 class="text-lg font-bold text-blue-500">Monto Disponible: S/.{{$monto_asignado}} - {{$monto_usado}}</h1>
+                    <h1 class="text-lg font-bold {{$monto_usado > $monto_asignado ? 'text-red-500' : 'text-green-500'}}">Monto Disponible: S/.{{floatval($monto_asignado) - floatval($monto_usado)}}</h1>
                 </div>
             </div>
         <!-------------------------------------------TABLA DE LOS MATERIALES ------------------------------------------------- -->
@@ -226,7 +226,7 @@
         </x-slot>
         <x-slot name="footer">
         @if($id_implemento > 0)
-            <button wire:loading.attr="disabled" wire:click="$emit('confirmarValidarPreReserva',[{{$id_pre_reserva}},'{{$implemento}}',{{$monto_usado}}])" style="width: 200px" class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md">
+            <button wire:loading.attr="disabled" wire:click="$emit('confirmarValidarPreReserva',[{{$id_pre_reserva}},'{{$implemento}}',{{$monto_pre_reservado}}])" style="width: 200px" class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md">
                 Validar
             </button>
             <button wire:loading.attr="disabled" wire:click="$emit('confirmarRechazarPreReserva','{{$implemento}}')" style="width: 200px" class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-md">
