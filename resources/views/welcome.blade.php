@@ -45,6 +45,8 @@
                     </svg>
                 </div>
 
+                <img src="{{ asset('storage/newMaterials/1iBZN4jLhgObKH3hOgZVi0NXwzDdFMdo3l0N1za9.jpg') }}" alt="sad" width="90">
+
                 <div class="mt-8 bg-white dark:bg-gray-800 overflow-hidden shadow sm:rounded-lg">
                     <div class="grid grid-cols-1 md:grid-cols-2">
                         <div class="p-6">

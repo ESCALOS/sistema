@@ -5,9 +5,6 @@
     <x-jet-dialog-modal wire:model='open'>
         <x-slot name="title">
             Registrar Programación de tractores
-            @foreach ($usuarios_usados as $user)
-                {{$user}}
-            @endforeach
         </x-slot>
         <x-slot name="content">
             <div class="grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
