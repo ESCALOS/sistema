@@ -1,0 +1,19 @@
+{
+    "nunito": {
+        "normal": "\/home\/nanoka\/public_html\/sistema\/storage\/fonts\/nunito_normal_f8ce9593f0c56e52776379aa29b2d690",
+        "600": "\/home\/nanoka\/public_html\/sistema\/storage\/fonts\/nunito_600_0275befc5ca0fc822c590fc63a6c14d5",
+        "bold": "nunito_bold_8dc3583b65bede23262ac4c563179f23"
+    },
+    "font awesome 5 brands": {
+        "normal": "font_awesome_5_brands_normal_ba6ea9f3d43bcd575efc8dea06554877"
+    },
+    "font awesome 5 free": {
+        "normal": "\/home\/nanoka\/public_html\/sistema\/storage\/fonts\/font_awesome_5_free_normal_bc4347a0361d1bd8f7c9db2c4b17bf7c",
+        "900": "font_awesome_5_free_900_70343aafd9da788115b3f997768d0493"
+    },
+    "source sans pro": {
+        "300_italic": "\/home\/nanoka\/public_html\/sistema\/storage\/fonts\/source_sans_pro_300_italic_c7348df81e49066b772a98ae20e45811",
+        "italic": "\/home\/nanoka\/public_html\/sistema\/storage\/fonts\/source_sans_pro_italic_27672a92dcedb2218abd2dadee4fe950",
+        "600_italic": "source_sans_pro_600_italic_ef3fecfa74b416f01e1908b6dca4e4a4"
+    }
+}

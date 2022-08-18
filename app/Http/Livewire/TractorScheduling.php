@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire;
 
+use App\Exports\TractorScheduleExport;
 use App\Models\Implement;
 use App\Models\Labor;
 use App\Models\Location;
@@ -12,6 +13,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+use phpDocumentor\Reflection\Types\This;
 
 class TractorScheduling extends Component
 {
@@ -23,6 +27,9 @@ class TractorScheduling extends Component
     public $simplement;
     public $open_edit = false;
 
+    public $open_print_schedule = false;
+    public $start_date;
+    public $end_date;
     public $location;
     public $location_name;
     public $lote;
@@ -39,6 +46,11 @@ class TractorScheduling extends Component
     public $implementos_usados = [];
 
     protected $listeners = ['render'];
+
+    public function mount(){
+        $this->start_date = date('Y-m-d');
+        $this->end_date = date('Y-m-d');
+    }
 
     protected function rules(){
         return [
@@ -74,6 +86,18 @@ class TractorScheduling extends Component
             'date.date_format' => 'Formato incorrecto',
             'shift.in' => 'El turno no existe',
         ];
+    }
+
+    public function updatedStartDate(){
+        if($this->end_date < $this->start_date){
+            $this->end_date = $this->start_date;
+        }
+    }
+
+    public function updatedEndDate(){
+        if($this->start_date > $this->end_date){
+            $this->start_date = $this->end_date;
+        }
     }
 
     /**
@@ -164,8 +188,23 @@ class TractorScheduling extends Component
      * @param string $posicion Posicion de la alerta
      * @param string $icono Icono de la alerta
      */
-    public function alerta($mensaje = "Se registró correctamente", $posicion = 'middle', $icono = 'success'){
+    public function alerta($mensaje = "Se registró correctamente", $posicion = 'center', $icono = 'success'){
         $this->emit('alert',[$posicion,$icono,$mensaje]);
+    }
+
+    public function print_pdf(){
+        $title = 'Programación del '.$this->start_date;
+        if($this->start_date != $this->end_date){
+            $title = $title.' al '.$this->end_date;
+        }
+        $title = $title.'.xlsx';
+        //return Excel::download(new TractorScheduleExport($this->start_date,$this->end_date), $title);
+        return response()->streamDownload(function () {
+            $schedule = ModelsTractorScheduling::all();
+            $pdf = PDF::loadView('pdf.tractor-scheduling',compact('schedule'));
+            echo $pdf->stream();
+        }, 'test.pdf');
+
     }
 
     public function render()
@@ -219,8 +258,6 @@ class TractorScheduling extends Component
         }
 
         $tractorSchedulings = $tractorSchedulings->orderBy('id','desc')->paginate(6);
-
-
 
         return view('livewire.tractor-scheduling',compact('tractorSchedulings','tractors','labors','implements','locations','users','lotes','filtro_tractores','filtro_implementos'));
     }

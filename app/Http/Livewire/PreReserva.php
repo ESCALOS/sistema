@@ -115,7 +115,7 @@ class PreReserva extends Component
             $this->id_implemento = 0;
             $this->alerta('Se cerró correctamente','top-end','success',);
         }else{
-            $this->alerta('Aún quedan materiales no reservados','middle','error');
+            $this->alerta('Aún quedan materiales no reservados','center','error');
         }
     }
     /**
@@ -125,7 +125,7 @@ class PreReserva extends Component
      * @param string $posicion Posicion de la alerta
      * @param string $icono Icono de la alerta
      */
-    public function alerta($mensaje = "Se registró correctamente", $posicion = 'middle', $icono = 'success'){
+    public function alerta($mensaje = "Se registró correctamente", $posicion = 'center', $icono = 'success'){
         $this->emit('alert',[$posicion,$icono,$mensaje]);
     }
 

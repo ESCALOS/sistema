@@ -103,7 +103,7 @@ class CreateTractorReport extends Component
      * @param string $posicion Posicion de la alerta
      * @param string $icono Icono de la alerta
      */
-    public function alerta($mensaje = "Se registró correctamente", $posicion = 'middle', $icono = 'success'){
+    public function alerta($mensaje = "Se registró correctamente", $posicion = 'center', $icono = 'success'){
         $this->emit('alert',[$posicion,$icono,$mensaje]);
     }
 
