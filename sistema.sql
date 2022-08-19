@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 17-08-2022 a las 19:31:43
+-- Tiempo de generación: 19-08-2022 a las 19:22:39
 -- Versión del servidor: 10.8.3-MariaDB
 -- Versión de PHP: 8.1.8
 
@@ -68,6 +68,26 @@ OPEN cur_comp;
         INSERT INTO preventive_maintenance_frequencies(component_id,frequency) VALUES (componente,(tiempo_vida)/4);
     END LOOP bucle;
 CLOSE cur_comp;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `crear_rutinario` ()   BEGIN
+	DECLARE programacion_tractor INT;
+    DECLARE implemento INT;
+    DECLARE usuario INT;
+	DECLARE programado_final INT DEFAULT 0;
+    DECLARE cursor_programacion CURSOR FOR SELECT ts.id,ts.implement_id,ts.user_id FROM tractor_schedulings ts WHERE DATE(ts.date) = DATE(NOW());
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET programado_final = 1;
+    	OPEN cursor_programacion;
+        	bucle_programacion:LOOP
+            	IF programado_final = 1 THEN
+                	LEAVE bucle_programacion;
+                END IF;
+                FETCH cursor_programacion INTO programacion_tractor,implemento,usuario;
+                IF NOT EXISTS(SELECT * FROM routine_tasks WHERE implement_id = implemento AND date = DATE(NOW())) THEN
+                	INSERT INTO routine_tasks (tractor_scheduling_id, implement_id, user_id, date) VALUES (programacion_tractor,implemento,usuario,NOW());
+                END IF;
+            END LOOP bucle_programacion;
+        CLOSE cursor_programacion;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_mantenimientos_programados` ()   BEGIN
@@ -999,6 +1019,27 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_prereserva` ()   BEGIN
                     UPDATE pre_stockpile_dates SET state = "ABIERTO" WHERE id = fecha_pre_reserva;
             END;
         END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `rutinario` ()   BEGIN
+	DECLARE programacion_tractor INT;
+    DECLARE implemento INT;
+    DECLARE usuario INT;
+	DECLARE programado_final INT DEFAULT 0;
+    DECLARE fecha DATE;
+    DECLARE cursor_programacion CURSOR FOR SELECT ts.id,ts.implement_id,ts.user_id,ts.date FROM tractor_schedulings ts;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET programado_final = 1;
+    	OPEN cursor_programacion;
+        	bucle_programacion:LOOP
+            	IF programado_final = 1 THEN
+                	LEAVE bucle_programacion;
+                END IF;
+                FETCH cursor_programacion INTO programacion_tractor,implemento,usuario,fecha;
+                IF NOT EXISTS(SELECT * FROM routine_tasks WHERE implement_id = implemento AND date = fecha) THEN
+                	INSERT INTO routine_tasks (tractor_scheduling_id, implement_id, user_id, date) VALUES (programacion_tractor,implemento,usuario,fecha);
+                END IF;
+            END LOOP bucle_programacion;
+        CLOSE cursor_programacion;
 END$$
 
 DELIMITER ;
@@ -3476,6 +3517,201 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `routine_tasks`
+--
+
+CREATE TABLE `routine_tasks` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `tractor_scheduling_id` bigint(20) UNSIGNED NOT NULL,
+  `implement_id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `date` date NOT NULL,
+  `state` enum('PENDIENTE','CONCLUIDO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
+  `validated_by` bigint(20) UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `routine_tasks`
+--
+
+INSERT INTO `routine_tasks` (`id`, `tractor_scheduling_id`, `implement_id`, `user_id`, `date`, `state`, `validated_by`, `created_at`, `updated_at`) VALUES
+(38, 25, 5, 5, '2022-08-18', 'PENDIENTE', NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(39, 26, 6, 37, '2022-08-18', 'PENDIENTE', NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(40, 27, 7, 7, '2022-08-18', 'PENDIENTE', NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(41, 28, 8, 36, '2022-08-18', 'PENDIENTE', NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(42, 29, 5, 5, '2022-08-19', 'PENDIENTE', NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(43, 30, 6, 37, '2022-08-19', 'PENDIENTE', NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(44, 31, 8, 8, '2022-08-19', 'PENDIENTE', NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(45, 32, 7, 36, '2022-08-19', 'PENDIENTE', NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32');
+
+--
+-- Disparadores `routine_tasks`
+--
+DELIMITER $$
+CREATE TRIGGER `detallar_tareas_rutinarias` AFTER INSERT ON `routine_tasks` FOR EACH ROW BEGIN
+	DECLARE modelo_implemento INT;
+    SELECT i.implement_model_id INTO modelo_implemento FROM implements i WHERE i.id = new.implement_id;
+    BEGIN
+    DECLARE tarea_final INT;
+    DECLARE tarea INT;
+    DECLARE componente INT;
+    DECLARE cursor_tareas CURSOR FOR SELECT t.id,c.id FROM tasks t INNER JOIN components c ON c.id = t.component_id INNER JOIN component_implement_model cim ON cim.component_id = c.id WHERE cim.implement_model_id = modelo_implemento AND t.type = "RUTINARIO";
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
+    OPEN cursor_tareas;
+    	bucle_tareas:LOOP
+        	IF tarea_final = 1 THEN
+            	LEAVE bucle_tareas;
+            END IF;
+            FETCH cursor_tareas INTO tarea,componente;
+            IF NOT EXISTS(SELECT * FROM routine_task_details WHERE routine_task_id = new.id AND task_id = tarea) THEN
+        	INSERT INTO routine_task_details (routine_task_id, task_id) VALUES (new.id, tarea);
+            END IF;
+            BEGIN
+                DECLARE tarea_pieza_final INT DEFAULT 0;
+            	DECLARE cursor_tareas_pieza CURSOR FOR SELECT t.id FROM tasks t INNER JOIN components p ON p.id = t.component_id INNER JOIN component_part_model cpm ON cpm.part = p.id INNER JOIN components c ON c.id = cpm.component WHERE c.id = componente AND t.type = "RUTINARIO";
+                DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_pieza_final = 1;
+                OPEN cursor_tareas_pieza;
+                    bucle_pieza:LOOP
+                        IF tarea_pieza_final = 1 THEN
+            	            LEAVE bucle_pieza;
+                        END IF;
+                        FETCH cursor_tareas_pieza INTO tarea;
+                        IF NOT EXISTS(SELECT * FROM routine_task_details WHERE routine_task_id = new.id AND task_id = tarea) THEN
+                            INSERT INTO routine_task_details (routine_task_id, task_id) VALUES (new.id, tarea);
+                        END IF;
+                    END LOOP bucle_pieza;
+                CLOSE cursor_tareas_pieza;
+            END;
+        END LOOP bucle_tareas;
+    CLOSE cursor_tareas;
+    END;
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `routine_task_details`
+--
+
+CREATE TABLE `routine_task_details` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `routine_task_id` bigint(20) UNSIGNED NOT NULL,
+  `task_id` bigint(20) UNSIGNED NOT NULL,
+  `is_checked` tinyint(1) NOT NULL DEFAULT 0,
+  `observations` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `routine_task_details`
+--
+
+INSERT INTO `routine_task_details` (`id`, `routine_task_id`, `task_id`, `is_checked`, `observations`, `created_at`, `updated_at`) VALUES
+(240, 38, 90, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(241, 38, 84, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(242, 38, 32, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(243, 38, 96, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(244, 38, 27, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(245, 38, 8, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(246, 38, 88, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(247, 38, 14, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(248, 38, 4, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(249, 38, 35, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(250, 38, 18, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(251, 38, 39, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(252, 39, 90, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(253, 39, 84, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(254, 39, 32, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(255, 39, 96, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(256, 39, 27, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(257, 39, 8, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(258, 39, 88, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(259, 39, 14, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(260, 39, 4, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(261, 39, 35, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(262, 39, 18, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(263, 39, 39, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(264, 40, 90, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(265, 40, 84, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(266, 40, 32, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(267, 40, 96, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(268, 40, 27, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(269, 40, 8, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(270, 40, 88, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(271, 40, 14, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(272, 40, 4, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(273, 40, 35, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(274, 40, 18, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(275, 40, 39, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(276, 41, 90, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(277, 41, 84, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(278, 41, 32, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(279, 41, 96, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(280, 41, 27, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(281, 41, 8, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(282, 41, 88, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(283, 41, 14, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(284, 41, 4, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(285, 41, 35, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(286, 41, 18, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(287, 41, 39, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(288, 42, 90, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(289, 42, 84, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(290, 42, 32, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(291, 42, 96, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(292, 42, 27, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(293, 42, 8, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(294, 42, 88, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(295, 42, 14, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(296, 42, 4, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(297, 42, 35, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(298, 42, 18, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(299, 42, 39, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(300, 43, 90, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(301, 43, 84, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(302, 43, 32, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(303, 43, 96, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(304, 43, 27, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(305, 43, 8, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(306, 43, 88, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(307, 43, 14, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(308, 43, 4, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(309, 43, 35, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(310, 43, 18, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(311, 43, 39, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(312, 44, 90, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(313, 44, 84, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(314, 44, 32, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(315, 44, 96, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(316, 44, 27, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(317, 44, 8, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(318, 44, 88, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(319, 44, 14, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(320, 44, 4, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(321, 44, 35, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(322, 44, 18, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(323, 44, 39, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(324, 45, 90, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(325, 45, 84, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(326, 45, 32, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(327, 45, 96, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(328, 45, 27, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(329, 45, 8, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(330, 45, 88, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(331, 45, 14, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(332, 45, 4, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(333, 45, 35, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(334, 45, 18, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32'),
+(335, 45, 39, 0, NULL, '2022-08-19 17:29:32', '2022-08-19 17:29:32');
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `sedes`
 --
 
@@ -3518,8 +3754,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('ndUrk7eB1EzxxYnSlenapApoKRon2rhRCiYoiIZa', 5, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiSkhpYUg3ckhQaHpUYnVSSnNRUjh0MEd3VWJWTnRkQ2lobVBDaWxMViI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTg6Imh0dHA6Ly9zaXN0ZW1hLnRlc3Qvc3VwZXJ2aXNvci9PcmRlbi1kZS1UcmFiYWpvLVBlbmRpZW50ZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aTo1O30=', 1660745230),
-('NnYn4Yvfk5FsKSLDV0W29WqEBVrW2Uj4fmJJpWFS', 4, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0', 'YTo2OntzOjY6Il90b2tlbiI7czo0MDoiU1ZEZFNQSXVkZ1ZXS3V3RWxpeEZuOU9kZVQ2aDRTdGpZbGllRWpQUiI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjI5OiJodHRwOi8vc2lzdGVtYS50ZXN0L2Rhc2hib2FyZCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjQ7czoyMToicGFzc3dvcmRfaGFzaF9zYW5jdHVtIjtzOjYwOiIkMnkkMTAkOTJJWFVOcGtqTzByT1E1YnlNaS5ZZTRvS29FYTNSbzlsbEMvLm9nL2F0Mi51aGVXRy9pZ2kiO30=', 1660745195);
+('aNgC7NDOEslyBAfSMTIJhvzJW2pTWOpkoYuBjmi9', 5, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiRldvZWZtQkNtWTBSZ1BzejBINGI1bXFvVEFubUd1aTdOUUpwVjdlMiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTM6Imh0dHA6Ly9zaXN0ZW1hLnRlc3Qvc3VwZXJ2aXNvci9SZWdpc3Ryby1kZS1SdXRpbmFyaW9zIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NTt9', 1660936916);
 
 -- --------------------------------------------------------
 
@@ -4025,6 +4260,28 @@ CREATE TABLE `tractor_schedulings` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Volcado de datos para la tabla `tractor_schedulings`
+--
+
+INSERT INTO `tractor_schedulings` (`id`, `user_id`, `labor_id`, `tractor_id`, `implement_id`, `date`, `shift`, `lote_id`, `is_canceled`, `created_at`, `updated_at`) VALUES
+(25, 5, 1, 5, 5, '2022-08-18', 'MAÑANA', 5, 0, '2022-08-18 17:12:53', '2022-08-18 17:12:53'),
+(26, 37, 1, 6, 6, '2022-08-18', 'MAÑANA', 5, 0, '2022-08-18 17:13:05', '2022-08-18 17:13:05'),
+(27, 7, 3, 7, 7, '2022-08-18', 'MAÑANA', 7, 0, '2022-08-18 17:13:18', '2022-08-18 17:13:18'),
+(28, 36, 5, 8, 8, '2022-08-18', 'MAÑANA', 7, 0, '2022-08-18 17:13:24', '2022-08-18 17:13:24'),
+(29, 5, 3, 5, 5, '2022-08-19', 'MAÑANA', 5, 0, '2022-08-18 21:09:59', '2022-08-18 21:09:59'),
+(30, 37, 5, 6, 6, '2022-08-19', 'MAÑANA', 5, 0, '2022-08-18 21:10:07', '2022-08-18 21:10:07'),
+(31, 8, 2, 7, 8, '2022-08-19', 'MAÑANA', 8, 0, '2022-08-18 21:10:20', '2022-08-18 21:10:20'),
+(32, 36, 5, 8, 7, '2022-08-19', 'MAÑANA', 8, 0, '2022-08-18 21:10:29', '2022-08-18 21:10:29'),
+(33, 7, 3, 7, 7, '2022-08-18', 'NOCHE', 8, 0, '2022-08-18 21:10:58', '2022-08-18 21:10:58'),
+(34, 8, 3, 8, 8, '2022-08-18', 'NOCHE', 8, 0, '2022-08-18 21:11:06', '2022-08-18 21:11:06'),
+(35, 6, 4, 5, 5, '2022-08-18', 'NOCHE', 6, 0, '2022-08-18 21:11:19', '2022-08-18 21:11:19'),
+(36, 5, 3, 6, 6, '2022-08-18', 'NOCHE', 6, 0, '2022-08-18 21:11:27', '2022-08-18 21:11:27'),
+(37, 5, 3, 6, 6, '2022-08-19', 'NOCHE', 5, 0, '2022-08-18 21:11:46', '2022-08-18 21:11:46'),
+(38, 37, 2, 5, 5, '2022-08-19', 'NOCHE', 5, 0, '2022-08-18 21:11:54', '2022-08-18 21:11:54'),
+(39, 8, 3, 8, 7, '2022-08-19', 'NOCHE', 7, 0, '2022-08-18 21:12:09', '2022-08-18 21:12:09'),
+(40, 36, 2, 7, 8, '2022-08-19', 'NOCHE', 7, 0, '2022-08-18 21:12:16', '2022-08-18 21:12:16');
+
 -- --------------------------------------------------------
 
 --
@@ -4060,7 +4317,7 @@ INSERT INTO `users` (`id`, `code`, `name`, `lastname`, `location_id`, `email`, `
 (2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'kq6UeoBK8yBEh7t3lORPFEAPfgfFHoV59d0ik3tdEuR1ZFdngX8vVxDpSwRv', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
 (3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'i8ehVi3sLB4xZmPyinXPVVagbbIAokfAbankLCFkiMTSSLX6A65RE5lEQjUH', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'gzNzJmT6jNbUhqhriQXAFj2QQX4eChvPN12TmZFqsFGLn2m82KwPLKFWsTxG', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'wQFD5ZqKVlMOHSaVsVEYfcuPXTlSobpGnLuRlXETN6nirW3SPbOi7ZIMAEhQ', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'crIoH9sjJTj2W7zQx5ZasrminzDss6EU2dKZSzmYez2oxgKVvnLLJDdBFhAw', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (6, '502387', 'Bella Block', 'Bashirian', 3, 'sibyl08@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'RVExDOoZewUypH8ghrpflQW4DtNKg282pxx1kBPeW5BmwAtGRk5CK8SgMKwx', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (7, '981787', 'Jaylon Prosacco', 'Langosh', 4, 'pleuschke@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'ze5dr2RfKobN0IEj4TKysHzR84jH0tO19WeXOP6jrIvLwNXJXEk5jIujUM19', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
 (8, '588440', 'Irving Strosin', 'Langosh', 4, 'mercedes57@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'gGkZjXDuDGzrNV5Cowztezi5rGrfPtFD3vl1CYPKXjxexgoGkTNEiagdrYhq', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
@@ -4073,7 +4330,7 @@ INSERT INTO `users` (`id`, `code`, `name`, `lastname`, `location_id`, `email`, `
 (15, '057018', 'Meda Bode', 'Lynch', 8, 'garrison42@example.com', '2022-06-20 21:21:41', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'p93dRjOOBD', NULL, NULL, '2022-06-20 21:21:41', '2022-06-20 21:21:41'),
 (16, '266459', 'Carrie Haley', 'Wolf', 8, 'kathleen72@example.net', '2022-06-20 21:21:41', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'j6TyHWP4T1', NULL, NULL, '2022-06-20 21:21:41', '2022-06-20 21:21:41'),
 (35, '999999', 'CARLOS', 'ESCATE ROMÁN', 1, 'STORNBLOOD6969@GMAIL.COM', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, NULL, NULL, NULL, '2022-07-21 06:39:33', '2022-07-21 06:39:33'),
-(36, '888888', 'SEGIO', 'BERROCAL QUIÑONES', 4, 'SDD@GMAIL.COM', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, NULL, NULL, NULL, '2022-07-21 06:39:33', '2022-07-21 06:39:33'),
+(36, '888888', 'SERGIO', 'BERROCAL QUIÑONES', 4, 'SDD@GMAIL.COM', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, NULL, NULL, NULL, '2022-07-21 06:39:33', '2022-07-21 06:39:33'),
 (37, '777777', 'RAMÓN', 'AGUADO APAZA', 3, 'ASS@GMAIL.COM', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, NULL, NULL, NULL, '2022-07-21 06:39:33', '2022-07-21 06:39:33'),
 (38, '6666', 'LUCHO', 'ARANA PEREZ', 2, NULL, NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, NULL, NULL, NULL, '2022-07-21 06:39:33', '2022-07-21 06:39:33'),
 (40, '4197385', 'Rodrigo', 'Escate Román', 1, '', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, NULL, NULL, NULL, '2022-07-26 06:51:33', '2022-07-26 06:51:33');
@@ -4708,6 +4965,24 @@ ALTER TABLE `role_has_permissions`
   ADD KEY `role_has_permissions_role_id_foreign` (`role_id`);
 
 --
+-- Indices de la tabla `routine_tasks`
+--
+ALTER TABLE `routine_tasks`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `implement_id` (`implement_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `validated_by` (`validated_by`),
+  ADD KEY `tractor_scheduling_id` (`tractor_scheduling_id`);
+
+--
+-- Indices de la tabla `routine_task_details`
+--
+ALTER TABLE `routine_task_details`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `task` (`task_id`),
+  ADD KEY `routine_task_details_ibfk_2` (`routine_task_id`);
+
+--
 -- Indices de la tabla `sedes`
 --
 ALTER TABLE `sedes`
@@ -4780,7 +5055,8 @@ ALTER TABLE `systems`
 --
 ALTER TABLE `tasks`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `tasks_component_id_foreign` (`component_id`);
+  ADD KEY `tasks_component_id_foreign` (`component_id`),
+  ADD KEY `type` (`type`);
 
 --
 -- Indices de la tabla `task_required_materials`
@@ -5151,6 +5427,18 @@ ALTER TABLE `roles`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
+-- AUTO_INCREMENT de la tabla `routine_tasks`
+--
+ALTER TABLE `routine_tasks`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+
+--
+-- AUTO_INCREMENT de la tabla `routine_task_details`
+--
+ALTER TABLE `routine_task_details`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=336;
+
+--
 -- AUTO_INCREMENT de la tabla `sedes`
 --
 ALTER TABLE `sedes`
@@ -5232,7 +5520,7 @@ ALTER TABLE `tractor_reports`
 -- AUTO_INCREMENT de la tabla `tractor_schedulings`
 --
 ALTER TABLE `tractor_schedulings`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT de la tabla `users`
@@ -5509,6 +5797,22 @@ ALTER TABLE `risk_task_order`
 ALTER TABLE `role_has_permissions`
   ADD CONSTRAINT `role_has_permissions_permission_id_foreign` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `role_has_permissions_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `routine_tasks`
+--
+ALTER TABLE `routine_tasks`
+  ADD CONSTRAINT `routine_tasks_ibfk_1` FOREIGN KEY (`implement_id`) REFERENCES `implements` (`id`),
+  ADD CONSTRAINT `routine_tasks_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `routine_tasks_ibfk_3` FOREIGN KEY (`validated_by`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `routine_tasks_ibfk_4` FOREIGN KEY (`tractor_scheduling_id`) REFERENCES `tractor_schedulings` (`id`);
+
+--
+-- Filtros para la tabla `routine_task_details`
+--
+ALTER TABLE `routine_task_details`
+  ADD CONSTRAINT `routine_task_details_ibfk_1` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`),
+  ADD CONSTRAINT `routine_task_details_ibfk_2` FOREIGN KEY (`routine_task_id`) REFERENCES `routine_tasks` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `sedes`

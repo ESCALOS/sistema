@@ -2,7 +2,6 @@
 
 namespace App\Http\Livewire;
 
-use App\Exports\TractorScheduleExport;
 use App\Models\Implement;
 use App\Models\Labor;
 use App\Models\Location;
@@ -13,9 +12,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
-use phpDocumentor\Reflection\Types\This;
+use DateTime;
+use Illuminate\Support\Facades\DB;
 
 class TractorScheduling extends Component
 {
@@ -179,17 +178,57 @@ class TractorScheduling extends Component
         $this->emit('alert',[$posicion,$icono,$mensaje]);
     }
 
-    public function print_pdf(){
+    public function print_schedule(){
         $title = 'Programación del '.$this->schedule_date.'.pdf';
-        return response()->streamDownload(function () {
-            $fecha = $this->schedule_date;
-            $schedule = ModelsTractorScheduling::where('date',$fecha)->get();
-            $pdf = PDF::loadView('pdf.tractor-scheduling',compact('schedule','fecha'));
-            $pdf->set_paper('letter', 'landscape'); //esta es una forma de ponerlo horizontal
-            $pdf->set_paper("A4", "landscape");
-            echo $pdf->stream();
-        }, $title);
+        if(ModelsTractorScheduling::where('date',$this->schedule_date)->doesntExist()){
+            $this->alerta('No hay programación para ese día','center','error');
+        }else{
+            return response()->streamDownload(function () {
+                $fecha = $this->schedule_date;
+                $schedule = ModelsTractorScheduling::where('date',$fecha)->get();
+                $pdf = PDF::loadView('pdf.tractor-scheduling',compact('schedule','fecha'));
+                $pdf->set_paper("A4", "landscape");
+                echo $pdf->stream();
+            }, $title);
+        }
+    }
 
+    public function print_routines(){
+        if(ModelsTractorScheduling::where('date',$this->schedule_date)->doesntExist()){
+            $this->alerta('No hay programación para ese día','center','error');
+        }else{
+            $title = 'Programación del '.$this->schedule_date.'.pdf';
+            return response()->streamDownload(function () {
+    
+                $date = $this->schedule_date;
+
+                $implements = DB::table('routine_tasks')->join('implements',function($join){
+                                                        $join->on('routine_tasks.implement_id','implements.id');
+                                                    })->join('implement_models',function($join){
+                                                        $join->on('implement_models.id','implements.implement_model_id');
+                                                    })->join('users',function($join){
+                                                        $join->on('users.id','routine_tasks.user_id');
+                                                    })->where('routine_tasks.date',$date)
+                                                      ->select('users.name','users.lastname','routine_tasks.id','implement_models.implement_model','implements.implement_number')
+                                                      ->get();
+                
+                $tasks = DB::table('routine_task_details')->join('routine_tasks',function($join){
+                                                                $join->on('routine_tasks.id','routine_task_details.routine_task_id');                                            
+                                                            })->join('implements',function($join){
+                                                                $join->on('implements.id','routine_tasks.implement_id');
+                                                            })->join('tasks',function($join){
+                                                                $join->on('tasks.id','routine_task_details.task_id');
+                                                            })->join('components',function($join){
+                                                                $join->on('components.id','tasks.component_id');
+                                                            })->where('date',$date)
+                                                            ->select('routine_tasks.id as routine_task_id','tasks.task','components.component')
+                                                            ->get();
+                                                            
+                $pdf = PDF::loadView('pdf.routine-task',compact('date','implements','tasks'));
+                $pdf->set_paper("A4", "portrait");
+                echo $pdf->stream();
+            }, $title);
+        }
     }
 
     public function render()

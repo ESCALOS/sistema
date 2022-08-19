@@ -251,11 +251,17 @@
                     </div>
                 </x-slot>
                 <x-slot name="footer">
-                    <x-jet-button wire:loading.attr="disabled" wire:click="print_pdf()">
-                        Descargar Pdf
+                    <x-jet-button wire:loading.attr="disabled" wire:click="print_schedule()">
+                        Descargar Programación
                     </x-jet-button>
-                    <div wire:loading wire:target="print_pdf">
-                        Registrando...
+                    <x-jet-button wire:loading.attr="disabled" class="ml-2" wire:click="print_routines()">
+                        Descargar Rutinarios
+                    </x-jet-button>
+                    <div wire:loading wire:target="print_schedule">
+                        Descargando...
+                    </div>
+                    <div wire:loading wire:target="print_routines">
+                        Descargando...
                     </div>
                     <x-jet-secondary-button wire:click="$set('open_print_schedule',false)" class="ml-2">
                         Cancelar

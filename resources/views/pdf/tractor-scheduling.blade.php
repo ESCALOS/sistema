@@ -37,6 +37,9 @@
             text-align: center;
             align-items: center;
         }
+        .page-break{
+            page-break-before: always;
+        }
     </style>
 
 </head>
@@ -46,7 +49,9 @@
             <div>
                 <div class="sub">
                     <div class="title">
-                        <h2>Programación de Tractores del {{ $fecha }} Turno Mañana </h2>
+                        <h2>
+                            Programación de Tractores del {{ $fecha }} Turno Mañana 
+                        </h2>
                     </div>
                     <table>
                         <thead>
@@ -71,7 +76,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="sub">
+                <div class="sub page-break">
                     <div class="title">
                         <h2>Programación de Tractores del {{ $fecha }} Turno Noche </h2>
                     </div>
