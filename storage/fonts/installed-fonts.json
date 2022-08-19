@@ -1,8 +1,8 @@
 {
     "nunito": {
-        "normal": "\/home\/nanoka\/public_html\/sistema\/storage\/fonts\/nunito_normal_f8ce9593f0c56e52776379aa29b2d690",
-        "600": "\/home\/nanoka\/public_html\/sistema\/storage\/fonts\/nunito_600_0275befc5ca0fc822c590fc63a6c14d5",
-        "bold": "nunito_bold_8dc3583b65bede23262ac4c563179f23"
+        "normal": "C:\\xampp\\htdocs\\sistema\\storage\\fonts\/nunito_normal_f8ce9593f0c56e52776379aa29b2d690",
+        "600": "nunito_600_0275befc5ca0fc822c590fc63a6c14d5",
+        "bold": "C:\\xampp\\htdocs\\sistema\\storage\\fonts\/nunito_bold_8dc3583b65bede23262ac4c563179f23"
     },
     "font awesome 5 brands": {
         "normal": "font_awesome_5_brands_normal_ba6ea9f3d43bcd575efc8dea06554877"

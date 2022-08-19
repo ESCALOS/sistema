@@ -28,8 +28,8 @@ class TractorScheduling extends Component
     public $open_edit = false;
 
     public $open_print_schedule = false;
-    public $start_date;
-    public $end_date;
+    public $schedule_date;
+
     public $location;
     public $location_name;
     public $lote;
@@ -48,8 +48,7 @@ class TractorScheduling extends Component
     protected $listeners = ['render'];
 
     public function mount(){
-        $this->start_date = date('Y-m-d');
-        $this->end_date = date('Y-m-d');
+        $this->schedule_date = date('Y-m-d');
     }
 
     protected function rules(){
@@ -86,18 +85,6 @@ class TractorScheduling extends Component
             'date.date_format' => 'Formato incorrecto',
             'shift.in' => 'El turno no existe',
         ];
-    }
-
-    public function updatedStartDate(){
-        if($this->end_date < $this->start_date){
-            $this->end_date = $this->start_date;
-        }
-    }
-
-    public function updatedEndDate(){
-        if($this->start_date > $this->end_date){
-            $this->start_date = $this->end_date;
-        }
     }
 
     /**
@@ -193,17 +180,15 @@ class TractorScheduling extends Component
     }
 
     public function print_pdf(){
-        $title = 'Programación del '.$this->start_date;
-        if($this->start_date != $this->end_date){
-            $title = $title.' al '.$this->end_date;
-        }
-        $title = $title.'.xlsx';
-        //return Excel::download(new TractorScheduleExport($this->start_date,$this->end_date), $title);
+        $title = 'Programación del '.$this->schedule_date.'.pdf';
         return response()->streamDownload(function () {
-            $schedule = ModelsTractorScheduling::all();
-            $pdf = PDF::loadView('pdf.tractor-scheduling',compact('schedule'));
+            $fecha = $this->schedule_date;
+            $schedule = ModelsTractorScheduling::where('date',$fecha)->get();
+            $pdf = PDF::loadView('pdf.tractor-scheduling',compact('schedule','fecha'));
+            $pdf->set_paper('letter', 'landscape'); //esta es una forma de ponerlo horizontal
+            $pdf->set_paper("A4", "landscape");
             echo $pdf->stream();
-        }, 'test.pdf');
+        }, $title);
 
     }
 

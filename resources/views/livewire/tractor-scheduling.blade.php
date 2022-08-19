@@ -193,7 +193,7 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody  x-data="{open:false}" class="text-gray-600 text-sm font-light">
+                    <tbody class="text-gray-600 text-sm font-light">
                         @foreach ($tractorSchedulings as $tractorScheduling)
                             <tr style="cursor:pointer" wire:click="seleccionar({{$tractorScheduling->id}})" class="border-b {{ $tractorScheduling->id == $idSchedule ? 'bg-blue-200' : '' }} border-gray-200">
                                 <td class="py-3 text-center">
@@ -241,18 +241,12 @@
                     Imprimir Programación
                 </x-slot>
                 <x-slot name="content">
-                    <div class="grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+                    <div>
                         <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
-                            <x-jet-label>Día Inicial:</x-jet-label>
-                            <x-jet-input type="date" min="2022-05-18" style="height:40px;width: 100%" wire:model='start_date'/>
+                            <x-jet-label>Día</x-jet-label>
+                            <x-jet-input type="date" min="2022-05-18" style="height:40px;width: 50%" wire:model='schedule_date'/>
 
-                            <x-jet-input-error for="date"/>
-                        </div>
-                        <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
-                            <x-jet-label>Día Final</x-jet-label>
-                            <x-jet-input type="date" min="2022-05-18" style="height:40px;width: 100%" wire:model='end_date'/>
-
-                            <x-jet-input-error for="date"/>
+                            <x-jet-input-error for="schedule_date"/>
                         </div>
                     </div>
                 </x-slot>
