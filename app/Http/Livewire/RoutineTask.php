@@ -8,6 +8,8 @@ class RoutineTask extends Component
 {
     public function render()
     {
+        $routines_tasks = DB::table('routine-')->select()->get()
+        
         return view('livewire.routine-task');
     }
 }

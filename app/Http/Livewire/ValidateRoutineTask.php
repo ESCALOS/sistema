@@ -7,6 +7,7 @@ use App\Models\Sede;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use phpDocumentor\Reflection\Types\This;
 
 class ValidateRoutineTask extends Component
 {
@@ -14,10 +15,12 @@ class ValidateRoutineTask extends Component
     public $tlocation = 0;
     public $tdate = "";
 
-    public $implement_id = 0;
+    public $open_routine_task = false;
+
+    public $routine_taks_id = 0;
     public $implement = "";
 
-    public $open_routine_task = false;
+    public $observation = "";
 
     public function updatedTsede(){
         $this->resetExcept('tsede');
@@ -25,11 +28,42 @@ class ValidateRoutineTask extends Component
     public function updatedTlocation(){
         $this->resetExcept('tsede','tlocation');
     }
-
+    public function updatedTdate(){
+        $this->resetExcept('tsede','tlocation','tdate');
+    }
+    public function updatedOpenRoutineTask(){
+        $this->resetExcept('tsede','tlocation','tdate','open_routine_task');
+    }
+    /**
+     * Obtener los datos de detalle del rutinario con el id del implemento y la fecha y abrir su modal
+     * 
+     * @param int $id ID del implemento
+     * @param string $model Modelo del Implemento
+     * @param string $number Número del implemento
+     */
     public function mostrarRutinario($id,$model,$number){
-        $this->implement_id = $id;
+        $this->routine_taks_id = DB::table('routine_tasks')->where('implement_id',$id)->where('date',$this->tdate)->first()->id;
         $this->implement = $model.' '.$number;
         $this->open_routine_task = true;
+    }
+    /**
+     * Cambia el estado de la verificación de la tarea de verdadero a falso y viceversa
+     * 
+     * @param int $id ID del detalle de rutinario
+     */
+    public function cambiarVerificacion($id){
+        $detalle_rutinario = DB::table('routine_task_details')->where('id',$id)->first()->is_checked;
+        DB::table('routine_task_details')->where('id', $id)->update(['is_checked' => !$detalle_rutinario]);
+    }
+
+    public function registrarRutinario(){
+        DB::table('routine_tasks')->where('id',$this->routine_taks_id)->update([    
+                                                                                    'state' =>'CONCLUIDO',
+                                                                                    'observation' => $this->observation,
+                                                                                    'validated_by' => Auth::user()->id
+                                                                                ]);
+        $this->open_routine_task = false;
+        $this->resetExcept('tsede','tlocation','tdate','open_routine_task');
     }
 
     public function render(){
@@ -64,9 +98,8 @@ class ValidateRoutineTask extends Component
                                                             $join->on('tasks.id','routine_task_details.task_id');
                                                         })->join('components',function($join){
                                                             $join->on('components.id','tasks.component_id');
-                                                        })->where('routine_tasks.date',$this->tdate)
-                                                          ->where('implements.id',$this->implement_id)
-                                                          ->select('routine_task_details.id','routine_tasks.id as routine_task_id','tasks.task','components.component')
+                                                        })->where('routine_tasks.id',$this->routine_taks_id)
+                                                          ->select('routine_task_details.id','routine_task_details.is_checked','routine_tasks.id as routine_task_id','tasks.task','components.component')
                                                           ->get();
         }else{
             $tasks = [];

@@ -65,28 +65,30 @@
             Registrar Rutinario
         </x-slot>
         <x-slot name="content">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Componente</th>
-                        <th>Tarea</th>
-                        <th>¿Verficado?</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if(count($tasks))
-                        @foreach ($tasks as $task)
-                            <tr>
-                                <td> {{$task->component}} </td>
-                                <td> {{$task->task}} </td>
-                                <td>
-                                    <input type="checkbox" name="is_verified" wire:model='task'>
-                                </td>
-                            </tr>
-                        @endforeach
-                    @endif
-                </tbody>
-            </table>
+            <div style="max-height:180px;overflow:auto">
+                <table class="min-w-max w-full">
+                    <thead>
+                        <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 text-center">Componente</th>
+                            <th class="py-3 text-center">Tarea</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600 text-sm font-light">
+                        @if(count($tasks))
+                            @foreach ($tasks as $task)
+                                <tr wire:click='cambiarVerificacion({{$task->id}})' class="border-b {{ $task->is_checked ? 'bg-yellow-200' : 'bg-green-200' }} border-gray-200 unselected">
+                                    <td class="py-3 px-6 text-center"> {{$task->component}} </td>
+                                    <td class="py-3 px-6 text-center"> {{$task->task}} </td>
+                                </tr>
+                            @endforeach
+                        @endif
+                    </tbody>
+                </table>
+            </div>
+            <div class=" mt-4 p-2" style="padding-left: 1rem; padding-right:1rem; grid-column: 2 span/ 2 span">
+                <x-jet-label>Observaciones:</x-jet-label>
+                <textarea class="form-control w-full text-sm" rows=4 wire:model.defer="observation"></textarea>
+            </div>
         </x-slot>
         <x-slot name="footer">
             <x-jet-button wire:loading.attr="disabled" wire:click="registrarRutinario()">

@@ -101,10 +101,14 @@ class TractorScheduling extends Component
      */
     public function anular(){
         $scheduling = ModelsTractorScheduling::find($this->idSchedule);
-        $scheduling->is_canceled = 1;
-        $scheduling->save();
-        $this->idSchedule = 0;
-        $this->render();
+        if($scheduling->date < now()->toDateString()){
+            $this->alerta('No se puede anular','center','error');
+        }else{
+            $scheduling->is_canceled = 1;
+            $scheduling->save();
+            $this->idSchedule = 0;
+            $this->alerta('Se anuló correctamente','top-end');
+        }
     }
 
     /**
@@ -112,36 +116,40 @@ class TractorScheduling extends Component
      */
     public function editar(){
         $scheduling = ModelsTractorScheduling::find($this->idSchedule);
-        $this->location = $scheduling->lote->location->id;
-        $this->location_name = $scheduling->lote->location->location;
-        $this->lote = $scheduling->lote_id;
-        $this->lote_name = $scheduling->lote->lote;
-        $this->date = $scheduling->date;
-        $this->shift = $scheduling->shift;
-        $this->user = $scheduling->user_id;
-        $this->tractor = $scheduling->tractor_id;
-        $this->labor = $scheduling->labor_id;
-        $this->implement = $scheduling->implement_id;
-        $this->open_edit = true;
+        if($scheduling->date < now()->toDateString()){
+            $this->alerta('No se puede editar','center','error');
+        }else{
+            $this->location = $scheduling->lote->location->id;
+            $this->location_name = $scheduling->lote->location->location;
+            $this->lote = $scheduling->lote_id;
+            $this->lote_name = $scheduling->lote->lote;
+            $this->date = $scheduling->date;
+            $this->shift = $scheduling->shift;
+            $this->user = $scheduling->user_id;
+            $this->tractor = $scheduling->tractor_id;
+            $this->labor = $scheduling->labor_id;
+            $this->implement = $scheduling->implement_id;
+            $this->open_edit = true;
+        }
     }
 
     /**
      * Actualizar la programaciòn del tractor
      */
     public function actualizar(){
-        $this->validate();
         $scheduling = ModelsTractorScheduling::find($this->idSchedule);
-        //$scheduling->lote_id = $this->lote;
-        //$scheduling->date = $this->date;
-        //$scheduling->shift = $this->shift;
-        $scheduling->user_id = $this->user;
-        $scheduling->tractor_id = $this->tractor;
-        $scheduling->labor_id = $this->labor;
-        $scheduling->implement_id = $this->implement;
-        $scheduling->save();
-        $this->open_edit = false;
-        $this->render();
-        $this->alerta();
+        $this->validate();
+        if($scheduling->date < now()->toDateString()){
+            $this->alerta('No se puede editar','center','error');
+        }else{
+            $scheduling->user_id = $this->user;
+            $scheduling->tractor_id = $this->tractor;
+            $scheduling->labor_id = $this->labor;
+            $scheduling->implement_id = $this->implement;
+            $scheduling->save();
+            $this->open_edit = false;
+            $this->alerta();
+        }        
     }
 
     public function updatedLocation(){
