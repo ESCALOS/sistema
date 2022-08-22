@@ -1,6 +1,13 @@
 <div>
+    <div style="display:flex; align-items:center;justify-content:center;margin-bottom:15px">
+        <div class="text-center">
+            <h1 class="font-bold text-4xl">
+                Registro de Rutinarios
+            </h1>
+        </div>
+    </div>
     <div class="p-6">
-        @if ($routine_tasks->count())
+        @if (count($routine_tasks))
         <table class="min-w-max w-full overflow-x-scroll">
             <thead>
                 <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -22,33 +29,21 @@
                 </tr>
             </thead>
             <tbody class="text-gray-600 text-sm font-light">
-                @foreach ($tractorSchedulings as $tractorScheduling)
-                    <tr style="cursor:pointer" wire:click="seleccionar({{$tractorScheduling->id}})" class="border-b {{ $tractorScheduling->id == $idSchedule ? 'bg-blue-200' : '' }} border-gray-200">
+                @foreach ($routine_tasks as $routine_task)
+                    <tr style="cursor:pointer" class="border-b border-gray-200">
                         <td class="py-3 text-center">
                             <div>
-                                <span class="font-medium">{{ $tractorScheduling->user->name }}</span>
+                                <span class="font-medium">{{ $routine_task->user->name }}</span>
                             </div>
                         </td>
                         <td class="py-3 text-center">
                             <div>
-                                <span class="font-medium">{{ $tractorScheduling->tractor->tractorModel->model }}
-                                    {{ $tractorScheduling->tractor->tractor_number }}</span>
+                                <span class="font-medium">{{ $routine_task->implement->implementModel->implement_model }} {{$routine_task->implement->implement_number}} </span>
                             </div>
                         </td>
                         <td class="py-3 text-center">
                             <div>
-                                <span class="font-medium">{{ $tractorScheduling->implement->implementModel->implement_model }} {{$tractorScheduling->implement->implement_number}} </span>
-                            </div>
-                        </td>
-                        <td class="py-3 text-center">
-                            <div>
-                                <span class="font-medium">{{ $tractorScheduling->date }}</span>
-                            </div>
-                        </td>
-                        <td class="py-3 px-2 text-center">
-                            <div class="flex items-center justify-center">
-                                <img src="/img/{{ $tractorScheduling->shift == 'MAÑANA' ? 'sun' : 'moon' }}.svg"
-                                    alt="shift" width="25">
+                                <span class="font-medium">{{ $routine_task->date }}</span>
                             </div>
                         </td>
                     </tr>
@@ -61,7 +56,7 @@
             </div>
         @endif
             <div class="px-4 py-4">
-                {{ $tractorSchedulings->links() }}
+                {{ $routine_tasks->links() }}
             </div>
     </div>
 </div>

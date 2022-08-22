@@ -2,14 +2,18 @@
 
 namespace App\Http\Livewire;
 
+use App\Models\RoutineTask as ModelsRoutineTask;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class RoutineTask extends Component
 {
+    use WithPagination;
+    
     public function render()
     {
-        $routines_tasks = DB::table('routine-')->select()->get()
+        $routine_tasks = ModelsRoutineTask::orderBy('id','desc')->paginate(5);
         
-        return view('livewire.routine-task');
+        return view('livewire.routine-task',compact('routine_tasks'));
     }
 }

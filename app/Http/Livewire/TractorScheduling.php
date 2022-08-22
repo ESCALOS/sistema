@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Barryvdh\DomPDF\Facade\Pdf;
-use DateTime;
 use Illuminate\Support\Facades\DB;
 
 class TractorScheduling extends Component
@@ -84,6 +83,18 @@ class TractorScheduling extends Component
             'date.date_format' => 'Formato incorrecto',
             'shift.in' => 'El turno no existe',
         ];
+    }
+
+    public function updatedStractor(){
+        $this->resetPage();
+    }
+
+    public function updatedSimplement(){
+        $this->resetPage();
+    }
+
+    public function updatedSlabor(){
+        $this->resetPage();
     }
 
     /**
