@@ -2,10 +2,10 @@
 -- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
--- Servidor: localhost
--- Tiempo de generación: 19-08-2022 a las 19:22:39
--- Versión del servidor: 10.8.3-MariaDB
--- Versión de PHP: 8.1.8
+-- Servidor: 127.0.0.1
+-- Tiempo de generación: 24-08-2022 a las 08:09:57
+-- Versión del servidor: 10.4.24-MariaDB
+-- Versión de PHP: 8.1.6
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -826,7 +826,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_prereserva` ()   BEGIN
                                                                     END;
                                                             END IF;
                                                         /*---------CALCULAR MANTENIMIENTO PREVENTIVOS----------------------------------------------------------*/
-                                                            SELECT (FLOOR((horas_ultimo_mantenimiento_componente+336)/frecuencia_componente) - cantidad_componente_recambio) INTO cantidad_componente_preventivo;
+                                                            SELECT (FLOOR((horas_ultimo_mantenimiento_componente+168)/frecuencia_componente) - cantidad_componente_recambio) INTO cantidad_componente_preventivo;
                                                         /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS---------------------------*/
                                                             IF cantidad_componente_preventivo > 0 THEN
                                                                 /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL MANTENIMIENTO PREVENTIVO DEL COMPONENTE-------------------------*/
@@ -899,7 +899,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_prereserva` ()   BEGIN
                                                                                         SELECT tiempo_vida_pieza INTO horas_pieza;
                                                                                 END IF;
                                                                             /*---------CALCULAR SI NECESITA RECAMBIO DENTRO DE 2 MESES----------------------------------------*/
-                                                                                SELECT FLOOR((horas_pieza+336)/tiempo_vida_pieza) INTO cantidad_pieza_recambio;
+                                                                                SELECT FLOOR((horas_pieza+168)/tiempo_vida_pieza) INTO cantidad_pieza_recambio;
                                                                             /*---------OBTENER FRECUENCIA DE MANTENIMIENTO PREVENTIVO DE LA PIEZA-----------------------------*/
                                                                                 SELECT frequency INTO frecuencia_pieza FROM preventive_maintenance_frequencies WHERE component_id = pieza;
                                                                             /*---------OBTENER HORAS DEL ÚLTIMO MATENIMIENTO DE LA PIEZA EN CASO HUBIERA----------------------*/
@@ -954,7 +954,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `Listar_prereserva` ()   BEGIN
                                                                                             END;
                                                                                 END IF;
                                                                             /*---------CALCULAR MANTENIMIENTO PREVENTIVOS-----------------------------------------------------*/
-                                                                                SELECT (FLOOR((horas_ultimo_mantenimiento_pieza+336)/frecuencia_pieza) - cantidad_pieza_recambio) INTO cantidad_pieza_preventivo;
+                                                                                SELECT (FLOOR((horas_ultimo_mantenimiento_pieza+168)/frecuencia_pieza) - cantidad_pieza_recambio) INTO cantidad_pieza_preventivo;
                                                                             /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS----------------------*/
                                                                                 IF cantidad_pieza_preventivo > 0 THEN
                                                                                     /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL MANTENIMIENTO PREVENTIVO DE LA PIEZA-------------------------*/
@@ -3754,7 +3754,10 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('aNgC7NDOEslyBAfSMTIJhvzJW2pTWOpkoYuBjmi9', 5, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiRldvZWZtQkNtWTBSZ1BzejBINGI1bXFvVEFubUd1aTdOUUpwVjdlMiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTM6Imh0dHA6Ly9zaXN0ZW1hLnRlc3Qvc3VwZXJ2aXNvci9SZWdpc3Ryby1kZS1SdXRpbmFyaW9zIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NTt9', 1660936916);
+('cZebbPioHWhpDxs37TPbNUxoR0tsWfIFCuln6VZz', 4, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.102 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiNTJiUlNYWDNybHUyM1Jyekh3UklCdFk4eDNQUjhsWFQzZlU1Tm1KbCI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTQ6Imh0dHA6Ly9zaXN0ZW1hLnRlc3Qvb3BlcmF0b3IvTWFudGVuaW1pZW50b3MtUGVuZGllbnRlcyI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjQ7fQ==', 1661297576),
+('CzgIc6UU390qP4XwlA1Dpxwflp9ymkEVc0YkJYaq', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.102 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiWHJmYk1NcnpST0pRNlQxbjBYekdETzI4RWpVZWVMOXJWd3NMRVpzcSI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czo1NDoiaHR0cDovL3Npc3RlbWEudGVzdC9vcGVyYXRvci9NYW50ZW5pbWllbnRvcy1QZW5kaWVudGVzIjt9czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjU6Imh0dHA6Ly9zaXN0ZW1hLnRlc3QvbG9naW4iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1661311896),
+('O0DZv4j27XGjslOgMXyzZ4GKWZDWLoOUcUdaSkS9', 4, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.102 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiVUZUYnNSWENZcnFQaFJadjExQXlxVGhJclcyWFdlU25KcUJzRVo0ZiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTQ6Imh0dHA6Ly9zaXN0ZW1hLnRlc3Qvb3BlcmF0b3IvTWFudGVuaW1pZW50b3MtUGVuZGllbnRlcyI7fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjQ7fQ==', 1661134693),
+('tqu9QNIF51DuITm6FEluaMJmcMnVn8sfkcLkcMgS', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.102 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoia3BmcEFaM1FqSjIzT2tuOExhSU1na1lKOEgxd2VpVkx5VGlaR2o3VyI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czo1NDoiaHR0cDovL3Npc3RlbWEudGVzdC9vcGVyYXRvci9NYW50ZW5pbWllbnRvcy1QZW5kaWVudGVzIjt9czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTQ6Imh0dHA6Ly9zaXN0ZW1hLnRlc3Qvb3BlcmF0b3IvTWFudGVuaW1pZW50b3MtUGVuZGllbnRlcyI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1661311895);
 
 -- --------------------------------------------------------
 
@@ -4317,7 +4320,7 @@ INSERT INTO `users` (`id`, `code`, `name`, `lastname`, `location_id`, `email`, `
 (2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'kq6UeoBK8yBEh7t3lORPFEAPfgfFHoV59d0ik3tdEuR1ZFdngX8vVxDpSwRv', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
 (3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'i8ehVi3sLB4xZmPyinXPVVagbbIAokfAbankLCFkiMTSSLX6A65RE5lEQjUH', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'gzNzJmT6jNbUhqhriQXAFj2QQX4eChvPN12TmZFqsFGLn2m82KwPLKFWsTxG', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'crIoH9sjJTj2W7zQx5ZasrminzDss6EU2dKZSzmYez2oxgKVvnLLJDdBFhAw', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'ru24VEDqMX306p1YRHGG3O2E0jPb4gJr22vcKCK9J7U70t5YZHxeVf0eiqBw', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (6, '502387', 'Bella Block', 'Bashirian', 3, 'sibyl08@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'RVExDOoZewUypH8ghrpflQW4DtNKg282pxx1kBPeW5BmwAtGRk5CK8SgMKwx', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (7, '981787', 'Jaylon Prosacco', 'Langosh', 4, 'pleuschke@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'ze5dr2RfKobN0IEj4TKysHzR84jH0tO19WeXOP6jrIvLwNXJXEk5jIujUM19', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
 (8, '588440', 'Irving Strosin', 'Langosh', 4, 'mercedes57@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'gGkZjXDuDGzrNV5Cowztezi5rGrfPtFD3vl1CYPKXjxexgoGkTNEiagdrYhq', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
@@ -4374,12 +4377,10 @@ CREATE TABLE `work_orders` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `implement_id` bigint(20) UNSIGNED NOT NULL,
   `user_id` bigint(20) UNSIGNED NOT NULL,
-  `location_id` bigint(20) UNSIGNED NOT NULL,
   `date` date NOT NULL,
   `maintenance` enum('1','2','3') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `state` enum('PENDIENTE','NO VALIDADO','VALIDADO','CONCLUIDO','RECHAZADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
+  `state` enum('PENDIENTE','VALIDADO','CONCLUIDO','RECHAZADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDIENTE',
   `validated_by` bigint(20) UNSIGNED NOT NULL,
-  `is_canceled` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -4394,7 +4395,7 @@ CREATE TABLE `work_order_details` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `work_order_id` bigint(20) UNSIGNED NOT NULL,
   `task_id` bigint(20) UNSIGNED NOT NULL,
-  `state` enum('RECOMENDADO','ACEPTADO','RECHAZADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ACEPTADO',
+  `state` enum('ACEPTADO','RECHAZADO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ACEPTADO',
   `is_checked` tinyint(1) NOT NULL DEFAULT 0,
   `component_implement_id` bigint(20) UNSIGNED DEFAULT NULL,
   `component_part_id` bigint(20) UNSIGNED DEFAULT NULL,
@@ -4408,12 +4409,62 @@ CREATE TABLE `work_order_details` (
 --
 DELIMITER $$
 CREATE TRIGGER `componente_ordenado` AFTER UPDATE ON `work_order_details` FOR EACH ROW BEGIN
-IF new.state = "ACEPTADO" THEN
+DECLARE material_final INT DEFAULT 0;
+DECLARE material INT;
+DECLARE cantidad DECIMAL(8,2);
+DECLARE tipo_tarea VARCHAR(255);
+SELECT type INTO tipo_tarea FROM tasks WHERE id = new.task_id;
+IF new.state = "ACEPTADO" AND old.state = "RECHAZADO" AND tipo_tarea = "RECAMBIO" THEN
+	/*-----Marcar componente ordenado si la tarea es de recambio------------*/
 	IF new.component_part_id IS NULL THEN
     	UPDATE component_implement SET state = "ORDENADO" WHERE id = new.component_implement_id;
     ELSE
+    /*------Marcar a la pieza ordenado si la tarea es de recambio------------*/
     UPDATE component_part SET state = "ORDENADO" WHERE id = new.component_part_id;
     END IF;
+    /*------Poner materiales que tiene cada tarea-----*/
+        BEGIN
+            DECLARE cursor_tareas CURSOR FOR SELECT item_id,quantity FROM task_required_materials WHERE task_id = new.task_id;
+            DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
+            OPEN cursor_tareas;
+                bucle:LOOP
+                    IF material_final = 1 THEN
+                        LEAVE bucle;
+                    END IF;
+                    FETCH cursor_tareas INTO material,cantidad;
+                    IF EXISTS(SELECT * FROM work_order_required_materials WHERE work_order_id = new.work_order_id AND item_id = material) THEN
+                        UPDATE work_order_required_materials SET quantity = quantity + cantidad WHERE work_order_id = new.work_order_id AND item_id = material;
+                    ELSE
+                        INSERT INTO work_order_required_materials(work_order_id,item_id,quantity) VALUES (new.work_order_id,material,cantidad);
+                    END IF;
+                END LOOP bucle;
+            CLOSE cursor_tareas;
+        END;
+ELSEIF new.state = "RECHAZADO" AND old.state = "ACEPTADO" AND tipo_tarea = "RECAMBIO" THEN
+	/*---------Revertir cambios---------------------*/
+	IF new.component_part_id IS NULL THEN
+    	UPDATE component_implement SET state = "PENDIENTE" WHERE id = new.component_implement_id;
+    ELSE
+    	UPDATE component_part SET state = "PENDIENTE" WHERE id = new.component_part_id;
+    END IF;
+    /*------Quitar materiales que tiene cada tarea-----*/
+        BEGIN
+            DECLARE cursor_tareas CURSOR FOR SELECT item_id,quantity FROM task_required_materials WHERE task_id = new.task_id;
+            DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
+            OPEN cursor_tareas;
+                bucle:LOOP
+                    IF material_final = 1 THEN
+                        LEAVE bucle;
+                    END IF;
+                    FETCH cursor_tareas INTO material,cantidad;
+                    IF EXISTS(SELECT * FROM work_order_required_materials WHERE work_order_id = new.work_order_id AND item_id = material AND quantity >= cantidad) THEN
+                        UPDATE work_order_required_materials SET quantity = quantity - cantidad WHERE work_order_id = new.work_order_id AND item_id = material;
+                    ELSE
+                    	UPDATE work_order_required_materials SET quantity = 0 WHERE work_order_id = new.work_order_id AND item_id = material;
+                    END IF;
+                END LOOP bucle;
+            CLOSE cursor_tareas;
+        END;
 END IF;
 END
 $$
@@ -4476,7 +4527,7 @@ CREATE TABLE `work_order_required_materials` (
   `work_order_id` bigint(20) UNSIGNED NOT NULL,
   `item_id` bigint(20) UNSIGNED NOT NULL,
   `quantity` decimal(8,2) NOT NULL DEFAULT 1.00,
-  `state` enum('PENDIENTE','RESERVADO','RECHAZADO') NOT NULL,
+  `state` enum('PENDIENTE','RESERVADO','RECHAZADO') NOT NULL DEFAULT 'PENDIENTE',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -4568,7 +4619,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `lista_de_materiales_pedidos`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock`, `ord`.`state` AS `state` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`));
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock`, `ord`.`state` AS `state` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`))  ;
 
 -- --------------------------------------------------------
 
@@ -4577,7 +4628,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `lista_de_materiales_pedidos_pendientes`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos_pendientes`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) WHERE `ord`.`state` = 'PENDIENTE';
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `lista_de_materiales_pedidos_pendientes`  AS SELECT `o`.`id` AS `order_request_id`, `u`.`id` AS `user_id`, `ord`.`id` AS `id`, `it`.`sku` AS `sku`, `it`.`item` AS `item`, `it`.`type` AS `type`, `ord`.`quantity` AS `quantity`, `mu`.`abbreviation` AS `abbreviation`, ifnull(`os`.`ordered_quantity`,0) AS `ordered_quantity`, ifnull(`os`.`used_quantity`,0) AS `used_quantity`, ifnull(`gs`.`quantity`,0) AS `stock` FROM ((((((((`order_request_details` `ord` join `order_requests` `o` on(`o`.`id` = `ord`.`order_request_id`)) join `users` `u` on(`u`.`id` = `o`.`user_id`)) join `locations` `l` on(`l`.`id` = `u`.`location_id`)) join `sedes` `s` on(`s`.`id` = `l`.`sede_id`)) join `items` `it` on(`it`.`id` = `ord`.`item_id`)) join `measurement_units` `mu` on(`mu`.`id` = `it`.`measurement_unit_id`)) left join `operator_stocks` `os` on(`os`.`user_id` = `u`.`id` and `os`.`item_id` = `it`.`id`)) left join `general_stocks` `gs` on(`gs`.`item_id` = `it`.`id` and `gs`.`sede_id` = `s`.`id`)) WHERE `ord`.`state` = 'PENDIENTE''PENDIENTE'  ;
 
 -- --------------------------------------------------------
 
@@ -5134,8 +5185,7 @@ ALTER TABLE `warehouses`
 ALTER TABLE `work_orders`
   ADD PRIMARY KEY (`id`),
   ADD KEY `work_orders_implement_id_foreign` (`implement_id`),
-  ADD KEY `work_orders_user_id_foreign` (`user_id`),
-  ADD KEY `work_orders_location_id_foreign` (`location_id`);
+  ADD KEY `work_orders_user_id_foreign` (`user_id`);
 
 --
 -- Indices de la tabla `work_order_details`
@@ -5917,7 +5967,6 @@ ALTER TABLE `warehouses`
 --
 ALTER TABLE `work_orders`
   ADD CONSTRAINT `work_orders_implement_id_foreign` FOREIGN KEY (`implement_id`) REFERENCES `implements` (`id`),
-  ADD CONSTRAINT `work_orders_location_id_foreign` FOREIGN KEY (`location_id`) REFERENCES `locations` (`id`),
   ADD CONSTRAINT `work_orders_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 --

@@ -145,7 +145,7 @@ BEGIN
                                                                     END;
                                                             END IF;
                                                         /*---------CALCULAR MANTENIMIENTO PREVENTIVOS----------------------------------------------------------*/
-                                                            SELECT (FLOOR((horas_ultimo_mantenimiento_componente+336)/frecuencia_componente) - cantidad_componente_recambio) INTO cantidad_componente_preventivo;
+                                                            SELECT (FLOOR((horas_ultimo_mantenimiento_componente+168)/frecuencia_componente) - cantidad_componente_recambio) INTO cantidad_componente_preventivo;
                                                         /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS---------------------------*/
                                                             IF cantidad_componente_preventivo > 0 THEN
                                                                 /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL MANTENIMIENTO PREVENTIVO DEL COMPONENTE-------------------------*/
@@ -218,7 +218,7 @@ BEGIN
                                                                                         SELECT tiempo_vida_pieza INTO horas_pieza;
                                                                                 END IF;
                                                                             /*---------CALCULAR SI NECESITA RECAMBIO DENTRO DE 2 MESES----------------------------------------*/
-                                                                                SELECT FLOOR((horas_pieza+336)/tiempo_vida_pieza) INTO cantidad_pieza_recambio;
+                                                                                SELECT FLOOR((horas_pieza+168)/tiempo_vida_pieza) INTO cantidad_pieza_recambio;
                                                                             /*---------OBTENER FRECUENCIA DE MANTENIMIENTO PREVENTIVO DE LA PIEZA-----------------------------*/
                                                                                 SELECT frequency INTO frecuencia_pieza FROM preventive_maintenance_frequencies WHERE component_id = pieza;
                                                                             /*---------OBTENER HORAS DEL ÚLTIMO MATENIMIENTO DE LA PIEZA EN CASO HUBIERA----------------------*/
@@ -273,7 +273,7 @@ BEGIN
                                                                                             END;
                                                                                 END IF;
                                                                             /*---------CALCULAR MANTENIMIENTO PREVENTIVOS-----------------------------------------------------*/
-                                                                                SELECT (FLOOR((horas_ultimo_mantenimiento_pieza+336)/frecuencia_pieza) - cantidad_pieza_recambio) INTO cantidad_pieza_preventivo;
+                                                                                SELECT (FLOOR((horas_ultimo_mantenimiento_pieza+168)/frecuencia_pieza) - cantidad_pieza_recambio) INTO cantidad_pieza_preventivo;
                                                                             /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS----------------------*/
                                                                                 IF cantidad_pieza_preventivo > 0 THEN
                                                                                     /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL MANTENIMIENTO PREVENTIVO DE LA PIEZA-------------------------*/
