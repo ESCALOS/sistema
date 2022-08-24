@@ -40,6 +40,8 @@ BEGIN
     /*-----------CURSOR PARA ITERAR CADA IMPLEMENTO-----------------------------*/
         DECLARE cursor_implementos CURSOR FOR SELECT id,implement_model_id,user_id FROM implements;
         DECLARE CONTINUE HANDLER for NOT FOUND SET implemento_final = 1;
+    /*-----------FECHA 3 DÍAS DESPUÉS DE CREADA LA ORDEN DE TRABAJO-------------*/
+        
     /*-----------ABRIR CURSOR DE LOS IMPLEMENTOS--------------------------------*/
         OPEN cursor_implementos;
             bucle_implementos:LOOP
@@ -50,11 +52,11 @@ BEGIN
                 /*---------OBTENER LOS DATOS DEL IMPLEMENTO DEL CICLO-----------------------*/
                     FETCH cursor_implementos INTO implemento,modelo_del_implemento,responsable;
                 /*---------HACER EN CASO LA PRE-RESERVA SI NO ESTÁ CREADA AÚN---------------*/
-                    IF NOT EXISTS(SELECT * FROM pre_stockpiles WHERE implement_id = implemento AND state = "PENDIENTE" AND pre_stockpile_date_id = fecha_pre_reserva) THEN
+                    IF NOT EXISTS(SELECT * FROM work_orders WHERE implement_id = implemento AND state = "PENDIENTE" AND date = fecha) THEN
                         /*----------------------CREAR CABECERA DE LA PRE-RESERVA---------------------------------*/
-                            INSERT INTO pre_stockpiles (user_id,implement_id,pre_stockpile_date_id) VALUES (responsable,implemento,fecha_pre_reserva);
+                            INSERT INTO work_orders (user_id,implement_id,pre_stockpile_date_id) VALUES (responsable,implemento,fecha_pre_reserva);
                         /*----------------------OBTENER ID DE LA CABECERA DE LA PRE-RESERVA-------------------------------------*/
-                            SELECT id INTO pre_reserva FROM pre_stockpiles WHERE implement_id = implemento AND state = "PENDIENTE" AND pre_stockpile_date_id = fecha_pre_reserva;
+                            SELECT id INTO pre_reserva FROM work_orders WHERE implement_id = implemento AND state = "PENDIENTE" AND pre_stockpile_date_id = fecha_pre_reserva;
                         /*----------------------CURSOR PARA ITERAR CADA COMPONENTE DEL IMPLEMENTO DEL CICLO--------------*/
                             BEGIN
                                 DECLARE cursor_componentes CURSOR FOR SELECT component_id FROM component_implement_model WHERE implement_model_id = modelo_del_implemento;

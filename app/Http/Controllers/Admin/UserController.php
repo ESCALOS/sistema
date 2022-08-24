@@ -14,14 +14,4 @@ class UserController extends Controller
     public function create(){
         return "hola";
     }
-    /*public function create(array $input)
-    {
-        return User::create([
-            'code' => $input['code'],
-            'name' => $input['name'],
-            'lastname' => $input['lastname'],
-            'email' => $input['email'],
-            'password' => Hash::make($input['password']),
-        ]);
-    }*/
 }

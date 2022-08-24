@@ -5,9 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::get('/redirects',[HomeController::class,'index']);
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [HomeController::class,'index']);
 
 
 

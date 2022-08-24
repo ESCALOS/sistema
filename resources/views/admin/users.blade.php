@@ -1,90 +1,36 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Users List
-        </h2>
-    </x-slot>
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <div>
-        <div class="max-w-6xl mx-auto py-10 sm:px-6 lg:px-8">
-            <div class="block mb-8">
-                <a href="#" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Add User</a>
-            </div>
-            <div class="flex flex-col">
-                <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                    <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                        <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-                            <table class="min-w-full divide-y divide-gray-200 w-full">
-                                <thead>
-                                <tr>
-                                    <th scope="col" width="50" class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        ID
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Name
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Email
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Email Verified At
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Roles
-                                    </th>
-                                    <th scope="col" width="200" class="px-6 py-3 bg-gray-50">
+        <title>{{ config('app.name', 'Laravel') }}</title>
 
-                                    </th>
-                                </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap">
 
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            a
-                                        </td>
+        <link rel="stylesheet" href="{{ mix('css/app.css') }}">
 
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                           nnnngf
-                                        </td>
+        @livewireStyles
 
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                           rwetrtre
-                                        </td>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            werwerre
-                                        </td>
+        <script src="{{ mix('js/app.js') }}" defer></script>
+    </head>
+    <body class="font-sans antialiased">
 
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                    gffff
-                                                </span>
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                    gffff
-                                                </span><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                    gffff
-                                                </span>
-                                        </td>
-
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <a href="#" class="text-blue-600 hover:text-blue-900 mb-2 mr-2">View</a>
-                                            <a href="#" class="text-indigo-600 hover:text-indigo-900 mb-2 mr-2">Edit</a>
-                                            <form class="inline-block" action="#" method="POST" onsubmit="return confirm('Are you sure?');">
-                                                <input type="hidden" name="_method" value="DELETE">
-                                                <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                                                <input type="submit" class="text-red-600 hover:text-red-900 mb-2 mr-2" value="Delete">
-                                            </form>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+        <div class="min-h-screen bg-gray-100">
+            
+            @livewire('admin.users')
+            
         </div>
-    </div>
-</x-app-layout>
+
+        @stack('modals')
+
+        @livewireScripts
+        
+    </body>
+</html>
