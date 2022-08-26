@@ -14,6 +14,7 @@ class ValidateRoutineTask extends Component
     public $tsede = 0;
     public $tlocation = 0;
     public $tdate = "";
+    public $item = 0;
 
     public $open_routine_task = false;
 

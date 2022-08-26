@@ -230,6 +230,8 @@ class TractorScheduling extends Component
     
                 $date = $this->schedule_date;
 
+                DB::select('call rutinario(?)',[$date]);
+
                 $implements = DB::table('routine_tasks')->join('implements',function($join){
                                                         $join->on('routine_tasks.implement_id','implements.id');
                                                     })->join('implement_models',function($join){
@@ -248,7 +250,7 @@ class TractorScheduling extends Component
                                                                 $join->on('tasks.id','routine_task_details.task_id');
                                                             })->join('components',function($join){
                                                                 $join->on('components.id','tasks.component_id');
-                                                            })->where('date',$date)
+                                                            })->where('routine_tasks.date',$date)
                                                             ->select('routine_tasks.id as routine_task_id','tasks.task','components.component')
                                                             ->get();
                                                             

@@ -1,3 +1,6 @@
+@php
+    $item = 0;
+@endphp
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -129,6 +132,7 @@
                         <table>
                             <thead>
                                 <tr>
+                                    <th>Item</th>
                                     <th>Componente</th>
                                     <th>Tarea</th>
                                     <th>¿Verficado?</th>
@@ -138,6 +142,7 @@
                                 @foreach ($tasks as $task)
                                     @if($task->routine_task_id == $implement->id)
                                         <tr>
+                                            <td> {{++$item}} </td>
                                             <td> {{$task->component}} </td>
                                             <td> {{$task->task}} </td>
                                             <td>

@@ -66,9 +66,10 @@
         </x-slot>
         <x-slot name="content">
             <div style="max-height:180px;overflow:auto">
-                <table class="min-w-max w-full">
+                <table class="table-fixed w-full">
                     <thead>
                         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                            <th>Item</th>
                             <th class="py-3 text-center">Componente</th>
                             <th class="py-3 text-center">Tarea</th>
                         </tr>
@@ -76,7 +77,8 @@
                     <tbody class="text-gray-600 text-sm font-light">
                         @if(count($tasks))
                             @foreach ($tasks as $task)
-                                <tr wire:click='cambiarVerificacion({{$task->id}})' class="border-b {{ $task->is_checked ? 'bg-yellow-200' : 'bg-green-200' }} border-gray-200 unselected">
+                                <tr wire:click='cambiarVerificacion({{$task->id}})' class="border-b {{ $task->is_checked ? 'bg-red-200' : 'bg-green-200' }} border-gray-200 unselected">
+                                    <td> {{++$item}} </td>
                                     <td class="py-3 px-6 text-center"> {{$task->component}} </td>
                                     <td class="py-3 px-6 text-center"> {{$task->task}} </td>
                                 </tr>
