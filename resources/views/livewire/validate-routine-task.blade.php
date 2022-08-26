@@ -41,7 +41,7 @@
             @endif
         @endif
     </div>
-    @if ($implements->count())
+    @if (count($implements))
     <div class="grid grid-cols-1 sm:grid-cols-3 mt-4 p-6 gap-4">
         @foreach ($implements as $implement)
     <!-- Cards de los usuarios con pedidos pendientes a validar  -->

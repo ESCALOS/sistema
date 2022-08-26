@@ -79,8 +79,8 @@ class ValidateRoutineTask extends Component
                                               ->groupBy('routine_tasks.date')
                                               ->select('routine_tasks.date')
                                               ->get();
-
-        $implements = DB::table('routine_tasks')->join('implements',function($join){
+        if($this->tdate != ""){
+            $implements = DB::table('routine_tasks')->join('implements',function($join){
                                                     $join->on('implements.id','routine_tasks.implement_id');
                                                 })->join('implement_models',function($join){
                                                     $join->on('implement_models.id','implements.implement_model_id');
@@ -89,6 +89,9 @@ class ValidateRoutineTask extends Component
                                                   ->where('routine_tasks.date',$this->tdate)
                                                   ->select('implements.id','implement_models.implement_model','implements.implement_number')
                                                   ->get();
+        }else{
+            $implements = [];
+        }
         if($this->open_routine_task){
             $tasks = DB::table('routine_task_details')->join('routine_tasks',function($join){
                                                             $join->on('routine_tasks.id','routine_task_details.routine_task_id');                                            
