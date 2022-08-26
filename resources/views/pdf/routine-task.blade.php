@@ -96,6 +96,20 @@
             -ms-transform: rotate(-45deg);
             transform: rotate(-45deg);
         }
+        #observations {
+            margin-top: 1rem;
+            width: 100%;
+            height: 200px;
+            border-radius: 10px;
+            border: 3px solid black;
+            text-align: center;
+        }
+        #observations p {
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 0.3rem;
+            text-decoration-line: underline;
+        }
     </style>
 
 </head>
@@ -136,11 +150,13 @@
                                 @endforeach
                             </tbody>
                         </table>
+                        <div id="observations">
+                            <p>Observaciones:</p>
+                        </div>
                     </div>
                 @endforeach
             </div> 
         </div>
     </div>
-
 </body>
 </html>
