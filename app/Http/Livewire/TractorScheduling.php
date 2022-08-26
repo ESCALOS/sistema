@@ -122,7 +122,7 @@ class TractorScheduling extends Component
                 $this->alerta('Se anuló correctamente','top-end');
             }
         }else{
-            $this->alerta('Ningún registro seleccionado');
+            $this->alerta('Ningún registro seleccionado','center','error');
         }
     }
 
@@ -149,7 +149,7 @@ class TractorScheduling extends Component
                 $this->open_edit = true;
             }
         }else{
-            $this->alerta('Ningún registro seleccionado');
+            $this->alerta('Ningún registro seleccionado','center','error');
         }
     }
 
