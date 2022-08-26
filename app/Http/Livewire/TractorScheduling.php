@@ -111,14 +111,18 @@ class TractorScheduling extends Component
      * Anula la programación del tractor
      */
     public function anular(){
-        $scheduling = ModelsTractorScheduling::find($this->idSchedule);
-        if($scheduling->date < now()->toDateString()){
-            $this->alerta('No se puede anular','center','error');
+        if($this->idSchedule > 0){
+            $scheduling = ModelsTractorScheduling::find($this->idSchedule);
+            if($scheduling->date < now()->toDateString()){
+                $this->alerta('No se puede anular','center','error');
+            }else{
+                $scheduling->is_canceled = 1;
+                $scheduling->save();
+                $this->idSchedule = 0;
+                $this->alerta('Se anuló correctamente','top-end');
+            }
         }else{
-            $scheduling->is_canceled = 1;
-            $scheduling->save();
-            $this->idSchedule = 0;
-            $this->alerta('Se anuló correctamente','top-end');
+            $this->alerta('Ningún registro seleccionado');
         }
     }
 
@@ -126,21 +130,26 @@ class TractorScheduling extends Component
      * Obtener los datos de la programación del tractor
      */
     public function editar(){
-        $scheduling = ModelsTractorScheduling::find($this->idSchedule);
-        if($scheduling->date < now()->toDateString()){
-            $this->alerta('No se puede editar','center','error');
+
+        if($this->idSchedule > 0){
+            $scheduling = ModelsTractorScheduling::find($this->idSchedule);
+            if($scheduling->date < now()->toDateString()){
+                $this->alerta('No se puede editar','center','error');
+            }else{
+                $this->location = $scheduling->lote->location->id;
+                $this->location_name = $scheduling->lote->location->location;
+                $this->lote = $scheduling->lote_id;
+                $this->lote_name = $scheduling->lote->lote;
+                $this->date = $scheduling->date;
+                $this->shift = $scheduling->shift;
+                $this->user = $scheduling->user_id;
+                $this->tractor = $scheduling->tractor_id;
+                $this->labor = $scheduling->labor_id;
+                $this->implement = $scheduling->implement_id;
+                $this->open_edit = true;
+            }
         }else{
-            $this->location = $scheduling->lote->location->id;
-            $this->location_name = $scheduling->lote->location->location;
-            $this->lote = $scheduling->lote_id;
-            $this->lote_name = $scheduling->lote->lote;
-            $this->date = $scheduling->date;
-            $this->shift = $scheduling->shift;
-            $this->user = $scheduling->user_id;
-            $this->tractor = $scheduling->tractor_id;
-            $this->labor = $scheduling->labor_id;
-            $this->implement = $scheduling->implement_id;
-            $this->open_edit = true;
+            $this->alerta('Ningún registro seleccionado');
         }
     }
 
