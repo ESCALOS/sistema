@@ -48,7 +48,7 @@
                     </button>
                 </div>
             </div>
-            <div class="bg-white p-6 grid items-center" style="grid-template-columns: repeat(3, minmax(0, 1fr))">
+            <div class="bg-white p-6 grid grid-cols-3 items-center">
                 @livewire('create-tractor-scheduling')
                 <div>
                     <div class="p-4">
@@ -61,7 +61,7 @@
                             Editar reporte
                         </x-slot>
                         <x-slot name="content">
-                            <div class="grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+                            <div class="grid grid-cols-1 sm:grid-cols-2">
                                 <div class="py-2" style="padding-left: 1rem; padding-right:1rem">
                                     <x-jet-label>Día:</x-jet-label>
                                     <x-jet-input readonly type="date" min="2022-05-18" style="height:40px;width: 100%" value="{{$date}}"/>
@@ -263,9 +263,6 @@
                     <div wire:loading wire:target="print_routines">
                         Descargando...
                     </div>
-                    <x-jet-secondary-button wire:click="$set('open_print_schedule',false)" class="ml-2">
-                        Cancelar
-                    </x-jet-secondary-button>
                 </x-slot>
             </x-jet-dialog-modal>
         </div>
