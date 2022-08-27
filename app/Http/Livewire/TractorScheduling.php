@@ -209,12 +209,12 @@ class TractorScheduling extends Component
 
     public function print_schedule(){
         $title = 'Programación del '.$this->schedule_date.'.pdf';
-        if(ModelsTractorScheduling::where('date',$this->schedule_date)->doesntExist()){
+        if(ModelsTractorScheduling::where('date',$this->schedule_date)->where('is_canceled',0)->doesntExist()){
             $this->alerta('No hay programación para ese día','center','error');
         }else{
             return response()->streamDownload(function () {
                 $fecha = $this->schedule_date;
-                $schedule = ModelsTractorScheduling::where('date',$fecha)->get();
+                $schedule = ModelsTractorScheduling::where('date',$fecha)->where('is_canceled',0)->get();
                 $pdf = PDF::loadView('pdf.tractor-scheduling',compact('schedule','fecha'));
                 $pdf->set_paper("A4", "landscape");
                 echo $pdf->stream();
@@ -223,7 +223,7 @@ class TractorScheduling extends Component
     }
 
     public function print_routines(){
-        if(ModelsTractorScheduling::where('date',$this->schedule_date)->doesntExist()){
+        if(ModelsTractorScheduling::where('date',$this->schedule_date)->where('is_canceled',0)->doesntExist()){
             $this->alerta('No hay programación para ese día','center','error');
         }else{
             $title = 'Programación del '.$this->schedule_date.'.pdf';
@@ -231,21 +231,20 @@ class TractorScheduling extends Component
     
                 $date = $this->schedule_date;
 
-                DB::select('call rutinario(?)',[$date]);
+                DB::select('call rutinario(?,?)',[$date,Auth::user()->id]);
 
-                $implements = DB::table('routine_tasks')->join('implements',function($join){
+                $implements = DB::table('routine_tasks')->join('tractor_schedulings',function($join){
+                                                        $join->on('tractor_schedulings.id','routine_tasks.tractor_scheduling_id');
+                                                    })->join('implements',function($join){
                                                         $join->on('routine_tasks.implement_id','implements.id');
                                                     })->join('implement_models',function($join){
                                                         $join->on('implement_models.id','implements.implement_model_id');
                                                     })->join('users',function($join){
                                                         $join->on('users.id','implements.user_id');
-                                                    })->join('tractor_schedulings',function($join){
-                                                        $join->on('tractor_schedulings.id','routine_tasks.tractor_scheduling_id');
                                                     })->where('routine_tasks.date',$date)
                                                       ->where('tractor_schedulings.validated_by',Auth::user()->id)
-                                                      ->orderBy('tractor_schedulings.shift','ASC')
-                                                      ->orderBy('users.name','ASC')
-                                                      ->select('users.name','users.lastname','tractor_schedulings.shift','routine_tasks.id','implement_models.implement_model','implements.implement_number')
+                                                      ->where('tractor_schedulings.is_canceled',0)
+                                                      ->select('routine_tasks.id','users.name','users.lastname','tractor_schedulings.shift','routine_tasks.id','implement_models.implement_model','implements.implement_number')
                                                       ->get();
                 
                 $tasks = DB::table('routine_task_details')->join('routine_tasks',function($join){

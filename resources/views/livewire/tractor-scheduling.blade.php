@@ -236,9 +236,11 @@
                         {{ $tractorSchedulings->links() }}
                     </div>
             </div>
-            <x-jet-dialog-modal wire:model="open_print_schedule">
+            <x-jet-dialog-modal maxWidth="sm" wire:model="open_print_schedule">
                 <x-slot name="title">
                     Imprimir Programación
+                    <label class="flex flex-row justify-top-start font-bold text-xl hover:text-gray-500" style="cursor: pointer">X</label>
+                    
                 </x-slot>
                 <x-slot name="content">
                     <div>
@@ -252,10 +254,10 @@
                 </x-slot>
                 <x-slot name="footer">
                     <x-jet-button wire:loading.attr="disabled" wire:click="print_schedule()">
-                        Descargar Programación
+                        Programación
                     </x-jet-button>
                     <x-jet-button wire:loading.attr="disabled" class="ml-2" wire:click="print_routines()">
-                        Descargar Rutinarios
+                        Rutinarios
                     </x-jet-button>
                     <div wire:loading wire:target="print_schedule">
                         Descargando...

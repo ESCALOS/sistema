@@ -123,7 +123,7 @@
                 @foreach ($implements as $implement)
                     <div class="sub{{ $loop->index > 0 ? ' page-break' : '' }}">
                         <div class="title">
-                            <label>Rutinario del Implemento: {{ $implement->implement_model }} {{ $implement->implement_number }} </label>
+                            <label>Rutinario del Implemento: {{$implement->id}} {{ $implement->implement_model }} {{ $implement->implement_number }} </label>
                             <div class="detalle">
                                 <label>Operador: {{ $implement->name }} {{$implement->lastname}} </label><br>
                                 <label>Fecha: {{ $date }} </label>

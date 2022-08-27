@@ -2,7 +2,6 @@
 
 namespace App\Http\Livewire;
 
-use App\Http\Livewire\TractorScheduling as LivewireTractorScheduling;
 use App\Models\Implement;
 use App\Models\Labor;
 use App\Models\Location;
@@ -130,7 +129,7 @@ class CreateTractorScheduling extends Component
             $this->date = date('Y-m-d',strtotime(date('Y-m-d')."+1 days"));
         }
 
-        $overseer_locations = DB::table('overseer_locations')->select('location_id')->where('user_id',Auth::user()->id)->get();
+        $overseer_locations = DB::table('overseer_locations')->where('user_id',Auth::user()->id)->select('location_id')->get();
         foreach($overseer_locations as $request){
             array_push($this->fundos,$request->location_id);
         }
