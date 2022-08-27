@@ -127,6 +127,7 @@
                             <div class="detalle">
                                 <label>Operador: {{ $implement->name }} {{$implement->lastname}} </label><br>
                                 <label>Fecha: {{ $date }} </label>
+                                <label>Turno: {{ $implement->shift }} </label>
                             </div>
                         </div>
                         <table>
@@ -159,6 +160,9 @@
                             <p>Observaciones:</p>
                         </div>
                     </div>
+                    @php
+                        $item = 0;
+                    @endphp
                 @endforeach
             </div> 
         </div>

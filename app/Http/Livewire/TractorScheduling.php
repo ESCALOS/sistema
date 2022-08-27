@@ -166,6 +166,7 @@ class TractorScheduling extends Component
             $scheduling->tractor_id = $this->tractor;
             $scheduling->labor_id = $this->labor;
             $scheduling->implement_id = $this->implement;
+            $scheduling->validated_by = Auth::user()->id;
             $scheduling->save();
             $this->open_edit = false;
             $this->alerta();
@@ -237,9 +238,14 @@ class TractorScheduling extends Component
                                                     })->join('implement_models',function($join){
                                                         $join->on('implement_models.id','implements.implement_model_id');
                                                     })->join('users',function($join){
-                                                        $join->on('users.id','routine_tasks.user_id');
+                                                        $join->on('users.id','implements.user_id');
+                                                    })->join('tractor_schedulings',function($join){
+                                                        $join->on('tractor_schedulings.id','routine_tasks.tractor_scheduling_id');
                                                     })->where('routine_tasks.date',$date)
-                                                      ->select('users.name','users.lastname','routine_tasks.id','implement_models.implement_model','implements.implement_number')
+                                                      ->where('tractor_schedulings.validated_by',Auth::user()->id)
+                                                      ->orderBy('tractor_schedulings.shift','ASC')
+                                                      ->orderBy('users.name','ASC')
+                                                      ->select('users.name','users.lastname','tractor_schedulings.shift','routine_tasks.id','implement_models.implement_model','implements.implement_number')
                                                       ->get();
                 
                 $tasks = DB::table('routine_task_details')->join('routine_tasks',function($join){
@@ -261,8 +267,7 @@ class TractorScheduling extends Component
         }
     }
 
-    public function render()
-    {
+    public function render(){
         $this->reset('usuarios_usados','tractores_usados','implementos_usados');
         $sede_general = Auth::user()->location->sede->id;
         $filtro_tractores = Tractor::join('locations',function($join){
@@ -277,7 +282,6 @@ class TractorScheduling extends Component
             $join->on('sedes.id','=','locations.sede_id');
         })->where('sedes.id','=',$sede_general)->select('implements.*')->get();
 
-
         /*---------------Verificar si existe programación del día y turno-------------*/
         if(ModelsTractorScheduling::where('date',$this->date)->where('shift',$this->shift)->where('is_canceled',0)->whereNotIn('id',[$this->idSchedule])->exists()){
             /*--------------Obtener registros ya seleccionados-------------------------------*/
@@ -290,14 +294,12 @@ class TractorScheduling extends Component
         }
 
         /*----------------CRUD-------------------------------------------------------*/
-        $locations = Location::where('sede_id',Auth::user()->location->sede->id)->get();
-        $lotes = Lote::where('location_id',$this->location)->get();
         $users = User::where('location_id',$this->location)->whereNotIn('id',$this->usuarios_usados)->get();
         $tractors = Tractor::where('location_id',$this->location)->whereNotIn('id',$this->tractores_usados)->get();
         $labors = Labor::all();
         $implements = Implement::where('location_id',$this->location)->whereNotIn('id',$this->implementos_usados)->get();
 
-        $tractorSchedulings = ModelsTractorScheduling::where('is_canceled',0);
+        $tractorSchedulings = ModelsTractorScheduling::where('is_canceled',0)->where('validated_by',Auth::user()->id);
 
         if($this->stractor > 0){
             $tractorSchedulings = $tractorSchedulings->where('tractor_id',$this->stractor);
@@ -313,6 +315,6 @@ class TractorScheduling extends Component
 
         $tractorSchedulings = $tractorSchedulings->orderBy('id','desc')->paginate(6);
 
-        return view('livewire.tractor-scheduling',compact('tractorSchedulings','tractors','labors','implements','locations','users','lotes','filtro_tractores','filtro_implementos'));
+        return view('livewire.tractor-scheduling',compact('tractorSchedulings','tractors','labors','implements','users','filtro_tractores','filtro_implementos'));
     }
 }

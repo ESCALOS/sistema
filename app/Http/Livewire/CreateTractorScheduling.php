@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire;
 
+use App\Http\Livewire\TractorScheduling as LivewireTractorScheduling;
 use App\Models\Implement;
 use App\Models\Labor;
 use App\Models\Location;
@@ -10,6 +11,7 @@ use App\Models\Tractor;
 use App\Models\TractorScheduling;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class CreateTractorScheduling extends Component
@@ -23,6 +25,8 @@ class CreateTractorScheduling extends Component
     public $implement;
     public $date;
     public $shift = "MAÑANA";
+
+    public $fundos = [];
 
     public $usuarios_usados = [];
     public $tractores_usados = [];
@@ -67,8 +71,7 @@ class CreateTractorScheduling extends Component
     /**
      * Registra la programación de tractores
      */
-    public function store()
-    {
+    public function store(){
         $this->validate();
 
         TractorScheduling::create([
@@ -79,6 +82,7 @@ class CreateTractorScheduling extends Component
             'implement_id' => $this->implement,
             'date' => $this->date,
             'shift' => $this->shift,
+            'validated_by' => Auth::user()->id
         ]);
         $this->resetExcept(['open','location','lote','date','shift']);
 
@@ -125,8 +129,12 @@ class CreateTractorScheduling extends Component
         if($this->date == ""){
             $this->date = date('Y-m-d',strtotime(date('Y-m-d')."+1 days"));
         }
-        
-        $locations = Location::where('sede_id',Auth::user()->location->sede->id)->get();
+
+        $overseer_locations = DB::table('overseer_locations')->select('location_id')->where('user_id',Auth::user()->id)->get();
+        foreach($overseer_locations as $request){
+            array_push($this->fundos,$request->location_id);
+        }
+        $locations = Location::whereIn('id',$this->fundos)->get();
 
     /*---------------Verificar si existe programación del día y turno-------------*/
         if(TractorScheduling::where('date',$this->date)->where('shift',$this->shift)->where('is_canceled',0)->exists()){
