@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 26-08-2022 a las 19:28:31
+-- Tiempo de generación: 27-08-2022 a las 15:54:42
 -- Versión del servidor: 10.8.3-MariaDB
 -- Versión de PHP: 8.1.9
 
@@ -1028,8 +1028,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `rutinario` (IN `fecha` DATE)   BEGI
             DECLARE implemento INT;
             DECLARE usuario INT;
             DECLARE programado_final INT DEFAULT 0;
-            DECLARE cursor_programacion CURSOR FOR SELECT ts.id,ts.implement_id,ts.user_id FROM tractor_schedulings ts WHERE date = fecha;
+            DECLARE cursor_programacion CURSOR FOR SELECT ts.id,ts.implement_id,ts.user_id FROM tractor_schedulings ts WHERE ts.date = fecha AND ts.is_canceled = 0;
             DECLARE CONTINUE HANDLER FOR NOT FOUND SET programado_final = 1;
+            DELETE FROM routine_tasks WHERE date = fecha AND state = "PENDIENTE";
                 OPEN cursor_programacion;
                     bucle_programacion:LOOP
                         IF programado_final = 1 THEN
@@ -1040,7 +1041,6 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `rutinario` (IN `fecha` DATE)   BEGI
                             INSERT INTO routine_tasks (tractor_scheduling_id, implement_id, user_id, date) VALUES (programacion_tractor,implemento,usuario,fecha);
                         ELSE 
                             IF EXISTS (SELECT * FROM routine_tasks WHERE implement_id = implemento AND date = fecha AND state = "PENDIENTE") THEN
-                                DELETE FROM routine_tasks WHERE implement_id = implemento AND date = fecha AND state = "PENDIENTE";
                                 INSERT INTO routine_tasks (tractor_scheduling_id, implement_id, user_id, date) VALUES (programacion_tractor,implemento,usuario,fecha);
                             END IF;
                         END IF;
@@ -2198,24 +2198,25 @@ CREATE TABLE `locations` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `code` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `location` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `sede_id` bigint(20) UNSIGNED NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `sede_id` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `locations`
 --
 
-INSERT INTO `locations` (`id`, `code`, `location`, `sede_id`, `created_at`, `updated_at`) VALUES
-(1, '461330', 'CHINCHA ALTA', 1, '2022-06-20 21:21:36', '2022-06-20 21:21:36'),
-(2, '857147', 'CHINCHA BAJA', 1, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
-(3, '639678', 'LOS CASTILLOS', 2, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(4, '719304', 'SANTA MARGARITA', 2, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
-(5, '063994', 'ad', 3, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
-(6, '979452', 'occaecati', 3, '2022-06-20 21:21:40', '2022-06-20 21:21:40'),
-(7, '378233', 'in', 4, '2022-06-20 21:21:40', '2022-06-20 21:21:40'),
-(8, '412730', 'assumenda', 4, '2022-06-20 21:21:41', '2022-06-20 21:21:41');
+INSERT INTO `locations` (`id`, `code`, `location`, `sede_id`) VALUES
+(1, '461330', 'CHINCHA ALTA', 1),
+(2, '857147', 'CHINCHA BAJA', 1),
+(3, '639678', 'LOS CASTILLOS', 2),
+(4, '719304', 'SANTA MARGARITA', 2),
+(5, '063994', 'ad', 3),
+(6, '979452', 'occaecati', 3),
+(7, '378233', 'in', 4),
+(8, '412730', 'assumenda', 4),
+(11, '4103', 'SANTA INÉS', 2),
+(12, '4104', 'DOS MARIAS', 2),
+(13, '4205', 'SAN HILARION', 2);
 
 -- --------------------------------------------------------
 
@@ -2520,7 +2521,10 @@ INSERT INTO `model_has_roles` (`role_id`, `model_type`, `model_id`) VALUES
 (3, 'App\\Models\\User', 15),
 (3, 'App\\Models\\User', 16),
 (4, 'App\\Models\\User', 4),
-(5, 'App\\Models\\User', 5);
+(5, 'App\\Models\\User', 3),
+(5, 'App\\Models\\User', 4),
+(5, 'App\\Models\\User', 5),
+(5, 'App\\Models\\User', 6);
 
 -- --------------------------------------------------------
 
@@ -2896,6 +2900,29 @@ INSERT INTO `order_request_new_items` (`id`, `order_request_id`, `new_item`, `qu
 (17, 165, 'KURUMI', '2.00', 5, 'SADSAD', 'public/newMaterials/0c0Cxd9wnoTeysDReJl0ZY8JDlskNoVW06BoMrQh.jpg', 'CREADO', 142, '', '2022-08-13 21:46:24', '2022-08-13 21:55:02'),
 (18, 165, 'MIZUHARA', '2.00', 6, 'ASD', 'public/newMaterials/2RXTO521bXJMV0qIxloka2p3QbZH0MnPogz0lgDW.jpg', 'RECHAZADO', NULL, '', '2022-08-13 21:46:52', '2022-08-13 21:55:06'),
 (19, 165, 'REM', '2.00', 9, 'SDAD', 'public/newMaterials/HHUrvAXqkorjQKyibrd0dS2kzhJ3I7DuNthjyeAR.jpg', 'RECHAZADO', NULL, '', '2022-08-13 21:47:11', '2022-08-13 21:55:09');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `overseer_locations`
+--
+
+CREATE TABLE `overseer_locations` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `location_id` bigint(20) UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `overseer_locations`
+--
+
+INSERT INTO `overseer_locations` (`id`, `user_id`, `location_id`) VALUES
+(1, 6, 4),
+(2, 6, 12),
+(5, 5, 3),
+(6, 5, 11),
+(7, 5, 13);
 
 -- --------------------------------------------------------
 
@@ -3555,7 +3582,13 @@ INSERT INTO `routine_tasks` (`id`, `tractor_scheduling_id`, `implement_id`, `use
 (77, 37, 6, 5, '2022-08-19', 'PENDIENTE', NULL, '2022-08-26 19:27:29', '2022-08-26 19:27:29'),
 (78, 38, 5, 37, '2022-08-19', 'PENDIENTE', NULL, '2022-08-26 19:27:29', '2022-08-26 19:27:29'),
 (79, 39, 7, 8, '2022-08-19', 'PENDIENTE', NULL, '2022-08-26 19:27:29', '2022-08-26 19:27:29'),
-(81, 40, 8, 36, '2022-08-19', 'PENDIENTE', NULL, '2022-08-26 19:27:29', '2022-08-26 19:27:29');
+(81, 40, 8, 36, '2022-08-19', 'PENDIENTE', NULL, '2022-08-26 19:27:29', '2022-08-26 19:27:29'),
+(159, 43, 8, 36, '2022-08-28', 'PENDIENTE', NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(160, 44, 7, 7, '2022-08-28', 'PENDIENTE', NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(161, 45, 7, 7, '2022-08-28', 'PENDIENTE', NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(162, 46, 8, 8, '2022-08-28', 'PENDIENTE', NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(163, 48, 6, 5, '2022-08-28', 'PENDIENTE', NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(164, 48, 6, 5, '2022-08-28', 'PENDIENTE', NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13');
 
 --
 -- Disparadores `routine_tasks`
@@ -3754,7 +3787,79 @@ INSERT INTO `routine_task_details` (`id`, `routine_task_id`, `task_id`, `is_chec
 (764, 81, 4, 0, NULL, '2022-08-26 19:27:29', '2022-08-26 19:27:29'),
 (765, 81, 35, 0, NULL, '2022-08-26 19:27:29', '2022-08-26 19:27:29'),
 (766, 81, 18, 0, NULL, '2022-08-26 19:27:29', '2022-08-26 19:27:29'),
-(767, 81, 39, 0, NULL, '2022-08-26 19:27:29', '2022-08-26 19:27:29');
+(767, 81, 39, 0, NULL, '2022-08-26 19:27:29', '2022-08-26 19:27:29'),
+(1692, 159, 90, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1693, 159, 84, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1694, 159, 32, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1695, 159, 96, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1696, 159, 27, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1697, 159, 8, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1698, 159, 88, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1699, 159, 14, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1700, 159, 4, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1701, 159, 35, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1702, 159, 18, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1703, 159, 39, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1704, 160, 90, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1705, 160, 84, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1706, 160, 32, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1707, 160, 96, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1708, 160, 27, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1709, 160, 8, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1710, 160, 88, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1711, 160, 14, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1712, 160, 4, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1713, 160, 35, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1714, 160, 18, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1715, 160, 39, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1716, 161, 90, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1717, 161, 84, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1718, 161, 32, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1719, 161, 96, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1720, 161, 27, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1721, 161, 8, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1722, 161, 88, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1723, 161, 14, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1724, 161, 4, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1725, 161, 35, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1726, 161, 18, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1727, 161, 39, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1728, 162, 90, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1729, 162, 84, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1730, 162, 32, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1731, 162, 96, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1732, 162, 27, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1733, 162, 8, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1734, 162, 88, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1735, 162, 14, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1736, 162, 4, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1737, 162, 35, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1738, 162, 18, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1739, 162, 39, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1740, 163, 90, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1741, 163, 84, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1742, 163, 32, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1743, 163, 96, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1744, 163, 27, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1745, 163, 8, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1746, 163, 88, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1747, 163, 14, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1748, 163, 4, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1749, 163, 35, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1750, 163, 18, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1751, 163, 39, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1752, 164, 90, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1753, 164, 84, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1754, 164, 32, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1755, 164, 96, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1756, 164, 27, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1757, 164, 8, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1758, 164, 88, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1759, 164, 14, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1760, 164, 4, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1761, 164, 35, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1762, 164, 18, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13'),
+(1763, 164, 39, 0, NULL, '2022-08-27 13:21:13', '2022-08-27 13:21:13');
 
 -- --------------------------------------------------------
 
@@ -3801,7 +3906,8 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('a4Xa5cfnqoKGK8TyQAr204qAJ7vhowelaQBS0OMv', 5, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiR0NUU251QlI1ZE12V00waG1aT2pWWHFlb214WDRYZ3VSOXhWa0JucCI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjUzOiJodHRwOi8vc2lzdGVtYS50ZXN0L3N1cGVydmlzb3IvUHJvZ3JhbWFjaW9uLVRyYWN0b3JlcyI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjU7fQ==', 1661542071);
+('jvOcMWBMUPOAUq1Nc5nz2z3iF1ZozgiuiRYHQ6uh', NULL, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiN2NkVmZ3VlJsUHBYYjZ3ckZ6V1JaOHJWUG81MUVUMVU4ZE4wdm13cyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjU6Imh0dHA6Ly9zaXN0ZW1hLnRlc3QvbG9naW4iO319', 1661615296),
+('wJOHz83ANl5RQPxnAiXZNHbA4drdxuZ9ofFsarVY', 6, '127.0.0.1', 'Mozilla/5.0 (X11; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoid21jNjJEY1BjaFBUYndVeTlFNUVEaHJoSFhlTldITTZiT01iN1hOYyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NTM6Imh0dHA6Ly9zaXN0ZW1hLnRlc3Qvc3VwZXJ2aXNvci9Qcm9ncmFtYWNpb24tVHJhY3RvcmVzIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6Njt9', 1661615050);
 
 -- --------------------------------------------------------
 
@@ -4302,6 +4408,7 @@ CREATE TABLE `tractor_schedulings` (
   `date` date NOT NULL,
   `shift` enum('MAÑANA','NOCHE') COLLATE utf8mb4_unicode_ci NOT NULL,
   `lote_id` bigint(20) UNSIGNED NOT NULL,
+  `validated_by` bigint(20) UNSIGNED NOT NULL,
   `is_canceled` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -4311,25 +4418,32 @@ CREATE TABLE `tractor_schedulings` (
 -- Volcado de datos para la tabla `tractor_schedulings`
 --
 
-INSERT INTO `tractor_schedulings` (`id`, `user_id`, `labor_id`, `tractor_id`, `implement_id`, `date`, `shift`, `lote_id`, `is_canceled`, `created_at`, `updated_at`) VALUES
-(25, 5, 1, 5, 5, '2022-08-18', 'MAÑANA', 5, 0, '2022-08-18 17:12:53', '2022-08-18 17:12:53'),
-(26, 37, 1, 6, 6, '2022-08-18', 'MAÑANA', 5, 0, '2022-08-18 17:13:05', '2022-08-18 17:13:05'),
-(27, 7, 3, 7, 7, '2022-08-18', 'MAÑANA', 7, 0, '2022-08-18 17:13:18', '2022-08-18 17:13:18'),
-(28, 36, 5, 8, 8, '2022-08-18', 'MAÑANA', 7, 0, '2022-08-18 17:13:24', '2022-08-18 17:13:24'),
-(29, 5, 3, 5, 5, '2022-08-19', 'MAÑANA', 5, 0, '2022-08-18 21:09:59', '2022-08-18 21:09:59'),
-(30, 37, 5, 6, 6, '2022-08-19', 'MAÑANA', 5, 0, '2022-08-18 21:10:07', '2022-08-18 21:10:07'),
-(31, 8, 2, 7, 8, '2022-08-19', 'MAÑANA', 8, 0, '2022-08-18 21:10:20', '2022-08-18 21:10:20'),
-(32, 36, 5, 8, 7, '2022-08-19', 'MAÑANA', 8, 0, '2022-08-18 21:10:29', '2022-08-18 21:10:29'),
-(33, 7, 3, 7, 7, '2022-08-18', 'NOCHE', 8, 0, '2022-08-18 21:10:58', '2022-08-18 21:10:58'),
-(34, 8, 3, 8, 8, '2022-08-18', 'NOCHE', 8, 0, '2022-08-18 21:11:06', '2022-08-18 21:11:06'),
-(35, 6, 4, 5, 5, '2022-08-18', 'NOCHE', 6, 0, '2022-08-18 21:11:19', '2022-08-18 21:11:19'),
-(36, 5, 3, 6, 6, '2022-08-18', 'NOCHE', 6, 0, '2022-08-18 21:11:27', '2022-08-18 21:11:27'),
-(37, 5, 3, 6, 6, '2022-08-19', 'NOCHE', 5, 0, '2022-08-18 21:11:46', '2022-08-18 21:11:46'),
-(38, 37, 2, 5, 5, '2022-08-19', 'NOCHE', 5, 0, '2022-08-18 21:11:54', '2022-08-18 21:11:54'),
-(39, 8, 3, 8, 7, '2022-08-19', 'NOCHE', 7, 0, '2022-08-18 21:12:09', '2022-08-18 21:12:09'),
-(40, 36, 2, 7, 8, '2022-08-19', 'NOCHE', 7, 0, '2022-08-18 21:12:16', '2022-08-18 21:12:16'),
-(41, 6, 1, 5, 5, '2022-08-22', 'NOCHE', 6, 0, '2022-08-26 23:03:57', '2022-08-26 23:03:57'),
-(42, 5, 4, 5, 6, '2022-08-27', 'MAÑANA', 6, 0, '2022-08-26 23:04:39', '2022-08-27 00:25:22');
+INSERT INTO `tractor_schedulings` (`id`, `user_id`, `labor_id`, `tractor_id`, `implement_id`, `date`, `shift`, `lote_id`, `validated_by`, `is_canceled`, `created_at`, `updated_at`) VALUES
+(25, 5, 1, 5, 5, '2022-08-18', 'MAÑANA', 5, 5, 0, '2022-08-18 17:12:53', '2022-08-18 17:12:53'),
+(26, 37, 1, 6, 6, '2022-08-18', 'MAÑANA', 5, 5, 0, '2022-08-18 17:13:05', '2022-08-18 17:13:05'),
+(27, 7, 3, 7, 7, '2022-08-18', 'MAÑANA', 7, 5, 0, '2022-08-18 17:13:18', '2022-08-18 17:13:18'),
+(28, 36, 5, 8, 8, '2022-08-18', 'MAÑANA', 7, 5, 0, '2022-08-18 17:13:24', '2022-08-18 17:13:24'),
+(29, 5, 3, 5, 5, '2022-08-19', 'MAÑANA', 5, 5, 0, '2022-08-18 21:09:59', '2022-08-18 21:09:59'),
+(30, 37, 5, 6, 6, '2022-08-19', 'MAÑANA', 5, 5, 0, '2022-08-18 21:10:07', '2022-08-18 21:10:07'),
+(31, 8, 2, 7, 8, '2022-08-19', 'MAÑANA', 8, 5, 0, '2022-08-18 21:10:20', '2022-08-18 21:10:20'),
+(32, 36, 5, 8, 7, '2022-08-19', 'MAÑANA', 8, 5, 0, '2022-08-18 21:10:29', '2022-08-18 21:10:29'),
+(33, 7, 3, 7, 7, '2022-08-18', 'NOCHE', 8, 5, 0, '2022-08-18 21:10:58', '2022-08-18 21:10:58'),
+(34, 8, 3, 8, 8, '2022-08-18', 'NOCHE', 8, 5, 0, '2022-08-18 21:11:06', '2022-08-18 21:11:06'),
+(35, 6, 4, 5, 5, '2022-08-18', 'NOCHE', 6, 5, 0, '2022-08-18 21:11:19', '2022-08-18 21:11:19'),
+(36, 5, 3, 6, 6, '2022-08-18', 'NOCHE', 6, 5, 0, '2022-08-18 21:11:27', '2022-08-18 21:11:27'),
+(37, 5, 3, 6, 6, '2022-08-19', 'NOCHE', 5, 5, 0, '2022-08-18 21:11:46', '2022-08-18 21:11:46'),
+(38, 37, 2, 5, 5, '2022-08-19', 'NOCHE', 5, 5, 0, '2022-08-18 21:11:54', '2022-08-18 21:11:54'),
+(39, 8, 3, 8, 7, '2022-08-19', 'NOCHE', 7, 5, 0, '2022-08-18 21:12:09', '2022-08-18 21:12:09'),
+(40, 36, 2, 7, 8, '2022-08-19', 'NOCHE', 7, 5, 0, '2022-08-18 21:12:16', '2022-08-18 21:12:16'),
+(41, 6, 1, 5, 5, '2022-08-22', 'NOCHE', 6, 5, 0, '2022-08-26 23:03:57', '2022-08-26 23:03:57'),
+(42, 5, 4, 5, 6, '2022-08-27', 'MAÑANA', 6, 5, 0, '2022-08-26 23:04:39', '2022-08-27 00:25:22'),
+(43, 36, 5, 7, 8, '2022-08-28', 'MAÑANA', 7, 5, 0, '2022-08-27 17:34:43', '2022-08-27 17:34:43'),
+(44, 7, 6, 8, 7, '2022-08-28', 'MAÑANA', 7, 5, 0, '2022-08-27 17:34:52', '2022-08-27 17:34:52'),
+(45, 7, 1, 7, 7, '2022-08-28', 'NOCHE', 7, 5, 0, '2022-08-27 17:34:59', '2022-08-27 17:34:59'),
+(46, 8, 3, 8, 8, '2022-08-28', 'NOCHE', 7, 5, 0, '2022-08-27 17:35:06', '2022-08-27 17:35:06'),
+(47, 37, 5, 5, 5, '2022-08-28', 'NOCHE', 5, 5, 1, '2022-08-27 17:35:17', '2022-08-27 17:54:22'),
+(48, 5, 6, 6, 6, '2022-08-28', 'NOCHE', 5, 5, 0, '2022-08-27 17:42:59', '2022-08-27 17:42:59'),
+(49, 6, 5, 5, 5, '2022-08-28', 'NOCHE', 5, 5, 0, '2022-08-27 18:43:34', '2022-08-27 18:43:34');
 
 -- --------------------------------------------------------
 
@@ -4364,9 +4478,9 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `code`, `name`, `lastname`, `location_id`, `email`, `email_verified_at`, `password`, `two_factor_secret`, `two_factor_recovery_codes`, `two_factor_confirmed_at`, `is_admin`, `remember_token`, `current_team_id`, `profile_photo_path`, `created_at`, `updated_at`) VALUES
 (1, '777269', 'Mr. Ford Vandervort', 'Kunze', 1, 'roob.brianne@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'O0nIxI5IQprroeRZWEEa3vnPs0R1Pi5wgB9j0qktxHzR83vsquad1iThdR6V', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
 (2, '213312', 'Birdie Waelchi', 'Walker', 1, 'ernser.caden@example.org', '2022-06-20 21:21:37', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'kq6UeoBK8yBEh7t3lORPFEAPfgfFHoV59d0ik3tdEuR1ZFdngX8vVxDpSwRv', NULL, NULL, '2022-06-20 21:21:37', '2022-06-20 21:21:37'),
-(3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'i8ehVi3sLB4xZmPyinXPVVagbbIAokfAbankLCFkiMTSSLX6A65RE5lEQjUH', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'gzNzJmT6jNbUhqhriQXAFj2QQX4eChvPN12TmZFqsFGLn2m82KwPLKFWsTxG', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
-(5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'ru24VEDqMX306p1YRHGG3O2E0jPb4gJr22vcKCK9J7U70t5YZHxeVf0eiqBw', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(3, '109931', 'Randi Leuschke', 'Cormier', 2, 'amaya.feeney@example.org', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'kjARXfkUNj7lt2rtj3BbUeWfShmaUvtx3U7xaiDlwWlVRZv7c3KZyGx7NPFd', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(4, '854140', 'Dr. Levi Feest', 'Ondricka', 2, 'woodrow.bogan@example.com', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'vZicdOOBSIl5xTMTqD63d55zCFWZsnJ1IWg33d7Yz3yojAYwRMU5BbtfvBG7', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
+(5, '912055', 'Erwin Green', 'Heidenreich', 3, 'hbeatty@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'gFNMkVRHab6lN1eBgl40QGDrGVLtVXQxN7tCKNqjuCXoQQ8JQuVbO3QDFa3f', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (6, '502387', 'Bella Block', 'Bashirian', 3, 'sibyl08@example.net', '2022-06-20 21:21:38', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'RVExDOoZewUypH8ghrpflQW4DtNKg282pxx1kBPeW5BmwAtGRk5CK8SgMKwx', NULL, NULL, '2022-06-20 21:21:38', '2022-06-20 21:21:38'),
 (7, '981787', 'Jaylon Prosacco', 'Langosh', 4, 'pleuschke@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'ze5dr2RfKobN0IEj4TKysHzR84jH0tO19WeXOP6jrIvLwNXJXEk5jIujUM19', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
 (8, '588440', 'Irving Strosin', 'Langosh', 4, 'mercedes57@example.com', '2022-06-20 21:21:39', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, 0, 'gGkZjXDuDGzrNV5Cowztezi5rGrfPtFD3vl1CYPKXjxexgoGkTNEiagdrYhq', NULL, NULL, '2022-06-20 21:21:39', '2022-06-20 21:21:39'),
@@ -4973,6 +5087,14 @@ ALTER TABLE `order_request_new_items`
   ADD KEY `order_request_new_items_item_id_foreign` (`item_id`);
 
 --
+-- Indices de la tabla `overseer_locations`
+--
+ALTER TABLE `overseer_locations`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `location_id` (`location_id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
 -- Indices de la tabla `password_resets`
 --
 ALTER TABLE `password_resets`
@@ -5400,7 +5522,7 @@ ALTER TABLE `loans`
 -- AUTO_INCREMENT de la tabla `locations`
 --
 ALTER TABLE `locations`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT de la tabla `lotes`
@@ -5461,6 +5583,12 @@ ALTER TABLE `order_request_details`
 --
 ALTER TABLE `order_request_new_items`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+
+--
+-- AUTO_INCREMENT de la tabla `overseer_locations`
+--
+ALTER TABLE `overseer_locations`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `permissions`
@@ -5526,13 +5654,13 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT de la tabla `routine_tasks`
 --
 ALTER TABLE `routine_tasks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=165;
 
 --
 -- AUTO_INCREMENT de la tabla `routine_task_details`
 --
 ALTER TABLE `routine_task_details`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=768;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1764;
 
 --
 -- AUTO_INCREMENT de la tabla `sedes`
@@ -5616,7 +5744,7 @@ ALTER TABLE `tractor_reports`
 -- AUTO_INCREMENT de la tabla `tractor_schedulings`
 --
 ALTER TABLE `tractor_schedulings`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT de la tabla `users`
@@ -5850,6 +5978,13 @@ ALTER TABLE `order_request_new_items`
   ADD CONSTRAINT `order_request_new_items_item_id_foreign` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
   ADD CONSTRAINT `order_request_new_items_measurement_unit_id_foreign` FOREIGN KEY (`measurement_unit_id`) REFERENCES `measurement_units` (`id`),
   ADD CONSTRAINT `order_request_new_items_order_request_id_foreign` FOREIGN KEY (`order_request_id`) REFERENCES `order_requests` (`id`);
+
+--
+-- Filtros para la tabla `overseer_locations`
+--
+ALTER TABLE `overseer_locations`
+  ADD CONSTRAINT `overseer_locations_ibfk_1` FOREIGN KEY (`location_id`) REFERENCES `locations` (`id`),
+  ADD CONSTRAINT `overseer_locations_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 --
 -- Filtros para la tabla `preventive_maintenance_frequencies`
