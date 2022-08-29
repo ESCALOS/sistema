@@ -238,9 +238,8 @@
             </div>
             <x-jet-dialog-modal maxWidth="sm" wire:model="open_print_schedule">
                 <x-slot name="title">
-                    Imprimir Programación
-                    <label class="flex flex-row justify-top-start font-bold text-xl hover:text-gray-500" style="cursor: pointer">X</label>
-                    
+                        <label>Imprimir Programación</label>
+                        <button style="position:fixed; margin-left:40px; font-weight: 900" class="hover:text-gray-500 text-2xl"  wire:click="$set('open_print_schedule',false)">X</button>
                 </x-slot>
                 <x-slot name="content">
                     <div>
