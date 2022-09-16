@@ -8,6 +8,7 @@ BEGIN
     /*-----------VARIABLES PARA LA CABECERA DE LA ORDEN DE TRABAJO-------------------*/
         DECLARE implemento INT;
         DECLARE responsable INT;
+        DECLARE dias_para_mantenimiento INT;
         DECLARE fecha DATE;
     /*-----------VARIABLES PARA EL DETALLE DE LA ORDEN DE TRABAJO--------------------*/
         DECLARE orden_de_trabajo INT;
@@ -40,8 +41,6 @@ BEGIN
     /*-----------CURSOR PARA ITERAR CADA IMPLEMENTO-----------------------------*/
         DECLARE cursor_implementos CURSOR FOR SELECT id,implement_model_id,user_id FROM implements;
         DECLARE CONTINUE HANDLER for NOT FOUND SET implemento_final = 1;
-    /*-----------FECHA 3 DÍAS DESPUÉS DE CREADA LA ORDEN DE TRABAJO-------------*/
-        SET fecha = DATE_ADD(CURDATE(),INTERVAL 3 DAY);
     /*-----------ABRIR CURSOR DE LOS IMPLEMENTOS--------------------------------*/
         OPEN cursor_implementos;
             bucle_implementos:LOOP
@@ -72,16 +71,14 @@ BEGIN
                                     /*---------OBTENER EL ID Y HORAS DEL COMPONENTE DEL IMPLEMENTO ----------------------------------------*/
                                         SELECT id,hours INTO componente_del_implemento,horas_componente FROM component_implement WHERE component_id = componente AND implement_id = implemento AND state = "PENDIENTE";
                                     /*---------OBTENER TIEMPO DE VIDA Y EL ID DEL ITEM DEL COMPONENTE -------------------------------------*/
-                                        SELECT lifespan, item_id INTO tiempo_vida_componente,item_componente FROM components WHERE id = componente;
+                                        SELECT lifespan,frequency,item_id INTO tiempo_vida_componente,frecuencia_componente,item_componente FROM components WHERE id = componente;
                                     /*---------HACER SI EL TIEMPO DE VIDA SUPERA A LAS HORAS DEL COMPONENTE--------------------------------*/
                                         IF horas_componente > tiempo_vida_componente THEN
                                             /*-----------PONER EL TIEMPO DE VIDA COMO EL TOTAL DE HORAS-----------------------------------*/
                                             SELECT tiempo_vida_componente INTO horas_componente;
                                         END IF;
-                                    /*---------CALCULAR CANTIDAD DE RECAMBIOS DENTRO DE 2 MESES--------------------------------------------*/
+                                    /*---------CALCULAR CANTIDAD DE RECAMBIOS DENTRO DE LOS 3 DÍAS SIGUIENTES--------------------------------------------*/
                                         SELECT FLOOR((horas_componente+21)/tiempo_vida_componente) INTO cantidad_componente_recambio;
-                                    /*---------OBTENER FRECUENCIA DE MANTENIMIENTO PREVENTIVO DEL COMPONENTE-------------------------------*/
-                                        SELECT frequency INTO frecuencia_componente FROM preventive_maintenance_frequencies WHERE component_id = componente;
                                     /*---------OBTENER HORAS DEL ÚLTIMO MANTENIMIENTO DEL COMPONENTE EN CASO HUBIERA-----------------------*/
                                         IF EXISTS(SELECT * FROM work_order_details wod INNER JOIN tasks t ON t.id = wod.task_id WHERE wod.component_implement_id = componente_del_implemento AND t.type = "PREVENTIVO") THEN
                                             SELECT component_hours INTO horas_ultimo_mantenimiento_componente FROM work_order_details WHERE component_implement_id = componente_del_implemento AND is_checked = 1 ORDER BY id DESC LIMIT 1;
@@ -90,40 +87,35 @@ BEGIN
                                         END IF;
                                     /*---------HACER EN CASO NECESITE RECAMBIO-------------------------------------------------------------*/
                                         IF cantidad_componente_recambio > 0 THEN
+                                            IF cantidad_componente_recambio > 1 THEN
+                                                SET dias_para_mantenimiento = 3;
+                                            ELSE
+                                                SET dias_para_mantenimiento = (tiempo_vida_componente - horas_componente)/7;
+                                            END IF;
+                                            SET fecha = DATE_ADD(CURDATE(),INTERVAL dias_para_mantenimiento day);
                                             /*---------HACER EN CASO ORDEN DE TRABAJO SI NO ESTÁ CREADA AÚN--------------------------------------*/
                                                 IF NOT EXISTS(SELECT * FROM work_orders WHERE implement_id = implemento AND state = "PENDIENTE") THEN
                                                 /*----------------------CREAR CABECERA DE LA ORDEN DE TRABAJO---------------------------------*/
                                                     INSERT INTO work_orders (user_id,implement_id,date) VALUES (responsable,implemento,fecha);
                                                 /*----------------------OBTENER ID DE LA CABECERA DE LA ORDEN DE TRABAJO-------------------------------------*/
-                                                    SELECT id INTO orden_de_trabajo FROM work_orders WHERE implement_id = implemento AND state = "PENDIENTE" AND date = fecha;
+                                                    SELECT id INTO orden_de_trabajo FROM work_orders WHERE implement_id = implemento AND state = "PENDIENTE";
                                                 END IF;
-                                            /*---------CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL RECAMBIO DEL COMPONENTE-----------------------*/
-                                                BEGIN
-                                                    DECLARE cursor_componente_tareas_recambio CURSOR FOR SELECT id FROM tasks WHERE component_id = componente AND type = "RECAMBIO";
-                                                    DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
-                                                    /*--------ABRIR CURSOR DE LAS TAREAS DE RECAMBIO PARA LOS COMPONENTES------------------------*/
-                                                        OPEN cursor_componente_tareas_recambio;
-                                                            bucle_componente_tareas_recambio:LOOP
-                                                                /*-----DETENER EL CICLO CUANDO NO ENCUENTRE MAS TAREAS----------------*/
-                                                                    IF tarea_final = 1 THEN
-                                                                        LEAVE bucle_componente_tareas_recambio;
-                                                                    END IF;
-                                                                /*----------OBTENER LA TAREA DEL COMPONENTE-------------------------------*/
-                                                                    FETCH cursor_componente_tareas_recambio INTO tarea_componente;
-                                                                /*----------PONER TAREAS A LA ORDEN DE TRABAJO------------------------------*/
-                                                                    IF NOT EXISTS(SELECT * FROM work_order_details WHERE task_id = tarea_componente AND work_order_id = orden_de_trabajo AND component_implement_id = componente_del_implemento) THEN
-                                                                        INSERT INTO work_order_details(work_order_id,task_id,component_implement_id,component_hours) VALUES (orden_de_trabajo,tarea_componente,componente_del_implemento,horas_componente);
-                                                                    END IF;
-                                                            END LOOP bucle_componente_tareas_recambio;
-                                                        CLOSE cursor_componente_tareas_recambio;
-                                                    /*--------RESETEAR CONTADOR DE TAREAS----------------------------------------------*/
-                                                        SELECT 0 INTO tarea_final;
-                                                END;
+                                            /*---------OBTENER LA TAREA PARA EL RECAMBIO DEL COMPONENTE-----------------------*/
+                                                SELECT id INTO tarea_componente FROM tasks WHERE component_id = componente AND type = "RECAMBIO" limit 1;
+                                                IF NOT EXISTS(SELECT * FROM work_order_details WHERE task_id = tarea_componente AND work_order_id = orden_de_trabajo AND component_implement_id = componente_del_implemento) THEN
+                                                    INSERT INTO work_order_details(work_order_id, task_id,component_implement_id, component_hours) VALUES (orden_de_trabajo, tarea_componente, componente_del_implemento, horas_componente);
+                                                END IF;
                                         ELSE
                                         /*---------CALCULAR MANTENIMIENTO PREVENTIVOS----------------------------------------------------------*/
-                                            SELECT (FLOOR((horas_ultimo_mantenimiento_componente+21)/frecuencia_componente) - cantidad_componente_recambio) INTO cantidad_componente_preventivo;
+                                            SELECT (FLOOR(((horas_componente - horas_ultimo_mantenimiento_componente) + 21)/frecuencia_componente)) INTO cantidad_componente_preventivo;
                                         /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS---------------------------*/
                                             IF cantidad_componente_preventivo > 0 THEN
+                                                IF cantidad_componente_preventivo > 1 THEN
+                                                    SET dias_para_mantenimiento = 3;
+                                                ELSE
+                                                    SET dias_para_mantenimiento = (frecuencia_componente - (horas_componente - horas_ultimo_mantenimiento_componente))/7;
+                                                END IF;
+                                                SET fecha = DATE_ADD(CURDATE(),INTERVAL dias_para_mantenimiento day);
                                                 /*---------HACER EN CASO ORDEN DE TRABAJO SI NO ESTÁ CREADA AÚN--------------------------------------*/
                                                     IF NOT EXISTS(SELECT * FROM work_orders WHERE implement_id = implemento AND state = "PENDIENTE") THEN
                                                         /*----------------------CREAR CABECERA DE LA ORDEN DE TRABAJO---------------------------------*/
@@ -137,36 +129,18 @@ BEGIN
                                                         DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
                                                         /*--------ABRIR CURSOR DE LAS TAREAS DE RECAMBIO PARA LOS COMPONENTES------------------------*/
                                                             OPEN cursor_componente_tareas_preventivo;
-                                                                bucle_componente_tareas_preventino:LOOP
+                                                                bucle_componente_tareas_preventivo:LOOP
                                                                     /*-----DETENER EL CICLO CUANDO NO ENCUENTRE MAS TAREAS----------------*/
                                                                         IF tarea_final = 1 THEN
-                                                                            LEAVE bucle_componente_tareas_preventino;
+                                                                            LEAVE bucle_componente_tareas_preventivo;
                                                                         END IF;
                                                                     /*----------OBTENER LA TAREA DEL COMPONENTE-------------------------------*/
                                                                         FETCH cursor_componente_tareas_preventivo INTO tarea_componente;
                                                                     /*----------CURSOR PARA ITERAR LOS MATERIALES DE DICHA TAREA--------------*/
-                                                                        BEGIN
-                                                                            DECLARE cursor_materiales_preventivo CURSOR FOR SELECT item_id,quantity FROM task_required_materials WHERE task_id = tarea_componente;
-                                                                            DECLARE CONTINUE HANDLER FOR NOT FOUND SET material_final = 1;
-                                                                            /*----------ABRIR CURSOR DE MATERIALES-------------------------------*/
-                                                                                OPEN cursor_materiales_preventivo;
-                                                                                    bucle_materiales:LOOP
-                                                                                        /*----------DETENER CICLO CUANDO NO SE ENCUENTREN MAS MATERIALES-----------------*/
-                                                                                            IF material_final = 1 THEN
-                                                                                                LEAVE bucle_materiales;
-                                                                                            END IF;
-                                                                                        /*----------OBTENER EL MATERIAL DE LA TAREA-----------------------------*/
-                                                                                            FETCH cursor_materiales_preventivo INTO item_componente,cantidad_componente_preventivo;
-                                                                                        /*----------PONER TAREAS A LA ORDEN DE TRABAJO------------------------------*/
-                                                                                            IF NOT EXISTS(SELECT * FROM work_order_details WHERE task_id = tarea_componente AND work_order_id = orden_de_trabajo AND component_implement_id = componente_del_implemento) THEN
-                                                                                                INSERT INTO work_order_details(work_order_id,task_id,component_implement_id,component_hours) VALUES (orden_de_trabajo,tarea_componente,componente_del_implemento,horas_componente);
-                                                                                            END IF;
-                                                                                    END LOOP bucle_materiales;
-                                                                                CLOSE cursor_materiales_preventivo;
-                                                                            /*------RESERTEAR CONTADOR MATERIALES---------------------------------------*/
-                                                                                SELECT 0 INTO material_final;
-                                                                        END;
-                                                                END LOOP bucle_componente_tareas_preventino;
+                                                                        IF NOT EXISTS(SELECT * FROM work_order_details WHERE task_id = tarea_componente AND work_order_id = orden_de_trabajo AND component_implement_id = componente_del_implemento) THEN
+                                                                            INSERT INTO work_order_details(work_order_id,task_id,component_implement_id,component_hours) VALUES (orden_de_trabajo,tarea_componente,componente_del_implemento,horas_componente);
+                                                                        END IF;
+                                                                END LOOP bucle_componente_tareas_preventivo;
                                                             CLOSE cursor_componente_tareas_preventivo;
                                                         /*--------RESETEAR CONTADOR TAREAS-----------------------------------------------------------*/
                                                             SELECT 0 INTO tarea_final;
@@ -191,8 +165,8 @@ BEGIN
                                                                 END IF;
                                                             /*---------OBTENER ID Y HORAS DE LA PIEZA DEL COMPONENTE------------------------------------------*/
                                                                 SELECT id,hours INTO pieza_del_componente,horas_pieza FROM component_part WHERE component_implement_id = componente_del_implemento AND part = pieza AND state = "PENDIENTE";
-                                                            /*---------OBTENER EL TIEMPO DE VIDA Y EL ID DEL ALMACEN DE LA PIEZA------------------------------*/
-                                                                SELECT lifespan, item_id INTO tiempo_vida_pieza,item_pieza FROM components WHERE id = pieza;
+                                                            /*---------OBTENER EL TIEMPO DE VIDA, LA FRECUENCIA Y EL ID DE LA PIEZA------------------------------*/
+                                                                SELECT lifespan,frequency, item_id INTO tiempo_vida_pieza,frecuencia_pieza,item_pieza FROM components WHERE id = pieza;
                                                             /*---------HACER SI EL TIEMPO DE VIDA SUPERA A LAS HORAS DE LA PIEZA------------------------------*/
                                                                 IF horas_pieza >= tiempo_vida_pieza THEN
                                                                     /*---------PONER EL TIEMPO DE VIDA COMO EL TOTAL DE HORAS----------*/
@@ -200,16 +174,20 @@ BEGIN
                                                                 END IF;
                                                             /*---------CALCULAR SI NECESITA RECAMBIO DENTRO DE 2 MESES----------------------------------------*/
                                                                 SELECT FLOOR((horas_pieza+21)/tiempo_vida_pieza) INTO cantidad_pieza_recambio;
-                                                            /*---------OBTENER FRECUENCIA DE MANTENIMIENTO PREVENTIVO DE LA PIEZA-----------------------------*/
-                                                                SELECT frequency INTO frecuencia_pieza FROM preventive_maintenance_frequencies WHERE component_id = pieza;
                                                             /*---------OBTENER HORAS DEL ÚLTIMO MATENIMIENTO DE LA PIEZA EN CASO HUBIERA----------------------*/
                                                                 IF EXISTS(SELECT * FROM work_order_details wod INNER JOIN tasks t ON t.id = wod.task_id WHERE wod.component_part_id = pieza_del_componente AND t.type = "PREVENTIVO" AND is_checked = 1) THEN
-                                                                        SELECT wod.component_hours INTO horas_ultimo_mantenimiento_pieza FROM work_order_details wod INNER JOIN tasks t ON t.id = wod.task_id WHERE wod.component_part_id = pieza_del_componente AND t.type = "PREVENTIVO" AND is_checked = 1 ORDER BY id DESC LIMIT 1;
-                                                                    ELSE
-                                                                        SELECT 0 INTO horas_ultimo_mantenimiento_pieza;
-                                                                    END IF;
+                                                                    SELECT wod.component_hours INTO horas_ultimo_mantenimiento_pieza FROM work_order_details wod INNER JOIN tasks t ON t.id = wod.task_id WHERE wod.component_part_id = pieza_del_componente AND t.type = "PREVENTIVO" AND is_checked = 1 ORDER BY id DESC LIMIT 1;
+                                                                ELSE
+                                                                    SELECT 0 INTO horas_ultimo_mantenimiento_pieza;
+                                                                END IF;
                                                             /*---------HACER EN CASO NECESITE RECAMBIO--------------------------------------------------------*/
                                                                 IF(cantidad_pieza_recambio > 0) THEN
+                                                                    IF cantidad_pieza_recambio > 1 THEN
+                                                                        SET dias_para_mantenimiento = 3;
+                                                                    ELSE
+                                                                        SET dias_para_mantenimiento = (tiempo_vida_pieza - horas_pieza)/7;
+                                                                    END IF;
+                                                                    SET fecha = DATE_ADD(CURDATE(),INTERVAL dias_para_mantenimiento day);
                                                                     /*---------HACER EN CASO ORDEN DE TRABAJO SI NO ESTÁ CREADA AÚN--------------------------------------*/
                                                                         IF NOT EXISTS(SELECT * FROM work_orders WHERE implement_id = implemento AND state = "PENDIENTE") THEN
                                                                             /*----------------------CREAR CABECERA DE LA ORDEN DE TRABAJO---------------------------------*/
@@ -218,32 +196,21 @@ BEGIN
                                                                                 SELECT id INTO orden_de_trabajo FROM work_orders WHERE implement_id = implemento AND state = "PENDIENTE" AND date = fecha;
                                                                         END IF;
                                                                     /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL RECAMBIO DEL COMPONENTE-----------------------*/
-                                                                        BEGIN
-                                                                            DECLARE cursor_pieza_tareas_recambio CURSOR FOR SELECT id FROM tasks WHERE component_id = pieza AND type = "RECAMBIO";
-                                                                            DECLARE CONTINUE HANDLER FOR NOT FOUND SET tarea_final = 1;
-                                                                            /*--------ABRIR CURSOR DE LAS TAREAS DE RECAMBIO PARA LOS COMPONENTES------------------------*/
-                                                                                OPEN cursor_pieza_tareas_recambio;
-                                                                                    bucle_pieza_tareas_recambio:LOOP
-                                                                                        /*----------DETENER EL CICLO CUANDO NO ENCUENTRE MAS TAREAS----------------*/
-                                                                                            IF tarea_final = 1 THEN
-                                                                                                LEAVE bucle_pieza_tareas_recambio;
-                                                                                            END IF;
-                                                                                        /*----------OBTENER LA TAREA DE LA PIEZA--------------------------------*/
-                                                                                            FETCH cursor_pieza_tareas_recambio INTO tarea_pieza;
-                                                                                        /*----------PONER MATERIALES PARA PRE-RESERVA----------------------------------------*/
-                                                                                            IF NOT EXISTS(SELECT * FROM work_order_details WHERE task_id = tarea_pieza AND work_order_id = orden_de_trabajo) THEN
-                                                                                                INSERT INTO work_order_details(work_order_id,item_id,component_part_id,component_hours) VALUES (orden_de_trabajo,tarea_pieza,pieza_del_componente);
-                                                                                            END IF;
-                                                                                    END LOOP bucle_pieza_tareas_recambio;
-                                                                                CLOSE cursor_pieza_tareas_recambio;
-                                                                            /*----------RESETEAR CONTADOR DE TAREAS----------------------------*/
-                                                                                SELECT 0 INTO tarea_final;
-                                                                        END;
+                                                                        SELECT id INTO tarea_pieza FROM tasks WHERE component_id = pieza AND type = "RECAMBIO" limit 1;
+                                                                        IF NOT EXISTS(SELECT * FROM work_order_details WHERE task_id = tarea_pieza AND work_order_id = orden_de_trabajo) THEN
+                                                                            INSERT INTO work_order_details(work_order_id,task_id,component_part_id,component_hours) VALUES (orden_de_trabajo,tarea_pieza,pieza_del_componente,horas_pieza);
+                                                                        END IF;
                                                                 ELSE
                                                                     /*---------CALCULAR MANTENIMIENTO PREVENTIVOS-----------------------------------------------------*/
-                                                                        SELECT (FLOOR((horas_ultimo_mantenimiento_pieza+21)/frecuencia_pieza) - cantidad_pieza_recambio) INTO cantidad_pieza_preventivo;
+                                                                        SELECT (FLOOR(((horas_pieza - horas_ultimo_mantenimiento_pieza)+21)/frecuencia_pieza)) INTO cantidad_pieza_preventivo;
                                                                     /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS----------------------*/
                                                                         IF cantidad_pieza_preventivo > 0 THEN
+                                                                            IF cantidad_pieza_preventivo > 1 THEN
+                                                                                SET dias_para_mantenimiento = 3;
+                                                                            ELSE
+                                                                                SET dias_para_mantenimiento = (frecuencia_pieza - (horas_pieza - horas_ultimo_mantenimiento_pieza))/7;
+                                                                            END IF;
+                                                                            SET fecha = DATE_ADD(CURDATE(),INTERVAL dias_para_mantenimiento day);
                                                                             /*---------HACER EN CASO ORDEN DE TRABAJO SI NO ESTÁ CREADA AÚN--------------------------------------*/
                                                                                 IF NOT EXISTS(SELECT * FROM work_orders WHERE implement_id = implemento AND state = "PENDIENTE") THEN
                                                                                     /*----------------------CREAR CABECERA DE LA ORDEN DE TRABAJO---------------------------------*/
@@ -265,8 +232,8 @@ BEGIN
                                                                                                 /*----------OBTENER LA TAREA DEL COMPONENTE-------------------------------*/
                                                                                                     FETCH cursor_pieza_tareas_preventivo INTO tarea_pieza;
                                                                                                 /*----------PONER TAREAS A LA ORDEN DE TRABAJO------------------------------*/
-                                                                                                    IF NOT EXISTS(SELECT * FROM work_order_details WHERE task_id = tarea_componente AND work_order_id = orden_de_trabajo AND component_implement_id = componente_del_implemento) THEN
-                                                                                                        INSERT INTO work_order_details(work_order_id,task_id,component_implement_id,component_hours) VALUES (orden_de_trabajo,tarea_componente,componente_del_implemento,horas_componente);
+                                                                                                    IF NOT EXISTS(SELECT * FROM work_order_details WHERE task_id = tarea_pieza AND work_order_id = orden_de_trabajo AND component_implement_id = componente_del_implemento) THEN
+                                                                                                        INSERT INTO work_order_details(work_order_id,task_id,component_implement_id,component_hours) VALUES (orden_de_trabajo,tarea_pieza,componente_del_implemento,horas_componente);
                                                                                                     END IF;
                                                                                             END LOOP bucle_pieza_tareas_preventivo;
                                                                                         CLOSE cursor_pieza_tareas_preventivo;

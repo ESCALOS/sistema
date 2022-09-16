@@ -147,7 +147,7 @@ BEGIN
                                                                     END;
                                                             ELSE
                                                                 /*---------CALCULAR MANTENIMIENTO PREVENTIVOS----------------------------------------------------------*/
-                                                                    SELECT (FLOOR((horas_ultimo_mantenimiento_componente+336)/frecuencia_componente) - cantidad_componente_recambio) INTO cantidad_componente_preventivo;
+                                                                    SELECT (FLOOR(((horas_componenete - horas_ultimo_mantenimiento_componente)+336)/frecuencia_componente) ) INTO cantidad_componente_preventivo;
                                                                 /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS---------------------------*/
                                                                     IF cantidad_componente_preventivo > 0 THEN
                                                                         /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL MANTENIMIENTO PREVENTIVO DEL COMPONENTE-------------------------*/
@@ -275,7 +275,7 @@ BEGIN
                                                                                                     END;
                                                                                         END IF;
                                                                                     /*---------CALCULAR MANTENIMIENTO PREVENTIVOS-----------------------------------------------------*/
-                                                                                        SELECT (FLOOR((horas_ultimo_mantenimiento_pieza+336)/frecuencia_pieza) - cantidad_pieza_recambio) INTO cantidad_pieza_preventivo;
+                                                                                        SELECT (FLOOR(((horas_pieza - horas_ultimo_mantenimiento_pieza)+336)/frecuencia_pieza)) INTO cantidad_pieza_preventivo;
                                                                                     /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS----------------------*/
                                                                                         IF cantidad_pieza_preventivo > 0 THEN
                                                                                             /*-----CURSOR PARA ITERAR TODAS LAS TAREAS PARA EL MANTENIMIENTO PREVENTIVO DE LA PIEZA-------------------------*/

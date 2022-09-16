@@ -146,7 +146,7 @@ BEGIN
                                                             END;
                                                     ELSE
                                                         /*---------CALCULAR MANTENIMIENTO PREVENTIVOS----------------------------------------------------------*/
-                                                            SELECT (FLOOR((horas_ultimo_mantenimiento_componente+168)/frecuencia_componente) - cantidad_componente_recambio) INTO cantidad_componente_preventivo;
+                                                            SELECT (FLOOR((horas_componente - horas_ultimo_mantenimiento_componente+168)/frecuencia_componente)) INTO cantidad_componente_preventivo;
                                                         /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS---------------------------*/
                                                             IF cantidad_componente_preventivo > 0 THEN
                                                                 /*---------HACER EN CASO LA PRE-RESERVA SI NO ESTÁ CREADA AÚN---------------*/
@@ -288,7 +288,7 @@ BEGIN
                                                                                             END;
                                                                                 ELSE
                                                                                     /*---------CALCULAR MANTENIMIENTO PREVENTIVOS-----------------------------------------------------*/
-                                                                                        SELECT (FLOOR((horas_ultimo_mantenimiento_pieza+168)/frecuencia_pieza) - cantidad_pieza_recambio) INTO cantidad_pieza_preventivo;
+                                                                                        SELECT (FLOOR((horas_pieza - horas_ultimo_mantenimiento_pieza+168)/frecuencia_pieza)) INTO cantidad_pieza_preventivo;
                                                                                     /*---------HACER EN CASO NECESITE MATERIALES PARA MANTENIMIENTOS PREVENTIVOS----------------------*/
                                                                                         IF cantidad_pieza_preventivo > 0 THEN
                                                                                             /*---------HACER EN CASO LA PRE-RESERVA SI NO ESTÁ CREADA AÚN---------------*/
