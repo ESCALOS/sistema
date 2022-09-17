@@ -74,7 +74,7 @@ BEGIN
                             /*-------------------HACER EN CASO SE NECESITE RECAMBO EN 3 DÍAS------------------------------------------------*/
                                 IF (dias_para_el_recambio_del_componente <= dias_antes_del_aviso) THEN
                                     BEGIN
-                                    /*----------OBTENER LA FECHA QUE FALTA PARA EL MATENIMIENTO---------------------------------------------*/
+                                    /*----------OBTENER LA FECHA QUE FALTA PARA EL CAMBIO--------------------------------------------------*/
                                         SET fecha = DATE_ADD(CURDATE(),INTERVAL (dias_para_el_recambio_del_componente+1) day);
                                         IF NOT EXISTS (SELECT * FROM work_orders WHERE implement_id = implemento AND state = 'PENDIENTE') THEN
                                             INSERT INTO work_orders (implement_id,user_id,date,location_id,ceco_id) VALUES (implemento,responsable,fecha,ubicacion,ceco);
@@ -85,6 +85,8 @@ BEGIN
                                     /*-------SOLICITAR EL RECAMBIO DEL COMPONENTE---------------------------*/
                                         IF NOT EXISTS(SELECT * FROM work_order_details WHERE work_order_id = orden_de_trabajo AND task_id = tarea_del_componente) THEN
                                             INSERT INTO work_order_details(work_order_id,task_id,task_type,component_implement_id,component_id) VALUES(orden_de_trabajo,tarea_del_componente,'RECAMBIO',componente_del_implemento,componente);
+                                        ELSE
+                                            UPDATE work_order_details SET quantity = quantity + 1 WHERE work_order_id = orden_de_trabajo AND task_id = tarea_del_componente AND component_implement_id = componente_del_implemento;
                                         END IF;
                                     END;
                             /*------------------DE LO CONTRARIO VERIFICAR SI NECESITA MANTENIMIENTO PREVENTIVO------------------------------*/
@@ -107,11 +109,27 @@ BEGIN
                                     /*---------HACER SI ES NECESARIO EL MATENIMIENTO DEL COMPONENTE-----------------------------------------*/
                                         IF dias_para_el_matenimiento_preventivo_del_componente <= dias_antes_del_aviso THEN
                                             BEGIN
-                                        /*-----OBTENER LA FECHA EN LA CUAL ES NECESARIA EL MANTENIMIENTO PREVENTIVO-------------------------*/
-                                            SET fecha = DATE_ADD(CURDATE(),INTERVAL (dias_para_el_recambio_del_componente+1) day);
-                                        /*----------------------------------------------------------------------*/
-
-                                            END
+                                            /*-----OBTENER LA FECHA EN LA CUAL ES NECESARIA EL MANTENIMIENTO PREVENTIVO-------------------------*/
+                                                SET fecha = DATE_ADD(CURDATE(),INTERVAL (dias_para_el_matenimiento_preventivo_del_componente + 1) day);
+                                            /*----------------------------------------------------------------------*/
+                                                IF NOT EXISTS(SELECT * FROM work_orders WHERE implement_id = implemento AND state = 'PENDIENTE') THEN
+                                                    INSERT INTO work_orders (implement_id,user_id,date,location_id,ceco_id) VALUES (implemento,responsable,fecha,ubicacion,ceco);
+                                                END IF;
+                                                SELECT id INTO orden_de_trabajo FROM work_orders WHERE implement_id = implemento AND state = 'PENDIENTE' LIMIT 1;
+                                                BEGIN
+                                                    DECLARE cursor_tareas_preventinvas_del_componente CURSOR FOR SELECT id FROM tasks WHERE component_id = componente;
+                                                    DECLARE CONTINUE HANDLE FOR NOT FOUND SET tarea_final = 1;
+                                                    OPEN lista_de_las_tareas_para_preventivo;
+                                                        bucle_tareas:LOOP
+                                                            FETCH lista_de_las_tareas_para_preventivo INTO tarea_del_componente;
+                                                            IF tarea_final THEN
+                                                                LEAVE bucle_tareas;
+                                                            END IF;
+                                                        END LOOP bucle_tarea;
+                                                    CLOSE lista_de_las_tareas_para_preventivo;
+                                                    SET tarea_final = 0;
+                                                END;
+                                            END;
                                         END IF;
                                     /*------------INICIO DE RECORRIDO DE TODOS LAS PIEZAS DEL COMPONENTE DEL IMPLEMENTO-----------------------------*/
                                         BEGIN
