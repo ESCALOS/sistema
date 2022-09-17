@@ -4,8 +4,6 @@ namespace App\Http\Livewire;
 
 use App\Models\Implement;
 use App\Models\Labor;
-use App\Models\Location;
-use App\Models\Lote;
 use App\Models\Tractor;
 use App\Models\TractorScheduling as ModelsTractorScheduling;
 use App\Models\User;
