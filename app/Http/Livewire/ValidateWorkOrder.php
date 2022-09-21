@@ -30,7 +30,7 @@ class ValidateWorkOrder extends Component
 
     /**
      * Obtener los componentes para recambio y mostrar el modal
-     * 
+     *
      * @param int $id ID de la orden de trabajo
      */
     public function mostrarComponentesRecambio($id){
@@ -55,7 +55,7 @@ class ValidateWorkOrder extends Component
                         ->update(['state' => 'ACEPTADO']);
 
         $work_order = WorkOrder::find($this->orden_trabajo);
-        
+
         $work_order->state = "PENDIENTE";
         $work_order->save();
 

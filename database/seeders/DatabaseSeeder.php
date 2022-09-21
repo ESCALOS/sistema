@@ -35,9 +35,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        $faker = Faker::create();
 
-        Zone::factory(2)->has(Sede::factory()->count(2)->has(Location::factory()->count(2)->has(Lote::factory()->count(2))->has(User::factory()->count(2))->has(Ceco::factory()->count(2))))->create();
+
+        $faker = Faker::create();
+        User::factory(1)->create();
+        /*Zone::factory(2)->has(Sede::factory()->count(2)->has(Location::factory()->count(2)->has(Lote::factory()->count(2))->has(User::factory()->count(2))->has(Ceco::factory()->count(2))))->create();
         Brand::factory(30)->create();
         MeasurementUnit::factory(50)->create();
         Crop::factory(10)->create();
@@ -78,7 +80,7 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(RoleSeeder::class);
-        $this->call(OrderDateSeeder::class);
+        $this->call(OrderDateSeeder::class);*/
 
         /*TractorScheduling::factory(50)->create();
         TractorReport::factory(50)->create();
