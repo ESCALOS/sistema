@@ -19,19 +19,19 @@ class UsersImport implements ToModel,WithHeadingRow,WithValidation,WithBatchInse
     private $locations;
 
     public function __construct() {
-        //$this->locations = Location::pluck('id','code');
+        $this->locations = Location::pluck('id','code');
     }
 
     public function model(array $row)
     {
 
-        if(isset($row['CODIGO'])){
+        if(isset($row['codigo'])){
             return new User([
-                'code' => $row['CODIGO'],
-                'name' => $row['NOMBRE'],
-                'lastname' => $row['APELLIDO'],
+                'code' => $row['codigo'],
+                'name' => $row['nombre'],
+                'lastname' => $row['apellido'],
                 'location_id' => 14,
-                'email' => "",
+                'email' => NULL,
                 'email_verified_at' => now(),
                 'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
                 'remember_token' => Str::random(10),
@@ -55,7 +55,6 @@ class UsersImport implements ToModel,WithHeadingRow,WithValidation,WithBatchInse
             '*.codigo' => ['required','unique:users,code'],
             '*.nombre' => ['required'],
             '*.apellido' => ['required'],
-            '*.sede' => ['required','exists:sedes,id'],
         ];
     }
 

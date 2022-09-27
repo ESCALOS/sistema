@@ -43,7 +43,7 @@ class InsertMaterial extends Component
 
     /**
      * Filtra el detalle de ingreso de materiales por sedes(puede ser más de una)
-     * 
+     *
      * @param int $sede_id ID de la sede
      */
     public function addSedeFilter($sede_id){
@@ -112,7 +112,7 @@ class InsertMaterial extends Component
 
     /**
      * Esta función se usa para mostrar el mensaje de sweetalert
-     * 
+     *
      * @param string $mensaje Mensaje a mostrar
      * @param string $posicion Posicion de la alerta
      * @param string $icono Icono de la alerta

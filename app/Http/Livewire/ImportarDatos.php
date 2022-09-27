@@ -16,7 +16,7 @@ class ImportarDatos extends Component
 
     public $user;
     public $item;
-    public $errores_user;
+    public $errores_user = NULL;
     public $errores_item;
 
     /**
@@ -28,7 +28,7 @@ class ImportarDatos extends Component
             $this->alerta();
         } catch(\Maatwebsite\Excel\Validators\ValidationException $e){
             $this->errores_user = $e->failures();
-            $this->alerta('Corrija los errroes y descague el formato nuevamente','middle','error');
+            $this->alerta($this->errores_user,'middle','error');
         }
     }
 
@@ -61,10 +61,10 @@ class ImportarDatos extends Component
     {
         return Excel::download(new GeneralOrderRequestExport(1), 'formato-stock.xlsx');
     }
-    
+
     /**
      * Esta función se usa para mostrar el mensaje de sweetalert
-     * 
+     *
      * @param string $mensaje Mensaje a mostrar
      * @param string $posicion Posicion de la alerta
      * @param string $icono Icono de la alerta
