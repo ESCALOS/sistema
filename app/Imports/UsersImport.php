@@ -21,7 +21,10 @@ class UsersImport implements ToModel,WithHeadingRow,WithValidation,WithBatchInse
 
     public function __construct() {
         $this->locations = Location::pluck('id','code');
+<<<<<<< HEAD
         $this->sedes = Sede::pluck('id','sede');
+=======
+>>>>>>> a9be07364ea3037f0524d9f6b061ad8d4af4f440
     }
 
     public function model(array $row)
@@ -30,10 +33,16 @@ class UsersImport implements ToModel,WithHeadingRow,WithValidation,WithBatchInse
         if(isset($row['codigo'])){
             return new User([
                 'code' => $row['codigo'],
+<<<<<<< HEAD
                 'dni' => $row['dni'],
                 'name' => $row['nombre'],
                 'lastname' => $row['apellido'],
                 'location_id' => Location::where('sede_id',$this->sedes[$row['sede']])->first()->id,
+=======
+                'name' => $row['nombre'],
+                'lastname' => $row['apellido'],
+                'location_id' => 14,
+>>>>>>> a9be07364ea3037f0524d9f6b061ad8d4af4f440
                 'email' => NULL,
                 'email_verified_at' => now(),
                 'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
