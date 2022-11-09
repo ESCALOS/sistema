@@ -22,15 +22,15 @@ class ImportarDatos extends Component
     use WithPagination;
 
     public $modelos = [
-        [
+        1 =>[
             'tabla' => 'users',
             'nombre' => 'Personal'
         ],
-        [
+        2 => [
             'tabla' => 'tractors',
             'nombre' => 'Tractores'
         ],
-        [
+        3 => [
             'tabla' => 'lotes',
             'nombre' => 'Lotes'
         ]

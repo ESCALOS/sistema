@@ -29,14 +29,15 @@
     </div>
     
     @switch($select_import)
-        @case(1)
+        @case('1')
             @livewire('admin.user')
             @break
-        @case(2)
-            
+        @case('2')
+            @livewire('admin.tractor')
             @break
         @default
-            
+            @livewire('admin.lote')
+            @break
     @endswitch
 
     @isset($errores_item)
