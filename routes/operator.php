@@ -1,9 +1,9 @@
 <?php
 
-use App\Http\Livewire\OperatorIndex;
-use App\Http\Livewire\PendingMaintenanceList;
-use App\Http\Livewire\PreReserva;
-use App\Http\Livewire\RequestMaterial;
+use App\Http\Livewire\Operator\OperatorIndex;
+use App\Http\Livewire\Operator\WorkOrder\PendingMaintenanceList;
+use App\Http\Livewire\Operator\PreReserva\PreReserva;
+use App\Http\Livewire\Operator\RequestMaterial\RequestMaterial;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/',OperatorIndex::class)->name('operator.index');

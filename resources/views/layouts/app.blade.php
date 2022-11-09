@@ -9,8 +9,8 @@
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap">
 
-        <link rel="stylesheet" href="{{ mix('css/app.css') }}">
-
+        <!--<link rel="stylesheet" href="{{ mix('css/app.css') }}">-->
+        <link rel="stylesheet" href="/sistema/public/css/app.css">
         @livewireStyles
 
         <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
@@ -18,7 +18,8 @@
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-        <script src="{{ mix('js/app.js') }}" defer></script>
+        <!--<script src="{{ mix('js/app.js') }}" defer></script>-->
+        <script src="/sistema/public/js/app.js" defer></script>
     </head>
     <body class="font-sans antialiased">
         <x-jet-banner />

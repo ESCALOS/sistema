@@ -1,9 +1,9 @@
 <?php
 
-use App\Http\Livewire\RoutineTask;
-use App\Http\Livewire\TractorScheduling;
-use App\Http\Livewire\ValidateRoutineTask;
-use App\Http\Livewire\ValidateWorkOrder;
+use App\Http\Livewire\Overseer\RoutineTask\RoutineTask;
+use App\Http\Livewire\Overseer\TractorScheduling\TractorScheduling;
+use App\Http\Livewire\Overseer\RoutineTask\ValidateRoutineTask;
+use App\Http\Livewire\Overseer\WorkOrder\ValidateWorkOrder;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/Programacion-Tractores',TractorScheduling::class)->name('overseer.tractor-scheduling');
