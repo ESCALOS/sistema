@@ -23,105 +23,19 @@ class ImportarDatos extends Component
 
     public $modelos = [
         [
-            'nombre' => 'personal',
             'tabla' => 'users',
-            'campos' => [
-                [
-                    'header' => 'Código',
-                    'field' => 'code',
-                ],
-                [
-                    'header' => 'DNI',
-                    'field' => 'dni'
-                ],
-                [
-                    'header' => 'Nombre',
-                    'field' => 'name'
-                ],
-                [
-                    'header' => 'Apellido',
-                    'field' => 'lastname'
-                ],
-                [
-                    'header' => 'Ubicación',
-                    'field' => 'location_id',
-                    'show' => 'location'
-                ]
-            ]
+            'nombre' => 'Personal'
         ],
         [
-            'nombre' => 'tractores',
             'tabla' => 'tractors',
-            'campos' => [
-                [
-                    'header' => 'Modelo',
-                    'field' => 'tractor_model_id'
-                ],
-                [
-                    'header' => 'Número',
-                    'field' => 'tractor_number'
-                ],
-                [
-                    'header' => 'Motor',
-                    'field' => 'motor'
-                ],
-                [
-                    'header' => 'Serie',
-                    'field' => 'serie'
-                ],
-                [
-                    'header' => 'Horómetro',
-                    'field' => 'hour_meter'
-                ]
-            ]
+            'nombre' => 'Tractores'
         ],
         [
-            'nombre' => 'implementos',
-            'tabla' => 'implements',
-            'campos' => [
-                [
-                    'header' => 'Modelo',
-                    'field' => 'implement_model_id',
-                ],
-                [
-                    'header' => 'Número',
-                    'field' => 'implement_number'
-                ],
-                [
-                    'header' => 'Horas',
-                    'field' => 'hours'
-                ],
-                [
-                    'header' => 'Responsable',
-                    'field' => 'user_id',
-                    'show' => 'code'
-                ],
-                [
-                    'header' => 'Ubicación',
-                    'field' => 'location_id',
-                    'show' => 'location'
-                ],
-                [
-                    'header' => 'CeCo',
-                    'field' => 'ceco_id',
-                    'show' => 'code'
-                ]
-            ]
-        ],
-        [
-            'nombre' => 'lotes',
             'tabla' => 'lotes',
-            'campos' => [
-
-            ]
-        ],
-        [
-            'nombre' => 'items',
-            'tabla' => 'items'
+            'nombre' => 'Lotes'
         ]
     ];
-    public $select_import = 0;
-    public $showed_fields = [];
+    public $select_import = 1;
 
     public $file_import;
     public $errores_user = NULL;
@@ -201,10 +115,6 @@ class ImportarDatos extends Component
 
     }
 
-    public function updatingSelectImport(){
-        $this->showed_fields = [];
-    }
-
     /**
      * Exporta un excel con los datos de los usuarios
      */
@@ -234,30 +144,6 @@ class ImportarDatos extends Component
 
     public function render()
     {
-        if($this->select_import >= 0){
-
-            $datos = DB::table($this->modelos[$this->select_import]['tabla']);
-
-            foreach ($this->modelos[$this->select_import]['campos'] as $campo) {
-                if(preg_match('/_id$/',$campo['field'])){
-                    $nombre_tabla = $this->modelos[$this->select_import]['tabla'];
-                    $nombre_campo = $campo['field'];
-                    $datos->join(str_replace('_id','s',$campo['field']),function($join) use ($nombre_campo,$nombre_tabla){
-                        $join->on(str_replace('_id','s',$nombre_campo).'.id',$nombre_tabla.'.'.$nombre_campo);
-                    });
-                    if(isset($campo['show'])){
-                        array_push($this->showed_fields,str_replace('_id','s',$campo['field']).'.'.$campo['show']);
-                    }else{
-                        array_push($this->showed_fields,str_replace('_id','s',$campo['field']).'.'.str_replace('_id','',$campo['field']));
-                    }
-                }else{
-                    array_push($this->showed_fields,$this->modelos[$this->select_import]['tabla'].'.'.$campo['field']);
-                }
-                //array_push($this->showed_fields,$campo['field']);
-            }
-
-            $datos = $datos->select($this->showed_fields)->paginate(8);
-        }
-        return view('livewire.admin.import.importar-datos',compact('datos'));
+        return view('livewire.admin.import.importar-datos');
     }
 }

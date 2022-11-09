@@ -1,5 +1,5 @@
 @php
-    $i=0;
+    $i=1;
 @endphp
 <div>
     <div class="grid grid-cols-2">
@@ -7,7 +7,7 @@
             <label for="select_import">¿Qué desea importar?</label><br>
             <select id="select_import" class="select2 w-full mt-4" wire:model='select_import'>
                 @foreach ($modelos as $modelo)
-                    <option value="{{ $i++ }}">{{ ucfirst($modelo['nombre']) }}</option>
+                    <option value="{{ $i++ }}">{{ $modelo['nombre'] }}</option>
                 @endforeach
             </select>
         </center>
@@ -27,37 +27,17 @@
             </div>
         </div>
     </div>
-    <div>
-        <table class="table-fixed w-full">
-            <thead>
-                <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                @foreach ($modelos[$select_import]['campos'] as $campo)
-                    <th>{{ $campo['header'] }}</th>
-                @endforeach
-                </tr>
-            </thead>
-            <tbody class="text-gray-600 text-sm font-light">
-                @foreach ($datos as &$dato)
-                    @php
-                        $dato = get_object_vars($dato);
-                    @endphp
-                    <tr class="border-b border-gray-200">
-                        @foreach ($modelos[$select_import]['campos'] as $campo)
-                            @if(isset($campo['show']))
-                        <td>{{ $dato[$campo['show']] }}</td>
-                            @elseif (preg_match('/_id$/',$campo['field']))
-                        <td>{{ $dato[str_replace('_id','',$campo['field'])] }}</td>
-                            @else
-                        <td>{{ $dato[$campo['field']] }}</td>
-                            @endif
-                        @endforeach
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-
-        {{ $datos->links() }}
-    </div>
+    
+    @switch($select_import)
+        @case(1)
+            @livewire('admin.user')
+            @break
+        @case(2)
+            
+            @break
+        @default
+            
+    @endswitch
 
     @isset($errores_item)
     <div>

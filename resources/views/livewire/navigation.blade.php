@@ -15,8 +15,8 @@
       </div>
       <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
         <a href="/" class="flex-shrink-0 flex items-center">
-          <img class="block lg:hidden h-8 w-auto" src="/sistema/public/img/logo.png" alt="Logo">
-          <img class="hidden lg:block h-8 w-auto" src="/sistema/public/img/logo.png" alt="Logo">
+          <img class="block lg:hidden h-8 w-auto" src="img/logo.png" alt="Logo">
+          <img class="hidden lg:block h-8 w-auto" src="img/logo.png" alt="Logo">
         </a>
         <div class="hidden sm:block sm:ml-6">
           <div class="flex space-x-4">
@@ -85,7 +85,9 @@
   <div class="sm:hidden" x-show="open">
     <div class="px-2 pt-2 pb-3 space-y-1">
       <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
-      <a href="#" class="bg-gray-900 text-white block px-3 py-2 rounded-md text-base font-medium" aria-current="page">Dashboard</a>
+      @role('admin')
+      <a href="#" class="{{ request()->routeIs('admin') ? 'bg-gray-900 text-white block px-3 py-2 rounded-md text-base font-medium" aria-current="page"' : 'text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium'}}">Dashboard</a>
+      @endrole
 
       <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Team</a>
 
