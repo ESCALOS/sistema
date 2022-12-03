@@ -312,6 +312,6 @@ class TractorScheduling extends Component
 
         $tractorSchedulings = $tractorSchedulings->orderBy('id','desc')->paginate(6);
 
-        return view('livewire.tractor-scheduling',compact('tractorSchedulings','tractors','labors','implements','users','filtro_tractores','filtro_implementos'));
+        return view('livewire.overseer.tractor-scheduling.tractor-scheduling',compact('tractorSchedulings','tractors','labors','implements','users','filtro_tractores','filtro_implementos'));
     }
 }

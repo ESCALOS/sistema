@@ -16,7 +16,7 @@
                 <div class="pt-2">
                     <x-jet-label>Importar {{ $modelos[$select_import]['nombre'] }}</x-jet-label>
                 </div>
-                <div class="pt-2">
+                <div class="pt-2" style="overflow:hidden">
                     <div class="mb-2">
                         <input type="file" name="{{ $modelos[$select_import]['tabla'] }}" id="{{ $modelos[$select_import]['tabla'] }}" wire:model='file_import'>
                     </div>
@@ -30,7 +30,7 @@
     
     @switch($select_import)
         @case('1')
-            @livewire('admin.user')
+            @livewire('admin.user.user')
             @break
         @case('2')
             @livewire('admin.tractor')

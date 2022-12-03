@@ -1,3 +1,0 @@
-<div>
-    CRUD USUARIOS
-</div>

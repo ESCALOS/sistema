@@ -152,6 +152,6 @@ class CreateTractorScheduling extends Component
         $implements = Implement::where('location_id',$this->location)->whereNotIn('id',$this->implementos_usados)->get();
         $lotes = Lote::where('location_id',$this->location)->get();
 
-        return view('livewire.create-tractor-scheduling', compact('tractors', 'users', 'labors', 'implements', 'locations','lotes'));
+        return view('livewire.overseer.tractor-scheduling.create-tractor-scheduling', compact('tractors', 'users', 'labors', 'implements', 'locations','lotes'));
     }
 }
